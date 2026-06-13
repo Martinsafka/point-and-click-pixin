@@ -18,6 +18,9 @@ export type SceneBand = 'background' | 'mid' | 'foreground'
 /** What a layer is for beyond drawing — drives editor tooling + runtime roles. */
 export type LayerRole = 'scenery' | 'occluder' | 'floor'
 
+/** How an `image` layer sizes to the viewport (default 'none' = natural size). */
+export type LayerFit = 'stretch' | 'cover' | 'contain' | 'none'
+
 /** Flat polygon as fractions [x0, y0, x1, y1, ...]. */
 export type Polygon = number[]
 
@@ -83,6 +86,7 @@ export type LayerData =
       yFrac?: number
       anchorYFrac?: number
       role?: LayerRole
+      fit?: LayerFit
       when?: Condition
     }
   | {

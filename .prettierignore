@@ -6,3 +6,5 @@ public
 .idea
 # Hand-authored project docs — keep their formatting as written.
 *.md
+# Editor-managed game content — its format is owned by the editor's export.
+content

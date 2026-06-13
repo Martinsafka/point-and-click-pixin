@@ -3,6 +3,7 @@ import { editorStore, exportDoc, importDocFromFile, useEditor } from './editor-s
 import { clearDocDraft, hasDocDraft, saveDocDraft } from '../data/doc-draft'
 import { ScenePreview } from './ScenePreview'
 import { WalkableOverlay } from './WalkableOverlay'
+import { LayerList } from './LayerList'
 
 function round(n: number): number {
   return Math.round(n * 1000) / 1000
@@ -96,6 +97,9 @@ export function Editor() {
             Clear
           </button>
         </div>
+
+        <h2 className="editor__title">Layers · {scene ? scene.layers.length : 0}</h2>
+        {scene && <LayerList sceneId={selectedId} layers={scene.layers} />}
 
         <h2 className="editor__title">Playtest</h2>
         <div className="editor__toolbar">

@@ -23,6 +23,18 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M3 step 3: upload image layers (M3 core complete)
+**What:** The editor can upload images as scene layers. **Schema:** `image` LayerData gains `fit` (`stretch`/`cover`/`contain`/`none`). **Runtime:** `scene.ts` `fitImageSprite()` sizes/places an image sprite (cover fills the viewport keeping aspect; none = natural size, centered on `xFrac`/`yFrac`). **Editor:** new `editor/LayerList.tsx` + a **Layers** panel — upload an SVG/PNG (FileReader → data-URL stored in the doc) and, per layer, set band / fit / role, reorder (↑/↓), or delete. `editor-store` gains `addImageLayer` / `removeLayer` / `moveLayer` / `setLayerBand` / `setLayerFit` / `setLayerRole`.
+**Why:** M3's last core piece — author scenes with real art, not just code painters. Completes the editor core (M3 done).
+**How:**
+- **schema → runtime → editor:** added `fit` to the schema, taught `buildLayer` to size the sprite, then exposed it. SVG/PNG load via `Assets.load(dataUrl)`; for `.svg` files the mime is forced to `image/svg+xml` so Pixi's SVG loader auto-detects it.
+- **Builtin + image share the panel:** the list shows every layer (the demo's `builtin` painters too) — all can be rebanded / reordered / removed. Array order = paint order within a band; ↑/↓ swap neighbours.
+- **Re-mount only when visual:** add/remove/move/band/fit bump `revision` (preview reloads; `Assets` caches data-URLs so it's cheap); `role` is metadata → no re-mount (mirrors `setWalkable`).
+- **Uploads live in the document** as data-URLs, so they survive Export → `content/game.json`. (This is what will push the localStorage draft past its ceiling → the IndexedDB / async-load migration noted earlier.)
+- **`content/` un-prettied:** added `content` to `.prettierignore` so the editor's exported `game.json` isn't reformatted on every `pnpm format` (prettier was collapsing it by ~81 lines); the editor owns that file's format, like `public/` and `*.md`.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200 (game, `?edit`, LayerList, scene). Whether an uploaded SVG visually renders is the user's browser check.
+**Follow-ups:** image **props need positioning** (`fit:'none'` currently centers them — xFrac/yFrac drag handles, like the walkable overlay); per-layer `when` visibility + `anchorYFrac`; list thumbnails. → **M4** (interactables / items / recipes / exits).
+
 ### 2026-06-13 — content/ boundary: load a published game.json
 **What:** New top-level **`content/`** (with a README) is the home for the game's data. `data/game.ts` now resolves the document in priority: **editor dev-draft (localStorage) → `content/game.json` → built-in demo** (street + room, in code). `content/game.json` loads via `import.meta.glob` (eager, optional) so the file is optional and bundles into the build when committed.
 **Why:** The user asked where the editor's exported `game.json` should live so it actually drives the game — without a defined home + loader, Export was a dead-end download.

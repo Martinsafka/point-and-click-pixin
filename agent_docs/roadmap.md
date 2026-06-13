@@ -80,9 +80,9 @@ cutscenes, audio, atmosphere, theming) → packaging.
 
 - [x] Edit mode (`?edit`, DEV-only) — React editor shell beside the live preview.
 - [x] Scene panel: list / add / delete / select + live preview; editable working doc.
-- [ ] Layers: upload SVG → place in band, reorder, set role. _(Walkable drawing ✓ ·
-      save/load `GameDoc` as JSON ✓ · edit→play test loop ✓ · layer upload is the
-      last M3 piece.)_
+- [x] Layers: upload SVG → place in band, reorder, set role. _(Walkable drawing ✓ ·
+      save/load `GameDoc` as JSON ✓ · edit→play test loop ✓ · layer upload ✓ —
+      **M3 core complete**.)_
 
 ### M4 — Editor: interactables, items, recipes, exits
 

@@ -55,11 +55,38 @@ function resolvePolygon(frac: readonly number[], { width, height }: Size): numbe
   return frac.map((v, i) => v * (i % 2 === 0 ? width : height))
 }
 
+/** Size + place an `image` layer's sprite per its `fit` (default 'none'). */
+function fitImageSprite(
+  sprite: Sprite,
+  layer: Extract<LayerData, { kind: 'image' }>,
+  screen: Size,
+): void {
+  const fit = layer.fit ?? 'none'
+  if (fit === 'stretch') {
+    sprite.anchor.set(0, 0)
+    sprite.position.set(0, 0)
+    sprite.width = screen.width
+    sprite.height = screen.height
+    return
+  }
+  if (fit === 'cover' || fit === 'contain') {
+    const sx = screen.width / sprite.texture.width
+    const sy = screen.height / sprite.texture.height
+    sprite.anchor.set(0.5, 0.5)
+    sprite.scale.set(fit === 'cover' ? Math.max(sx, sy) : Math.min(sx, sy))
+    sprite.position.set(screen.width / 2, screen.height / 2)
+    return
+  }
+  // 'none' — natural size, centered on (xFrac, yFrac).
+  sprite.anchor.set(0.5, 0.5)
+  sprite.position.set((layer.xFrac ?? 0.5) * screen.width, (layer.yFrac ?? 0.5) * screen.height)
+}
+
 async function buildLayer(layer: LayerData, screen: Size): Promise<Container> {
   if (layer.kind === 'image') {
     const texture = await Assets.load(layer.src)
     const sprite = new Sprite(texture)
-    sprite.position.set((layer.xFrac ?? 0) * screen.width, (layer.yFrac ?? 0) * screen.height)
+    fitImageSprite(sprite, layer, screen)
     return sprite
   }
   const build = builders.get(layer.builder)
