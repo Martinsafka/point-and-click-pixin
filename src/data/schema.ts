@@ -165,7 +165,7 @@ export interface SceneData {
  * Pointer cursor per interaction context — an optional uploaded icon (image URL),
  * else an emoji fallback shown by the runtime.
  */
-export type CursorKind = 'walk' | 'pickable' | 'interact' | 'exit' | 'inspect'
+export type CursorKind = 'walk' | 'pickable' | 'interact' | 'exit' | 'inspect' | 'default'
 
 /** The whole authored game. */
 export interface GameDoc {

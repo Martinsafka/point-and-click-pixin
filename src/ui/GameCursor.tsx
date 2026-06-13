@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { pickInteractable } from '../systems/interactions'
+import { containsPoint } from '../systems/walkable'
 import { storyStore } from '../state/story'
 import { gameDoc } from '../data/game'
 import type { CursorKind } from '../data/schema'
@@ -10,6 +11,7 @@ const EMOJI: Record<CursorKind, string> = {
   interact: '⚙️',
   exit: '🚪',
   inspect: '👁',
+  default: '↖️',
 }
 
 /**
@@ -40,10 +42,18 @@ export function GameCursor() {
       const state = storyStore.getState()
       const scene = gameDoc.scenes[state.currentScene]
       const screen = { width: window.innerWidth, height: window.innerHeight }
-      const hit = scene
-        ? pickInteractable(scene.interactables, e.clientX, e.clientY, screen, state)
-        : undefined
-      setKind(hit ? hit.kind : 'walk')
+      // Hotspot → its kind; else walkable → walk; else (sky / walls) → default.
+      let kind: CursorKind = 'default'
+      if (scene) {
+        const hit = pickInteractable(scene.interactables, e.clientX, e.clientY, screen, state)
+        if (hit) {
+          kind = hit.kind
+        } else {
+          const px = scene.walkable.map((v, i) => v * (i % 2 === 0 ? screen.width : screen.height))
+          kind = containsPoint({ polygon: px }, e.clientX, e.clientY) ? 'walk' : 'default'
+        }
+      }
+      setKind(kind)
       setVisible(true)
     }
     window.addEventListener('mousemove', onMove)

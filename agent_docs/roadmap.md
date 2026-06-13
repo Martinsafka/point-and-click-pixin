@@ -104,8 +104,11 @@ M4 additions (raised after the core was done):
 - [x] Editor QoL: collapsible **accordion** sections.
 - [x] Editor QoL: **resizable** side panel (drag to widen).
 - [x] Cursor polish: hide the native cursor; offset the icon off the pointer.
-- [ ] Pickable pickup only on a **deliberate click** on its hit-area — never from
-      the character merely walking through it.
+- [x] ~~Pickable walk-through protection~~ — the current click-on-hit-area pickup is
+      already correct (verified); dropped, no change.
+- [x] Cursor polish #2: `walk` cursor only over the walkable area; a custom
+      **default** cursor (emoji / icon) everywhere else — the game has no native
+      cursor at all.
 
 ### M5 — Characters & animation
 

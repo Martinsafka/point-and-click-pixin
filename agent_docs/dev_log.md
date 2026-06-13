@@ -23,6 +23,15 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M4 cursor polish #2: walk-only-on-walkable + default cursor
+**What:** The `walk` cursor (👣) now shows **only over the walkable area**; anywhere else over the scene (sky, walls, outside any area) shows a new **default** `CursorKind` (↖️ emoji or an uploaded icon). So the game has a fully custom cursor — no native pointer anywhere over the scene. Schema: `CursorKind` gains `default`. `GameCursor` hit-tests the walkable polygon (`containsPoint`) after the hotspot check; `CursorEditor` lists `default` (upload an icon). Also: **dropped #5** (pickable walk-through) — the user re-tested and the current click-on-hit-area pickup is already correct. Guide updated.
+**Why:** The user's last M4 cursor polish — `walk` was showing over non-walkable areas (e.g. the sky); the walk cue should appear only where you can walk, with a custom default elsewhere.
+**How:**
+- **Hover order:** hotspot (`pickInteractable`) → its kind; else inside the walkable polygon (`containsPoint`, fractions → px) → `walk`; else → `default`.
+- Adding `default` to `CursorKind` forced both EMOJI maps (GameCursor + CursorEditor) to list it (↖️), enforced by TS.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200; `containsPoint` in the transformed `GameCursor`. The over-sky-vs-floor feel is the user's browser check.
+**Follow-ups:** none — **M4 is fully complete** (core + all additions; the full look/use/talk verb modes remain the deferred optional). Next: **M5 — Characters & animation**.
+
 ### 2026-06-13 — M4 #1: inspect interactable (protagonist text + voice)
 **What:** A 4th interactable kind, **inspect** — a plain click makes the protagonist "speak": its `text` shows as the narration line + an optional uploaded `audio` voice clip plays. New `CursorKind 'inspect'` (👁 emoji / uploaded icon). Schema: an `inspect` variant (`{ id, hitArea, text?, audio?, when? }`). Runtime: `scene.ts` walks to it, then `say(text)` + plays the clip; `audio.ts` gains `playClip(src)` (Howler; format derived from the `data:audio/<x>` mime, Howls cached). Editor: a **+ Look** button, an inspect form (text + audio upload), a teal hit-area, and the inspect cursor in `CursorEditor` / `GameCursor`. Guide updated.
 **Why:** The user's important M4 addition — a "look at / comment" object with the protagonist's voice, distinct from the silent `examine` text.

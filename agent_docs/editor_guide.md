@@ -152,10 +152,11 @@ matching items in the inventory consumes both and yields the output.
 
 ### Cursors (global)
 
-The in-game pointer changes by what it's over: **walk** (empty / floor),
-**pickable**, **interact**, **exit**, or **inspect**. Upload an icon per context
-(SVG/PNG), or leave it for the emoji fallback (👣 / ✋ / ⚙️ / 🚪 / 👁) shown in the
-preview. Over the game UI the normal pointer returns.
+The in-game pointer changes by what it's over: **walk** (over the walkable area),
+**pickable**, **interact**, **exit**, **inspect**, or **default** (anywhere else —
+sky, walls, outside any area). Upload an icon per context (SVG/PNG), or leave it
+for the emoji fallback (👣 / ✋ / ⚙️ / 🚪 / 👁 / ↖️). The game has **no native
+cursor**; over the game UI the normal pointer returns.
 
 ### Playtest
 
