@@ -40,7 +40,9 @@ So your edits live in a draft until you publish them (Export → `content/game.j
 ## Layout
 
 A **left panel** (the tools, top to bottom) beside a **live preview** of the
-selected scene. Edits show in the preview immediately.
+selected scene. Edits show in the preview immediately. Each section **collapses**
+when you click its title (accordion), and you can **drag the divider** between the
+panel and the preview to widen the panel.
 
 ---
 

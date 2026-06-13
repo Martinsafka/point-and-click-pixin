@@ -104,7 +104,8 @@ body {
 /* In-game pointer cursor (icon / emoji following the mouse over the scene). */
 .game-cursor {
   position: fixed;
-  transform: translate(-50%, -50%);
+  /* Offset up-left so the icon sits off the actual pointer (lower-right). */
+  transform: translate(-82%, -82%);
   pointer-events: none;
   z-index: 100;
   font-size: 26px;
@@ -299,8 +300,7 @@ body {
 
 /* Editor (dev-only, ?edit) */
 .editor {
-  display: grid;
-  grid-template-columns: 320px 1fr;
+  display: flex;
   width: 100vw;
   height: 100vh;
 }
@@ -309,6 +309,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 0 0 auto;
+  min-width: 240px;
+  max-width: 720px;
   padding: 16px;
   background: #0d1017;
   border-right: 1px solid #1c2230;
@@ -321,6 +324,43 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   opacity: 0.8;
+}
+
+/* Collapsible sections (accordion) */
+.editor__section {
+  display: flex;
+  flex-direction: column;
+}
+.editor__section > summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.editor__section > summary::-webkit-details-marker {
+  display: none;
+}
+.editor__section > summary::before {
+  content: '▾ ';
+  opacity: 0.5;
+}
+.editor__section:not([open]) > summary::before {
+  content: '▸ ';
+}
+.editor__section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* Drag handle between the panel and the preview */
+.editor__resizer {
+  flex: 0 0 5px;
+  cursor: col-resize;
+  background: #1c2230;
+}
+.editor__resizer:hover {
+  background: #45568a;
 }
 
 .editor__toolbar {
@@ -485,6 +525,8 @@ body {
 
 .editor__preview {
   position: relative;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
 }
 

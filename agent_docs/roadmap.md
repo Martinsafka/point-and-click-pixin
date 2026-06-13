@@ -97,6 +97,16 @@ cutscenes, audio, atmosphere, theming) → packaging.
       interact / exit) + emoji fallback; runtime + editor. _(Full look/use/talk verb
       modes stay deferred — single-click model kept; examine is on a plain click.)_
 
+M4 additions (raised after the core was done):
+
+- [ ] **Inspect** interactable (4th kind) — a plain click makes the protagonist
+      "speak" (text + audio); its own cursor (eye emoji / uploaded icon).
+- [x] Editor QoL: collapsible **accordion** sections.
+- [x] Editor QoL: **resizable** side panel (drag to widen).
+- [x] Cursor polish: hide the native cursor; offset the icon off the pointer.
+- [ ] Pickable pickup only on a **deliberate click** on its hit-area — never from
+      the character merely walking through it.
+
 ### M5 — Characters & animation
 
 - Runtime:

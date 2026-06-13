@@ -1,4 +1,10 @@
-import { useState, type ChangeEvent } from 'react'
+import {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+} from 'react'
 import { editorStore, exportDoc, importDocFromFile, useEditor } from './editor-store'
 import { clearDocDraft, hasDocDraft, saveDocDraft } from '../data/doc-draft'
 import type { InteractableData } from '../data/schema'
@@ -15,10 +21,26 @@ function round(n: number): number {
   return Math.round(n * 1000) / 1000
 }
 
+/** A collapsible panel section (native `<details>`, default open). */
+function Section({ title, children }: { title: ReactNode; children: ReactNode }) {
+  const [open, setOpen] = useState(true)
+  return (
+    <details
+      className="editor__section"
+      open={open}
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary className="editor__title">{title}</summary>
+      <div className="editor__section-body">{children}</div>
+    </details>
+  )
+}
+
 /**
  * The dev-only editor shell (`?edit`). Edits a working `GameDoc`: scenes, the
- * walkable polygon, image layers, and interactables (place + draw hit-areas).
- * "Test in game" saves a localStorage draft the game loads in place of the doc.
+ * walkable polygon, image layers, interactables, items, recipes and cursors.
+ * Sections collapse (accordion) and the panel is drag-resizable. "Test in game"
+ * saves a localStorage draft the game loads in place of the doc.
  */
 export function Editor() {
   const doc = useEditor((s) => s.doc)
@@ -27,6 +49,23 @@ export function Editor() {
   const [drawWalkable, setDrawWalkable] = useState(false)
   const [drawHitArea, setDrawHitArea] = useState(false)
   const [selectedInteractable, setSelectedInteractable] = useState<number | null>(null)
+  const [panelWidth, setPanelWidth] = useState(320)
+
+  // Resizing the panel changes the preview container; nudge Pixi to re-fit it.
+  useEffect(() => {
+    window.dispatchEvent(new Event('resize'))
+  }, [panelWidth])
+
+  const startResize = (e: ReactMouseEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const onMove = (ev: MouseEvent) => setPanelWidth(Math.max(240, Math.min(720, ev.clientX)))
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
 
   const sceneIds = Object.keys(doc.scenes)
   const scene = doc.scenes[selectedId]
@@ -101,128 +140,137 @@ export function Editor() {
 
   return (
     <div className="editor">
-      <aside className="editor__panel">
-        <h2 className="editor__title">Scenes</h2>
-        <div className="editor__toolbar">
-          <button type="button" onClick={() => editorStore.getState().addScene()}>
-            + Scene
-          </button>
-          <button
-            type="button"
-            onClick={() => editorStore.getState().deleteScene(selectedId)}
-            disabled={sceneIds.length <= 1}
-          >
-            Delete
-          </button>
-        </div>
-        <ul className="editor__scenes">
-          {sceneIds.map((id) => (
-            <li key={id}>
-              <button
-                type="button"
-                className={`editor__scene${id === selectedId ? ' editor__scene--active' : ''}`}
-                onClick={() => select(id)}
-              >
-                {doc.scenes[id].name}
-              </button>
-            </li>
-          ))}
-        </ul>
-
-        <h2 className="editor__title">Walkable · {pointCount} pts</h2>
-        <div className="editor__toolbar">
-          <button
-            type="button"
-            className={drawWalkable ? 'editor__btn--active' : undefined}
-            onClick={toggleWalkable}
-          >
-            {drawWalkable ? 'Done' : 'Draw'}
-          </button>
-          <button type="button" onClick={clearWalkable}>
-            Clear
-          </button>
-        </div>
-
-        <h2 className="editor__title">Layers · {scene ? scene.layers.length : 0}</h2>
-        {scene && <LayerList sceneId={selectedId} layers={scene.layers} />}
-
-        <h2 className="editor__title">Interactables · {scene ? scene.interactables.length : 0}</h2>
-        <div className="editor__toolbar">
-          <button type="button" onClick={() => addInteractable('pickable')}>
-            + Pick
-          </button>
-          <button type="button" onClick={() => addInteractable('interact')}>
-            + Use
-          </button>
-          <button type="button" onClick={() => addInteractable('exit')}>
-            + Exit
-          </button>
-        </div>
-        {scene && scene.interactables.length > 0 && (
-          <ul className="editor__interactables">
-            {scene.interactables.map((it, i) => (
-              <li key={i} className="intr-row">
+      <aside className="editor__panel" style={{ width: panelWidth }}>
+        <Section title="Scenes">
+          <div className="editor__toolbar">
+            <button type="button" onClick={() => editorStore.getState().addScene()}>
+              + Scene
+            </button>
+            <button
+              type="button"
+              onClick={() => editorStore.getState().deleteScene(selectedId)}
+              disabled={sceneIds.length <= 1}
+            >
+              Delete
+            </button>
+          </div>
+          <ul className="editor__scenes">
+            {sceneIds.map((id) => (
+              <li key={id}>
                 <button
                   type="button"
-                  className={`intr-row__select intr-row__select--${it.kind}${
-                    i === selectedInteractable ? ' intr-row__select--active' : ''
-                  }`}
-                  onClick={() => selectInteractable(i)}
+                  className={`editor__scene${id === selectedId ? ' editor__scene--active' : ''}`}
+                  onClick={() => select(id)}
                 >
-                  <span className="intr-row__kind">{it.kind}</span> {it.id}
-                </button>
-                <button
-                  type="button"
-                  className="intr-row__del"
-                  onClick={() => removeInteractable(i)}
-                >
-                  ✕
+                  {doc.scenes[id].name}
                 </button>
               </li>
             ))}
           </ul>
-        )}
-        {scene && selectedInteractable !== null && selInteractable && (
-          <InteractableForm
-            sceneId={selectedId}
-            index={selectedInteractable}
-            interactable={selInteractable}
-            items={doc.items}
-            sceneIds={sceneIds}
-            drawMode={drawHitArea}
-            onToggleDraw={toggleHitArea}
-          />
-        )}
+        </Section>
 
-        <h2 className="editor__title">Items · {Object.keys(doc.items).length}</h2>
-        <ItemCatalogue items={doc.items} />
+        <Section title={`Walkable · ${pointCount} pts`}>
+          <div className="editor__toolbar">
+            <button
+              type="button"
+              className={drawWalkable ? 'editor__btn--active' : undefined}
+              onClick={toggleWalkable}
+            >
+              {drawWalkable ? 'Done' : 'Draw'}
+            </button>
+            <button type="button" onClick={clearWalkable}>
+              Clear
+            </button>
+          </div>
+        </Section>
 
-        <h2 className="editor__title">Recipes · {(doc.recipes ?? []).length}</h2>
-        <RecipeTable recipes={doc.recipes ?? []} items={doc.items} />
+        <Section title={`Layers · ${scene ? scene.layers.length : 0}`}>
+          {scene && <LayerList sceneId={selectedId} layers={scene.layers} />}
+        </Section>
 
-        <h2 className="editor__title">Cursors</h2>
-        <CursorEditor cursors={doc.cursors} />
+        <Section title={`Interactables · ${scene ? scene.interactables.length : 0}`}>
+          <div className="editor__toolbar">
+            <button type="button" onClick={() => addInteractable('pickable')}>
+              + Pick
+            </button>
+            <button type="button" onClick={() => addInteractable('interact')}>
+              + Use
+            </button>
+            <button type="button" onClick={() => addInteractable('exit')}>
+              + Exit
+            </button>
+          </div>
+          {scene && scene.interactables.length > 0 && (
+            <ul className="editor__interactables">
+              {scene.interactables.map((it, i) => (
+                <li key={i} className="intr-row">
+                  <button
+                    type="button"
+                    className={`intr-row__select intr-row__select--${it.kind}${
+                      i === selectedInteractable ? ' intr-row__select--active' : ''
+                    }`}
+                    onClick={() => selectInteractable(i)}
+                  >
+                    <span className="intr-row__kind">{it.kind}</span> {it.id}
+                  </button>
+                  <button
+                    type="button"
+                    className="intr-row__del"
+                    onClick={() => removeInteractable(i)}
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {scene && selectedInteractable !== null && selInteractable && (
+            <InteractableForm
+              sceneId={selectedId}
+              index={selectedInteractable}
+              interactable={selInteractable}
+              items={doc.items}
+              sceneIds={sceneIds}
+              drawMode={drawHitArea}
+              onToggleDraw={toggleHitArea}
+            />
+          )}
+        </Section>
 
-        <h2 className="editor__title">Playtest</h2>
-        <div className="editor__toolbar">
-          <button type="button" onClick={testInGame}>
-            ▶ Test in game
-          </button>
-          <button type="button" onClick={discardDraft} disabled={!hasDocDraft()}>
-            Discard
-          </button>
-        </div>
+        <Section title={`Items · ${Object.keys(doc.items).length}`}>
+          <ItemCatalogue items={doc.items} />
+        </Section>
 
-        <h2 className="editor__title">Document</h2>
-        <div className="editor__toolbar">
-          <button type="button" onClick={exportDoc}>
-            Export
-          </button>
-          <label className="editor__import">
-            Import
-            <input type="file" accept="application/json" hidden onChange={onImport} />
-          </label>
-        </div>
+        <Section title={`Recipes · ${(doc.recipes ?? []).length}`}>
+          <RecipeTable recipes={doc.recipes ?? []} items={doc.items} />
+        </Section>
+
+        <Section title="Cursors">
+          <CursorEditor cursors={doc.cursors} />
+        </Section>
+
+        <Section title="Playtest">
+          <div className="editor__toolbar">
+            <button type="button" onClick={testInGame}>
+              ▶ Test in game
+            </button>
+            <button type="button" onClick={discardDraft} disabled={!hasDocDraft()}>
+              Discard
+            </button>
+          </div>
+        </Section>
+
+        <Section title="Document">
+          <div className="editor__toolbar">
+            <button type="button" onClick={exportDoc}>
+              Export
+            </button>
+            <label className="editor__import">
+              Import
+              <input type="file" accept="application/json" hidden onChange={onImport} />
+            </label>
+          </div>
+        </Section>
 
         <p className="editor__hint">
           {drawWalkable
@@ -232,6 +280,7 @@ export function Editor() {
               : '“Test in game” saves a dev draft and opens the game; Export to commit the doc.'}
         </p>
       </aside>
+      <div className="editor__resizer" onMouseDown={startResize} />
       <main className="editor__preview">
         {scene && (
           <>

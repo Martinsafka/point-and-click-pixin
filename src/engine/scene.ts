@@ -160,7 +160,7 @@ export async function mountScene(
 
   app.stage.eventMode = 'static'
   app.stage.hitArea = app.screen
-  app.stage.cursor = 'pointer'
+  app.stage.cursor = 'none' // the DOM GameCursor draws the pointer; hide the native one
   const onTap = (event: FederatedPointerEvent) => {
     const local = interactive.toLocal(event.global)
     const state = store.getState()

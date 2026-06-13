@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M4 polish: accordion sections, resizable panel, cursor fix
+**What:** Editor QoL + a cursor bug fix. (1) Editor sections are now **collapsible** (a `Section` wrapper over native `<details>`, default open). (2) The side panel is **drag-resizable** (a splitter between panel + preview; `panelWidth` state; flex layout). (3) **Cursor fix:** the native pointer still showed under the custom icon — `mountScene` set `app.stage.cursor = 'pointer'`, which Pixi writes onto `canvas.style.cursor`, overriding the CSS `cursor: none`. Set it to `'none'`; the custom icon is offset up-left of the pointer so it's not on the click point.
+**Why:** The editor grew long (9 sections) → collapsing + widening help; and the user reported the native cursor showing under the icon.
+**How:**
+- **Accordion = `<details>`** (controlled `open` + `onToggle` → per-section `useState`, default open) — no deps, keyboard-accessible.
+- **Resize:** flex layout (`panel | resizer | preview`); the splitter's mousedown tracks window mousemove → `panelWidth` (clamped 240–720). A `useEffect` on `panelWidth` dispatches a window `resize` so Pixi's ResizePlugin re-fits the preview to its container.
+- **Cursor:** the real bug was Pixi writing the canvas cursor; `stage.cursor = 'none'` fixes it. Icon offset via `transform: translate(-82%, -82%)` (tunable).
+- **Verified:** format / typecheck / lint / build green; dev smoke 200; `cursor="none"` in the transformed `scene.ts`. Collapse / drag / cursor feel is the user's browser check.
+**Follow-ups (still M4):** **#1 inspect** interactable (protagonist text + audio + eye cursor) is next; then **#5 pickable** deliberate-click pickup.
+
 ### 2026-06-13 — M4: context cursor (icons + emoji fallback)
 **What:** An in-game pointer that changes by what it's over — walk / pickable / interact / exit — using an uploaded icon per context, else an emoji fallback (👣 ✋ ⚙️ 🚪). New `ui/GameCursor.tsx` (DOM cursor following the mouse; hover hit-test via `pickInteractable`; native cursor hidden on the scene canvas) + `editor/CursorEditor.tsx` (upload / clear an icon per kind). Schema: `GameDoc.cursors?` (`CursorKind` → icon URL). `editor-store` gains `setCursorIcon`; the Editor gets a global **Cursors** section. Guide updated.
 **Why:** The user asked for the optional cursor part of M4's verb/cursor item, kept **simple** (icons + emoji) — not the full look/use/talk verb modes.
