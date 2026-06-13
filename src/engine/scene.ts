@@ -12,8 +12,8 @@ import { resolveDepthScale } from '../data/scene-config'
 import { depthScaleAt } from '../systems/depth'
 import type { WalkArea } from '../systems/walkable'
 import { effectsFor, pickInteractable } from '../systems/interactions'
-import type { StoryStore } from '../systems/conditions'
-import type { LayerData, SceneBand, SceneData, SceneId } from '../data/schema'
+import { checkCondition, type StoryStore } from '../systems/conditions'
+import type { Condition, LayerData, SceneBand, SceneData, SceneId } from '../data/schema'
 
 /** Viewport size in CSS pixels. */
 export interface Size {
@@ -71,7 +71,8 @@ async function buildLayer(layer: LayerData, screen: Size): Promise<Container> {
  * Mounts a `SceneData` onto an initialised Application as three zIndex-ordered
  * bands — background < interactive (mid) < foreground occluder. A click either
  * runs the topmost interactable under it (after walking there) or just walks the
- * character. Positions in the data are screen fractions, resolved to pixels here.
+ * character. Layers with a `when` Condition toggle visibility as state changes
+ * (e.g. a picked-up item vanishes). Positions in the data are screen fractions.
  */
 export async function mountScene(
   app: Application,
@@ -94,6 +95,9 @@ export async function mountScene(
   const bandFor = (band: SceneBand): Container =>
     band === 'background' ? background : band === 'foreground' ? foreground : interactive
 
+  // Layers whose `when` toggles their visibility as story state changes.
+  const conditional: { display: Container; when: Condition }[] = []
+
   for (const layer of scene.layers) {
     const display = await buildLayer(layer, screen)
     if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
@@ -101,8 +105,19 @@ export async function mountScene(
       display.zIndex = anchorY
       display.scale.set(depthScaleAt(anchorY, depthScale))
     }
+    if (layer.when) {
+      display.visible = checkCondition(store.getState(), layer.when)
+      conditional.push({ display, when: layer.when })
+    }
     bandFor(layer.band).addChild(display)
   }
+
+  const refreshVisibility = () => {
+    const state = store.getState()
+    for (const c of conditional) c.display.visible = checkCondition(state, c.when)
+  }
+  const unsubscribeVisibility =
+    conditional.length > 0 ? store.subscribe(refreshVisibility) : () => {}
 
   const walkable: WalkArea = { polygon: resolvePolygon(scene.walkable, screen) }
   const character = new Character(createCubeView(), depthScale, walkable)
@@ -135,6 +150,7 @@ export async function mountScene(
     destroy() {
       if (torn) return
       torn = true
+      unsubscribeVisibility()
       app.ticker.remove(onTick)
       app.stage.off('pointertap', onTap)
       app.stage.eventMode = 'auto'

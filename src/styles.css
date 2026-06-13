@@ -70,3 +70,33 @@ body {
   line-height: 1.5;
   opacity: 0.6;
 }
+
+/* Inventory bar — bottom-centre HUD. pointer-events none for now (display only);
+   becomes interactive when item selection lands in the next step. */
+.inventory {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.inventory__slot {
+  min-width: 64px;
+  height: 64px;
+  padding: 6px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(20, 26, 38, 0.8);
+  border: 1px solid #2a3650;
+  border-radius: 8px;
+}
+
+.inventory__label {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+}

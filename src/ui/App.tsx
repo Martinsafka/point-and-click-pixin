@@ -1,4 +1,5 @@
 import { GameCanvas } from './GameCanvas'
+import { Inventory } from './Inventory'
 import { useStory } from './use-story'
 import { gameDoc } from '../data/game'
 
@@ -7,9 +8,9 @@ import { gameDoc } from '../data/game'
  * everything rendered here is DOM chrome layered on top — the "world in Pixi,
  * chrome in React" split from agent_docs/architecture.md.
  *
- * Scene name + visited count are read from the story store via `useStory` —
- * proof the overlay is bound to the same discrete state the engine drives, and
- * that state persists across scene transitions.
+ * Scene name + visited count + the inventory are read from the story store via
+ * `useStory` — proof the overlay is bound to the same discrete state the engine
+ * drives, and that it persists across scene transitions.
  */
 export function App() {
   const sceneId = useStory((s) => s.currentScene)
@@ -22,9 +23,10 @@ export function App() {
       <div className="overlay">
         <header className="overlay__title">Point &amp; Click Adventure</header>
         <p className="overlay__hint">
-          Scene: {sceneName} · visited {visited} — click to walk; click the lit door to change
-          scene. The cube stays on the road, and progress persists across scenes.
+          Scene: {sceneName} · visited {visited} — click to walk. Pick up the key, then the lit door
+          unlocks; click it to change scene.
         </p>
+        <Inventory />
       </div>
     </div>
   )

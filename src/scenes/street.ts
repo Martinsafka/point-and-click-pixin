@@ -28,6 +28,7 @@ const WINDOW_DARK = '#1a2336'
 const LAMP_POST = '#0a0e16'
 const LAMP_GLOW = '#e8b552'
 const BUSH = '#05080d'
+const KEY = '#e8b552'
 
 const HORIZON_FRAC = 0.33
 
@@ -140,12 +141,24 @@ function buildBush({ width: W, height: H }: Size, p: Record<string, number>): Gr
   return g
 }
 
+/** A small gold key lying on the ground — picked up, then it vanishes. */
+function buildKey({ width: W, height: H }: Size, p: Record<string, number>): Graphics {
+  const g = new Graphics()
+  g.circle(0, -22, 9).stroke({ width: 4, color: KEY, alignment: 0.5 })
+  g.rect(-2, -16, 4, 24).fill(KEY)
+  g.rect(2, 2, 7, 3).fill(KEY)
+  g.rect(2, 8, 5, 3).fill(KEY)
+  g.position.set((p.xFrac ?? 0.25) * W, (p.yFrac ?? 0.8) * H)
+  return g
+}
+
 registerLayerBuilder('street.sky', buildSky)
 registerLayerBuilder('street.land', buildLand)
 registerLayerBuilder('street.buildings', buildBuildings)
 registerLayerBuilder('street.road', buildRoad)
 registerLayerBuilder('street.lamppost', buildLamppost)
 registerLayerBuilder('street.bush', buildBush)
+registerLayerBuilder('street.key', buildKey)
 
 export const streetScene: SceneData = {
   id: 'street',
@@ -156,10 +169,18 @@ export const streetScene: SceneData = {
   walkable: [0, 0.95, 1, 0.95, 1, 0.67, 0.59, 0.67, 0.53, 0.52, 0.47, 0.52, 0.41, 0.67, 0, 0.67],
   interactables: [
     {
+      kind: 'pickable',
+      id: 'key',
+      item: 'key',
+      hitArea: [0.21, 0.74, 0.29, 0.74, 0.29, 0.86, 0.21, 0.86],
+      when: { kind: 'not', of: { kind: 'hasItem', item: 'key' } },
+    },
+    {
       kind: 'exit',
       id: 'to-room',
       to: 'room',
       hitArea: [0.6, 0.5, 0.64, 0.5, 0.64, 0.62, 0.6, 0.62],
+      when: { kind: 'hasItem', item: 'key' },
     },
   ],
   layers: [
@@ -167,6 +188,14 @@ export const streetScene: SceneData = {
     { kind: 'builtin', band: 'background', builder: 'street.land' },
     { kind: 'builtin', band: 'background', builder: 'street.buildings' },
     { kind: 'builtin', band: 'background', builder: 'street.road' },
+    {
+      kind: 'builtin',
+      band: 'mid',
+      builder: 'street.key',
+      anchorYFrac: 0.8,
+      params: { xFrac: 0.25, yFrac: 0.8 },
+      when: { kind: 'not', of: { kind: 'hasItem', item: 'key' } },
+    },
     {
       kind: 'builtin',
       band: 'mid',

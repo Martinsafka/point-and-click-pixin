@@ -70,6 +70,7 @@ export type LayerData =
       yFrac?: number
       anchorYFrac?: number
       role?: LayerRole
+      when?: Condition
     }
   | {
       kind: 'builtin'
@@ -78,6 +79,7 @@ export type LayerData =
       params?: Record<string, number>
       anchorYFrac?: number
       role?: LayerRole
+      when?: Condition
     }
 
 /** A clickable thing in a scene, gated by an optional `when` Condition. */

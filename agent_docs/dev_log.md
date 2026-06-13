@@ -23,6 +23,17 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M1: pickup + inventory bar + condition-gated door
+**What:** Inventory, first half. Pickables are picked up via the existing click → effect path; a picked item vanishes from the scene and shows in an inventory bar. Added `LayerData.when?` (conditional layers) + a store subscription in `mountScene` that toggles layer visibility as state changes. New `ui/Inventory.tsx` (DOM bar reading `store.inventory`) + styles. Street: a gold `key` pickable (visual + hitArea, both gated `not hasItem(key)`); the room door now gated `hasItem(key)`. Added the `key` item to `gameDoc`.
+**Why:** Deliver the pickup → inventory → condition-gated-transition loop — the spine of inventory puzzles — on the M0 condition/effect foundation.
+**How:**
+- **Pick up once, then vanish, no extra state:** the pickable AND its visual layer are both gated `not hasItem(item)`. Pick up → you hold it → both disappear (the layer via the visibility subscription; the pickable via `pickInteractable`'s `when`). The door's `when: hasItem(key)` is re-checked per click, so it "unlocks" the moment you hold the key. Caveat: if an item is later *consumed*, a `not hasItem` pickable reappears — a per-pickable picked-flag is the robust fix once use/combine can consume items.
+- **Conditional layers are general:** any layer with `when` is shown/hidden reactively (scene subscribes to the store, unsubscribes on destroy) — useful beyond pickups (open/closed doors, state props).
+- **Inventory UI is display-only** for now (names/placeholders), `pointer-events: none` so it doesn't block world clicks; selection comes with combine/use-on.
+- **Verified:** typecheck + lint + build green; dev server transforms the new modules; the gating logic (hasItem / not / giveItem) is Node-tested (M0). Pickup + render is visual — test in `pnpm dev`.
+**Follow-ups (M1 inventory, part 2):**
+- **Combine** (data-driven recipes) + **use item on object** (select in inventory → click world object): needs `selectedItem` in the store, `recipes` in `GameDoc`, `uses` rules on interactables, and an interactive inventory bar.
+
 ### 2026-06-13 — M1: interactables + scene transitions + persistence
 **What:** First M1 chunk. Click an interactable → the character walks to it, then its `Effect`s run; an `exit`'s `goTo` swaps scenes. Added `systems/interactions.ts` (`effectsFor`, `pickInteractable`), `Character.setTarget(x, y, onArrive?)`, a store-aware `mountScene(app, scene, store)` + self-driving `createSceneHost(app, scenes, store)` (subscribes to `currentScene`, swaps deferred). New 2nd scene `scenes/room.ts` + a lit door on the street, connected by `exit` interactables. Overlay shows scene name + visited count. Moved `StoryStore` into `conditions.ts` to break an engine↔store cycle.
 **Why:** Three original-backlog items at once — interaction (click → effect), scene transitions, persistence — all on the M0 condition/effect + store foundation.

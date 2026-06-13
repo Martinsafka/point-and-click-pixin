@@ -13,6 +13,8 @@ export const gameDoc: GameDoc = {
     street: streetScene,
     room: roomScene,
   },
-  items: {},
+  items: {
+    key: { id: 'key', name: 'Key' },
+  },
   initialFlags: {},
 }
