@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M3 step 2: editable doc + add/delete scenes + JSON save/load
+**What:** Editor goes from read-only to editable. New `editor/editor-store.ts` (Zustand) holds a **mutable clone of `gameDoc`** + selection + a `revision` counter; actions select / add / delete scene + setDoc. The panel gains **+ Scene / Delete** and **Export / Import** (download/upload the doc as JSON). The live preview re-mounts on `selectedSceneId-revision`.
+**Why:** M3 step 2 — the data-mutation layer + persistence that the visual tools (walkable, layers) build on.
+**How:**
+- **Working doc is a clone**, so editing never touches the const `gameDoc` (the running game). Add → a blank scene (default floor walkable + spawn, no layers); delete keeps ≥1 scene and fixes `start` / selection.
+- **Save/load = JSON export/import** in-session (download a `game.json`; import validates `scenes` + `start`). Wiring an edited doc back into the build (or loading it at runtime) is a later integration.
+- **Preview keys on `selectedId-revision`** so any structural change re-mounts it; walkable edits (step 2b) will use a separate overlay so they don't re-mount.
+- **Verified:** typecheck + lint + build green; dev server transforms the editor modules. Visual — `?edit`: add/delete scenes, export → a JSON file, import it back.
+**Follow-ups (M3):** **walkable polygon drawing** (SVG overlay over the preview — step 2b); then layer upload / order / role; later, persist the doc into the project (dev endpoint) so edits survive a reload without manual import.
+
 ### 2026-06-13 — M3 step 1: editor shell + scene panel + live preview
 **What:** Started the editor. `?edit` (DEV-only) routes `main.tsx` to a new `<Editor>` (`src/editor/`) instead of the game: a left **scene panel** (lists scenes from `gameDoc`, click to select) + a **live preview** of the selected scene. New `engine/mountPreview(app, scene)` renders a scene's layers (reusing the layer builder) + a static character at spawn, no gameplay input. `createPixiApp` now takes a `resizeTo` target so the preview canvas sizes to its pane.
 **Why:** M3's first chunk — the editor shell + read-only live preview, the surface every later editing tool hangs off.

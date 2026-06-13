@@ -79,9 +79,9 @@ cutscenes, audio, atmosphere, theming) → packaging.
 ### M3 — Editor core (dev-only)
 
 - [x] Edit mode (`?edit`, DEV-only) — React editor shell beside the live preview.
-- [ ] Scene panel: list + select + live preview ✓; add / delete pending.
+- [x] Scene panel: list / add / delete / select + live preview; editable working doc.
 - [ ] Layers: upload SVG → place in band, reorder, set role; draw the walkable
-      polygon; save `GameDoc` to JSON (dev endpoint or download/upload).
+      polygon. _(Save/load `GameDoc` as JSON — export/import — done.)_
 
 ### M4 — Editor: interactables, items, recipes, exits
 
