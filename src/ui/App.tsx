@@ -14,8 +14,8 @@ export function App() {
       <div className="overlay">
         <header className="overlay__title">Point &amp; Click Adventure</header>
         <p className="overlay__hint">
-          Click to walk. The cube scales with depth, sorts in front of / behind the crate by its
-          feet, and hides behind the foreground pillar.
+          Click to walk — the cube stays on the road. Head up the side street to shrink with depth;
+          it hides behind the lampposts and the foreground bushes.
         </p>
       </div>
     </div>

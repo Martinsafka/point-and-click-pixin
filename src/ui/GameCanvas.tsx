@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react'
 import type { Application } from 'pixi.js'
 import { createPixiApp } from '../engine/app'
-import { createScene, type Scene } from '../engine/scene'
+import { createSceneHost, type SceneHost } from '../engine/scene'
+import { scenes } from '../scenes'
 
 /**
  * Hosts the PixiJS canvas inside the React tree. The canvas is the game world;
@@ -16,14 +17,14 @@ export function GameCanvas() {
 
   useEffect(() => {
     let app: Application | undefined
-    let scene: Scene | undefined
+    let host: SceneHost | undefined
     let cancelled = false
 
-    const teardown = (target: Application, builtScene?: Scene) => {
-      // Drop the scene's ticker callback + input listeners first, then release
-      // the renderer. releaseGlobalResources matters when re-initing in the same
-      // tab (StrictMode remount, later scene swaps) — see the pixijs-application skill.
-      builtScene?.destroy()
+    const teardown = (target: Application, builtHost?: SceneHost) => {
+      // Drop the scene host (ticker callback + input listeners) first, then
+      // release the renderer. releaseGlobalResources matters when re-initing in
+      // the same tab (StrictMode remount, scene swaps) — see pixijs-application.
+      builtHost?.destroy()
       target.destroy(
         { removeView: true, releaseGlobalResources: true },
         { children: true, texture: true, textureSource: true },
@@ -38,15 +39,17 @@ export function GameCanvas() {
       }
       app = created
       hostRef.current?.appendChild(created.canvas)
-      scene = createScene(created)
+      const built = createSceneHost(created)
+      host = built
+      await built.show(scenes.street)
     })()
 
     return () => {
       cancelled = true
       if (app) {
-        teardown(app, scene)
+        teardown(app, host)
         app = undefined
-        scene = undefined
+        host = undefined
       }
     }
   }, [])

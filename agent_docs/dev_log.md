@@ -23,6 +23,33 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — Walkable area, layered scenes + swap, street polish
+**What:** Three things on the street. (1) **Walkable area** — new `src/systems/walkable.ts` (`WalkArea` polygon, `containsPoint`, `clampToArea`); `Character` takes an optional area and clamps both the click target and every step, so the cube only travels on the road. (2) **Scene system v2** — `engine/scene.ts` mounts a `SceneDefinition` of stacked `SceneLayer[]` (band + display + optional anchorY); added `createSceneHost(app)` (swap scenes), `imageLayer(url, band)` (load an SVG/image as a Sprite layer — the art path), async `mountScene`/`SceneFactory`; new `scenes/index.ts` registry. `street.ts` rebuilt as layers (sky / land / buildings / road + lamppost/bush). `GameCanvas` mounts via the host. (3) **Polish** — horizon raised to the top third; sky is now clear night-blue bands (was a near-black "void").
+**Why:** Requested: keep the player on the road, fix the dead black sky band, and prepare easy scene swap/creation toward SVG-composed scenes (parts layering).
+**How:**
+- **Walkable = polygon clamp.** The road is a concave ⊥ (horizontal street + receding branch). `clampToArea` returns the point if inside, else the nearest boundary point — off-road clicks walk to the road edge, and per-frame clamping slides the cube along edges around the corner. No A* yet (proper nav for the concave corner) — flagged. Verified the geometry in Node: inside/outside checks pass, house-click → road edge, sky-click → branch top.
+- **Layers model "parts stacking."** Each background part (sky, land, buildings, road) is its own Graphics layer drawn in array order; mid layers Y-sort + depth-scale by `anchorY`; foreground always on top. Maps 1:1 to future SVGs — `imageLayer()` loads a URL into a Sprite layer; `SceneFactory` is async so a scene can `await Assets.load(...)`. Swapping is `host.show(scenes.x)`.
+- **Sky/horizon.** `HORIZON_FRAC` 0.46 → 0.33; sky split into 3 clearly-blue bands. Kept flat fills (not `FillGradient`): still can't see the canvas from here, and a flat fill can't fail as a runtime error.
+- **Verified:** format + typecheck + lint + build green; Node test of the walkable polygon; dev server transforms the new modules (200). The render is eyeballed in `pnpm dev`.
+**Follow-ups:**
+- **Resize** still unhandled — the scene (layout, walkable polygon, depth, hitArea) is built once from `app.screen`. One resize pass should rebuild it all.
+- **Walkable nav** is clamp-and-slide; a walk-mesh + A* would give clean paths around the L corner (architecture's intended approach).
+- **SVG art:** `imageLayer` is ready — wire real SVGs when the pipeline produces them; consider a manifest/bundle preload.
+
+### 2026-06-13 — Data-driven scenes + geometric street scene
+**What:** Generalised the engine into a scene-manifest mounter and added the first real scene. `engine/scene.ts`: `createScene` → `mountScene(app, SceneFactory)` consuming a `SceneDefinition` (depth, start, `paintBackground`, mid/foreground props); mid props are Y-sorted + depth-scaled by their `anchorY`. New `src/scenes/street.ts`: a geometric city street (sky + hills, a house row with a central gap, a lower-third road branching into an L that recedes to the horizon, mid-layer lampposts, foreground bushes). `data/scene-config.ts`: dropped `demoScene` (scenes own their depth values now). `GameCanvas` mounts `streetScene`; overlay hint updated.
+**Why:** The "design a simple street scene" task — and the natural moment to realise the proposed data-driven scene manifest (populates the empty `src/scenes/`). The street exercises all three systems at once: layering, dynamic occlusion, depth scaling.
+**How:**
+- **Scene = factory `(screen) → SceneDefinition`.** Engine owns the generic "how" (3 layers, input, ticker, teardown, prop sort/scale); each scene owns the "what" (a background painter + a prop list). Adding a scene/prop is data, not engine edits.
+- **Two occlusion kinds on show:** the cube hides behind **foreground bushes** (top layer) and Y-sorts in front of / behind the **lampposts** (mid layer, `zIndex = anchorY`). Mid props are also depth-scaled by `anchorY`, so they sit in the character's perspective.
+- **Depth test = the L branch.** Walking up the receding side road (feet Y → `yFar` 0.5H) shrinks the cube to `scaleFar` 0.4; the horizontal road is the near (large) end.
+- **All geometric, flat Röki palette.** Sky is flat bands, **not** `FillGradient` — deliberately: a gradient-API slip would be a runtime error invisible to typecheck/build, and the canvas can't be seen from here.
+- **Verified:** format + typecheck + lint + build green; dev server transforms the new modules (HTTP 200). Visual correctness eyeballed in `pnpm dev`.
+**Follow-ups:**
+- Everything is laid out from `app.screen` at build time — **no resize re-layout** yet (backdrop, props, depth, hitArea). One resize pass should rebuild/rescale the scene together.
+- Still free movement — **walkable-area clamping** (keep the cube on the road/L) is the obvious next step now that there's a road to stay on.
+- Props are built inline in `street.ts`; if scenes multiply, consider a small shape/prop schema or shared prop helpers.
+
 ### 2026-06-13 — Scene layering + dynamic occlusion + depth scaling (2.5D)
 **What:** Turned the flat stage into a 3-layer 2.5D scene. Added `src/systems/depth.ts` (`DepthScale` + `depthScaleAt`) and `src/data/scene-config.ts` (per-scene depth fractions + `resolveDepthScale`). Reworked `engine/scene.ts` into background / interactive-mid / foreground layers with a placeholder backdrop, a Y-sortable crate, and a foreground pillar occluder. `entities/character.ts` now scales + Y-sorts by feet Y. Overlay hint updated. Also added **workflow step 5 "propose a commit message"** to `workflow.md` + `conventions.md` (Done means) + `AGENTS.md` (the loop summary).
 **Why:** Deliver the layering + dynamic-occlusion beat (the cube passes behind the foreground and hides) plus the depth illusion that makes it read — all keyed off the feet point step 2 set up.

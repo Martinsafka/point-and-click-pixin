@@ -1,10 +1,11 @@
 import type { DepthScale } from '../systems/depth'
 
 /**
- * Per-scene perspective config. Stored as fractions of screen height so it
+ * Per-scene perspective config, stored as fractions of screen height so it
  * survives different viewport sizes; resolved to pixels at scene-build time.
  * Perspective differs per background, so this is scene data, not hardcoded
- * (agent_docs/architecture.md, "Depth scaling").
+ * (agent_docs/architecture.md, "Depth scaling"). Concrete values live with each
+ * scene in src/scenes/.
  */
 export interface SceneConfig {
   /** Feet Y (fraction of screen height) nearest the camera — biggest. */
@@ -13,14 +14,6 @@ export interface SceneConfig {
   readonly yFarFrac: number
   readonly scaleNear: number
   readonly scaleFar: number
-}
-
-/** The single placeholder scene used by the prototype. */
-export const demoScene: SceneConfig = {
-  yNearFrac: 0.96,
-  yFarFrac: 0.5,
-  scaleNear: 1,
-  scaleFar: 0.45,
 }
 
 /** Resolve a scene's fractional depth config to concrete pixel values. */

@@ -1,17 +1,16 @@
 import type { CharacterView } from './character-view'
 import { facingFromVector, WALK_SPEED, type Facing, type MoveState } from '../systems/movement'
 import { depthScaleAt, type DepthScale } from '../systems/depth'
+import { clampToArea, type WalkArea } from '../systems/walkable'
 
 /**
  * One logical entity = mutable per-frame state + a swappable view. Every
  * fast-changing field below is a plain mutable number updated in the ticker —
- * never routed through Zustand, which is for discrete/meta state only
- * (agent_docs/architecture.md, "State — two kinds, never mixed").
+ * never routed through Zustand (agent_docs/architecture.md, "State").
  *
- * The character is positioned by its **feet** (x, y). That single logical point
- * drives everything 2.5D: the view sits on it, the depth scale comes from its Y,
- * and the Y-sort zIndex follows its Y — so the character draws in front of
- * nearer scenery and behind further scenery.
+ * The character is positioned by its **feet** (x, y): the view sits on it, the
+ * depth scale + Y-sort zIndex come from its Y, and movement is clamped to an
+ * optional walkable area so it can only travel where the scene allows.
  */
 export class Character {
   private x = 0
@@ -25,6 +24,7 @@ export class Character {
   constructor(
     private readonly view: CharacterView,
     private readonly depthScale: DepthScale,
+    private readonly walkable?: WalkArea,
   ) {
     this.syncView()
   }
@@ -36,18 +36,19 @@ export class Character {
 
   /** Place the character instantly (e.g. on scene entry), cancelling any walk. */
   setPosition(x: number, y: number): void {
-    this.x = x
-    this.y = y
+    this.moveTo(x, y)
     this.targetX = null
     this.targetY = null
     this.state = 'idle'
     this.syncView()
   }
 
-  /** Send the character walking toward a feet target, in view-local coords. */
+  /** Walk toward a feet target (view-local coords), clamped onto the walkable
+   *  area — clicking off-road heads to the nearest road point instead. */
   setTarget(x: number, y: number): void {
-    this.targetX = x
-    this.targetY = y
+    const t = this.walkable ? clampToArea(this.walkable, x, y) : { x, y }
+    this.targetX = t.x
+    this.targetY = t.y
   }
 
   /** Advance one frame. `deltaMS` is real elapsed milliseconds from the ticker. */
@@ -59,17 +60,14 @@ export class Character {
       const step = (this.speed * deltaMS) / 1000
 
       if (dist <= step || dist < 0.5) {
-        // Close enough — snap and stop.
-        this.x = this.targetX
-        this.y = this.targetY
+        this.moveTo(this.targetX, this.targetY)
         this.targetX = null
         this.targetY = null
         this.state = 'idle'
       } else {
-        this.x += (dx / dist) * step
-        this.y += (dy / dist) * step
         this.facing = facingFromVector(dx, dy)
         this.state = 'walk'
+        this.moveTo(this.x + (dx / dist) * step, this.y + (dy / dist) * step)
       }
     }
 
@@ -80,11 +78,22 @@ export class Character {
     this.view.destroy()
   }
 
+  /** Move to a point, clamped to the walkable area if one is set. */
+  private moveTo(x: number, y: number): void {
+    if (this.walkable) {
+      const c = clampToArea(this.walkable, x, y)
+      this.x = c.x
+      this.y = c.y
+    } else {
+      this.x = x
+      this.y = y
+    }
+  }
+
   private syncView(): void {
     const { container } = this.view
     container.position.set(this.x, this.y)
-    // 2.5D, both derived from the feet Y: scale with depth, and sort by depth so
-    // the character passes in front of nearer props and behind further ones.
+    // 2.5D, both from the feet Y: scale with depth, sort by depth.
     container.scale.set(depthScaleAt(this.y, this.depthScale))
     container.zIndex = this.y
     this.view.setPose(this.state, this.facing)
