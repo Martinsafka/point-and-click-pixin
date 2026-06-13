@@ -23,6 +23,12 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — Editor guide + "document editor features" rule
+**What:** New `agent_docs/editor_guide.md` — a usage guide for the visual editor: every panel / control (Scenes, Walkable, Layers, Interactables, Playtest, Document), the edit → test → publish loop, and reference tables (fit modes, Conditions, Effects). Added a standing rule to `workflow.md` (step 3, Execute), `AGENTS.md` (progressive-disclosure list), and `conventions.md` ("Done means"): any change under `src/editor/` must update the guide in the same task.
+**Why:** The editor has grown (scenes · walkable · layers · interactables · logic forms) and was undocumented; it's the eventual OSS product surface, so its usage docs can't lag behind the code. The user asked for the guide + a process rule to keep it current.
+**How:** Docs only, no code. The guide lives in `agent_docs/` (the project's doc home), written for the game author (it seeds the OSS user docs later) and listed in `AGENTS.md` so the agent reads it when touching `src/editor/`. Markdown is `.prettierignore`d, so no formatting churn.
+**Follow-ups:** keep it current per the new rule. **M4 step 2b** (item catalogue + recipe table) next — it'll add an "Items & recipes" section to the guide.
+
 ### 2026-06-13 — M4 step 2a: Condition / Effect / uses forms
 **What:** The editor authors per-interactable logic. New `editor/EffectList.tsx` (controlled `Effect[]` editor + shared `ItemSelect` / `SceneSelect`), `editor/ConditionEditor.tsx` (recursive `Condition` editor — hasItem / flag / visited leaves + all / any / not combinators), `editor/UsesList.tsx` (item → effects rules, reusing `EffectList`). `InteractableForm` gains `when` (gate), `effects`, and — for interact / exit — `uses`. `editor-store` gains `setInteractableWhen` / `setInteractableEffects` / `setInteractableUses`.
 **Why:** M4's logic step — the full condition/effect vocabulary that powers all gating is now authorable, so an `interact` does things, exits/objects gate on conditions, and "use item on object" puzzles (crank → panel → gem) are buildable in the editor.

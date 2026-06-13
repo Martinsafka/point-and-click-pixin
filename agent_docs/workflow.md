@@ -22,6 +22,9 @@ Follow this loop for **every** task. Don't skip analysis or the log.
 - Implement the agreed approach.
 - Keep changes focused on the task; don't refactor unrelated code without flagging.
 - Run typecheck + lint before considering it done.
+- **If the task adds or changes anything in `src/editor/`** (a panel, control, or
+  authoring flow), **update `agent_docs/editor_guide.md`** in the same task — the
+  editor is the OSS product surface, so its usage docs must never lag the code.
 
 ## 4. Log
 

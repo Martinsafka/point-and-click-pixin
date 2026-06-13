@@ -38,6 +38,7 @@ Pull the relevant doc(s) into context **only when the task needs them**:
 - Code style, naming, data-driven patterns, TypeScript rules, performance basics → `agent_docs/conventions.md`.
 - How to approach tasks (the loop) → `agent_docs/workflow.md`.
 - What's been done and why (running log — **append after every task**) → `agent_docs/dev_log.md`.
+- Using the visual editor (panels, controls, the edit → test → publish loop) → `agent_docs/editor_guide.md`. **Keep it updated whenever you add or change an editor feature.**
 
 ## Working rule
 
