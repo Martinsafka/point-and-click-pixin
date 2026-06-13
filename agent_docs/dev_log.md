@@ -23,6 +23,18 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M1: menu + audio  ← M1 / jam slice complete
+**What:** Finished M1. A React menu (`ui/Menu.tsx`): a corner button → panel with Resume / New Game (`store.reset`) / Mute. Audio (`src/audio/`): Howler playing placeholder sounds generated in code as WAV data URIs (`sounds.ts`) — a soft drone ambient loop + pickup/transition SFX — wired to the store (`audio.ts`): a blip when inventory grows, a chime on scene change; mute toggles `Howler.mute`. App renders the menu; styles added.
+**Why:** Close out M1 (UI + audio) — the 2-scene slice is now a self-contained, playable jam build.
+**How:**
+- **No audio assets yet, so synthesise them:** `sounds.ts` builds short 16-bit PCM WAVs (a seamless drone + faded blips), base64-encodes them as `data:` URIs, and Howler loads those. Real files swap into the same `Howl`s later. (~79 kB baked into the bundle → ~588 kB now; benign, externalise later.)
+- **Audio = side-effect of state** (architecture): `audio.ts` subscribes to the story store at module load and plays SFX on inventory-grew / scene-changed; the drone starts on the first `pointerdown` (browser autoplay policy).
+- **New Game** = `store.reset(gameDoc)`: the host re-mounts when currentScene changes; within the same scene the visibility subscription refreshes (pickables reappear) and the inventory clears. Minor: resetting while already on the start scene doesn't re-spawn the cube — a re-mount-on-reset is the clean fix.
+- **Verified:** typecheck + lint + build green; dev server transforms the new modules. Sound + menu are runtime — test in `pnpm dev` (click once to start the ambient).
+**Follow-ups:**
+- M1 done bar **optional stealth** ("only if core"). Footstep SFX deferred (per-frame, not state-driven). Audio data URIs → real files; re-mount-on-reset for a clean New Game.
+- Next milestone: **M2 — the visual editor** (the bigger goal), or stealth if wanted.
+
 ### 2026-06-13 — M1: inventory complete (combine + use-on-object)
 **What:** Finished the inventory verbs. `selectedItem` + `select`/`combine` actions in the store; an interactive inventory bar (click a slot to select, click another to combine via a recipe). Use-item-on-object: a selected item clicked on a world interactable runs its `uses` rule. Schema += `Recipe`/`recipes`, `UseRule`/`uses`. Pickables now gate on a derived `picked:<id>` flag (set on pickup), so a consumed item never reappears. Room demo: pick up gear + handle → combine → crank → use crank on the wall panel → gem.
 **Why:** Complete "Inventory: add + combine + use-on-object" — the inventory puzzle loop.

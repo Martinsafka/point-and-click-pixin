@@ -52,10 +52,11 @@ editor authors data for runtime systems, so those systems exist first.
 - [x] Interaction: click object → effect (React overlay + Zustand). _(Dialog
       runtime is M4; `startDialog` is a marker for now.)_
 - [x] Inventory: add + combine (data-driven recipes) + "use item on object".
-- [ ] UI: simple menu.
-- [ ] Audio: ambient loop + ≥1 SFX (Howler, triggered by state).
+- [x] UI: simple menu.
+- [x] Audio: ambient loop + ≥1 SFX (Howler, triggered by state).
 - [ ] Stealth detection — only if it's a core beat.
-- [ ] Author the 2–3 scene vertical slice → JAM BUILD DONE.
+- [x] Author the 2–3 scene vertical slice → JAM BUILD DONE. _(2 scenes, full
+      mechanics, placeholder art; stealth optional.)_
 
 ### M2 — Minimal editor (dev-only)  (start with what's painful by hand)
 
