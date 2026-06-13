@@ -240,3 +240,80 @@ body {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* Editor (dev-only, ?edit) */
+.editor {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  width: 100vw;
+  height: 100vh;
+}
+
+.editor__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: #0d1017;
+  border-right: 1px solid #1c2230;
+  overflow: auto;
+}
+
+.editor__title {
+  margin: 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+
+.editor__scenes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.editor__scene {
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  background: rgba(20, 26, 38, 0.85);
+  border: 1px solid #2a3650;
+  border-radius: 8px;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.editor__scene:hover {
+  border-color: #45568a;
+}
+
+.editor__scene--active {
+  border-color: #e8b552;
+}
+
+.editor__hint {
+  margin-top: auto;
+  font-size: 11px;
+  line-height: 1.5;
+  opacity: 0.5;
+}
+
+.editor__preview {
+  position: relative;
+  overflow: hidden;
+}
+
+.preview {
+  position: absolute;
+  inset: 0;
+}
+
+.preview canvas {
+  display: block;
+}

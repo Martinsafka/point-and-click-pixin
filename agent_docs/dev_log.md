@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M3 step 1: editor shell + scene panel + live preview
+**What:** Started the editor. `?edit` (DEV-only) routes `main.tsx` to a new `<Editor>` (`src/editor/`) instead of the game: a left **scene panel** (lists scenes from `gameDoc`, click to select) + a **live preview** of the selected scene. New `engine/mountPreview(app, scene)` renders a scene's layers (reusing the layer builder) + a static character at spawn, no gameplay input. `createPixiApp` now takes a `resizeTo` target so the preview canvas sizes to its pane.
+**Why:** M3's first chunk — the editor shell + read-only live preview, the surface every later editing tool hangs off.
+**How:**
+- **Dev-only routing:** `isEditMode()` = `import.meta.env.DEV && ?edit`; `main.tsx` renders `<Editor>` or `<App>`. Editor lives in `src/editor/` (the dev-only boundary). Excluding it from the prod bundle is a packaging task; for now it's bundled but never rendered in prod.
+- **Preview = visuals only:** `mountPreview` reuses the engine's `buildLayer` + band/zIndex/depth logic but skips input/ticker/interactables; conditional layers evaluate against an empty initial state. Small band/layer duplication with `mountScene` (left untouched; extract later).
+- **Per-scene preview:** `ScenePreview` mounts a Pixi app sized to its container, re-mounts on scene change (StrictMode-safe, like GameCanvas).
+- **Verified:** typecheck + lint + build green; dev server transforms the editor modules. Visual — open `…/?edit`.
+**Follow-ups (rest of M3):** scene add/delete; an editor store (mutate the `GameDoc`); upload SVG layers + reorder + role; draw the walkable polygon on the preview; save the doc (JSON / dev endpoint).
+
 ### 2026-06-13 — Roadmap: scheduled the extra features
 **What:** Promoted the candidate backlog into proper milestones at sensible spots: **M6 Movement & camera** (pathfinding A\*/walk-mesh · camera / scrolling scenes · scene-transition fades) and **M8 Cutscenes / scripted sequences**; folded **examine** + optional **verb/cursor** into M4, and **settings (volume)** + **i18n** into M11 (UI theming). Final layout is M0–M13; cross-references fixed.
 **Why:** User asked to schedule all the recommendations + nice-to-haves, not leave them in a backlog.

@@ -10,11 +10,11 @@ import { Application } from 'pixi.js'
  * This function owns renderer setup only; the scene contents (interactive layer,
  * character, input) are built separately in engine/scene.ts.
  */
-export async function createPixiApp(): Promise<Application> {
+export async function createPixiApp(resizeTo: HTMLElement | Window = window): Promise<Application> {
   const app = new Application()
 
   await app.init({
-    resizeTo: window,
+    resizeTo,
     background: '#10131a', // muted dark — Röki chiaroscuro base
     antialias: true,
     autoDensity: true,

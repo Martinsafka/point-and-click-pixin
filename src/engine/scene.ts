@@ -12,7 +12,7 @@ import { resolveDepthScale } from '../data/scene-config'
 import { depthScaleAt } from '../systems/depth'
 import type { WalkArea } from '../systems/walkable'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
-import { checkCondition, type StoryStore } from '../systems/conditions'
+import { checkCondition, type StoryState, type StoryStore } from '../systems/conditions'
 import type { Condition, LayerData, SceneBand, SceneData, SceneId } from '../data/schema'
 
 /** Viewport size in CSS pixels. */
@@ -170,6 +170,70 @@ export async function mountScene(
       app.stage.cursor = 'default'
       app.stage.sortableChildren = false
       character.destroy()
+      background.destroy({ children: true })
+      interactive.destroy({ children: true })
+      foreground.destroy({ children: true })
+    },
+  }
+}
+
+/**
+ * Renders a scene's layers for the editor preview — visuals at the initial story
+ * state, plus a static character placeholder at the spawn point. No gameplay
+ * input or ticker; it's a still picture of the authored scene.
+ */
+export async function mountPreview(app: Application, scene: SceneData): Promise<Scene> {
+  const screen: Size = { width: app.screen.width, height: app.screen.height }
+  const depthScale = resolveDepthScale(scene.depth, screen.height)
+  const state: StoryState = {
+    currentScene: scene.id,
+    flags: {},
+    inventory: [],
+    visited: [],
+    selectedItem: null,
+  }
+
+  app.stage.sortableChildren = true
+  const background = new Container()
+  background.zIndex = 0
+  const interactive = new Container()
+  interactive.zIndex = 10
+  interactive.sortableChildren = true
+  const foreground = new Container()
+  foreground.zIndex = 20
+  app.stage.addChild(background, interactive, foreground)
+
+  const bandFor = (band: SceneBand): Container =>
+    band === 'background' ? background : band === 'foreground' ? foreground : interactive
+
+  for (const layer of scene.layers) {
+    const display = await buildLayer(layer, screen)
+    if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
+      const anchorY = layer.anchorYFrac * screen.height
+      display.zIndex = anchorY
+      display.scale.set(depthScaleAt(anchorY, depthScale))
+    }
+    if (layer.when) display.visible = checkCondition(state, layer.when)
+    bandFor(layer.band).addChild(display)
+  }
+
+  // Static character placeholder at the spawn point (shows scale + position).
+  const view = createCubeView()
+  const feetX = scene.spawn.xFrac * screen.width
+  const feetY = scene.spawn.yFrac * screen.height
+  view.container.position.set(feetX, feetY)
+  view.container.scale.set(depthScaleAt(feetY, depthScale))
+  view.container.zIndex = feetY
+  view.setPose('idle', 'S')
+  interactive.addChild(view.container)
+
+  let torn = false
+  return {
+    destroy() {
+      if (torn) return
+      torn = true
+      app.stage.sortableChildren = false
+      view.destroy()
       background.destroy({ children: true })
       interactive.destroy({ children: true })
       foreground.destroy({ children: true })
