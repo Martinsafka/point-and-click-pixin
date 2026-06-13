@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M4 step 1: place interactables + draw hit-areas
+**What:** The editor can place interactables and draw their hit-areas. New `editor/HitAreaOverlay.tsx` (SVG/DOM overlay drawing every interactable's hit-area, colour-coded by kind, the selected one highlighted + labelled by id + vertices; draw mode = click to add points) and `editor/InteractableForm.tsx` (edit the selected one's id + essential field — pickable→item, exit→target scene — and draw/clear its hit-area). Editor gains an **Interactables** panel (+ Pick / + Use / + Exit, a list to select / delete). `editor-store` gains `addInteractable` / `removeInteractable` / `setHitArea` / `setInteractableId` / `setInteractableItem` / `setInteractableTo`.
+**Why:** M4 step 1 — author the clickable objects (the jam slice's were hand-coded). Pickable + exit are end-to-end testable now; `interact`'s effects come in step 2.
+**How:**
+- **Interactables are invisible** (just hit-areas for `pickInteractable`), so they live in the DOM overlay, not Pixi — their store actions **don't bump `revision`** (no preview re-mount), like `setWalkable`.
+- **Reused the walkable pattern:** SVG 0–1 viewBox + a click-catcher in draw mode → fractions. Walkable + hit-area overlays stack over the preview; **only one draw mode is active at a time** (mutually exclusive toggles), and both stay pointer-events-none when idle so the Pixi layer-drag underneath still works.
+- **Defaults are valid:** a centred box hit-area + a unique id (`<kind>`, `<kind>-2`…); pickable defaults to the first item, exit to another scene — so a freshly placed object isn't broken.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200 (game, `?edit`, both new modules). Placing / drawing / in-game behaviour are the user's browser check.
+**Follow-ups:** click a hit-area in the preview to select it; drag existing vertices; **M4 step 2** — Condition / Effect / `uses` forms + item catalogue + recipe table; then examine.
+
 ### 2026-06-13 — Fix: layer-drag grab offset (no jump on re-grab)
 **What:** Dragging an image layer no longer snaps its centre to the cursor on grab. `makeLayerDraggable` records the pointer→origin offset at `pointerdown` and moves with `position = pointer + offset`.
 **Why:** User report — grabbing a taller `width` strip made it jump (its centre leapt to the click point), so it looked like the saved Y position was lost / reset to default. The position *was* persisted (`setLayerPos` writes `yFrac`, re-mount reads it); the jump was the whole symptom, and it's worse for tall strips because the grab point sits farther from the centre.

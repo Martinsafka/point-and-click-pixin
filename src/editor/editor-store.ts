@@ -2,6 +2,8 @@ import { createStore } from 'zustand/vanilla'
 import { useStore } from 'zustand'
 import type {
   GameDoc,
+  InteractableData,
+  ItemId,
   LayerData,
   LayerFit,
   LayerRole,
@@ -14,7 +16,8 @@ import { gameDoc } from '../data/game'
 /**
  * The editor's working copy of the `GameDoc` — a mutable clone of the authored
  * game. The editor edits this; the running game reads its own document. `revision`
- * bumps on every structural change so the live preview re-mounts.
+ * bumps only on changes the Pixi preview must re-mount for (layers); walkable,
+ * hit-areas and interactables are drawn in the DOM overlay, so they don't bump it.
  */
 interface EditorStore {
   doc: GameDoc
@@ -24,8 +27,7 @@ interface EditorStore {
   addScene(): void
   deleteScene(id: SceneId): void
   setDoc(doc: GameDoc): void
-  /** Replace a scene's walkable polygon (fractions). Doesn't bump `revision`, so
-   *  the live preview isn't re-mounted while drawing. */
+  /** Replace a scene's walkable polygon (fractions). No `revision` bump. */
   setWalkable(id: SceneId, polygon: number[]): void
   /** Append an uploaded image as a full-screen background layer (a backdrop). */
   addImageLayer(id: SceneId, src: string): void
@@ -38,6 +40,13 @@ interface EditorStore {
   /** Set an image layer's position (dragged in the preview). No `revision` bump —
    *  the dragged sprite already moved; this only records the fractions. */
   setLayerPos(id: SceneId, index: number, xFrac: number, yFrac: number): void
+  // Interactables (M4) — invisible hit areas in the DOM overlay; no `revision` bump.
+  addInteractable(id: SceneId, kind: InteractableData['kind']): void
+  removeInteractable(id: SceneId, index: number): void
+  setHitArea(id: SceneId, index: number, polygon: number[]): void
+  setInteractableId(id: SceneId, index: number, value: string): void
+  setInteractableItem(id: SceneId, index: number, item: ItemId): void
+  setInteractableTo(id: SceneId, index: number, to: SceneId): void
 }
 
 function blankScene(id: SceneId): SceneData {
@@ -59,9 +68,17 @@ function uniqueSceneId(doc: GameDoc, base: string): SceneId {
   return `${base}-${n}`
 }
 
+function uniqueInteractableId(taken: readonly InteractableData[], base: string): string {
+  const ids = new Set(taken.map((it) => it.id))
+  if (!ids.has(base)) return base
+  let n = 2
+  while (ids.has(`${base}-${n}`)) n += 1
+  return `${base}-${n}`
+}
+
 export const editorStore = createStore<EditorStore>((set, get) => {
   /** Replace one scene immutably. `remount` bumps `revision` so the preview
-   *  re-mounts (needed when the change is visual). */
+   *  re-mounts (needed when the change is visual in the Pixi canvas). */
   const patchScene = (id: SceneId, patch: Partial<SceneData>, remount: boolean) => {
     const { doc, revision } = get()
     const scene = doc.scenes[id]
@@ -72,6 +89,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
   }
   const mapLayers = (id: SceneId, fn: (layers: LayerData[]) => LayerData[], remount = true) =>
     patchScene(id, { layers: fn(get().doc.scenes[id].layers) }, remount)
+  const mapInteractables = (id: SceneId, fn: (its: InteractableData[]) => InteractableData[]) =>
+    patchScene(id, { interactables: fn(get().doc.scenes[id].interactables) }, false)
 
   return {
     doc: structuredClone(gameDoc),
@@ -125,6 +144,37 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         id,
         (ls) => ls.map((l, i) => (i === index && l.kind === 'image' ? { ...l, xFrac, yFrac } : l)),
         false,
+      ),
+    addInteractable: (id, kind) => {
+      const { doc } = get()
+      const scene = doc.scenes[id]
+      const newId = uniqueInteractableId(scene.interactables, kind)
+      const hitArea = [0.45, 0.45, 0.55, 0.45, 0.55, 0.6, 0.45, 0.6]
+      let it: InteractableData
+      if (kind === 'pickable') {
+        it = { kind, id: newId, item: Object.keys(doc.items)[0] ?? '', hitArea }
+      } else if (kind === 'exit') {
+        it = { kind, id: newId, to: Object.keys(doc.scenes).find((s) => s !== id) ?? id, hitArea }
+      } else {
+        it = { kind, id: newId, hitArea, effects: [] }
+      }
+      mapInteractables(id, (its) => [...its, it])
+    },
+    removeInteractable: (id, index) =>
+      mapInteractables(id, (its) => its.filter((_, i) => i !== index)),
+    setHitArea: (id, index, polygon) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) => (i === index ? { ...it, hitArea: polygon } : it)),
+      ),
+    setInteractableId: (id, index, value) =>
+      mapInteractables(id, (its) => its.map((it, i) => (i === index ? { ...it, id: value } : it))),
+    setInteractableItem: (id, index, item) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) => (i === index && it.kind === 'pickable' ? { ...it, item } : it)),
+      ),
+    setInteractableTo: (id, index, to) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) => (i === index && it.kind === 'exit' ? { ...it, to } : it)),
       ),
   }
 })

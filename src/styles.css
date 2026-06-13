@@ -489,3 +489,179 @@ body {
   pointer-events: auto;
   cursor: crosshair;
 }
+
+/* Interactables panel (editor) */
+.editor__interactables {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.intr-row {
+  display: flex;
+  gap: 4px;
+}
+
+.intr-row__select {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  text-align: left;
+  background: rgba(20, 26, 38, 0.85);
+  border: 1px solid #2a3650;
+  border-left-width: 3px;
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.intr-row__select--pickable {
+  border-left-color: #57c878;
+}
+.intr-row__select--interact {
+  border-left-color: #e8b552;
+}
+.intr-row__select--exit {
+  border-left-color: #5a8cff;
+}
+.intr-row__select--active {
+  border-color: #e8b552;
+}
+
+.intr-row__kind {
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  opacity: 0.55;
+}
+
+.intr-row__del {
+  width: 30px;
+  background: rgba(20, 26, 38, 0.85);
+  border: 1px solid #2a3650;
+  border-radius: 6px;
+  color: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.intr-row__del:hover {
+  border-color: #c8576a;
+}
+
+.intr-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(20, 26, 38, 0.5);
+  border: 1px solid #1c2230;
+  border-radius: 6px;
+}
+
+.intr-form__field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.intr-form__field > span {
+  width: 30px;
+  opacity: 0.55;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.intr-form__field input,
+.intr-form__field select {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  background: rgba(11, 13, 18, 0.85);
+  border: 1px solid #2a3650;
+  border-radius: 5px;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+}
+
+.intr-form__note {
+  margin: 0;
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+/* Hit-area overlay (editor) */
+.hitarea-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hitarea-overlay__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hitarea-overlay__svg polygon {
+  fill-opacity: 0.12;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.hitarea--pickable {
+  fill: #57c878;
+  stroke: #57c878;
+}
+.hitarea--interact {
+  fill: #e8b552;
+  stroke: #e8b552;
+}
+.hitarea--exit {
+  fill: #5a8cff;
+  stroke: #5a8cff;
+}
+.hitarea--selected {
+  fill-opacity: 0.26;
+  stroke-width: 2.5;
+}
+
+.hitarea-overlay__label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 1px 5px;
+  font-size: 10px;
+  background: rgba(6, 9, 14, 0.72);
+  border-radius: 3px;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+.hitarea-overlay__label--selected {
+  opacity: 1;
+  outline: 1px solid #e8b552;
+}
+
+.hitarea-overlay__vertex {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #0b0d12;
+}
+
+.hitarea-overlay__catcher {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  cursor: crosshair;
+}

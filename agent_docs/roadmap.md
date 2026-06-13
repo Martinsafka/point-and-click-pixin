@@ -86,7 +86,9 @@ cutscenes, audio, atmosphere, theming) → packaging.
 
 ### M4 — Editor: interactables, items, recipes, exits
 
-- [ ] Place pickable / interact / door objects; draw hit areas.
+- [x] Place pickable / interact / exit objects; draw hit areas. _(+ id & the
+      essential field: pickable→item, exit→target scene. Click-to-select +
+      vertex editing are follow-ups.)_
 - [ ] Forms for Condition + Effect + `uses`; item catalogue + recipe table.
 - [ ] **Examine** — "look at" text for items / objects.
 - [ ] _(optional)_ **Verb / cursor system** — look / use / talk verbs + a hover
