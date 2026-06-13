@@ -99,7 +99,7 @@ cutscenes, audio, atmosphere, theming) → packaging.
 
 M4 additions (raised after the core was done):
 
-- [ ] **Inspect** interactable (4th kind) — a plain click makes the protagonist
+- [x] **Inspect** interactable (4th kind) — a plain click makes the protagonist
       "speak" (text + audio); its own cursor (eye emoji / uploaded icon).
 - [x] Editor QoL: collapsible **accordion** sections.
 - [x] Editor QoL: **resizable** side panel (drag to widen).
@@ -134,8 +134,16 @@ M4 additions (raised after the core was done):
         with holes/obstacles); replaces straight-line + clamp-and-slide so the
         character routes around obstacles.
   - [ ] **Camera** — for scenes larger than the viewport: a world transform that
-        follows the character (bounds + dead-zone); depth / Y-sort / input already
-        work in world space.
+        follows the character. The viewport **centres on the character** (especially
+        on smaller resolutions) and scrolls with them as they move sideways (bounds
+        + dead-zone). Depth / Y-sort / input already work in world space.
+    - ⚠️ **Overlays must follow the world, not the window.** Walkable, hit-areas
+      and every other overlay (editor + runtime) are currently positioned by
+      *screen* fractions; under a camera they must track the world/camera transform
+      and **must not resize relative to the window** — they pan with the scene, not
+      the viewport.
+    - ⚠️ **Scene / window resize is unresolved** — how the world maps to varying
+      viewport sizes (and the overlay coordinate space) must be worked out here.
   - [ ] **Scene transitions** — fade out/in on `goTo` (covers the async mount; no
         hard cut / blank frame).
 - Editor:

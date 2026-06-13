@@ -101,11 +101,12 @@ where the layer currently sits.
 ### Interactables · _N_
 
 The clickable objects. Shown in the preview as coloured hit-areas, labelled by id:
-**green = pickable**, **amber = interact (use)**, **blue = exit**; the selected
-one is highlighted.
+**green = pickable**, **amber = interact (use)**, **blue = exit**, **teal = look
+(inspect)**; the selected one is highlighted.
 
-- **+ Pick / + Use / + Exit** — add an object (with a centred default hit-area and
-  a unique id). Pickable defaults to the first item, exit to another scene.
+- **+ Pick / + Use / + Exit / + Look** — add an object (with a centred default
+  hit-area and a unique id). Pickable defaults to the first item, exit to another
+  scene; **Look** (inspect) makes the protagonist comment.
 - Click a row to **select**; **✕** deletes it.
 
 The **selected object's form**:
@@ -115,9 +116,11 @@ The **selected object's form**:
 | **id**        | all            | Unique id (used by gating, e.g. the `picked:<id>` flag). Keep unique.|
 | **item**      | pickable       | Which inventory item it gives when picked up.                        |
 | **to**        | exit           | The scene it leads to.                                               |
-| **look**      | all            | "Look at" text shown on a plain click (no item selected).           |
+| **text**      | inspect        | What the protagonist says when clicked.                             |
+| **audio**     | inspect        | Optional uploaded voice clip played with the text.                  |
+| **look**      | pick / use / exit | "Look at" text shown on a plain click (no item selected).        |
 | **when**      | all            | A Condition that gates it ("(always)" = no gate). See Conditions.   |
-| **effects**   | all            | Effects run when clicked. See Effects.                              |
+| **effects**   | pick / use / exit | Effects run when clicked. See Effects.                           |
 | **uses**      | interact, exit | "Use item on object" rules: an item + the effects of using it.      |
 | **Hit-area**  | all            | **Draw** (click the preview to add points) / **Clear**.             |
 
@@ -150,9 +153,9 @@ matching items in the inventory consumes both and yields the output.
 ### Cursors (global)
 
 The in-game pointer changes by what it's over: **walk** (empty / floor),
-**pickable**, **interact**, or **exit**. Upload an icon per context (SVG/PNG), or
-leave it for the emoji fallback (👣 / ✋ / ⚙️ / 🚪) shown in the preview. Over the
-game UI the normal pointer returns.
+**pickable**, **interact**, **exit**, or **inspect**. Upload an icon per context
+(SVG/PNG), or leave it for the emoji fallback (👣 / ✋ / ⚙️ / 🚪 / 👁) shown in the
+preview. Over the game UI the normal pointer returns.
 
 ### Playtest
 

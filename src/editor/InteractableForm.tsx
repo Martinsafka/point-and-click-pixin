@@ -1,3 +1,4 @@
+import { type ChangeEvent } from 'react'
 import { editorStore } from './editor-store'
 import type { InteractableData, ItemDef, ItemId, SceneId } from '../data/schema'
 import { EffectList } from './EffectList'
@@ -15,9 +16,10 @@ interface Props {
 }
 
 /**
- * Edits the selected interactable: id + essential field (pickable → item, exit →
- * target scene), the `when` gate, its `effects`, and (interact / exit) item-`uses`
- * rules, plus its hit-area (draw / clear).
+ * Edits the selected interactable: id + the kind-specific fields (pickable → item,
+ * exit → target, inspect → protagonist text + voice), plus the `when` gate, the
+ * `examine` text, `effects`, item-`uses`, and the hit-area. Inspect is the "look /
+ * comment" kind — text + optional audio, no effects/uses.
  */
 export function InteractableForm({
   sceneId,
@@ -30,6 +32,16 @@ export function InteractableForm({
 }: Props) {
   const s = () => editorStore.getState()
   const points = interactable.hitArea.length / 2
+  const isInspect = interactable.kind === 'inspect'
+
+  const onAudio = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => s().setInteractableAudio(sceneId, index, String(reader.result))
+    reader.readAsDataURL(file)
+  }
 
   return (
     <div className="intr-form">
@@ -74,14 +86,45 @@ export function InteractableForm({
         </label>
       )}
 
-      <label className="intr-form__field">
-        <span>look</span>
-        <input
-          value={interactable.examine ?? ''}
-          placeholder="examine text…"
-          onChange={(e) => s().setInteractableExamine(sceneId, index, e.target.value)}
-        />
-      </label>
+      {interactable.kind === 'inspect' && (
+        <>
+          <label className="intr-form__field intr-form__field--col">
+            <span>text</span>
+            <input
+              value={interactable.text ?? ''}
+              placeholder="what the character says…"
+              onChange={(e) => s().setInteractableText(sceneId, index, e.target.value)}
+            />
+          </label>
+          <div className="intr-form__field">
+            <span>audio</span>
+            <label className="editor__import">
+              {interactable.audio ? 'Change' : '+ Audio'}
+              <input type="file" accept="audio/*" hidden onChange={onAudio} />
+            </label>
+            {interactable.audio && (
+              <button
+                type="button"
+                className="logic__del"
+                onClick={() => s().setInteractableAudio(sceneId, index, undefined)}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </>
+      )}
+
+      {!isInspect && (
+        <label className="intr-form__field">
+          <span>look</span>
+          <input
+            value={interactable.examine ?? ''}
+            placeholder="examine text…"
+            onChange={(e) => s().setInteractableExamine(sceneId, index, e.target.value)}
+          />
+        </label>
+      )}
 
       <div className="intr-form__field intr-form__field--col">
         <span>when</span>
@@ -93,14 +136,16 @@ export function InteractableForm({
         />
       </div>
 
-      <EffectList
-        effects={interactable.effects ?? []}
-        onChange={(e) => s().setInteractableEffects(sceneId, index, e)}
-        items={items}
-        sceneIds={sceneIds}
-      />
+      {!isInspect && (
+        <EffectList
+          effects={interactable.effects ?? []}
+          onChange={(e) => s().setInteractableEffects(sceneId, index, e)}
+          items={items}
+          sceneIds={sceneIds}
+        />
+      )}
 
-      {interactable.kind !== 'pickable' && (
+      {(interactable.kind === 'interact' || interactable.kind === 'exit') && (
         <UsesList
           uses={interactable.uses ?? []}
           onChange={(u) => s().setInteractableUses(sceneId, index, u)}

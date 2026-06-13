@@ -9,6 +9,7 @@ const EMOJI: Record<CursorKind, string> = {
   pickable: '✋',
   interact: '⚙️',
   exit: '🚪',
+  inspect: '👁',
 }
 
 /**

@@ -63,6 +63,8 @@ interface EditorStore {
   removeRecipe(index: number): void
   setRecipe(index: number, recipe: Recipe): void
   setInteractableExamine(id: SceneId, index: number, examine: string): void
+  setInteractableText(id: SceneId, index: number, text: string): void
+  setInteractableAudio(id: SceneId, index: number, audio: string | undefined): void
   setItemExamine(id: ItemId, examine: string): void
   setItemIcon(id: ItemId, icon: string | undefined): void
   setCursorIcon(kind: CursorKind, icon: string | undefined): void
@@ -183,6 +185,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         it = { kind, id: newId, item: Object.keys(doc.items)[0] ?? '', hitArea }
       } else if (kind === 'exit') {
         it = { kind, id: newId, to: Object.keys(doc.scenes).find((s) => s !== id) ?? id, hitArea }
+      } else if (kind === 'inspect') {
+        it = { kind, id: newId, hitArea, text: '' }
       } else {
         it = { kind, id: newId, hitArea, effects: [] }
       }
@@ -237,6 +241,14 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       patchDoc({ recipes: (get().doc.recipes ?? []).map((r, i) => (i === index ? recipe : r)) }),
     setInteractableExamine: (id, index, examine) =>
       mapInteractables(id, (its) => its.map((it, i) => (i === index ? { ...it, examine } : it))),
+    setInteractableText: (id, index, text) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) => (i === index && it.kind === 'inspect' ? { ...it, text } : it)),
+      ),
+    setInteractableAudio: (id, index, audio) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) => (i === index && it.kind === 'inspect' ? { ...it, audio } : it)),
+      ),
     setItemExamine: (id, examine) => {
       const { items } = get().doc
       patchDoc({ items: { ...items, [id]: { ...items[id], examine } } })

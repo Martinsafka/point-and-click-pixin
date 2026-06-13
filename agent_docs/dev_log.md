@@ -23,6 +23,17 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M4 #1: inspect interactable (protagonist text + voice)
+**What:** A 4th interactable kind, **inspect** — a plain click makes the protagonist "speak": its `text` shows as the narration line + an optional uploaded `audio` voice clip plays. New `CursorKind 'inspect'` (👁 emoji / uploaded icon). Schema: an `inspect` variant (`{ id, hitArea, text?, audio?, when? }`). Runtime: `scene.ts` walks to it, then `say(text)` + plays the clip; `audio.ts` gains `playClip(src)` (Howler; format derived from the `data:audio/<x>` mime, Howls cached). Editor: a **+ Look** button, an inspect form (text + audio upload), a teal hit-area, and the inspect cursor in `CursorEditor` / `GameCursor`. Guide updated.
+**Why:** The user's important M4 addition — a "look at / comment" object with the protagonist's voice, distinct from the silent `examine` text.
+**How:**
+- **Audio via dynamic import:** `scene.ts` does `import('../audio/audio').then((m) => m.playClip(...))` only when a clip fires. `audio.ts`'s only static importer is `Menu.tsx` (game-only), so the **editor preview never loads audio** (no stray ambient) — the dynamic import keeps the engine's static graph audio-free too.
+- **inspect has no effects/uses/examine** — just text + audio (the user wanted "just dialog"). `effectsFor` / `effectsForUse` gained inspect cases; the form gates the other fields off; the `say(examine)` line is now guarded to non-inspect kinds (a first typecheck caught `hit.examine` on the inspect variant).
+- **Cursor:** adding `inspect` to `CursorKind` forced both EMOJI maps to list it (👁) — enforced by TS.
+- Dialogue here is a single line + a clip; the full branching dialogue runtime is still **M7**.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200. Authoring + in-game speech / voice is the user's browser check.
+**Follow-ups:** **#5 pickable** deliberate-click pickup is the last M4 addition; branching dialogue + voice-while-speaking is M7.
+
 ### 2026-06-13 — M4 polish: accordion sections, resizable panel, cursor fix
 **What:** Editor QoL + a cursor bug fix. (1) Editor sections are now **collapsible** (a `Section` wrapper over native `<details>`, default open). (2) The side panel is **drag-resizable** (a splitter between panel + preview; `panelWidth` state; flex layout). (3) **Cursor fix:** the native pointer still showed under the custom icon — `mountScene` set `app.stage.cursor = 'pointer'`, which Pixi writes onto `canvas.style.cursor`, overriding the CSS `cursor: none`. Set it to `'none'`; the custom icon is offset up-left of the pointer so it's not on the click point.
 **Why:** The editor grew long (9 sections) → collapsing + widening help; and the user reported the native cursor showing under the icon.

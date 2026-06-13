@@ -365,6 +365,7 @@ body {
 
 .editor__toolbar {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
@@ -618,6 +619,9 @@ body {
 }
 .intr-row__select--exit {
   border-left-color: #5a8cff;
+}
+.intr-row__select--inspect {
+  border-left-color: #4fd1c5;
 }
 .intr-row__select--active {
   border-color: #e8b552;
@@ -925,6 +929,10 @@ body {
 .hitarea--exit {
   fill: #5a8cff;
   stroke: #5a8cff;
+}
+.hitarea--inspect {
+  fill: #4fd1c5;
+  stroke: #4fd1c5;
 }
 .hitarea--selected {
   fill-opacity: 0.26;

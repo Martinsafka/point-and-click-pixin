@@ -138,6 +138,16 @@ export type InteractableData =
       effects?: Effect[]
       uses?: UseRule[]
     }
+  | {
+      kind: 'inspect'
+      id: string
+      hitArea: Polygon
+      /** What the protagonist says when this is clicked. */
+      text?: string
+      /** Optional voice clip (audio URL) played alongside the text. */
+      audio?: string
+      when?: Condition
+    }
 
 export interface SceneData {
   id: SceneId
@@ -155,7 +165,7 @@ export interface SceneData {
  * Pointer cursor per interaction context — an optional uploaded icon (image URL),
  * else an emoji fallback shown by the runtime.
  */
-export type CursorKind = 'walk' | 'pickable' | 'interact' | 'exit'
+export type CursorKind = 'walk' | 'pickable' | 'interact' | 'exit' | 'inspect'
 
 /** The whole authored game. */
 export interface GameDoc {

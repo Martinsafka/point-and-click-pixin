@@ -199,6 +199,9 @@ export function Editor() {
             <button type="button" onClick={() => addInteractable('exit')}>
               + Exit
             </button>
+            <button type="button" onClick={() => addInteractable('inspect')}>
+              + Look
+            </button>
           </div>
           {scene && scene.interactables.length > 0 && (
             <ul className="editor__interactables">

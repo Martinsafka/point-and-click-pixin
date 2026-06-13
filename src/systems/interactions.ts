@@ -23,12 +23,14 @@ export function effectsFor(it: InteractableData): Effect[] {
       return it.effects
     case 'exit':
       return [{ kind: 'goTo', scene: it.to }, ...(it.effects ?? [])]
+    case 'inspect':
+      return []
   }
 }
 
 /** The Effects of using `item` on an interactable, or undefined if no rule. */
 export function effectsForUse(it: InteractableData, item: ItemId): Effect[] | undefined {
-  if (it.kind === 'pickable') return undefined
+  if (it.kind === 'pickable' || it.kind === 'inspect') return undefined
   return it.uses?.find((u) => u.item === item)?.effects
 }
 

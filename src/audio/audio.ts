@@ -22,6 +22,24 @@ export function isMuted(): boolean {
   return muted
 }
 
+/**
+ * Play an arbitrary clip (e.g. an uploaded inspect voice) from a URL / data-URL.
+ * Howls are cached by `src` so repeated plays don't re-decode. The format is
+ * derived from a `data:audio/<x>` mime so Howler can decode data-URIs.
+ */
+const clips = new Map<string, Howl>()
+export function playClip(src: string): void {
+  let howl = clips.get(src)
+  if (!howl) {
+    const mime = /^data:audio\/([a-z0-9]+)/i.exec(src)?.[1]?.toLowerCase()
+    const format = mime === 'mpeg' ? 'mp3' : mime
+    howl = new Howl({ src: [src], format: format ? [format] : undefined, volume: 0.8 })
+    clips.set(src, howl)
+  }
+  howl.stop()
+  howl.play()
+}
+
 // SFX as a side-effect of discrete state changes on the single story store.
 let prev = storyStore.getState()
 storyStore.subscribe(() => {

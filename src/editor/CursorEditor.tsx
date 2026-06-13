@@ -2,12 +2,13 @@ import { type ChangeEvent } from 'react'
 import { editorStore } from './editor-store'
 import type { CursorKind, GameDoc } from '../data/schema'
 
-const KINDS: CursorKind[] = ['walk', 'pickable', 'interact', 'exit']
+const KINDS: CursorKind[] = ['walk', 'pickable', 'interact', 'exit', 'inspect']
 const EMOJI: Record<CursorKind, string> = {
   walk: '👣',
   pickable: '✋',
   interact: '⚙️',
   exit: '🚪',
+  inspect: '👁',
 }
 
 /**

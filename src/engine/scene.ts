@@ -167,7 +167,10 @@ export async function mountScene(
     const hit = pickInteractable(scene.interactables, local.x, local.y, screen, state)
     const selected = state.selectedItem
     if (selected) store.getState().select(null) // any click consumes the selection
-    if (hit?.examine && !selected) store.getState().say(hit.examine) // "look at" flavour
+    // "look at" flavour (inspect has its own `text`, handled below).
+    if (hit && hit.kind !== 'inspect' && hit.examine && !selected) {
+      store.getState().say(hit.examine)
+    }
 
     // Using the selected item on the object (if it has a matching rule).
     if (hit && selected) {
@@ -177,8 +180,16 @@ export async function mountScene(
         return
       }
     }
-    // Otherwise: walk to the interactable and run its plain effects, or just walk.
-    if (hit) {
+    // Walk to the interactable, then: for `inspect` the protagonist comments
+    // (text + optional voice), otherwise run its effects. Or just walk.
+    if (hit && hit.kind === 'inspect') {
+      const { text, audio } = hit
+      character.setTarget(local.x, local.y, () => {
+        if (text) store.getState().say(text)
+        // Dynamic import keeps audio out of the editor preview's module graph.
+        if (audio) void import('../audio/audio').then((m) => m.playClip(audio))
+      })
+    } else if (hit) {
       const effects = effectsFor(hit)
       character.setTarget(local.x, local.y, () => store.getState().run(effects))
     } else {
