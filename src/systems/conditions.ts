@@ -1,0 +1,61 @@
+import type { Condition, Effect, FlagId, ItemId, SceneId } from '../data/schema'
+
+/**
+ * Live discrete state of a playthrough — what Conditions read and Effects mutate.
+ * The Zustand store (src/state/story.ts) holds the canonical instance; these
+ * functions are pure so they're trivially testable and usable outside React.
+ */
+export interface StoryState {
+  currentScene: SceneId
+  flags: Record<FlagId, boolean>
+  inventory: ItemId[]
+  visited: SceneId[]
+}
+
+/** Evaluate a Condition against the current story state. */
+export function checkCondition(state: StoryState, cond: Condition): boolean {
+  switch (cond.kind) {
+    case 'hasItem':
+      return state.inventory.includes(cond.item)
+    case 'flag':
+      return (state.flags[cond.flag] ?? false) === (cond.value ?? true)
+    case 'visited':
+      return state.visited.includes(cond.scene)
+    case 'all':
+      return cond.of.every((c) => checkCondition(state, c))
+    case 'any':
+      return cond.of.some((c) => checkCondition(state, c))
+    case 'not':
+      return !checkCondition(state, cond.of)
+  }
+}
+
+/** Apply one Effect, returning a new StoryState (immutable update). */
+export function applyEffect(state: StoryState, effect: Effect): StoryState {
+  switch (effect.kind) {
+    case 'setFlag':
+      return { ...state, flags: { ...state.flags, [effect.flag]: effect.value ?? true } }
+    case 'giveItem':
+      return state.inventory.includes(effect.item)
+        ? state
+        : { ...state, inventory: [...state.inventory, effect.item] }
+    case 'takeItem':
+      return { ...state, inventory: state.inventory.filter((i) => i !== effect.item) }
+    case 'goTo':
+      return {
+        ...state,
+        currentScene: effect.scene,
+        visited: state.visited.includes(effect.scene)
+          ? state.visited
+          : [...state.visited, effect.scene],
+      }
+    case 'startDialog':
+      // Dialog runtime arrives in M4; for now this is an inert marker.
+      return state
+  }
+}
+
+/** Apply a sequence of Effects left to right. */
+export function applyEffects(state: StoryState, effects: readonly Effect[]): StoryState {
+  return effects.reduce(applyEffect, state)
+}

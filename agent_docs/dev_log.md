@@ -23,6 +23,18 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M0 (part 1): data schema + condition/effect + story store
+**What:** Started the roadmap's M0 (data-driven foundation). Added `agent_docs/roadmap.md` (the milestone plan) and `workflow.md` step 6 ("point to the next step"). New code: `src/data/schema.ts` (serializable `GameDoc` — scenes, layers, interactables, items, flags + the `Condition`/`Effect` vocabulary), `src/systems/conditions.ts` (`StoryState` + pure `checkCondition`/`applyEffect`/`applyEffects`), `src/state/story.ts` (vanilla Zustand store wrapping them).
+**Why:** The schema is the project's public API — the engine, the editor, and the future npm package all sit on it. Schema-first means M1 gameplay and the M2+ editor slot on with no refactor.
+**How:**
+- **Additive only** — no working code touched, so the street game still runs. `schema.ts` is a leaf (no internal imports). Note: `SceneBand` is for now defined in **both** `schema.ts` and `engine/scene.ts` — a deliberate temporary dup, deduped when the engine consumes `SceneData` (next M0 step).
+- **One logic vocabulary.** `Condition` (hasItem/flag/visited/all/any/not) + `Effect` (setFlag/giveItem/takeItem/goTo/startDialog) are serializable data; the evaluator is pure + immutable. All gating (exits, interactions, dialog, NPCs, recipes) will route through it.
+- **Vanilla Zustand store** (`createStoryStore(doc)`) so engine/Pixi can read/write outside React (getState/subscribe); React binds via a `useStory` hook in M1. Holds only discrete state.
+- **Verified:** typecheck + lint + build green; Node test of `conditions.ts` — 15 checks (conditions + effects + immutability) all pass. Store covered by typecheck (Node can't resolve the extensionless internal imports the bundler handles, so it's not in the Node test).
+**Follow-ups (rest of M0):**
+- Port the street scene to `SceneData` + a builder registry for `builtin` (geometric) layers; make `mountScene` consume `SceneData`; dedupe `SceneBand`.
+- Add a React `useStory` hook and provide the store to the app.
+
 ### 2026-06-13 — Walkable area, layered scenes + swap, street polish
 **What:** Three things on the street. (1) **Walkable area** — new `src/systems/walkable.ts` (`WalkArea` polygon, `containsPoint`, `clampToArea`); `Character` takes an optional area and clamps both the click target and every step, so the cube only travels on the road. (2) **Scene system v2** — `engine/scene.ts` mounts a `SceneDefinition` of stacked `SceneLayer[]` (band + display + optional anchorY); added `createSceneHost(app)` (swap scenes), `imageLayer(url, band)` (load an SVG/image as a Sprite layer — the art path), async `mountScene`/`SceneFactory`; new `scenes/index.ts` registry. `street.ts` rebuilt as layers (sky / land / buildings / road + lamppost/bush). `GameCanvas` mounts via the host. (3) **Polish** — horizon raised to the top third; sky is now clear night-blue bands (was a near-black "void").
 **Why:** Requested: keep the player on the road, fix the dead black sky band, and prepare easy scene swap/creation toward SVG-composed scenes (parts layering).

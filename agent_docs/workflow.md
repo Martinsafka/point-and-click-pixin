@@ -32,3 +32,7 @@ Follow this loop for **every** task. Don't skip analysis or the log.
 
 - After logging, **propose a commit message** for the change — a concise subject plus a short body covering what/why. Match the repo's existing commit style.
 - **Don't run `git commit` or `git push` unless explicitly asked.** Propose the message text; the user commits.
+
+## 6. Point to the next step
+
+- When a task completes a milestone in `agent_docs/roadmap.md` — or a meaningful chunk of one — finish by **proposing which milestone/phase to tackle next**, and **tick the roadmap's checkboxes** for what's done.
