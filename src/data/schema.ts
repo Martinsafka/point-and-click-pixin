@@ -2,8 +2,10 @@
 // edits. This is the project's public schema (eventual npm API): keep it minimal
 // and extend via discriminated-union `kind`s, which stays backward-compatible.
 //
-// Runtime story state (flags/inventory in flight) lives in src/state/story.ts;
-// the evaluator for Condition/Effect lives in src/systems/conditions.ts.
+// Coordinate convention: ALL positions/polygons are FRACTIONS of the screen
+// (0..1), so a document is resolution-independent; the engine resolves them to
+// pixels at mount time. Runtime story state lives in src/state/story.ts; the
+// Condition/Effect evaluator in src/systems/conditions.ts.
 
 export type SceneId = string
 export type ItemId = string
@@ -16,7 +18,7 @@ export type SceneBand = 'background' | 'mid' | 'foreground'
 /** What a layer is for beyond drawing — drives editor tooling + runtime roles. */
 export type LayerRole = 'scenery' | 'occluder' | 'floor'
 
-/** Flat polygon [x0, y0, x1, y1, ...] (matches systems/walkable WalkArea). */
+/** Flat polygon as fractions [x0, y0, x1, y1, ...]. */
 export type Polygon = number[]
 
 /** Per-scene 2.5D perspective (fractions of screen height). */
@@ -55,28 +57,30 @@ export type Effect =
 
 /**
  * One stacked part of a scene. `image` is the art target (SVG/PNG URL — fully
- * serializable); `builtin` references a code-registered painter by key, for
- * geometric placeholders (e.g. the current street) until real art arrives.
+ * serializable); `builtin` references a code-registered painter by key (with an
+ * optional numeric `params` bag), for geometric placeholders until real art
+ * arrives. `anchorYFrac` on a `mid` layer drives Y-sort + depth scale.
  */
 export type LayerData =
   | {
       kind: 'image'
       band: SceneBand
       src: string
-      x?: number
-      y?: number
-      anchorY?: number
+      xFrac?: number
+      yFrac?: number
+      anchorYFrac?: number
       role?: LayerRole
     }
   | {
       kind: 'builtin'
       band: SceneBand
       builder: string
-      anchorY?: number
+      params?: Record<string, number>
+      anchorYFrac?: number
       role?: LayerRole
     }
 
-/** A clickable thing in a scene. All gated by an optional `when` Condition. */
+/** A clickable thing in a scene, gated by an optional `when` Condition. */
 export type InteractableData =
   | {
       kind: 'pickable'
@@ -100,7 +104,7 @@ export interface SceneData {
   id: SceneId
   name: string
   layers: LayerData[]
-  /** Where the character may walk. */
+  /** Where the character may walk (polygon as screen fractions). */
   walkable: Polygon
   interactables: InteractableData[]
   depth: DepthConfig

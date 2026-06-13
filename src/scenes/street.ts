@@ -1,26 +1,16 @@
 import { Graphics } from 'pixi.js'
-import type { SceneConfig } from '../data/scene-config'
-import type { SceneFactory, SceneLayer } from '../engine/scene'
-import type { WalkArea } from '../systems/walkable'
+import { registerLayerBuilder, type Size } from '../engine/scene'
+import type { SceneData } from '../data/schema'
 
 /**
- * A simple geometric city street, composed as stacked layers (sky → land →
- * buildings → road → props). Each background layer is a separate part so it can
- * later become an SVG — the parts just keep stacking (agent_docs/asset_pipeline.md).
- *
- *   sky                 → night-sky bands, horizon in the top third
- *   land                → distant hills + ground plate
- *   buildings           → house row, flanking a central gap
- *   road                → lower-third street + an L branch receding to the gap
- *   lampposts (mid)     → Y-sorted + depth-scaled with the character
- *   bushes (foreground) → occluders framing the near edge
- *
- * The character is clamped to `walkable` (the road ⊥), and walking up the
- * receding branch toward the houses shrinks it with depth.
+ * A simple geometric city street, expressed as `SceneData`: stacked layers
+ * (sky → land → buildings → road → props), a walkable ⊥ road, and a depth ramp.
+ * The geometric parts are `builtin` layers — code painters registered below by
+ * key — so the document stays serializable; each becomes an SVG `image` layer
+ * later (agent_docs/asset_pipeline.md). Positions in the data are screen fractions.
  */
 
-// Muted "Röki" palette — flat shapes, silhouette + atmosphere. Sky is a clear
-// night blue (not near-black) so the top reads as sky, not empty space.
+// Muted "Röki" palette — flat shapes. Sky is clear night blue (not near-black).
 const SKY_TOP = '#141d33'
 const SKY_MID = '#1d2a47'
 const SKY_HORIZON = '#2a3c61'
@@ -39,18 +29,9 @@ const LAMP_POST = '#0a0e16'
 const LAMP_GLOW = '#e8b552'
 const BUSH = '#05080d'
 
-// Horizon sits in the top third so the sky fills the upper area, not a dead band.
 const HORIZON_FRAC = 0.33
 
-/** Walkable floor runs from the near bottom up to the receding branch. */
-const streetDepth: SceneConfig = {
-  yNearFrac: 0.94,
-  yFarFrac: 0.5,
-  scaleNear: 1,
-  scaleFar: 0.4,
-}
-
-function buildSky(W: number, H: number): Graphics {
+function buildSky({ width: W, height: H }: Size): Graphics {
   const horizon = H * HORIZON_FRAC
   return new Graphics()
     .rect(0, 0, W, horizon * 0.45)
@@ -61,11 +42,10 @@ function buildSky(W: number, H: number): Graphics {
     .fill(SKY_HORIZON)
 }
 
-function buildLand(W: number, H: number): Graphics {
+function buildLand({ width: W, height: H }: Size): Graphics {
   const horizon = H * HORIZON_FRAC
   const g = new Graphics()
   g.rect(0, horizon, W, H - horizon).fill(GROUND)
-  // Distant hills sitting on the horizon, rising into the sky.
   g.moveTo(0, horizon)
     .lineTo(0, horizon - H * 0.05)
     .lineTo(W * 0.2, horizon - H * 0.1)
@@ -90,17 +70,12 @@ function drawHouse(
 ): void {
   const x = cx - w / 2
   const topY = baseY - h
-
   g.rect(x, topY, w, h).fill(body)
-
-  // Simple gable roof with a slight overhang.
   g.moveTo(x - w * 0.06, topY)
     .lineTo(x + w * 0.5, topY - h * 0.3)
     .lineTo(x + w + w * 0.06, topY)
     .closePath()
     .fill(ROOF)
-
-  // A grid of windows, a few lit warm.
   const ww = w * 0.18
   const wh = h * 0.16
   const cols = [x + w * 0.24, x + w * 0.58]
@@ -114,7 +89,7 @@ function drawHouse(
   }
 }
 
-function buildBuildings(W: number, H: number): Graphics {
+function buildBuildings({ width: W, height: H }: Size): Graphics {
   const g = new Graphics()
   const base = H * 0.62
   drawHouse(g, W * 0.08, base, W * 0.15, H * 0.24, HOUSE_A)
@@ -126,11 +101,9 @@ function buildBuildings(W: number, H: number): Graphics {
   return g
 }
 
-function buildRoad(W: number, H: number): Graphics {
+function buildRoad({ width: W, height: H }: Size): Graphics {
   const g = new Graphics()
-  // Horizontal foreground street in the lower third...
   g.rect(0, H * 0.66, W, H - H * 0.66).fill(ROAD)
-  // ...branching into an L that recedes toward the gap between the houses.
   g.moveTo(W * 0.4, H * 0.66)
     .lineTo(W * 0.6, H * 0.66)
     .lineTo(W * 0.535, H * 0.5)
@@ -141,19 +114,17 @@ function buildRoad(W: number, H: number): Graphics {
   return g
 }
 
-/** A lamppost: mid-layer, Y-sorted + depth-scaled by its base (feet) Y. */
-function lamppost(x: number, baseY: number): SceneLayer {
+function buildLamppost({ width: W, height: H }: Size, p: Record<string, number>): Graphics {
   const g = new Graphics()
   g.rect(-4, -130, 8, 130).fill(LAMP_POST)
   g.roundRect(-12, -144, 24, 16, 4).fill(LAMP_POST)
   g.circle(0, -136, 5).fill(LAMP_GLOW)
-  g.position.set(x, baseY)
-  return { band: 'mid', display: g, anchorY: baseY }
+  g.position.set((p.xFrac ?? 0.5) * W, (p.yFrac ?? 0.8) * H)
+  return g
 }
 
-/** A foreground bush: a clump of overlapping circles framing the near edge. */
-function bush(cx: number, cy: number, scale: number): SceneLayer {
-  const r = 46 * scale
+function buildBush({ width: W, height: H }: Size, p: Record<string, number>): Graphics {
+  const r = 46 * (p.scale ?? 1)
   const g = new Graphics()
   g.circle(-r * 0.9, 0, r * 0.8)
     .circle(0, -r * 0.35, r)
@@ -161,51 +132,67 @@ function bush(cx: number, cy: number, scale: number): SceneLayer {
     .circle(-r * 0.2, r * 0.25, r * 0.7)
     .circle(r * 0.45, r * 0.2, r * 0.75)
     .fill(BUSH)
-  g.position.set(cx, cy)
-  return { band: 'foreground', display: g }
+  g.position.set((p.xFrac ?? 0.5) * W, (p.yFrac ?? 1) * H)
+  return g
 }
 
-/** The road's ⊥ outline: horizontal street + the receding branch (clockwise). */
-function streetWalkable(W: number, H: number): WalkArea {
-  return {
-    polygon: [
-      0,
-      H * 0.95,
-      W,
-      H * 0.95,
-      W,
-      H * 0.67,
-      W * 0.59,
-      H * 0.67,
-      W * 0.53,
-      H * 0.52,
-      W * 0.47,
-      H * 0.52,
-      W * 0.41,
-      H * 0.67,
-      0,
-      H * 0.67,
-    ],
-  }
-}
+registerLayerBuilder('street.sky', buildSky)
+registerLayerBuilder('street.land', buildLand)
+registerLayerBuilder('street.buildings', buildBuildings)
+registerLayerBuilder('street.road', buildRoad)
+registerLayerBuilder('street.lamppost', buildLamppost)
+registerLayerBuilder('street.bush', buildBush)
 
-export const streetScene: SceneFactory = (screen) => {
-  const { width: W, height: H } = screen
-  return {
-    depth: streetDepth,
-    walkable: streetWalkable(W, H),
-    start: { x: W * 0.42, y: H * 0.86 },
-    layers: [
-      { band: 'background', display: buildSky(W, H) },
-      { band: 'background', display: buildLand(W, H) },
-      { band: 'background', display: buildBuildings(W, H) },
-      { band: 'background', display: buildRoad(W, H) },
-      lamppost(W * 0.45, H * 0.58),
-      lamppost(W * 0.82, H * 0.8),
-      bush(W * 0.12, H * 0.97, 1.35),
-      bush(W * 0.34, H * 1.0, 1.05),
-      bush(W * 0.66, H * 1.02, 1.2),
-      bush(W * 0.88, H * 0.98, 1.5),
-    ],
-  }
+export const streetScene: SceneData = {
+  id: 'street',
+  name: 'Street',
+  depth: { yNearFrac: 0.94, yFarFrac: 0.5, scaleNear: 1, scaleFar: 0.4 },
+  spawn: { xFrac: 0.42, yFrac: 0.86 },
+  // ⊥ road: horizontal street + the receding branch (fractions, clockwise).
+  walkable: [0, 0.95, 1, 0.95, 1, 0.67, 0.59, 0.67, 0.53, 0.52, 0.47, 0.52, 0.41, 0.67, 0, 0.67],
+  interactables: [],
+  layers: [
+    { kind: 'builtin', band: 'background', builder: 'street.sky' },
+    { kind: 'builtin', band: 'background', builder: 'street.land' },
+    { kind: 'builtin', band: 'background', builder: 'street.buildings' },
+    { kind: 'builtin', band: 'background', builder: 'street.road' },
+    {
+      kind: 'builtin',
+      band: 'mid',
+      builder: 'street.lamppost',
+      anchorYFrac: 0.58,
+      params: { xFrac: 0.45, yFrac: 0.58 },
+    },
+    {
+      kind: 'builtin',
+      band: 'mid',
+      builder: 'street.lamppost',
+      anchorYFrac: 0.8,
+      params: { xFrac: 0.82, yFrac: 0.8 },
+    },
+    {
+      kind: 'builtin',
+      band: 'foreground',
+      builder: 'street.bush',
+      params: { xFrac: 0.12, yFrac: 0.97, scale: 1.35 },
+    },
+    {
+      kind: 'builtin',
+      band: 'foreground',
+      builder: 'street.bush',
+      params: { xFrac: 0.34, yFrac: 1.0, scale: 1.05 },
+    },
+    {
+      kind: 'builtin',
+      band: 'foreground',
+      builder: 'street.bush',
+      params: { xFrac: 0.66, yFrac: 1.02, scale: 1.2 },
+    },
+    {
+      kind: 'builtin',
+      band: 'foreground',
+      builder: 'street.bush',
+      params: { xFrac: 0.88, yFrac: 0.98, scale: 1.5 },
+    },
+  ],
 }

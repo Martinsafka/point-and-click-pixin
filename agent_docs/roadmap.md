@@ -42,7 +42,7 @@ editor authors data for runtime systems, so those systems exist first.
       any / not ; setFlag / giveItem / takeItem / goTo / startDialog).
 - [x] Zustand story store: flags, inventory, currentScene, visited — single
       source of discrete state, survives scene changes.
-- [ ] Load a `GameDoc`; re-express the current street scene as `SceneData`
+- [x] Load a `GameDoc`; re-express the current street scene as `SceneData`
       (engine consumes data; geometric layers via a builder registry).
 
 ### M1 — Playable jam slice  (original backlog, built data-driven → shippable)

@@ -1,6 +1,7 @@
 import { createStore } from 'zustand/vanilla'
 import type { Condition, Effect, GameDoc } from '../data/schema'
 import { applyEffects, checkCondition, type StoryState } from '../systems/conditions'
+import { gameDoc } from '../data/game'
 
 /**
  * The discrete/meta state store — inventory, flags, current scene, visited. This
@@ -38,3 +39,6 @@ export function createStoryStore(doc: GameDoc) {
 }
 
 export type StoryStoreApi = ReturnType<typeof createStoryStore>
+
+/** The app's single story store, created from the authored game. */
+export const storyStore = createStoryStore(gameDoc)

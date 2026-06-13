@@ -8,9 +8,10 @@ import {
 } from 'pixi.js'
 import { Character } from '../entities/character'
 import { createCubeView } from '../entities/character-view'
-import { resolveDepthScale, type SceneConfig } from '../data/scene-config'
+import { resolveDepthScale } from '../data/scene-config'
 import { depthScaleAt } from '../systems/depth'
 import type { WalkArea } from '../systems/walkable'
+import type { LayerData, SceneBand, SceneData } from '../data/schema'
 
 /** Viewport size in CSS pixels. */
 export interface Size {
@@ -18,37 +19,18 @@ export interface Size {
   height: number
 }
 
-/** Which depth band a layer belongs to. */
-export type SceneBand = 'background' | 'mid' | 'foreground'
-
 /**
- * One stacked part of a scene. Parts layer on top of each other within their
- * band; eventually each is an SVG sprite (see `imageLayer`). For `mid` layers,
- * `anchorY` (feet Y, px) drives the Y-sort zIndex and depth scale, so the part
- * sits in the character's perspective.
+ * Builds a geometric placeholder layer (a `builtin` LayerData) from screen size
+ * + the layer's numeric params. Registered by key; real art uses `image` layers
+ * instead. Scenes register their builders at module load (see scenes/street.ts).
  */
-export interface SceneLayer {
-  band: SceneBand
-  display: Container
-  anchorY?: number
-}
+export type LayerBuilder = (screen: Size, params: Record<string, number>) => Container
 
-/** One screen's content, resolved against the current viewport. */
-export interface SceneDefinition {
-  depth: SceneConfig
-  /** Where the character may walk (a polygon, e.g. the road). */
-  walkable: WalkArea
-  /** Character spawn (feet), in px. */
-  start: { x: number; y: number }
-  /** Stacked parts of the scene, drawn in array order within each band. */
-  layers: SceneLayer[]
-}
+const builders = new Map<string, LayerBuilder>()
 
-/**
- * A scene is a factory from viewport size to its definition. It may be async, so
- * an SVG-composed scene can `await Assets.load(...)` before building its layers.
- */
-export type SceneFactory = (screen: Size) => SceneDefinition | Promise<SceneDefinition>
+export function registerLayerBuilder(key: string, build: LayerBuilder): void {
+  builders.set(key, build)
+}
 
 /** A live scene mounted on the Application. Call `destroy()` on teardown. */
 export interface Scene {
@@ -57,39 +39,38 @@ export interface Scene {
 
 /** Hosts one scene at a time on an Application and swaps between scenes. */
 export interface SceneHost {
-  show(factory: SceneFactory): Promise<void>
+  show(scene: SceneData): Promise<void>
   destroy(): void
 }
 
-/**
- * Builds a scene layer from an image/SVG URL — the eventual path for real art:
- * each scene part is an SVG that stacks in its band (Pixi loads SVG as a
- * texture). Async, so a SceneFactory that uses it must be async too.
- */
-export async function imageLayer(
-  url: string,
-  band: SceneBand,
-  opts: { x?: number; y?: number; anchorY?: number } = {},
-): Promise<SceneLayer> {
-  const texture = await Assets.load(url)
-  const sprite = new Sprite(texture)
-  sprite.position.set(opts.x ?? 0, opts.y ?? 0)
-  return { band, display: sprite, anchorY: opts.anchorY }
+/** Resolve a fractional polygon to pixels against the screen. */
+function resolvePolygon(frac: readonly number[], { width, height }: Size): number[] {
+  return frac.map((v, i) => v * (i % 2 === 0 ? width : height))
+}
+
+async function buildLayer(layer: LayerData, screen: Size): Promise<Container> {
+  if (layer.kind === 'image') {
+    const texture = await Assets.load(layer.src)
+    const sprite = new Sprite(texture)
+    sprite.position.set((layer.xFrac ?? 0) * screen.width, (layer.yFrac ?? 0) * screen.height)
+    return sprite
+  }
+  const build = builders.get(layer.builder)
+  if (!build) throw new Error(`Unknown layer builder: "${layer.builder}"`)
+  return build(screen, layer.params ?? {})
 }
 
 /**
- * Mounts a scene onto an initialised Application as three zIndex-ordered bands —
- * background < interactive (mid) < foreground occluder — plus whole-screen
- * click-to-move and the per-frame update hook (agent_docs/architecture.md).
+ * Mounts a `SceneData` onto an initialised Application as three zIndex-ordered
+ * bands — background < interactive (mid) < foreground occluder — plus
+ * whole-screen click-to-move and the per-frame update hook. Positions in the
+ * data are screen fractions, resolved to pixels here (agent_docs/architecture.md).
  */
-export async function mountScene(app: Application, factory: SceneFactory): Promise<Scene> {
+export async function mountScene(app: Application, scene: SceneData): Promise<Scene> {
   const screen: Size = { width: app.screen.width, height: app.screen.height }
-  const def = await factory(screen)
-  const depthScale = resolveDepthScale(def.depth, screen.height)
+  const depthScale = resolveDepthScale(scene.depth, screen.height)
 
-  // --- Bands ----------------------------------------------------------------
   app.stage.sortableChildren = true
-
   const background = new Container()
   background.zIndex = 0
   const interactive = new Container()
@@ -102,21 +83,21 @@ export async function mountScene(app: Application, factory: SceneFactory): Promi
   const bandFor = (band: SceneBand): Container =>
     band === 'background' ? background : band === 'foreground' ? foreground : interactive
 
-  // --- Layers (stacked in array order within each band) ---------------------
-  for (const layer of def.layers) {
-    if (layer.band === 'mid' && layer.anchorY !== undefined) {
-      layer.display.zIndex = layer.anchorY
-      layer.display.scale.set(depthScaleAt(layer.anchorY, depthScale))
+  for (const layer of scene.layers) {
+    const display = await buildLayer(layer, screen)
+    if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
+      const anchorY = layer.anchorYFrac * screen.height
+      display.zIndex = anchorY
+      display.scale.set(depthScaleAt(anchorY, depthScale))
     }
-    bandFor(layer.band).addChild(layer.display)
+    bandFor(layer.band).addChild(display)
   }
 
-  // --- Character ------------------------------------------------------------
-  const character = new Character(createCubeView(), depthScale, def.walkable)
+  const walkable: WalkArea = { polygon: resolvePolygon(scene.walkable, screen) }
+  const character = new Character(createCubeView(), depthScale, walkable)
   interactive.addChild(character.displayObject)
-  character.setPosition(def.start.x, def.start.y)
+  character.setPosition(scene.spawn.xFrac * screen.width, scene.spawn.yFrac * screen.height)
 
-  // --- Whole-screen click-to-move -------------------------------------------
   app.stage.eventMode = 'static'
   app.stage.hitArea = app.screen
   app.stage.cursor = 'pointer'
@@ -155,16 +136,15 @@ export function createSceneHost(app: Application): SceneHost {
   let current: Scene | undefined
   let destroyed = false
   return {
-    async show(factory) {
+    async show(scene) {
       current?.destroy()
       current = undefined
-      const scene = await mountScene(app, factory)
-      // Guard against being torn down while the (possibly async) mount ran.
+      const mounted = await mountScene(app, scene)
       if (destroyed) {
-        scene.destroy()
+        mounted.destroy()
         return
       }
-      current = scene
+      current = mounted
     },
     destroy() {
       destroyed = true

@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react'
 import type { Application } from 'pixi.js'
 import { createPixiApp } from '../engine/app'
 import { createSceneHost, type SceneHost } from '../engine/scene'
-import { scenes } from '../scenes'
+import { gameDoc } from '../data/game'
+import { storyStore } from '../state/story'
 
 /**
  * Hosts the PixiJS canvas inside the React tree. The canvas is the game world;
@@ -21,9 +22,6 @@ export function GameCanvas() {
     let cancelled = false
 
     const teardown = (target: Application, builtHost?: SceneHost) => {
-      // Drop the scene host (ticker callback + input listeners) first, then
-      // release the renderer. releaseGlobalResources matters when re-initing in
-      // the same tab (StrictMode remount, scene swaps) — see pixijs-application.
       builtHost?.destroy()
       target.destroy(
         { removeView: true, releaseGlobalResources: true },
@@ -41,7 +39,9 @@ export function GameCanvas() {
       hostRef.current?.appendChild(created.canvas)
       const built = createSceneHost(created)
       host = built
-      await built.show(scenes.street)
+      // Mount the current scene from the story store (the single source of truth
+      // for which scene is active). Scene transitions in M1 will drive swaps.
+      await built.show(gameDoc.scenes[storyStore.getState().currentScene])
     })()
 
     return () => {

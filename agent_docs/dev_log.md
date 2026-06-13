@@ -23,6 +23,19 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M0 (part 2): scene as data + store wired  ← M0 complete
+**What:** The engine now consumes serializable `SceneData` instead of a code factory. `engine/scene.ts`: `mountScene(app, SceneData)` + a **builder registry** (`registerLayerBuilder`) so geometric `builtin` layers stay in the data, while image/SVG layers load via `Assets`. `scenes/street.ts` rebuilt as `SceneData` (painters registered by key) with the walkable as fractions. New `data/game.ts` (`gameDoc`); `data/schema.ts` refined (fractions everywhere, `builtin` params, `anchorYFrac`). Store wired: `state/story.ts` exposes a `storyStore` singleton, `ui/use-story.ts` React hook, `GameCanvas` mounts `gameDoc.scenes[currentScene]`, overlay shows the scene name from the store. Removed `scenes/index.ts`; folded `SceneConfig` into schema's `DepthConfig`.
+**Why:** Make the scene fully data-driven (the editor's substrate) and prove the store flows both ways — engine reads `currentScene` to mount, React reads it for the overlay.
+**How:**
+- **Coordinate convention: fractions of screen (0..1)** in `SceneData` (positions, walkable, spawn, `anchorYFrac`), resolved to px at mount → resolution-independent documents.
+- **Builtin builder registry** bridges geometric placeholders into the data model: a `builtin` layer is `{ builder: key, params }`; scenes register painters at module load. The escape hatch disappears as layers become `image` SVGs.
+- **Vanilla store singleton** shared by engine (imperative `getState`) and React (`useStore` via `useStory`). Discrete state only.
+- **Visual unchanged** — same geometry, now data-driven; overlay gains "Scene: Street".
+- **Verified:** typecheck + lint + build green; dev server transforms the whole graph (`/src/main.tsx` 200). Build prints a benign >500 kB chunk advisory (Pixi).
+**Follow-ups:**
+- M1 next: scene transitions (exit interactables → `goTo`) + interaction (click → effect) + inventory (recipes, use-on) + menu + audio.
+- Resize re-layout still deferred (scene built once from `app.screen`).
+
 ### 2026-06-13 — M0 (part 1): data schema + condition/effect + story store
 **What:** Started the roadmap's M0 (data-driven foundation). Added `agent_docs/roadmap.md` (the milestone plan) and `workflow.md` step 6 ("point to the next step"). New code: `src/data/schema.ts` (serializable `GameDoc` — scenes, layers, interactables, items, flags + the `Condition`/`Effect` vocabulary), `src/systems/conditions.ts` (`StoryState` + pure `checkCondition`/`applyEffect`/`applyEffects`), `src/state/story.ts` (vanilla Zustand store wrapping them).
 **Why:** The schema is the project's public API — the engine, the editor, and the future npm package all sit on it. Schema-first means M1 gameplay and the M2+ editor slot on with no refactor.
