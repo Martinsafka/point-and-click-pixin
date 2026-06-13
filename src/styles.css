@@ -1,0 +1,72 @@
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: #0b0d12;
+  color: #e6ebf2;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  overflow: hidden;
+}
+
+.app-root {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* The Pixi canvas is the game world; it fills the viewport. */
+.game-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.game-canvas canvas {
+  display: block;
+}
+
+/*
+ * React/DOM chrome layered on top of the canvas. `pointer-events: none` so the
+ * overlay never steals clicks meant for the world; interactive children opt
+ * back in with `pointer-events: auto`.
+ */
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.overlay__title {
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.overlay__hint {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 12px;
+  line-height: 1.5;
+  opacity: 0.6;
+}

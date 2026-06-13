@@ -1,0 +1,8 @@
+dist
+node_modules
+pnpm-lock.yaml
+public
+.claude
+.idea
+# Hand-authored project docs — keep their formatting as written.
+*.md
