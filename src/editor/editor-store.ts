@@ -35,6 +35,9 @@ interface EditorStore {
   setLayerFit(id: SceneId, index: number, fit: LayerFit): void
   /** Role is metadata (no visual change), so this doesn't bump `revision`. */
   setLayerRole(id: SceneId, index: number, role: LayerRole | undefined): void
+  /** Set an image layer's position (dragged in the preview). No `revision` bump —
+   *  the dragged sprite already moved; this only records the fractions. */
+  setLayerPos(id: SceneId, index: number, xFrac: number, yFrac: number): void
 }
 
 function blankScene(id: SceneId): SceneData {
@@ -117,6 +120,12 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       ),
     setLayerRole: (id, index, role) =>
       mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, role } : l)), false),
+    setLayerPos: (id, index, xFrac, yFrac) =>
+      mapLayers(
+        id,
+        (ls) => ls.map((l, i) => (i === index && l.kind === 'image' ? { ...l, xFrac, yFrac } : l)),
+        false,
+      ),
   }
 })
 

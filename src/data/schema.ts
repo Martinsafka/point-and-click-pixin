@@ -18,8 +18,12 @@ export type SceneBand = 'background' | 'mid' | 'foreground'
 /** What a layer is for beyond drawing — drives editor tooling + runtime roles. */
 export type LayerRole = 'scenery' | 'occluder' | 'floor'
 
-/** How an `image` layer sizes to the viewport (default 'none' = natural size). */
-export type LayerFit = 'stretch' | 'cover' | 'contain' | 'none'
+/**
+ * How an `image` layer sizes to the viewport (default 'none' = natural size).
+ * 'width' fills the width keeping aspect (a horizontal strip) and is positioned
+ * vertically by `yFrac` — for composing scenes from sky / land / road bands.
+ */
+export type LayerFit = 'stretch' | 'cover' | 'contain' | 'width' | 'none'
 
 /** Flat polygon as fractions [x0, y0, x1, y1, ...]. */
 export type Polygon = number[]

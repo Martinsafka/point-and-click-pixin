@@ -81,8 +81,8 @@ cutscenes, audio, atmosphere, theming) → packaging.
 - [x] Edit mode (`?edit`, DEV-only) — React editor shell beside the live preview.
 - [x] Scene panel: list / add / delete / select + live preview; editable working doc.
 - [x] Layers: upload SVG → place in band, reorder, set role. _(Walkable drawing ✓ ·
-      save/load `GameDoc` as JSON ✓ · edit→play test loop ✓ · layer upload ✓ —
-      **M3 core complete**.)_
+      save/load `GameDoc` as JSON ✓ · edit→play test loop ✓ · layer upload ✓ ·
+      drag-to-position ✓ · `width`-fit strips ✓ — **M3 core complete**.)_
 
 ### M4 — Editor: interactables, items, recipes, exits
 
@@ -207,3 +207,6 @@ cutscenes, audio, atmosphere, theming) → packaging.
   `asset_pipeline.md` (frame-by-frame, baked atlases, 8-dir walk mirrored to ~5).
 - Pathfinding & scene transitions (M6) were both flagged as follow-ups during M1
   (clamp-and-slide is a stopgap; the goTo swap currently hard-cuts).
+- Larger-than-viewport scenes are **M6**: viewport-fractions → world-space + a
+  camera (follow + dead-zone) + per-layer **parallax**. The `width`-fit strip model
+  (M3) is the unit that prepares it — no world-space fields added early (YAGNI).

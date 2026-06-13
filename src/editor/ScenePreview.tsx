@@ -3,6 +3,7 @@ import type { Application } from 'pixi.js'
 import type { SceneData } from '../data/schema'
 import { createPixiApp } from '../engine/app'
 import { mountPreview, type Scene } from '../engine/scene'
+import { editorStore } from './editor-store'
 
 /**
  * A live, read-only Pixi preview of one scene, sized to its container. Mounts
@@ -37,7 +38,10 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
       }
       app = created
       host.appendChild(created.canvas)
-      preview = await mountPreview(created, scene)
+      preview = await mountPreview(created, scene, {
+        onLayerMove: (index, xFrac, yFrac) =>
+          editorStore.getState().setLayerPos(scene.id, index, xFrac, yFrac),
+      })
     })()
 
     return () => {

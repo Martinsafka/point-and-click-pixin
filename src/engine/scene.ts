@@ -77,6 +77,13 @@ function fitImageSprite(
     sprite.position.set(screen.width / 2, screen.height / 2)
     return
   }
+  if (fit === 'width') {
+    // Full-bleed horizontally (keeps aspect); positioned vertically via yFrac.
+    sprite.anchor.set(0.5, 0.5)
+    sprite.scale.set(screen.width / sprite.texture.width)
+    sprite.position.set(screen.width / 2, (layer.yFrac ?? 0.5) * screen.height)
+    return
+  }
   // 'none' — natural size, centered on (xFrac, yFrac).
   sprite.anchor.set(0.5, 0.5)
   sprite.position.set((layer.xFrac ?? 0.5) * screen.width, (layer.yFrac ?? 0.5) * screen.height)
@@ -204,12 +211,62 @@ export async function mountScene(
   }
 }
 
+/** Editor preview hooks. */
+export interface PreviewOptions {
+  /** Called when a free-positioned image layer is dragged, with new fractions. */
+  onLayerMove?: (index: number, xFrac: number, yFrac: number) => void
+}
+
+/**
+ * Make an image layer draggable in the editor preview: drag to move it, then
+ * commit the new fractional position on release. Only the dragged sprite moves
+ * (no re-mount), so it's smooth; the store just records where it landed.
+ */
+function makeLayerDraggable(
+  display: Container,
+  index: number,
+  screen: Size,
+  onMove: (index: number, xFrac: number, yFrac: number) => void,
+  axis: 'xy' | 'y' = 'xy',
+): void {
+  const clamp = (v: number, hi: number) => Math.max(0, Math.min(hi, v))
+  display.eventMode = 'static'
+  display.cursor = axis === 'y' ? 'ns-resize' : 'move'
+  let dragging = false
+  // Offset from the pointer to the sprite origin at grab time, so the layer moves
+  // relative to where it was grabbed (no jump) and resumes from its saved spot.
+  let grabX = 0
+  let grabY = 0
+  display.on('pointerdown', (e: FederatedPointerEvent) => {
+    dragging = true
+    grabX = display.position.x - e.global.x
+    grabY = display.position.y - e.global.y
+  })
+  display.on('globalpointermove', (e: FederatedPointerEvent) => {
+    if (!dragging) return
+    const x = axis === 'y' ? display.position.x : clamp(e.global.x + grabX, screen.width)
+    display.position.set(x, clamp(e.global.y + grabY, screen.height))
+  })
+  const drop = () => {
+    if (!dragging) return
+    dragging = false
+    onMove(index, display.position.x / screen.width, display.position.y / screen.height)
+  }
+  display.on('pointerup', drop)
+  display.on('pointerupoutside', drop)
+}
+
 /**
  * Renders a scene's layers for the editor preview — visuals at the initial story
  * state, plus a static character placeholder at the spawn point. No gameplay
- * input or ticker; it's a still picture of the authored scene.
+ * ticker; optionally lets the editor drag free-positioned (`fit: none`) image
+ * layers to place them.
  */
-export async function mountPreview(app: Application, scene: SceneData): Promise<Scene> {
+export async function mountPreview(
+  app: Application,
+  scene: SceneData,
+  opts: PreviewOptions = {},
+): Promise<Scene> {
   const screen: Size = { width: app.screen.width, height: app.screen.height }
   const depthScale = resolveDepthScale(scene.depth, screen.height)
   const state: StoryState = {
@@ -233,7 +290,8 @@ export async function mountPreview(app: Application, scene: SceneData): Promise<
   const bandFor = (band: SceneBand): Container =>
     band === 'background' ? background : band === 'foreground' ? foreground : interactive
 
-  for (const layer of scene.layers) {
+  for (let i = 0; i < scene.layers.length; i += 1) {
+    const layer = scene.layers[i]
     const display = await buildLayer(layer, screen)
     if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
       const anchorY = layer.anchorYFrac * screen.height
@@ -241,6 +299,12 @@ export async function mountPreview(app: Application, scene: SceneData): Promise<
       display.scale.set(depthScaleAt(anchorY, depthScale))
     }
     if (layer.when) display.visible = checkCondition(state, layer.when)
+    // Editor: drag image layers to place them — `none` freely, `width` on Y only.
+    if (opts.onLayerMove && layer.kind === 'image') {
+      const fit = layer.fit ?? 'none'
+      if (fit === 'none') makeLayerDraggable(display, i, screen, opts.onLayerMove, 'xy')
+      else if (fit === 'width') makeLayerDraggable(display, i, screen, opts.onLayerMove, 'y')
+    }
     bandFor(layer.band).addChild(display)
   }
 

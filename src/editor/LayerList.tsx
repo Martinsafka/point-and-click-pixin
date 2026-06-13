@@ -3,7 +3,7 @@ import { editorStore } from './editor-store'
 import type { LayerData, LayerFit, LayerRole, SceneBand, SceneId } from '../data/schema'
 
 const BANDS: SceneBand[] = ['background', 'mid', 'foreground']
-const FITS: LayerFit[] = ['none', 'stretch', 'cover', 'contain']
+const FITS: LayerFit[] = ['none', 'width', 'cover', 'contain', 'stretch']
 const ROLES: LayerRole[] = ['scenery', 'occluder', 'floor']
 
 function layerLabel(layer: LayerData): string {
@@ -129,6 +129,11 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
           </li>
         ))}
       </ul>
+      {layers.some((l) => l.kind === 'image' && ['none', 'width'].includes(l.fit ?? 'none')) && (
+        <p className="layer-list__empty">
+          Tip: drag none-fit images freely in the preview; width-fit strips move on Y.
+        </p>
+      )}
     </div>
   )
 }

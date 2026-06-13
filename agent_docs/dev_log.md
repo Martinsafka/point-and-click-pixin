@@ -23,6 +23,32 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — Fix: layer-drag grab offset (no jump on re-grab)
+**What:** Dragging an image layer no longer snaps its centre to the cursor on grab. `makeLayerDraggable` records the pointer→origin offset at `pointerdown` and moves with `position = pointer + offset`.
+**Why:** User report — grabbing a taller `width` strip made it jump (its centre leapt to the click point), so it looked like the saved Y position was lost / reset to default. The position *was* persisted (`setLayerPos` writes `yFrac`, re-mount reads it); the jump was the whole symptom, and it's worse for tall strips because the grab point sits farther from the centre.
+**How:** on `pointerdown`, `grabX/grabY = display.position − e.global`; on move, `clamp(e.global + grab)`. A re-grab resumes from the layer's current (saved) spot with zero jump. X stays locked for `width` strips.
+**Verified:** format / typecheck / lint / build green; dev smoke 200; the grab-offset is in the transformed `scene.ts`. The drag feel is the user's browser check.
+
+### 2026-06-13 — M3 step 3c: `width` fit for horizontal strips
+**What:** New image `fit: 'width'` — full-bleed horizontally (keeps aspect), positioned vertically by `yFrac` and **draggable on Y only** in the preview. For composing a scene from stacked bands (sky / land / road) instead of one backdrop. `makeLayerDraggable` gained an axis lock; `LayerList` lists the new fit + an updated tip.
+**Why:** The user wanted to stack horizontal strips and slide them vertically — `cover` fills the screen and `contain` is centred/locked.
+**How:**
+- **`width` = scale to viewport width**, anchor centre, X centred, Y = `yFrac`. Renders identically in game + preview (shared `fitImageSprite`).
+- **Axis-locked drag:** `makeLayerDraggable(..., axis)` — `width` strips move only on Y (X stays full-bleed; cursor `ns-resize`); `none` props keep free 2D drag.
+- **Forward-compatible with M6:** positioned strips are exactly the unit a camera/parallax builds on — in M6 `width` reads against world-width and each strip gets a `parallax` factor. Larger-than-viewport scenes were **deferred to M6 by decision** (it's a coordinate-system change — viewport-fractions → world-space); no speculative fields added now.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200; axis-lock (`ns-resize`) + the `width` branch present in the transformed modules. The visual drag is the user's browser check.
+**Follow-ups:** optional snapping / arrow-key nudge; a `height` counterpart for vertical strips if it's ever needed. → **M4**.
+
+### 2026-06-13 — M3 step 3b: drag image layers to position them
+**What:** Free-positioned (`fit: none`) image layers can be dragged in the editor preview to place them precisely. Engine `mountPreview` gains an optional `onLayerMove` callback + `makeLayerDraggable` (makes such sprites interactive and moves them live). `editor-store` gains `setLayerPos(id, index, xFrac, yFrac)` (no `revision` bump). `ScenePreview` wires the callback → store; `LayerList` shows a positioning tip.
+**Why:** The user asked to place uploaded props precisely with the mouse — `fit: none` images were stuck centered with no positioning UI.
+**How:**
+- **Clean boundary:** the engine takes a callback, not the editor store — `ScenePreview` injects `setLayerPos`. `engine/` stays React/editor-free.
+- **Smooth, no jump:** the drag moves only the Pixi sprite live; `setLayerPos` records the fractions WITHOUT bumping `revision`, so the preview doesn't re-mount during/after the drag (mirrors `setWalkable`). A later structural re-mount recreates the sprite at the stored position.
+- **Only `fit: none` is draggable** (cover/stretch/contain are screen-locked by design). Passive layers (builtins, the character) don't block hit-testing, so an image is grabbable even under them. Sprite anchor is center, so xFrac/yFrac = the prop's centre; the drag clamps to the viewport.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200; `makeLayerDraggable` present in the transformed `scene.ts`. The actual mouse-drag is the user's browser check.
+**Follow-ups:** the same drag pattern serves **M4** (place interactables / draw hit-areas) and spawn-point placement; optional snapping / arrow-key nudge.
+
 ### 2026-06-13 — M3 step 3: upload image layers (M3 core complete)
 **What:** The editor can upload images as scene layers. **Schema:** `image` LayerData gains `fit` (`stretch`/`cover`/`contain`/`none`). **Runtime:** `scene.ts` `fitImageSprite()` sizes/places an image sprite (cover fills the viewport keeping aspect; none = natural size, centered on `xFrac`/`yFrac`). **Editor:** new `editor/LayerList.tsx` + a **Layers** panel — upload an SVG/PNG (FileReader → data-URL stored in the doc) and, per layer, set band / fit / role, reorder (↑/↓), or delete. `editor-store` gains `addImageLayer` / `removeLayer` / `moveLayer` / `setLayerBand` / `setLayerFit` / `setLayerRole`.
 **Why:** M3's last core piece — author scenes with real art, not just code painters. Completes the editor core (M3 done).
