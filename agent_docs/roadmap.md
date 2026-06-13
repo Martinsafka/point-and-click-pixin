@@ -47,7 +47,7 @@ editor authors data for runtime systems, so those systems exist first.
 
 ### M1 — Playable jam slice  (original backlog, built data-driven → shippable)
 
-- [ ] Scene transitions + persistence — exits gated by Condition; inventory/flags
+- [x] Scene transitions + persistence — exits gated by Condition; inventory/flags
       survive scene 2.
 - [ ] Interaction: click object → dialog / effect (React overlay + Zustand).
 - [ ] Inventory: add + combine (data-driven recipes) + "use item on object".

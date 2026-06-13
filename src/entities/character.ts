@@ -8,15 +8,17 @@ import { clampToArea, type WalkArea } from '../systems/walkable'
  * fast-changing field below is a plain mutable number updated in the ticker —
  * never routed through Zustand (agent_docs/architecture.md, "State").
  *
- * The character is positioned by its **feet** (x, y): the view sits on it, the
- * depth scale + Y-sort zIndex come from its Y, and movement is clamped to an
- * optional walkable area so it can only travel where the scene allows.
+ * Positioned by its **feet** (x, y): the view sits on it, depth scale + Y-sort
+ * come from its Y, and movement is clamped to an optional walkable area. An
+ * optional `onArrive` callback fires once the character reaches a target — used
+ * to trigger an interaction after walking to it.
  */
 export class Character {
   private x = 0
   private y = 0
   private targetX: number | null = null
   private targetY: number | null = null
+  private onArrive?: () => void
   private facing: Facing = 'S'
   private state: MoveState = 'idle'
   private readonly speed = WALK_SPEED
@@ -39,20 +41,26 @@ export class Character {
     this.moveTo(x, y)
     this.targetX = null
     this.targetY = null
+    this.onArrive = undefined
     this.state = 'idle'
     this.syncView()
   }
 
-  /** Walk toward a feet target (view-local coords), clamped onto the walkable
-   *  area — clicking off-road heads to the nearest road point instead. */
-  setTarget(x: number, y: number): void {
+  /**
+   * Walk toward a feet target (clamped onto the walkable area). `onArrive` fires
+   * once, after the character reaches it — replacing any previous pending one.
+   */
+  setTarget(x: number, y: number, onArrive?: () => void): void {
     const t = this.walkable ? clampToArea(this.walkable, x, y) : { x, y }
     this.targetX = t.x
     this.targetY = t.y
+    this.onArrive = onArrive
   }
 
   /** Advance one frame. `deltaMS` is real elapsed milliseconds from the ticker. */
   update(deltaMS: number): void {
+    let arrived: (() => void) | undefined
+
     if (this.targetX !== null && this.targetY !== null) {
       const dx = this.targetX - this.x
       const dy = this.targetY - this.y
@@ -64,6 +72,8 @@ export class Character {
         this.targetX = null
         this.targetY = null
         this.state = 'idle'
+        arrived = this.onArrive
+        this.onArrive = undefined
       } else {
         this.facing = facingFromVector(dx, dy)
         this.state = 'walk'
@@ -72,6 +82,9 @@ export class Character {
     }
 
     this.syncView()
+    // Fire after syncView so this frame is consistent; the callback may trigger a
+    // scene swap, which the host defers past the current tick.
+    arrived?.()
   }
 
   destroy(): void {
@@ -93,7 +106,6 @@ export class Character {
   private syncView(): void {
     const { container } = this.view
     container.position.set(this.x, this.y)
-    // 2.5D, both from the feet Y: scale with depth, sort by depth.
     container.scale.set(depthScaleAt(this.y, this.depthScale))
     container.zIndex = this.y
     this.view.setPose(this.state, this.facing)

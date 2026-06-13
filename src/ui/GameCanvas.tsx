@@ -37,11 +37,9 @@ export function GameCanvas() {
       }
       app = created
       hostRef.current?.appendChild(created.canvas)
-      const built = createSceneHost(created)
-      host = built
-      // Mount the current scene from the story store (the single source of truth
-      // for which scene is active). Scene transitions in M1 will drive swaps.
-      await built.show(gameDoc.scenes[storyStore.getState().currentScene])
+      // The host keeps the displayed scene in sync with the store's currentScene:
+      // it mounts the start scene and swaps when a transition changes it.
+      host = createSceneHost(created, gameDoc.scenes, storyStore)
     })()
 
     return () => {

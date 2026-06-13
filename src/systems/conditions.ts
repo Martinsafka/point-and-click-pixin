@@ -1,4 +1,4 @@
-import type { Condition, Effect, FlagId, ItemId, SceneId } from '../data/schema'
+import type { Condition, Effect, FlagId, GameDoc, ItemId, SceneId } from '../data/schema'
 
 /**
  * Live discrete state of a playthrough — what Conditions read and Effects mutate.
@@ -10,6 +10,17 @@ export interface StoryState {
   flags: Record<FlagId, boolean>
   inventory: ItemId[]
   visited: SceneId[]
+}
+
+/**
+ * The story store's full surface: discrete state + actions over it. Defined here
+ * (next to the evaluator) so both the store (state/story.ts) and the engine can
+ * depend on it without importing each other.
+ */
+export interface StoryStore extends StoryState {
+  check(cond: Condition): boolean
+  run(effects: readonly Effect[]): void
+  reset(doc: GameDoc): void
 }
 
 /** Evaluate a Condition against the current story state. */

@@ -11,7 +11,9 @@ import { createCubeView } from '../entities/character-view'
 import { resolveDepthScale } from '../data/scene-config'
 import { depthScaleAt } from '../systems/depth'
 import type { WalkArea } from '../systems/walkable'
-import type { LayerData, SceneBand, SceneData } from '../data/schema'
+import { effectsFor, pickInteractable } from '../systems/interactions'
+import type { StoryStore } from '../systems/conditions'
+import type { LayerData, SceneBand, SceneData, SceneId } from '../data/schema'
 
 /** Viewport size in CSS pixels. */
 export interface Size {
@@ -19,10 +21,16 @@ export interface Size {
   height: number
 }
 
+/** The slice of the story store the engine needs: read state + react to it. */
+export interface SceneStore {
+  getState(): StoryStore
+  subscribe(listener: () => void): () => void
+}
+
 /**
  * Builds a geometric placeholder layer (a `builtin` LayerData) from screen size
  * + the layer's numeric params. Registered by key; real art uses `image` layers
- * instead. Scenes register their builders at module load (see scenes/street.ts).
+ * instead. Scenes register their builders at module load (see scenes/*.ts).
  */
 export type LayerBuilder = (screen: Size, params: Record<string, number>) => Container
 
@@ -37,9 +45,8 @@ export interface Scene {
   destroy(): void
 }
 
-/** Hosts one scene at a time on an Application and swaps between scenes. */
+/** Keeps the displayed scene in sync with the store's current scene. */
 export interface SceneHost {
-  show(scene: SceneData): Promise<void>
   destroy(): void
 }
 
@@ -62,11 +69,15 @@ async function buildLayer(layer: LayerData, screen: Size): Promise<Container> {
 
 /**
  * Mounts a `SceneData` onto an initialised Application as three zIndex-ordered
- * bands — background < interactive (mid) < foreground occluder — plus
- * whole-screen click-to-move and the per-frame update hook. Positions in the
- * data are screen fractions, resolved to pixels here (agent_docs/architecture.md).
+ * bands — background < interactive (mid) < foreground occluder. A click either
+ * runs the topmost interactable under it (after walking there) or just walks the
+ * character. Positions in the data are screen fractions, resolved to pixels here.
  */
-export async function mountScene(app: Application, scene: SceneData): Promise<Scene> {
+export async function mountScene(
+  app: Application,
+  scene: SceneData,
+  store: SceneStore,
+): Promise<Scene> {
   const screen: Size = { width: app.screen.width, height: app.screen.height }
   const depthScale = resolveDepthScale(scene.depth, screen.height)
 
@@ -103,7 +114,14 @@ export async function mountScene(app: Application, scene: SceneData): Promise<Sc
   app.stage.cursor = 'pointer'
   const onTap = (event: FederatedPointerEvent) => {
     const local = interactive.toLocal(event.global)
-    character.setTarget(local.x, local.y)
+    const hit = pickInteractable(scene.interactables, local.x, local.y, screen, store.getState())
+    if (hit) {
+      // Walk to it, then run its effects (a goTo here triggers a scene swap).
+      const effects = effectsFor(hit)
+      character.setTarget(local.x, local.y, () => store.getState().run(effects))
+    } else {
+      character.setTarget(local.x, local.y)
+    }
   }
   app.stage.on('pointertap', onTap)
 
@@ -131,23 +149,46 @@ export async function mountScene(app: Application, scene: SceneData): Promise<Sc
   }
 }
 
-/** Creates a host that mounts one scene at a time and swaps between them. */
-export function createSceneHost(app: Application): SceneHost {
+/**
+ * Mounts whichever scene the store says is current, and swaps when it changes.
+ * Swaps are deferred to a microtask so a transition fired from inside the ticker
+ * (a click → walk → goTo) tears the old scene down *after* the frame, never
+ * mid-update.
+ */
+export function createSceneHost(
+  app: Application,
+  scenes: Record<SceneId, SceneData>,
+  store: SceneStore,
+): SceneHost {
   let current: Scene | undefined
   let destroyed = false
+  let shownId: SceneId | undefined
+
+  async function show(id: SceneId): Promise<void> {
+    if (destroyed || id === shownId) return
+    shownId = id
+    current?.destroy()
+    current = undefined
+    const mounted = await mountScene(app, scenes[id], store)
+    if (destroyed || shownId !== id) {
+      mounted.destroy()
+      return
+    }
+    current = mounted
+  }
+
+  const sync = () => {
+    const id = store.getState().currentScene
+    if (id !== shownId) queueMicrotask(() => void show(id))
+  }
+
+  sync() // initial mount
+  const unsubscribe = store.subscribe(sync)
+
   return {
-    async show(scene) {
-      current?.destroy()
-      current = undefined
-      const mounted = await mountScene(app, scene)
-      if (destroyed) {
-        mounted.destroy()
-        return
-      }
-      current = mounted
-    },
     destroy() {
       destroyed = true
+      unsubscribe()
       current?.destroy()
       current = undefined
     },

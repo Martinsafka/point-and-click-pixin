@@ -23,6 +23,19 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M1: interactables + scene transitions + persistence
+**What:** First M1 chunk. Click an interactable → the character walks to it, then its `Effect`s run; an `exit`'s `goTo` swaps scenes. Added `systems/interactions.ts` (`effectsFor`, `pickInteractable`), `Character.setTarget(x, y, onArrive?)`, a store-aware `mountScene(app, scene, store)` + self-driving `createSceneHost(app, scenes, store)` (subscribes to `currentScene`, swaps deferred). New 2nd scene `scenes/room.ts` + a lit door on the street, connected by `exit` interactables. Overlay shows scene name + visited count. Moved `StoryStore` into `conditions.ts` to break an engine↔store cycle.
+**Why:** Three original-backlog items at once — interaction (click → effect), scene transitions, persistence — all on the M0 condition/effect + store foundation.
+**How:**
+- **Walk-then-interact.** A click hit-tests `scene.interactables` (topmost, gated by `when`); if hit, the character walks to the clamped point and `onArrive` runs `effectsFor(it)` via the store. Off-road doors clamp to the nearest road point.
+- **Deferred scene swap (key safety).** A `goTo` runs inside `character.update` (inside the ticker); the host swaps via `queueMicrotask`, so the old scene is destroyed *after* the frame, never mid-update. `onArrive` also fires after `syncView`.
+- **Persistence is free** — the store is a singleton; the host only swaps scenes, never resets. Inventory/flags/visited survive transitions (visited count proves it).
+- **Cycle break:** `StoryStore` now lives in `systems/conditions.ts`; the engine depends on a minimal `SceneStore` view, not `state/story`.
+- **Verified:** typecheck + lint + build green; dev server transforms the new graph; goTo state logic is Node-tested (M0). The click → walk → swap is visual — test in `pnpm dev`.
+**Follow-ups:**
+- M1 continues: **inventory** (pickable items + combine recipes + use-on-object), then menu, audio, stealth (if core). A `key` gating the door (`when: hasItem`) is the natural inventory demo.
+- Rapid double-transition isn't guarded (fine for clicks); brief blank frame during the async mount.
+
 ### 2026-06-13 — M0 (part 2): scene as data + store wired  ← M0 complete
 **What:** The engine now consumes serializable `SceneData` instead of a code factory. `engine/scene.ts`: `mountScene(app, SceneData)` + a **builder registry** (`registerLayerBuilder`) so geometric `builtin` layers stay in the data, while image/SVG layers load via `Assets`. `scenes/street.ts` rebuilt as `SceneData` (painters registered by key) with the walkable as fractions. New `data/game.ts` (`gameDoc`); `data/schema.ts` refined (fractions everywhere, `builtin` params, `anchorYFrac`). Store wired: `state/story.ts` exposes a `storyStore` singleton, `ui/use-story.ts` React hook, `GameCanvas` mounts `gameDoc.scenes[currentScene]`, overlay shows the scene name from the store. Removed `scenes/index.ts`; folded `SceneConfig` into schema's `DepthConfig`.
 **Why:** Make the scene fully data-driven (the editor's substrate) and prove the store flows both ways — engine reads `currentScene` to mount, React reads it for the overlay.

@@ -98,6 +98,10 @@ function buildBuildings({ width: W, height: H }: Size): Graphics {
   drawHouse(g, W * 0.62, base, W * 0.11, H * 0.18, HOUSE_C)
   drawHouse(g, W * 0.75, base, W * 0.14, H * 0.23, HOUSE_B)
   drawHouse(g, W * 0.91, base, W * 0.13, H * 0.21, HOUSE_A)
+  // Lit door on the central house — the exit to the room (warm light leaking).
+  g.rect(W * 0.6, H * 0.52, W * 0.04, H * 0.1)
+    .fill('#06090f')
+    .stroke({ width: 2, color: WINDOW_LIT, alignment: 0 })
   return g
 }
 
@@ -150,7 +154,14 @@ export const streetScene: SceneData = {
   spawn: { xFrac: 0.42, yFrac: 0.86 },
   // ⊥ road: horizontal street + the receding branch (fractions, clockwise).
   walkable: [0, 0.95, 1, 0.95, 1, 0.67, 0.59, 0.67, 0.53, 0.52, 0.47, 0.52, 0.41, 0.67, 0, 0.67],
-  interactables: [],
+  interactables: [
+    {
+      kind: 'exit',
+      id: 'to-room',
+      to: 'room',
+      hitArea: [0.6, 0.5, 0.64, 0.5, 0.64, 0.62, 0.6, 0.62],
+    },
+  ],
   layers: [
     { kind: 'builtin', band: 'background', builder: 'street.sky' },
     { kind: 'builtin', band: 'background', builder: 'street.land' },
