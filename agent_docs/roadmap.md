@@ -91,7 +91,7 @@ cutscenes, audio, atmosphere, theming) → packaging.
       vertex editing are follow-ups.)_
 - [x] Forms for Condition + Effect + `uses` (per-interactable logic; recursive
       condition editor with all/any/not).
-- [ ] Item catalogue + recipe table.
+- [x] Item catalogue + recipe table.
 - [ ] **Examine** — "look at" text for items / objects.
 - [ ] _(optional)_ **Verb / cursor system** — look / use / talk verbs + a hover
       cursor over hotspots (vs the current single-click); runtime mode + editor.

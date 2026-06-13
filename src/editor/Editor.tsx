@@ -7,6 +7,8 @@ import { WalkableOverlay } from './WalkableOverlay'
 import { HitAreaOverlay } from './HitAreaOverlay'
 import { LayerList } from './LayerList'
 import { InteractableForm } from './InteractableForm'
+import { ItemCatalogue } from './ItemCatalogue'
+import { RecipeTable } from './RecipeTable'
 
 function round(n: number): number {
   return Math.round(n * 1000) / 1000
@@ -190,6 +192,12 @@ export function Editor() {
             onToggleDraw={toggleHitArea}
           />
         )}
+
+        <h2 className="editor__title">Items · {Object.keys(doc.items).length}</h2>
+        <ItemCatalogue items={doc.items} />
+
+        <h2 className="editor__title">Recipes · {(doc.recipes ?? []).length}</h2>
+        <RecipeTable recipes={doc.recipes ?? []} items={doc.items} />
 
         <h2 className="editor__title">Playtest</h2>
         <div className="editor__toolbar">

@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M4 step 2b: item catalogue + recipe table
+**What:** Document-level data authoring. New `editor/ItemCatalogue.tsx` (add / remove items, edit name; id fixed) and `editor/RecipeTable.tsx` (add / remove `a + b → output` recipes, reusing `ItemSelect`). Editor gains **Items** + **Recipes** sections (global, before Playtest). `editor-store` gains a `patchDoc` helper + `addItem` / `removeItem` / `setItemName` / `addRecipe` / `removeRecipe` / `setRecipe`. `editor_guide.md` gains an "Items & Recipes" section (per the new docs rule).
+**Why:** M4 step 2b — author the inventory items + combine recipes that the interactable logic (giveItem / uses / recipes) references, completing M4's logic data.
+**How:**
+- **Document-level (`patchDoc`)** — items/recipes live on the `GameDoc`, not a scene, and don't touch the Pixi preview → no `revision` bump. The sections render from `doc.items` / `doc.recipes` regardless of the selected scene (grouped with Playtest / Document at the panel bottom).
+- **Item id is fixed at creation** (auto `item`, `item-2`…) — interactables / uses / effects / recipes reference it, so only the display name is editable (cascade-rename is a follow-up). Pickers show items by name, so the generic id rarely surfaces.
+- **Recipes reuse `ItemSelect`** (a / b / output) from the effect & condition editors.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200 (game, `?edit`, both modules). Authoring + the in-game combine is the user's browser check.
+**Follow-ups:** cascade-rename item ids; warn when deleting a referenced item; item **icons** (upload + render in the inventory). **M4 step 3 — examine** ("look at" text) is the last M4 piece.
+
 ### 2026-06-13 — Editor guide + "document editor features" rule
 **What:** New `agent_docs/editor_guide.md` — a usage guide for the visual editor: every panel / control (Scenes, Walkable, Layers, Interactables, Playtest, Document), the edit → test → publish loop, and reference tables (fit modes, Conditions, Effects). Added a standing rule to `workflow.md` (step 3, Execute), `AGENTS.md` (progressive-disclosure list), and `conventions.md` ("Done means"): any change under `src/editor/` must update the guide in the same task.
 **Why:** The editor has grown (scenes · walkable · layers · interactables · logic forms) and was undocumented; it's the eventual OSS product surface, so its usage docs can't lag behind the code. The user asked for the guide + a process rule to keep it current.

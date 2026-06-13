@@ -9,6 +9,7 @@ import type {
   LayerData,
   LayerFit,
   LayerRole,
+  Recipe,
   SceneBand,
   SceneData,
   SceneId,
@@ -53,6 +54,13 @@ interface EditorStore {
   setInteractableWhen(id: SceneId, index: number, when: Condition | undefined): void
   setInteractableEffects(id: SceneId, index: number, effects: Effect[]): void
   setInteractableUses(id: SceneId, index: number, uses: UseRule[]): void
+  // Items + recipes (M4 2b) — document-level data; no `revision` bump.
+  addItem(): void
+  removeItem(id: ItemId): void
+  setItemName(id: ItemId, name: string): void
+  addRecipe(): void
+  removeRecipe(index: number): void
+  setRecipe(index: number, recipe: Recipe): void
 }
 
 function blankScene(id: SceneId): SceneData {
@@ -82,6 +90,13 @@ function uniqueInteractableId(taken: readonly InteractableData[], base: string):
   return `${base}-${n}`
 }
 
+function uniqueItemId(items: GameDoc['items'], base: string): ItemId {
+  if (!items[base]) return base
+  let n = 2
+  while (items[`${base}-${n}`]) n += 1
+  return `${base}-${n}`
+}
+
 export const editorStore = createStore<EditorStore>((set, get) => {
   /** Replace one scene immutably. `remount` bumps `revision` so the preview
    *  re-mounts (needed when the change is visual in the Pixi canvas). */
@@ -97,6 +112,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     patchScene(id, { layers: fn(get().doc.scenes[id].layers) }, remount)
   const mapInteractables = (id: SceneId, fn: (its: InteractableData[]) => InteractableData[]) =>
     patchScene(id, { interactables: fn(get().doc.scenes[id].interactables) }, false)
+  // Document-level patch (items / recipes); never touches the Pixi preview.
+  const patchDoc = (patch: Partial<GameDoc>) => set({ doc: { ...get().doc, ...patch } })
 
   return {
     doc: structuredClone(gameDoc),
@@ -190,6 +207,29 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapInteractables(id, (its) =>
         its.map((it, i) => (i === index && it.kind !== 'pickable' ? { ...it, uses } : it)),
       ),
+    addItem: () => {
+      const { items } = get().doc
+      const id = uniqueItemId(items, 'item')
+      patchDoc({ items: { ...items, [id]: { id, name: 'New item' } } })
+    },
+    removeItem: (id) => {
+      const items = { ...get().doc.items }
+      delete items[id]
+      patchDoc({ items })
+    },
+    setItemName: (id, name) => {
+      const { items } = get().doc
+      patchDoc({ items: { ...items, [id]: { ...items[id], name } } })
+    },
+    addRecipe: () => {
+      const { items, recipes } = get().doc
+      const first = Object.keys(items)[0] ?? ''
+      patchDoc({ recipes: [...(recipes ?? []), { a: first, b: first, output: first }] })
+    },
+    removeRecipe: (index) =>
+      patchDoc({ recipes: (get().doc.recipes ?? []).filter((_, i) => i !== index) }),
+    setRecipe: (index, recipe) =>
+      patchDoc({ recipes: (get().doc.recipes ?? []).map((r, i) => (i === index ? recipe : r)) }),
   }
 })
 

@@ -122,6 +122,24 @@ The **selected object's form**:
 > automatic — its **effects** are *extra* things on top. For an **exit**, the
 > `goTo` is automatic; effects run after it.
 
+### Items · _N_ and Recipes · _N_ (global)
+
+These two sections are **document-level** — they apply to the whole game, not the
+selected scene.
+
+**Items** — the inventory catalogue.
+
+- **+ Item** — adds an item (a fixed auto id + an editable name).
+- Edit the **name** freely; **✕** deletes. The **id** is fixed at creation because
+  interactables, uses, effects and recipes reference it — the name is just the
+  label shown in the inventory and the editor's item pickers.
+
+**Recipes** — combine rules: `a + b → output`, order-independent. Selecting two
+matching items in the inventory consumes both and yields the output.
+
+- **+ Recipe** — adds a row; pick **a**, **b**, and **output** from the items.
+- **✕** deletes the rule.
+
 ### Playtest
 
 - **▶ Test in game** — saves the working document as a dev draft and opens the

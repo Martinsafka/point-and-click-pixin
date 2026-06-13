@@ -704,6 +704,42 @@ body {
   gap: 4px;
 }
 
+/* Item catalogue + recipe table (editor) */
+.catalogue {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cat-row__name {
+  flex: 1;
+}
+.cat-row__id {
+  flex: 0 0 auto;
+  max-width: 90px;
+  font-size: 10px;
+  opacity: 0.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recipe-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.recipe-row__sep {
+  flex: 0 0 auto;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
 /* Hit-area overlay (editor) */
 .hitarea-overlay {
   position: absolute;
