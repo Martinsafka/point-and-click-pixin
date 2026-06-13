@@ -151,6 +151,12 @@ export interface SceneData {
   spawn: { xFrac: number; yFrac: number }
 }
 
+/**
+ * Pointer cursor per interaction context — an optional uploaded icon (image URL),
+ * else an emoji fallback shown by the runtime.
+ */
+export type CursorKind = 'walk' | 'pickable' | 'interact' | 'exit'
+
 /** The whole authored game. */
 export interface GameDoc {
   start: SceneId
@@ -158,4 +164,6 @@ export interface GameDoc {
   items: Record<ItemId, ItemDef>
   initialFlags: Record<FlagId, boolean>
   recipes?: Recipe[]
+  /** Optional per-context cursor icons (image URLs); missing → emoji fallback. */
+  cursors?: Partial<Record<CursorKind, string>>
 }

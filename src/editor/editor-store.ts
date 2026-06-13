@@ -2,6 +2,7 @@ import { createStore } from 'zustand/vanilla'
 import { useStore } from 'zustand'
 import type {
   Condition,
+  CursorKind,
   Effect,
   GameDoc,
   InteractableData,
@@ -64,6 +65,7 @@ interface EditorStore {
   setInteractableExamine(id: SceneId, index: number, examine: string): void
   setItemExamine(id: ItemId, examine: string): void
   setItemIcon(id: ItemId, icon: string | undefined): void
+  setCursorIcon(kind: CursorKind, icon: string | undefined): void
 }
 
 function blankScene(id: SceneId): SceneData {
@@ -243,6 +245,7 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       const { items } = get().doc
       patchDoc({ items: { ...items, [id]: { ...items[id], icon } } })
     },
+    setCursorIcon: (kind, icon) => patchDoc({ cursors: { ...get().doc.cursors, [kind]: icon } }),
   }
 })
 

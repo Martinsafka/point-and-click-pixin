@@ -93,8 +93,9 @@ cutscenes, audio, atmosphere, theming) → packaging.
       condition editor with all/any/not).
 - [x] Item catalogue + recipe table.
 - [x] **Examine** — "look at" text for items / objects (+ inventory item icons).
-- [ ] _(optional)_ **Verb / cursor system** — look / use / talk verbs + a hover
-      cursor over hotspots (vs the current single-click); runtime mode + editor.
+- [x] _(optional)_ **Context cursor** — icon-per-hotspot pointer (walk / pickable /
+      interact / exit) + emoji fallback; runtime + editor. _(Full look/use/talk verb
+      modes stay deferred — single-click model kept; examine is on a plain click.)_
 
 ### M5 — Characters & animation
 

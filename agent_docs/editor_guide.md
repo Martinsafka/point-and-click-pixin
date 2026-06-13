@@ -145,6 +145,13 @@ matching items in the inventory consumes both and yields the output.
 - **+ Recipe** — adds a row; pick **a**, **b**, and **output** from the items.
 - **✕** deletes the rule.
 
+### Cursors (global)
+
+The in-game pointer changes by what it's over: **walk** (empty / floor),
+**pickable**, **interact**, or **exit**. Upload an icon per context (SVG/PNG), or
+leave it for the emoji fallback (👣 / ✋ / ⚙️ / 🚪) shown in the preview. Over the
+game UI the normal pointer returns.
+
 ### Playtest
 
 - **▶ Test in game** — saves the working document as a dev draft and opens the

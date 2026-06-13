@@ -23,6 +23,17 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M4: context cursor (icons + emoji fallback)
+**What:** An in-game pointer that changes by what it's over — walk / pickable / interact / exit — using an uploaded icon per context, else an emoji fallback (👣 ✋ ⚙️ 🚪). New `ui/GameCursor.tsx` (DOM cursor following the mouse; hover hit-test via `pickInteractable`; native cursor hidden on the scene canvas) + `editor/CursorEditor.tsx` (upload / clear an icon per kind). Schema: `GameDoc.cursors?` (`CursorKind` → icon URL). `editor-store` gains `setCursorIcon`; the Editor gets a global **Cursors** section. Guide updated.
+**Why:** The user asked for the optional cursor part of M4's verb/cursor item, kept **simple** (icons + emoji) — not the full look/use/talk verb modes.
+**How:**
+- **Hover logic in the DOM, not Pixi:** the game canvas is fullscreen, so `clientX/Y` map to scene px → `pickInteractable` (pure, no Pixi) finds the hotspot under the mouse on each `mousemove`. No scene changes, no per-move store writes.
+- **Native cursor hidden on `.game-canvas canvas`**; the custom cursor shows only while the mousemove target is the canvas, so UI chrome keeps its normal pointer.
+- **Position via a ref** (no re-render); only kind / visibility use state, and bail out when unchanged.
+- **Icons = uploaded data-URLs** on `doc.cursors` (survive Export); emoji fallback per kind.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200 (game, `?edit`, both modules). Feel + hover are the user's browser check.
+**Follow-ups:** a "use item" cursor (the selected item's icon); walkable-vs-blocked distinction; the full look/use/talk verb system stays the deferred optional. **M4 is complete.**
+
 ### 2026-06-13 — M4 step 3: examine ("look at") + inventory item icons
 **What:** **Examine** — `examine?` text on interactables + items; a plain click on an object (no item selected), or a click on an inventory item, shows it as a transient **narration line** (auto-clears). **Item icons** — `ItemDef.icon` is now authorable + rendered in the inventory. Schema: `examine?` on the three interactable variants + `ItemDef`. Runtime: `StoryStore` gains a **store-only** `narration` + `say()`; `scene.ts` narrates examine on click; `Inventory` narrates item examine + renders the icon; `App` shows the narration line. Editor: `InteractableForm` gets a **look** field; `ItemCatalogue` gets an **examine** field + an **+ Icon** upload (data-URL) with thumbnail / clear; `editor-store` gains `setInteractableExamine` / `setItemExamine` / `setItemIcon`. Guide updated.
 **Why:** M4's last core piece (examine) + the user's item-icon request. Chose **upload** over auto-cropping the scene art — simple, explicit, reuses the layer-upload pattern; auto-crop is fragile (hit-area includes background; builtin vs image differ).

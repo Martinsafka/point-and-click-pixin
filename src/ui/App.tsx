@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { GameCanvas } from './GameCanvas'
 import { Inventory } from './Inventory'
 import { Menu } from './Menu'
+import { GameCursor } from './GameCursor'
 import { TitleScreen } from './TitleScreen'
 import { useStory } from './use-story'
 import { gameDoc } from '../data/game'
@@ -63,6 +64,7 @@ export function App() {
         <Inventory />
         <Menu onExit={() => setPlaying(false)} />
       </div>
+      <GameCursor />
     </div>
   )
 }

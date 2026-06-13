@@ -9,6 +9,7 @@ import { LayerList } from './LayerList'
 import { InteractableForm } from './InteractableForm'
 import { ItemCatalogue } from './ItemCatalogue'
 import { RecipeTable } from './RecipeTable'
+import { CursorEditor } from './CursorEditor'
 
 function round(n: number): number {
   return Math.round(n * 1000) / 1000
@@ -198,6 +199,9 @@ export function Editor() {
 
         <h2 className="editor__title">Recipes · {(doc.recipes ?? []).length}</h2>
         <RecipeTable recipes={doc.recipes ?? []} items={doc.items} />
+
+        <h2 className="editor__title">Cursors</h2>
+        <CursorEditor cursors={doc.cursors} />
 
         <h2 className="editor__title">Playtest</h2>
         <div className="editor__toolbar">
