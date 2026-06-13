@@ -1,6 +1,8 @@
 import { createStore } from 'zustand/vanilla'
 import { useStore } from 'zustand'
 import type {
+  Condition,
+  Effect,
   GameDoc,
   InteractableData,
   ItemId,
@@ -10,6 +12,7 @@ import type {
   SceneBand,
   SceneData,
   SceneId,
+  UseRule,
 } from '../data/schema'
 import { gameDoc } from '../data/game'
 
@@ -47,6 +50,9 @@ interface EditorStore {
   setInteractableId(id: SceneId, index: number, value: string): void
   setInteractableItem(id: SceneId, index: number, item: ItemId): void
   setInteractableTo(id: SceneId, index: number, to: SceneId): void
+  setInteractableWhen(id: SceneId, index: number, when: Condition | undefined): void
+  setInteractableEffects(id: SceneId, index: number, effects: Effect[]): void
+  setInteractableUses(id: SceneId, index: number, uses: UseRule[]): void
 }
 
 function blankScene(id: SceneId): SceneData {
@@ -175,6 +181,14 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setInteractableTo: (id, index, to) =>
       mapInteractables(id, (its) =>
         its.map((it, i) => (i === index && it.kind === 'exit' ? { ...it, to } : it)),
+      ),
+    setInteractableWhen: (id, index, when) =>
+      mapInteractables(id, (its) => its.map((it, i) => (i === index ? { ...it, when } : it))),
+    setInteractableEffects: (id, index, effects) =>
+      mapInteractables(id, (its) => its.map((it, i) => (i === index ? { ...it, effects } : it))),
+    setInteractableUses: (id, index, uses) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) => (i === index && it.kind !== 'pickable' ? { ...it, uses } : it)),
       ),
   }
 })

@@ -1,5 +1,8 @@
 import { editorStore } from './editor-store'
 import type { InteractableData, ItemDef, ItemId, SceneId } from '../data/schema'
+import { EffectList } from './EffectList'
+import { ConditionEditor } from './ConditionEditor'
+import { UsesList } from './UsesList'
 
 interface Props {
   sceneId: SceneId
@@ -12,9 +15,9 @@ interface Props {
 }
 
 /**
- * Edits the selected interactable: its id, the essential field (pickable → item,
- * exit → target scene), and its hit-area (draw / clear). The Condition + Effect +
- * `uses` forms come in M4 step 2.
+ * Edits the selected interactable: id + essential field (pickable → item, exit →
+ * target scene), the `when` gate, its `effects`, and (interact / exit) item-`uses`
+ * rules, plus its hit-area (draw / clear).
  */
 export function InteractableForm({
   sceneId,
@@ -71,7 +74,31 @@ export function InteractableForm({
         </label>
       )}
 
-      {interactable.kind === 'interact' && <p className="intr-form__note">Effects: M4 step 2.</p>}
+      <div className="intr-form__field intr-form__field--col">
+        <span>when</span>
+        <ConditionEditor
+          condition={interactable.when}
+          onChange={(c) => s().setInteractableWhen(sceneId, index, c)}
+          items={items}
+          sceneIds={sceneIds}
+        />
+      </div>
+
+      <EffectList
+        effects={interactable.effects ?? []}
+        onChange={(e) => s().setInteractableEffects(sceneId, index, e)}
+        items={items}
+        sceneIds={sceneIds}
+      />
+
+      {interactable.kind !== 'pickable' && (
+        <UsesList
+          uses={interactable.uses ?? []}
+          onChange={(u) => s().setInteractableUses(sceneId, index, u)}
+          items={items}
+          sceneIds={sceneIds}
+        />
+      )}
 
       <div className="editor__toolbar">
         <button

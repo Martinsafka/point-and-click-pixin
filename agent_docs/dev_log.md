@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M4 step 2a: Condition / Effect / uses forms
+**What:** The editor authors per-interactable logic. New `editor/EffectList.tsx` (controlled `Effect[]` editor + shared `ItemSelect` / `SceneSelect`), `editor/ConditionEditor.tsx` (recursive `Condition` editor — hasItem / flag / visited leaves + all / any / not combinators), `editor/UsesList.tsx` (item → effects rules, reusing `EffectList`). `InteractableForm` gains `when` (gate), `effects`, and — for interact / exit — `uses`. `editor-store` gains `setInteractableWhen` / `setInteractableEffects` / `setInteractableUses`.
+**Why:** M4's logic step — the full condition/effect vocabulary that powers all gating is now authorable, so an `interact` does things, exits/objects gate on conditions, and "use item on object" puzzles (crank → panel → gem) are buildable in the editor.
+**How:**
+- **Controlled components** (`value` + `onChange`) so `EffectList` is reused in interactable effects AND in each use rule's effects; the parent persists via the store. No `revision` bump (interactables are DOM-only).
+- **Recursive `ConditionEditor`:** all/any render nested editors (+ add / delete each), not renders one. An `allowEmpty` prop lets the top-level gate be "(always)" while nested children must be real conditions. Union edits use `{ ...node, … }` spreads to keep the narrowed `kind`.
+- **Panel widened 260 → 320px** + flex-wrap rows so the forms fit the column.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200 (game, `?edit`, all four modules). Authoring + in-game behaviour is the user's browser check.
+**Follow-ups:** **M4 step 2b** — item catalogue (add/edit items) + recipe table; then **examine** (step 3). Note: pickable `effects` are the optional *extra* effects (giveItem + picked-flag stay implicit); `startDialog` is a marker until M7.
+
 ### 2026-06-13 — M4 step 1: place interactables + draw hit-areas
 **What:** The editor can place interactables and draw their hit-areas. New `editor/HitAreaOverlay.tsx` (SVG/DOM overlay drawing every interactable's hit-area, colour-coded by kind, the selected one highlighted + labelled by id + vertices; draw mode = click to add points) and `editor/InteractableForm.tsx` (edit the selected one's id + essential field — pickable→item, exit→target scene — and draw/clear its hit-area). Editor gains an **Interactables** panel (+ Pick / + Use / + Exit, a list to select / delete). `editor-store` gains `addInteractable` / `removeInteractable` / `setHitArea` / `setInteractableId` / `setInteractableItem` / `setInteractableTo`.
 **Why:** M4 step 1 — author the clickable objects (the jam slice's were hand-coded). Pickable + exit are end-to-end testable now; `interact`'s effects come in step 2.

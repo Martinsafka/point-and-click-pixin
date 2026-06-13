@@ -255,7 +255,7 @@ body {
 /* Editor (dev-only, ?edit) */
 .editor {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 320px 1fr;
   width: 100vw;
   height: 100vh;
 }
@@ -595,6 +595,113 @@ body {
   margin: 0;
   font-size: 11px;
   opacity: 0.5;
+}
+
+.intr-form__field--col {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+/* Logic editors — effects, conditions, uses (editor) */
+.logic {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px;
+  background: rgba(11, 13, 18, 0.45);
+  border: 1px solid #1c2230;
+  border-radius: 5px;
+}
+
+.logic__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+
+.logic__row,
+.logic__cond {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.logic__sel,
+.logic__in {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 5px;
+  background: rgba(11, 13, 18, 0.85);
+  border: 1px solid #2a3650;
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+}
+
+.logic__in {
+  flex: 0 1 64px;
+}
+
+.logic__chk {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  opacity: 0.75;
+}
+
+.logic__del,
+.logic__add {
+  padding: 2px 6px;
+  background: rgba(20, 26, 38, 0.85);
+  border: 1px solid #2a3650;
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+.logic__del:hover {
+  border-color: #c8576a;
+}
+.logic__add:hover {
+  border-color: #45568a;
+}
+
+.logic__nested {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding-left: 8px;
+  border-left: 1px solid #2a3650;
+}
+.logic__nested-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.logic__use {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 5px;
+  background: rgba(20, 26, 38, 0.4);
+  border: 1px solid #1c2230;
+  border-radius: 4px;
+}
+.logic__use-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* Hit-area overlay (editor) */

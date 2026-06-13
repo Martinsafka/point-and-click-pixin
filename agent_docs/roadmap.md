@@ -89,7 +89,9 @@ cutscenes, audio, atmosphere, theming) → packaging.
 - [x] Place pickable / interact / exit objects; draw hit areas. _(+ id & the
       essential field: pickable→item, exit→target scene. Click-to-select +
       vertex editing are follow-ups.)_
-- [ ] Forms for Condition + Effect + `uses`; item catalogue + recipe table.
+- [x] Forms for Condition + Effect + `uses` (per-interactable logic; recursive
+      condition editor with all/any/not).
+- [ ] Item catalogue + recipe table.
 - [ ] **Examine** — "look at" text for items / objects.
 - [ ] _(optional)_ **Verb / cursor system** — look / use / talk verbs + a hover
       cursor over hotspots (vs the current single-click); runtime mode + editor.
