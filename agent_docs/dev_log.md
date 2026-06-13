@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M5 step 1: AnimatedSprite character + view descriptor + placeholder atlas
+**What:** The character is now an **`AnimatedSprite`** driven by a **`ViewDescriptor`** (atlas + grid + `state → clip`), replacing the placeholder cube — a data change via the `CharacterView` interface, not a logic refactor. New: `data/schema.ts` `ViewDescriptor` + `AnimClip` types; `entities/placeholder-atlas.ts` (a procedural character spritesheet drawn in code → PNG data-URL + its descriptor, idle + walk clips); `entities/sprite-view.ts` `createSpriteView` (loads the atlas, slices frame sub-textures, builds clips, plays idle / walk per `MoveState`, mirrors for west facing). `scene.ts` mounts it in both the game + the editor preview.
+**Why:** M5 step 1 — realise the view-descriptor model from `asset_pipeline.md`; swap the cube for a real animated sprite, testable now via a procedural placeholder (no real art needed).
+**How:**
+- **Placeholder = a baked atlas, same path as real art:** the figure is drawn on a 2D canvas → `toDataURL` → loaded like any uploaded atlas, so the editor's future atlas upload reuses the exact `createSpriteView` load path.
+- **View ≠ depth:** the AnimatedSprite is a child of the view `container`; facing mirrors `sprite.scale.x` while `Character` depth-scales `container` — independent axes.
+- **Frames:** sub-textures share one atlas source (`new Texture({ source, frame })`); clips set `animationSpeed = fps / 60` + `loop`. `AnimatedSprite` auto-updates on `Ticker.shared` (movement stays on `app.ticker`).
+- **Verified:** format / typecheck / lint / build green; dev smoke 200 (game, `?edit`, both modules). The actual animation (idle bob / walk cycle / facing mirror) is the user's **browser check** — if it doesn't animate, switch the AnimatedSprite to the app ticker (a `view.update` hook).
+**Follow-ups:** **M5.2** real 8-direction frames (clip keys `walk.E` …, mirrored to ~5) wired to facing; **M5.3** one-shots (pickup / interact) + `onComplete`; **M5.4** the editor Characters tab (upload atlas, define clips, map state / facing, anchor + footprint).
+
 ### 2026-06-13 — Editor IA: top-level tabs (Scene / Items / Characters / Project)
 **What:** The editor panel is split into top-level **tabs** instead of one long scroll — **Scene** (Scenes · Walkable · Layers · Interactables), **Items** (Items · Recipes), **Characters** (placeholder for M5), **Project** (Cursors · Document). A persistent **footer** holds **▶ Test in game** / Discard (always reachable). Sections still collapse (accordion) within a tab; the panel stays drag-resizable.
 **Why:** The user flagged the single panel was getting crowded; the big cohesive blocks (scenes / items / characters) deserve separation, and M5's character & animation editor needs its own space ("a second level"). Pre-M5 IA so M5 drops into the Characters tab.

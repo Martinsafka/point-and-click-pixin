@@ -7,7 +7,8 @@ import {
   type Ticker,
 } from 'pixi.js'
 import { Character } from '../entities/character'
-import { createCubeView } from '../entities/character-view'
+import { createSpriteView } from '../entities/sprite-view'
+import { placeholderView } from '../entities/placeholder-atlas'
 import { resolveDepthScale } from '../data/scene-config'
 import { depthScaleAt } from '../systems/depth'
 import type { WalkArea } from '../systems/walkable'
@@ -154,7 +155,7 @@ export async function mountScene(
     conditional.length > 0 ? store.subscribe(refreshVisibility) : () => {}
 
   const walkable: WalkArea = { polygon: resolvePolygon(scene.walkable, screen) }
-  const character = new Character(createCubeView(), depthScale, walkable)
+  const character = new Character(await createSpriteView(placeholderView), depthScale, walkable)
   interactive.addChild(character.displayObject)
   character.setPosition(scene.spawn.xFrac * screen.width, scene.spawn.yFrac * screen.height)
 
@@ -321,7 +322,7 @@ export async function mountPreview(
   }
 
   // Static character placeholder at the spawn point (shows scale + position).
-  const view = createCubeView()
+  const view = await createSpriteView(placeholderView)
   const feetX = scene.spawn.xFrac * screen.width
   const feetY = scene.spawn.yFrac * screen.height
   view.container.position.set(feetX, feetY)

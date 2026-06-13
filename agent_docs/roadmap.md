@@ -113,11 +113,12 @@ M4 additions (raised after the core was done):
 ### M5 — Characters & animation
 
 - Runtime:
-  - [ ] **View descriptor** (`asset_pipeline.md`): per character, `state → animation`
-        — idle, walk (8-dir, mirror to ~5), plus named one-shots (pickup, interact,
-        talk); frames + per-frame timing, loop, anchor + footprint.
-  - [ ] **AnimatedSprite** view from baked PNG atlases; swap the placeholder cube →
-        a real animated character (a data change via the view, not a refactor).
+  - [x] **View descriptor** (`asset_pipeline.md`): `state → animation` (atlas + grid
+        + clips + anchor). Idle / walk done; 8-dir keys + named one-shots (pickup,
+        interact, talk) land in M5.2 / M5.3.
+  - [x] **AnimatedSprite** view from a baked PNG atlas; placeholder cube → an animated
+        figure (a data change via the view, not a refactor). Procedural placeholder
+        atlas (drawn in code) for testing before real art.
   - [ ] **8-dir facing → the right walk cycle** (depth-scale + Y-sort already feed
         off the feet point).
   - [ ] **One-shot triggers + `onComplete`**: an interactable / effect plays a

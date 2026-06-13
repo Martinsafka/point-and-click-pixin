@@ -36,6 +36,32 @@ export interface DepthConfig {
   scaleFar: number
 }
 
+/** One animation: frame indices into the atlas grid + playback. */
+export interface AnimClip {
+  frames: number[]
+  fps: number
+  loop: boolean
+}
+
+/**
+ * A character's view: a baked sprite atlas + how to play it. Drives the swappable
+ * `AnimatedSprite` view (entities/sprite-view.ts) — the placeholder figure and real
+ * uploaded atlases share this shape. `clips` are keyed by state (e.g. `idle`,
+ * `walk`); 8-direction keys (e.g. `walk.E`) arrive in M5.2.
+ */
+export interface ViewDescriptor {
+  /** Atlas image URL (a data-URL for the placeholder / uploads). */
+  atlas: string
+  frameWidth: number
+  frameHeight: number
+  /** Frames per row in the atlas grid. */
+  columns: number
+  /** Sprite anchor (0..1); feet at the bottom = `anchorY: 1`. */
+  anchorX: number
+  anchorY: number
+  clips: Record<string, AnimClip>
+}
+
 export interface ItemDef {
   id: ItemId
   name: string
