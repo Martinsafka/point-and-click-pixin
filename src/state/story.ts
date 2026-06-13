@@ -47,6 +47,7 @@ export function createStoryStore(doc: GameDoc) {
       )
       return true
     },
+    load: (state) => set({ ...state, selectedItem: null }),
     reset: (nextDoc) => set(freshState(nextDoc)),
   }))
 }

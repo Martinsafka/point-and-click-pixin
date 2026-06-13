@@ -65,12 +65,12 @@ Data foundation → finish gameplay (the jam slice) → runtime framing (save / 
 
 ### M2 — Runtime polish & framing  (completes the game frontend; no editor)
 
-- [ ] **ESC** opens / closes the menu. _(quick win)_
-- [ ] **Save / load** — one slot in IndexedDB (serialise the story state); a
-      "Continue" entry in the menu + on the title screen.
-- [ ] **Title / start screen** — Play / Continue / settings; a visual-only "menu
-      scene" (reuses scene layers; no walkable/interactables). Its in-editor
-      composer is M8.
+- [x] **ESC** opens / closes the menu.
+- [x] **Save / load** — one slot in IndexedDB (serialise the story state);
+      surfaced as Save (in-game) + Continue (title screen).
+- [x] **Title / start screen** — New game / Continue (DOM for now). In-game menu
+      becomes Save + **Exit to title** (confirmed: unsaved progress is lost). The
+      visual SVG composition of the title is the editor's job (M8).
 
 ### M3 — Editor core (dev-only)
 

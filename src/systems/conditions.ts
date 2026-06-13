@@ -26,6 +26,8 @@ export interface StoryStore extends StoryState {
   select(item: ItemId | null): void
   /** Combine two inventory items via a recipe; returns whether one matched. */
   combine(a: ItemId, b: ItemId): boolean
+  /** Replace the whole story state — used to load a save. */
+  load(state: StoryState): void
   reset(doc: GameDoc): void
 }
 

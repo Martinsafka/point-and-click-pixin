@@ -175,6 +175,68 @@ body {
   cursor: pointer;
 }
 
-.menu-panel__item:hover {
+.menu-panel__item:hover:not(:disabled) {
   border-color: #e8b552;
+}
+
+.menu-panel__item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.menu-panel__note {
+  margin: -4px 0 4px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* Title / start screen */
+.title {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 32%, #18223a, #0b0d12 72%);
+}
+
+.title__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  text-align: center;
+}
+
+.title__name {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: 0.04em;
+}
+
+.title__tagline {
+  margin: 0 0 12px;
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.title__btn {
+  min-width: 200px;
+  padding: 12px 18px;
+  background: rgba(20, 26, 38, 0.85);
+  border: 1px solid #2a3650;
+  border-radius: 8px;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.title__btn:hover:not(:disabled) {
+  border-color: #e8b552;
+}
+
+.title__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

@@ -23,6 +23,28 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M2b: title screen + exit-to-title  ← M2 complete
+**What:** The app now has two phases — **title** and **playing**. New `ui/TitleScreen.tsx` (New game / Continue; DOM for now). `App.tsx` holds the phase: New game resets the store + enters, Continue loads the save + enters; the Pixi world (GameCanvas) only mounts while playing. The in-game `Menu` drops New game/Continue and gains **Exit to title** with a confirmation (unsaved progress is lost).
+**Why:** The flow requested — in-game you Save or Exit; on the title you start New game or Continue a save. Completes M2.
+**How:**
+- **Phase = React state in App.** The title branch returns `<TitleScreen>`; the playing branch renders the game + overlay. Hooks stay unconditional (the early return is after them). The store is set (reset/load) *before* entering, so the scene host mounts the right scene.
+- **Exit tears the world down** (GameCanvas unmounts → Pixi app destroyed) and leaves the in-progress state in the store until New game (reset) or Continue (load) overwrites it — so unsaved progress is genuinely discarded, as warned.
+- **Exit confirmation** is a two-step menu panel; ESC / Resume / backdrop all drop it in handlers, not an effect (lint: `react-hooks/set-state-in-effect`).
+- The rich SVG-composed title is deferred to the editor (M8); this is a clean DOM placeholder.
+- **Fix:** `saveGame` now persists only the plain `StoryState` fields. `storyStore.getState()` also carries the store's action functions, which IndexedDB's structured clone rejected — so Save silently failed (and Continue stayed disabled). Confirmed with a `structuredClone` check.
+- **Verified:** typecheck + lint + build green; dev server transforms the modules.
+**Follow-ups:** M2 done → **M3 (the editor)**. Same-scene re-mount-on-reset/load still pending; title visual composer is M8.
+
+### 2026-06-13 — M2: ESC menu + save/load (IndexedDB)
+**What:** Menu opens/closes with **ESC**. One-slot **save/load**: `src/state/storage.ts` (hand-rolled IndexedDB wrapper — `saveGame` / `loadGame` / `hasSave`), a `load(state)` store action, and Save / Continue buttons in the menu (Continue disabled when no save; "Saved ✓" feedback).
+**Why:** M2's first chunk — runtime polish + persistence, before the title screen and the editor.
+**How:**
+- **Save = the serialisable story state** (currentScene, flags, inventory, visited) put under one IndexedDB slot, versioned (old saves ignored). The per-frame world (cube position) isn't saved — re-mounting the scene on load reconstructs it. `load` clears `selectedItem`.
+- **Load drives the store**, and the existing subscriptions follow: the host swaps to the saved scene (if it differs), the visibility subscription refreshes pickables to match flags, the inventory bar reflects the loaded items.
+- **No new deps** — hand-rolled IDB (~50 lines) instead of a library, for one slot.
+- **Verified:** typecheck + lint + build green; dev server transforms the modules. Save → Continue is a browser/IDB flow — test in `pnpm dev`.
+**Follow-ups:** M2b — title / start screen (app phase title→playing; a visual title scene + Play / Continue). Re-mount-on-reset/load would make a same-scene restart re-spawn the cube (currently it doesn't).
+
 ### 2026-06-13 — Roadmap expanded (post-M1 feature planning)
 **What:** Reworked `agent_docs/roadmap.md` to fold in 9 requested feature areas. New layout: M2 runtime polish & framing (ESC menu, save/load via IndexedDB, title/start screen), M3 editor core, M4 editor interactables/items/recipes, M5 NPCs + dialogue (typewriter) + stealth (NPC vision) + voice gibberish, M6 audio authoring (conditional per-entity sounds incl. footsteps), M7 atmosphere & lighting (stylised), M8 UI theming, M9 story graph, M10 packaging.
 **Why:** Map the path from the jam slice to the full reusable engine + editor before building the editor.

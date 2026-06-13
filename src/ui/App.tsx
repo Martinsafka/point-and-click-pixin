@@ -1,20 +1,41 @@
+import { useState } from 'react'
 import { GameCanvas } from './GameCanvas'
 import { Inventory } from './Inventory'
 import { Menu } from './Menu'
+import { TitleScreen } from './TitleScreen'
 import { useStory } from './use-story'
 import { gameDoc } from '../data/game'
+import { storyStore } from '../state/story'
+import { loadGame } from '../state/storage'
 
 /**
- * Root of the React overlay. The Pixi world sits underneath (GameCanvas);
- * everything rendered here is DOM chrome layered on top — the "world in Pixi,
- * chrome in React" split from agent_docs/architecture.md.
- *
- * Scene name, visited count, the inventory and the menu are all driven by the
- * story store via `useStory` / direct store access.
+ * App shell with two phases: the title screen, and the running game. New game /
+ * Continue set up the story store then enter the game (which mounts the Pixi
+ * world); Exit to title leaves it (tearing the world down). The Pixi world only
+ * exists while playing.
  */
 export function App() {
+  const [playing, setPlaying] = useState(false)
   const sceneId = useStory((s) => s.currentScene)
   const visited = useStory((s) => s.visited.length)
+
+  const newGame = () => {
+    storyStore.getState().reset(gameDoc)
+    setPlaying(true)
+  }
+
+  const continueGame = async () => {
+    const state = await loadGame()
+    if (state && gameDoc.scenes[state.currentScene]) {
+      storyStore.getState().load(state)
+      setPlaying(true)
+    }
+  }
+
+  if (!playing) {
+    return <TitleScreen onNewGame={newGame} onContinue={() => void continueGame()} />
+  }
+
   const sceneName = gameDoc.scenes[sceneId]?.name ?? sceneId
 
   return (
@@ -27,7 +48,7 @@ export function App() {
           bar, and use a selected item on objects.
         </p>
         <Inventory />
-        <Menu />
+        <Menu onExit={() => setPlaying(false)} />
       </div>
     </div>
   )
