@@ -18,12 +18,14 @@ Long term: author full games (dozens of scenes) with no code.
   `ui` (React overlay) · `editor` (dev-only) · `content` (data + assets).
 - **Editor is dev-only.** The player build ships baked data + assets, no editor.
 - **Game runs without the LLM** (persuasion NPC stays an optional, stubbed bonus).
+- **Each feature is schema-first → runtime → editor.** Extend `GameDoc`, build the
+  runtime that plays it, then add the editor controls — so the editor never forces
+  a refactor.
 
 ## Sequencing
 
-Data foundation → finish gameplay (the jam slice) → layer the editor on top →
-package it. Build gameplay schema-first so the editor needs no refactor. The
-editor authors data for runtime systems, so those systems exist first.
+Data foundation → finish gameplay (the jam slice) → runtime framing (save / title)
+→ the editor → feature systems (NPCs, audio, atmosphere, theming) → packaging.
 
 ## Working cadence
 
@@ -50,40 +52,83 @@ editor authors data for runtime systems, so those systems exist first.
 - [x] Scene transitions + persistence — exits gated by Condition; inventory/flags
       survive scene 2.
 - [x] Interaction: click object → effect (React overlay + Zustand). _(Dialog
-      runtime is M4; `startDialog` is a marker for now.)_
+      runtime is M5; `startDialog` is a marker for now.)_
 - [x] Inventory: add + combine (data-driven recipes) + "use item on object".
 - [x] UI: simple menu.
 - [x] Audio: ambient loop + ≥1 SFX (Howler, triggered by state).
-- [ ] Stealth detection — only if it's a core beat.
+- [ ] Stealth detection → folded into **M5** (NPC vision).
 - [x] Author the 2–3 scene vertical slice → JAM BUILD DONE. _(2 scenes, full
       mechanics, placeholder art; stealth optional.)_
 
-### M2 — Minimal editor (dev-only)  (start with what's painful by hand)
+> Feature milestones below each have a **runtime** part (the engine does it) and an
+> **editor** part (author it visually). Build runtime first.
+
+### M2 — Runtime polish & framing  (completes the game frontend; no editor)
+
+- [ ] **ESC** opens / closes the menu. _(quick win)_
+- [ ] **Save / load** — one slot in IndexedDB (serialise the story state); a
+      "Continue" entry in the menu + on the title screen.
+- [ ] **Title / start screen** — Play / Continue / settings; a visual-only "menu
+      scene" (reuses scene layers; no walkable/interactables). Its in-editor
+      composer is M8.
+
+### M3 — Editor core (dev-only)
 
 - [ ] Edit mode (`?edit`, DEV-only) — React editor shell beside the live preview.
 - [ ] Scene panel: list / add / delete / select (preview via the existing engine).
-- [ ] Layers: upload SVG → place in band, reorder, set role; persist SVG to
-      public/assets, layer to the doc.
-- [ ] Draw the walkable polygon on the preview.
-- [ ] Save `GameDoc` back to JSON (dev endpoint or download/upload).
+- [ ] Layers: upload SVG → place in band, reorder, set role; draw the walkable
+      polygon; save `GameDoc` to JSON (dev endpoint or download/upload).
 
-### M3 — Editor: interactables & exits
+### M4 — Editor: interactables, items, recipes, exits
 
-- [ ] Place pickable / interact / door objects visually.
-- [ ] Forms for Condition + Effect (e.g. door needs key → goTo scene).
+- [ ] Place pickable / interact / door objects; draw hit areas.
+- [ ] Forms for Condition + Effect + `uses`; item catalogue + recipe table.
 
-### M4 — Editor: NPCs & dialog
+### M5 — NPCs, dialogue & stealth
 
-- [ ] Place NPCs; arrival / departure conditions.
-- [ ] Dialog-tree editor (line → player options → effects); give item, unlock flags.
-- [ ] Optional hook: the persuasion-gate NPC plugs the LLM in here, behind the stub.
+- Runtime:
+  - [ ] NPC entities — placement, arrival / departure conditions, item handover.
+  - [ ] Dialogue runtime — branching tree with **typewriter text reveal**. _(item 7)_
+  - [ ] **NPC vision / detection** — line-of-sight (distance + cone, optional
+        occlusion); on "sees the player" run Effects = the stealth beat. _(item 8)_
+  - [ ] **Voice** — short unintelligible gibberish (Sims-style) while a character
+        speaks; real VO swaps in later. _(item 6, voice)_
+- Editor:
+  - [ ] Place NPCs; dialogue-tree editor; vision settings; attach voice.
 
-### M5 — Story / logic graph  (optional)
+### M6 — Audio authoring  (item 6)
+
+- Runtime:
+  - [ ] Bind sounds to entity / scene / interaction state, conditionally —
+        **footsteps while moving**, ambient per scene, SFX on interactions.
+- Editor:
+  - [ ] Attach sounds + their conditions to objects / characters / scenes.
+
+### M7 — Atmosphere & lighting  (advanced rendering — stylised, not photoreal)
+
+- [ ] **Lighting** _(item 4)_ — ambient / global light + local lights (lamp glows),
+      light pools, simple character / prop shadows. Stylised chiaroscuro via Pixi
+      blend modes + custom shaders / filters (NOT per-sprite normal maps).
+- [ ] **Fog & clouds** _(item 5)_ — animated noise-based "rolling" fog + cloud
+      layers with density sliders. A convincing *fake* (scrolling/warped noise),
+      not true volumetrics.
+- [ ] Editor: place lights per scene; atmosphere sliders.
+- Reality check: full dynamic / normal-mapped 2D lighting and true volumetric fog
+  are impractical in a browser and unneeded for flat vector — the stylised look is
+  the target and is what the Röki direction wants anyway.
+
+### M8 — UI theming  (item 9 + the title-screen composer)
+
+- [ ] Editable UI texts (menu / dialogue labels); system-font picker.
+- [ ] SVG skins / frames for UI elements; logo on the title screen.
+- [ ] Title-screen visual composer (reuses the scene editor, visual-only).
+
+### M9 — Story / logic graph  (optional)
 
 - [ ] React Flow (@xyflow/react) view/editor over the flag/condition graph, or an
       auto-generated visualization. Keep primary logic local to objects.
 
-### M6 — Open-source packaging
+### M10 — Open-source packaging
 
 - [ ] Split into pnpm-workspace packages: `@scope/engine`, `@scope/editor`,
       example game.
@@ -94,6 +139,8 @@ editor authors data for runtime systems, so those systems exist first.
 ## Notes
 
 - Already well-positioned: `engine/ systems/ entities/ data/` are React-free,
-  `ui/` is React, scenes are data — M6's package boundary mostly exists already.
+  `ui/` is React, scenes are data — M10's package boundary mostly exists already.
 - Don't split into real npm packages early — keep the internal boundary now, do the
-  actual split at M6 to avoid premature monorepo infra during the jam.
+  actual split at M10.
+- Atmosphere (M7) was always anticipated: `architecture.md` plans fog/lights/
+  chiaroscuro as a GPU-filter layer over the scene, not baked into assets.

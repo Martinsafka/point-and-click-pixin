@@ -23,6 +23,12 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — Roadmap expanded (post-M1 feature planning)
+**What:** Reworked `agent_docs/roadmap.md` to fold in 9 requested feature areas. New layout: M2 runtime polish & framing (ESC menu, save/load via IndexedDB, title/start screen), M3 editor core, M4 editor interactables/items/recipes, M5 NPCs + dialogue (typewriter) + stealth (NPC vision) + voice gibberish, M6 audio authoring (conditional per-entity sounds incl. footsteps), M7 atmosphere & lighting (stylised), M8 UI theming, M9 story graph, M10 packaging.
+**Why:** Map the path from the jam slice to the full reusable engine + editor before building the editor.
+**How:** Every feature stays schema-first → runtime → editor. Honest scoping on the two ambitious asks: lighting = stylised chiaroscuro (Pixi blend modes / shaders, not normal maps); fog/clouds = animated-noise fake (not raymarched volumetrics) — both fit flat vector and run fine in-browser. Old M1 "stealth detection" folded into M5 (NPC vision). No code changed.
+**Follow-ups:** Next is M2 (runtime polish) or jump straight to the editor (M3).
+
 ### 2026-06-13 — M1: menu + audio  ← M1 / jam slice complete
 **What:** Finished M1. A React menu (`ui/Menu.tsx`): a corner button → panel with Resume / New Game (`store.reset`) / Mute. Audio (`src/audio/`): Howler playing placeholder sounds generated in code as WAV data URIs (`sounds.ts`) — a soft drone ambient loop + pickup/transition SFX — wired to the store (`audio.ts`): a blip when inventory grows, a chime on scene change; mute toggles `Howler.mute`. App renders the menu; styles added.
 **Why:** Close out M1 (UI + audio) — the 2-scene slice is now a self-contained, playable jam build.
