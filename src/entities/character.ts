@@ -1,5 +1,6 @@
 import type { CharacterView } from './character-view'
 import { facingFromVector, WALK_SPEED, type Facing, type MoveState } from '../systems/movement'
+import { depthScaleAt, type DepthScale } from '../systems/depth'
 
 /**
  * One logical entity = mutable per-frame state + a swappable view. Every
@@ -7,9 +8,10 @@ import { facingFromVector, WALK_SPEED, type Facing, type MoveState } from '../sy
  * never routed through Zustand, which is for discrete/meta state only
  * (agent_docs/architecture.md, "State — two kinds, never mixed").
  *
- * The character is positioned by its **feet** (x, y): the view's origin is the
- * feet, and the click target is a feet target. That single logical point is
- * what depth scaling and Y-sort will consume next.
+ * The character is positioned by its **feet** (x, y). That single logical point
+ * drives everything 2.5D: the view sits on it, the depth scale comes from its Y,
+ * and the Y-sort zIndex follows its Y — so the character draws in front of
+ * nearer scenery and behind further scenery.
  */
 export class Character {
   private x = 0
@@ -20,7 +22,10 @@ export class Character {
   private state: MoveState = 'idle'
   private readonly speed = WALK_SPEED
 
-  constructor(private readonly view: CharacterView) {
+  constructor(
+    private readonly view: CharacterView,
+    private readonly depthScale: DepthScale,
+  ) {
     this.syncView()
   }
 
@@ -76,7 +81,12 @@ export class Character {
   }
 
   private syncView(): void {
-    this.view.container.position.set(this.x, this.y)
+    const { container } = this.view
+    container.position.set(this.x, this.y)
+    // 2.5D, both derived from the feet Y: scale with depth, and sort by depth so
+    // the character passes in front of nearer props and behind further ones.
+    container.scale.set(depthScaleAt(this.y, this.depthScale))
+    container.zIndex = this.y
     this.view.setPose(this.state, this.facing)
   }
 }

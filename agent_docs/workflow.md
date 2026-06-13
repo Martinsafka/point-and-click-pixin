@@ -27,3 +27,8 @@ Follow this loop for **every** task. Don't skip analysis or the log.
 
 - After finishing, append an entry to `agent_docs/dev_log.md`: **what** you did, **why**, and **how** you approached it (key decisions, tradeoffs, anything the next session needs).
 - This is the project's running memory. **Mandatory, not optional.**
+
+## 5. Propose a commit message
+
+- After logging, **propose a commit message** for the change — a concise subject plus a short body covering what/why. Match the repo's existing commit style.
+- **Don't run `git commit` or `git push` unless explicitly asked.** Propose the message text; the user commits.

@@ -14,8 +14,8 @@ export function App() {
       <div className="overlay">
         <header className="overlay__title">Point &amp; Click Adventure</header>
         <p className="overlay__hint">
-          Click anywhere to walk — the cube lerps to the point and its marker snaps to one of 8
-          facings. Placeholder for the real character view.
+          Click to walk. The cube scales with depth, sorts in front of / behind the crate by its
+          feet, and hides behind the foreground pillar.
         </p>
       </div>
     </div>

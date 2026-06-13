@@ -44,3 +44,4 @@ Code style and patterns for this project. Authoritative for "how we write code h
 
 - `typecheck` + `lint` pass.
 - The dev-log entry is written (`agent_docs/dev_log.md`).
+- A commit message is proposed for the change (see `workflow.md` step 5).

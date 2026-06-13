@@ -14,7 +14,7 @@ PixiJS skills are installed **globally** (`~/.claude/skills/`) — use them for 
 
 ## How to approach any task — read this first
 
-Follow the loop in `agent_docs/workflow.md` for **every** assignment: analyze → propose architecture → execute → log. Do not skip the analysis or the log.
+Follow the loop in `agent_docs/workflow.md` for **every** assignment: analyze → propose architecture → execute → log → propose commit message. Do not skip the analysis or the log.
 
 ## Layout (starting target — adjust as the project grows, and record changes in the dev log)
 
