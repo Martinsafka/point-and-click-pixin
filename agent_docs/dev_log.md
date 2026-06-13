@@ -23,6 +23,18 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — Roadmap: scheduled the extra features
+**What:** Promoted the candidate backlog into proper milestones at sensible spots: **M6 Movement & camera** (pathfinding A\*/walk-mesh · camera / scrolling scenes · scene-transition fades) and **M8 Cutscenes / scripted sequences**; folded **examine** + optional **verb/cursor** into M4, and **settings (volume)** + **i18n** into M11 (UI theming). Final layout is M0–M13; cross-references fixed.
+**Why:** User asked to schedule all the recommendations + nice-to-haves, not leave them in a backlog.
+**How:** No code — roadmap only. Movement & camera (M6) sits next to Characters (M5); cutscenes (M8) follow NPCs/dialogue (M7) since they orchestrate characters + lines + effects.
+**Follow-ups:** Start the editor (M3).
+
+### 2026-06-13 — Roadmap: characters & animation + candidate backlog
+**What:** Added **M5 — Characters & animation** (view descriptor `state → animation`, AnimatedSprite swap of the placeholder cube, 8-dir walk, one-shot triggers pickup/interact/talk with `onComplete`; editor uploads frames + maps states/triggers). Renumbered NPCs → M6 (an NPC = a character + idle anim + the same set), audio → M7, atmosphere → M8, UI theming → M9, story graph → M10, packaging → M11; fixed cross-references. Added a **Candidate additions** backlog: pathfinding (A\*/walk-mesh), camera/scrolling scenes, scene transitions (fade), cutscenes/sequences, settings (volume), i18n, verb/cursor system, examine items.
+**Why:** Capture the player + NPC animation/authoring the user flagged, plus likely-forgotten engine features, before starting the editor (M3).
+**How:** Characters & animation realise the view-descriptor model already specced in `asset_pipeline.md`; the view/logic split (placeholder cube behind a swappable view) means the swap is a data change, not a refactor. Triggers stay data-driven (the picked item/object names the one-shot). No code changed.
+**Follow-ups:** Editor is next (M3).
+
 ### 2026-06-13 — M2b: title screen + exit-to-title  ← M2 complete
 **What:** The app now has two phases — **title** and **playing**. New `ui/TitleScreen.tsx` (New game / Continue; DOM for now). `App.tsx` holds the phase: New game resets the store + enters, Continue loads the save + enters; the Pixi world (GameCanvas) only mounts while playing. The in-game `Menu` drops New game/Continue and gains **Exit to title** with a confirmation (unsaved progress is lost).
 **Why:** The flow requested — in-game you Save or Exit; on the title you start New game or Continue a save. Completes M2.
