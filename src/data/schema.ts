@@ -41,6 +41,8 @@ export interface ItemDef {
   name: string
   /** Inventory icon (image/SVG URL); optional while using placeholders. */
   icon?: string
+  /** "Look at" flavour text shown when the item is examined. */
+  examine?: string
 }
 
 /** Combining `a` + `b` (order-independent) consumes both and yields `output`. */
@@ -113,6 +115,7 @@ export type InteractableData =
       id: string
       item: ItemId
       hitArea: Polygon
+      examine?: string
       when?: Condition
       effects?: Effect[]
     }
@@ -120,6 +123,7 @@ export type InteractableData =
       kind: 'interact'
       id: string
       hitArea: Polygon
+      examine?: string
       when?: Condition
       effects: Effect[]
       uses?: UseRule[]
@@ -129,6 +133,7 @@ export type InteractableData =
       id: string
       to: SceneId
       hitArea: Polygon
+      examine?: string
       when?: Condition
       effects?: Effect[]
       uses?: UseRule[]

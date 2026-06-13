@@ -15,6 +15,8 @@ export function Inventory() {
 
   const onSlot = (id: string) => {
     const store = storyStore.getState()
+    const def = gameDoc.items[id]
+    if (def?.examine) store.say(def.examine) // "look at" the item on click
     if (selected === id) {
       store.select(null)
     } else if (selected) {
@@ -38,7 +40,11 @@ export function Inventory() {
             title={def?.name ?? id}
             onClick={() => onSlot(id)}
           >
-            <span className="inventory__label">{def?.name ?? id}</span>
+            {def?.icon ? (
+              <img className="inventory__icon" src={def.icon} alt={def?.name ?? id} />
+            ) : (
+              <span className="inventory__label">{def?.name ?? id}</span>
+            )}
           </button>
         )
       })}

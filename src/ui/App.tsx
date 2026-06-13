@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { GameCanvas } from './GameCanvas'
 import { Inventory } from './Inventory'
 import { Menu } from './Menu'
@@ -19,6 +19,14 @@ export function App() {
   const [playing, setPlaying] = useState(false)
   const sceneId = useStory((s) => s.currentScene)
   const visited = useStory((s) => s.visited.length)
+  const narration = useStory((s) => s.narration)
+
+  // The narration line ("look at" text) auto-clears after a few seconds.
+  useEffect(() => {
+    if (!narration) return
+    const t = setTimeout(() => storyStore.getState().say(null), 4000)
+    return () => clearTimeout(t)
+  }, [narration])
 
   const newGame = () => {
     storyStore.getState().reset(gameDoc)
@@ -51,6 +59,7 @@ export function App() {
           Scene: {sceneName} · visited {visited} — click to walk. Pick up items, combine them in the
           bar, and use a selected item on objects.
         </p>
+        {narration && <p className="overlay__narration">{narration}</p>}
         <Inventory />
         <Menu onExit={() => setPlaying(false)} />
       </div>

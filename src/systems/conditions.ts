@@ -20,6 +20,8 @@ export interface StoryState {
  * depend on it without importing each other.
  */
 export interface StoryStore extends StoryState {
+  /** Transient "look at" / narration line — UI only, not part of the saved state. */
+  narration: string | null
   check(cond: Condition): boolean
   run(effects: readonly Effect[]): void
   /** Select an inventory item (or null to clear) for combine / use-on. */
@@ -29,6 +31,8 @@ export interface StoryStore extends StoryState {
   /** Replace the whole story state — used to load a save. */
   load(state: StoryState): void
   reset(doc: GameDoc): void
+  /** Set or clear (null) the narration line. */
+  say(text: string | null): void
 }
 
 /** Evaluate a Condition against the current story state. */

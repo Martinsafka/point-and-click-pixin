@@ -74,6 +74,15 @@ export function InteractableForm({
         </label>
       )}
 
+      <label className="intr-form__field">
+        <span>look</span>
+        <input
+          value={interactable.examine ?? ''}
+          placeholder="examine text…"
+          onChange={(e) => s().setInteractableExamine(sceneId, index, e.target.value)}
+        />
+      </label>
+
       <div className="intr-form__field intr-form__field--col">
         <span>when</span>
         <ConditionEditor

@@ -32,6 +32,7 @@ function freshState(doc: GameDoc): StoryState {
 export function createStoryStore(doc: GameDoc) {
   return createStore<StoryStore>((set, get) => ({
     ...freshState(doc),
+    narration: null,
     check: (cond) => checkCondition(get(), cond),
     run: (effects) => set(applyEffects(get(), effects)),
     select: (item) => set({ selectedItem: item }),
@@ -47,8 +48,9 @@ export function createStoryStore(doc: GameDoc) {
       )
       return true
     },
-    load: (state) => set({ ...state, selectedItem: null }),
-    reset: (nextDoc) => set(freshState(nextDoc)),
+    load: (state) => set({ ...state, selectedItem: null, narration: null }),
+    reset: (nextDoc) => set({ ...freshState(nextDoc), narration: null }),
+    say: (text) => set({ narration: text }),
   }))
 }
 

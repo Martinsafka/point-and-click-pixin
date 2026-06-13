@@ -113,10 +113,14 @@ The **selected object's form**:
 | **id**        | all            | Unique id (used by gating, e.g. the `picked:<id>` flag). Keep unique.|
 | **item**      | pickable       | Which inventory item it gives when picked up.                        |
 | **to**        | exit           | The scene it leads to.                                               |
+| **look**      | all            | "Look at" text shown on a plain click (no item selected).           |
 | **when**      | all            | A Condition that gates it ("(always)" = no gate). See Conditions.   |
 | **effects**   | all            | Effects run when clicked. See Effects.                              |
 | **uses**      | interact, exit | "Use item on object" rules: an item + the effects of using it.      |
 | **Hit-area**  | all            | **Draw** (click the preview to add points) / **Clear**.             |
+
+Clicking an object that has **look** text (with no item selected), or clicking an
+inventory item, shows that text as a transient narration line in the game.
 
 > For a **pickable**, giving the item and hiding it (the `picked:` flag) are
 > automatic — its **effects** are *extra* things on top. For an **exit**, the
@@ -130,9 +134,10 @@ selected scene.
 **Items** — the inventory catalogue.
 
 - **+ Item** — adds an item (a fixed auto id + an editable name).
-- Edit the **name** freely; **✕** deletes. The **id** is fixed at creation because
-  interactables, uses, effects and recipes reference it — the name is just the
-  label shown in the inventory and the editor's item pickers.
+- Edit the **name** and **examine** ("look at" text), and **+ Icon** to upload an
+  inventory icon (SVG/PNG, stored in the document). **✕** deletes. The **id** is
+  fixed at creation because interactables, uses, effects and recipes reference it —
+  the name is just the label shown in the pickers.
 
 **Recipes** — combine rules: `a + b → output`, order-independent. Selecting two
 matching items in the inventory consumes both and yields the output.

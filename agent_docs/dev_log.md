@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M4 step 3: examine ("look at") + inventory item icons
+**What:** **Examine** — `examine?` text on interactables + items; a plain click on an object (no item selected), or a click on an inventory item, shows it as a transient **narration line** (auto-clears). **Item icons** — `ItemDef.icon` is now authorable + rendered in the inventory. Schema: `examine?` on the three interactable variants + `ItemDef`. Runtime: `StoryStore` gains a **store-only** `narration` + `say()`; `scene.ts` narrates examine on click; `Inventory` narrates item examine + renders the icon; `App` shows the narration line. Editor: `InteractableForm` gets a **look** field; `ItemCatalogue` gets an **examine** field + an **+ Icon** upload (data-URL) with thumbnail / clear; `editor-store` gains `setInteractableExamine` / `setItemExamine` / `setItemIcon`. Guide updated.
+**Why:** M4's last core piece (examine) + the user's item-icon request. Chose **upload** over auto-cropping the scene art — simple, explicit, reuses the layer-upload pattern; auto-crop is fragile (hit-area includes background; builtin vs image differ).
+**How:**
+- **Narration is store-only, not `StoryState`** → the save snapshot (which cherry-picks StoryState fields) ignores it; `reset` / `load` clear it; a 4 s React timeout auto-clears the line.
+- **Examine fires on a plain click** (no selected item) so it doesn't fight item-use; inventory examine fires on any slot click.
+- **Icons = uploaded data-URLs** on the item (survive Export), rendered in the slot (falls back to the name label).
+- **Verified:** format / typecheck / lint / build green; dev smoke 200. Authoring + in-game narration / icons are the user's browser check.
+**Follow-ups:** examine on an `exit` is cut short (the `goTo` changes scene immediately); optional auto-crop icon; the optional **verb / cursor** system would make "look vs use vs talk" explicit. **M4 core is complete** (verb/cursor is the only optional left).
+
 ### 2026-06-13 — M4 step 2b: item catalogue + recipe table
 **What:** Document-level data authoring. New `editor/ItemCatalogue.tsx` (add / remove items, edit name; id fixed) and `editor/RecipeTable.tsx` (add / remove `a + b → output` recipes, reusing `ItemSelect`). Editor gains **Items** + **Recipes** sections (global, before Playtest). `editor-store` gains a `patchDoc` helper + `addItem` / `removeItem` / `setItemName` / `addRecipe` / `removeRecipe` / `setRecipe`. `editor_guide.md` gains an "Items & Recipes" section (per the new docs rule).
 **Why:** M4 step 2b — author the inventory items + combine recipes that the interactable logic (giveItem / uses / recipes) references, completing M4's logic data.

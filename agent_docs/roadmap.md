@@ -92,7 +92,7 @@ cutscenes, audio, atmosphere, theming) → packaging.
 - [x] Forms for Condition + Effect + `uses` (per-interactable logic; recursive
       condition editor with all/any/not).
 - [x] Item catalogue + recipe table.
-- [ ] **Examine** — "look at" text for items / objects.
+- [x] **Examine** — "look at" text for items / objects (+ inventory item icons).
 - [ ] _(optional)_ **Verb / cursor system** — look / use / talk verbs + a hover
       cursor over hotspots (vs the current single-click); runtime mode + editor.
 

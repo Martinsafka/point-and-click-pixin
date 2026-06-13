@@ -167,6 +167,7 @@ export async function mountScene(
     const hit = pickInteractable(scene.interactables, local.x, local.y, screen, state)
     const selected = state.selectedItem
     if (selected) store.getState().select(null) // any click consumes the selection
+    if (hit?.examine && !selected) store.getState().say(hit.examine) // "look at" flavour
 
     // Using the selected item on the object (if it has a matching rule).
     if (hit && selected) {

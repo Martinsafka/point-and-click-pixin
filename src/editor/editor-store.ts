@@ -61,6 +61,9 @@ interface EditorStore {
   addRecipe(): void
   removeRecipe(index: number): void
   setRecipe(index: number, recipe: Recipe): void
+  setInteractableExamine(id: SceneId, index: number, examine: string): void
+  setItemExamine(id: ItemId, examine: string): void
+  setItemIcon(id: ItemId, icon: string | undefined): void
 }
 
 function blankScene(id: SceneId): SceneData {
@@ -230,6 +233,16 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       patchDoc({ recipes: (get().doc.recipes ?? []).filter((_, i) => i !== index) }),
     setRecipe: (index, recipe) =>
       patchDoc({ recipes: (get().doc.recipes ?? []).map((r, i) => (i === index ? recipe : r)) }),
+    setInteractableExamine: (id, index, examine) =>
+      mapInteractables(id, (its) => its.map((it, i) => (i === index ? { ...it, examine } : it))),
+    setItemExamine: (id, examine) => {
+      const { items } = get().doc
+      patchDoc({ items: { ...items, [id]: { ...items[id], examine } } })
+    },
+    setItemIcon: (id, icon) => {
+      const { items } = get().doc
+      patchDoc({ items: { ...items, [id]: { ...items[id], icon } } })
+    },
   }
 })
 
