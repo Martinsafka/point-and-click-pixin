@@ -36,6 +36,13 @@ export interface ItemDef {
   icon?: string
 }
 
+/** Combining `a` + `b` (order-independent) consumes both and yields `output`. */
+export interface Recipe {
+  a: ItemId
+  b: ItemId
+  output: ItemId
+}
+
 // --- Logic vocabulary (serializable; evaluated by systems/conditions.ts) ----
 
 export type Condition =
@@ -53,13 +60,19 @@ export type Effect =
   | { kind: 'goTo'; scene: SceneId }
   | { kind: 'startDialog'; dialog: DialogId }
 
+/** Using `item` on an interactable runs `effects`. */
+export interface UseRule {
+  item: ItemId
+  effects: Effect[]
+}
+
 // --- Scene content ----------------------------------------------------------
 
 /**
  * One stacked part of a scene. `image` is the art target (SVG/PNG URL — fully
  * serializable); `builtin` references a code-registered painter by key (with an
- * optional numeric `params` bag), for geometric placeholders until real art
- * arrives. `anchorYFrac` on a `mid` layer drives Y-sort + depth scale.
+ * optional numeric `params` bag), for geometric placeholders. `anchorYFrac` on a
+ * `mid` layer drives Y-sort + depth scale. `when` toggles visibility reactively.
  */
 export type LayerData =
   | {
@@ -82,7 +95,10 @@ export type LayerData =
       when?: Condition
     }
 
-/** A clickable thing in a scene, gated by an optional `when` Condition. */
+/**
+ * A clickable thing in a scene, gated by an optional `when` Condition. `uses`
+ * lets an item be used on it (select item in inventory → click the object).
+ */
 export type InteractableData =
   | {
       kind: 'pickable'
@@ -92,7 +108,14 @@ export type InteractableData =
       when?: Condition
       effects?: Effect[]
     }
-  | { kind: 'interact'; id: string; hitArea: Polygon; when?: Condition; effects: Effect[] }
+  | {
+      kind: 'interact'
+      id: string
+      hitArea: Polygon
+      when?: Condition
+      effects: Effect[]
+      uses?: UseRule[]
+    }
   | {
       kind: 'exit'
       id: string
@@ -100,6 +123,7 @@ export type InteractableData =
       hitArea: Polygon
       when?: Condition
       effects?: Effect[]
+      uses?: UseRule[]
     }
 
 export interface SceneData {
@@ -120,4 +144,5 @@ export interface GameDoc {
   scenes: Record<SceneId, SceneData>
   items: Record<ItemId, ItemDef>
   initialFlags: Record<FlagId, boolean>
+  recipes?: Recipe[]
 }

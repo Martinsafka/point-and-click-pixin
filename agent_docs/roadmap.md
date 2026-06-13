@@ -49,8 +49,9 @@ editor authors data for runtime systems, so those systems exist first.
 
 - [x] Scene transitions + persistence — exits gated by Condition; inventory/flags
       survive scene 2.
-- [ ] Interaction: click object → dialog / effect (React overlay + Zustand).
-- [ ] Inventory: add + combine (data-driven recipes) + "use item on object".
+- [x] Interaction: click object → effect (React overlay + Zustand). _(Dialog
+      runtime is M4; `startDialog` is a marker for now.)_
+- [x] Inventory: add + combine (data-driven recipes) + "use item on object".
 - [ ] UI: simple menu.
 - [ ] Audio: ambient loop + ≥1 SFX (Howler, triggered by state).
 - [ ] Stealth detection — only if it's a core beat.

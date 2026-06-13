@@ -10,6 +10,8 @@ export interface StoryState {
   flags: Record<FlagId, boolean>
   inventory: ItemId[]
   visited: SceneId[]
+  /** Item selected in the inventory (for combine / use-on), or null. */
+  selectedItem: ItemId | null
 }
 
 /**
@@ -20,6 +22,10 @@ export interface StoryState {
 export interface StoryStore extends StoryState {
   check(cond: Condition): boolean
   run(effects: readonly Effect[]): void
+  /** Select an inventory item (or null to clear) for combine / use-on. */
+  select(item: ItemId | null): void
+  /** Combine two inventory items via a recipe; returns whether one matched. */
+  combine(a: ItemId, b: ItemId): boolean
   reset(doc: GameDoc): void
 }
 

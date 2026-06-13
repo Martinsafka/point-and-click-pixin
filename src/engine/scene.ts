@@ -11,7 +11,7 @@ import { createCubeView } from '../entities/character-view'
 import { resolveDepthScale } from '../data/scene-config'
 import { depthScaleAt } from '../systems/depth'
 import type { WalkArea } from '../systems/walkable'
-import { effectsFor, pickInteractable } from '../systems/interactions'
+import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
 import { checkCondition, type StoryStore } from '../systems/conditions'
 import type { Condition, LayerData, SceneBand, SceneData, SceneId } from '../data/schema'
 
@@ -129,9 +129,21 @@ export async function mountScene(
   app.stage.cursor = 'pointer'
   const onTap = (event: FederatedPointerEvent) => {
     const local = interactive.toLocal(event.global)
-    const hit = pickInteractable(scene.interactables, local.x, local.y, screen, store.getState())
+    const state = store.getState()
+    const hit = pickInteractable(scene.interactables, local.x, local.y, screen, state)
+    const selected = state.selectedItem
+    if (selected) store.getState().select(null) // any click consumes the selection
+
+    // Using the selected item on the object (if it has a matching rule).
+    if (hit && selected) {
+      const usageEffects = effectsForUse(hit, selected)
+      if (usageEffects) {
+        character.setTarget(local.x, local.y, () => store.getState().run(usageEffects))
+        return
+      }
+    }
+    // Otherwise: walk to the interactable and run its plain effects, or just walk.
     if (hit) {
-      // Walk to it, then run its effects (a goTo here triggers a scene swap).
       const effects = effectsFor(hit)
       character.setTarget(local.x, local.y, () => store.getState().run(effects))
     } else {

@@ -23,6 +23,17 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — M1: inventory complete (combine + use-on-object)
+**What:** Finished the inventory verbs. `selectedItem` + `select`/`combine` actions in the store; an interactive inventory bar (click a slot to select, click another to combine via a recipe). Use-item-on-object: a selected item clicked on a world interactable runs its `uses` rule. Schema += `Recipe`/`recipes`, `UseRule`/`uses`. Pickables now gate on a derived `picked:<id>` flag (set on pickup), so a consumed item never reappears. Room demo: pick up gear + handle → combine → crank → use crank on the wall panel → gem.
+**Why:** Complete "Inventory: add + combine + use-on-object" — the inventory puzzle loop.
+**How:**
+- **Picked-flag fixes last step's consume-reappear bug:** `effectsFor(pickable)` auto-sets `picked:<id>`; `pickInteractable` auto-gates pickables by it; the visual layer gates `not flag('picked:<id>')`. So combining (which consumes inputs) doesn't bring them back. (Node-tested: "stays gated after consume".)
+- **Combine** = a store action over `gameDoc.recipes` (`findRecipe`, order-independent) → `takeItem a, takeItem b, giveItem output`. **Use-on** = engine onTap: a selected item + an interactable's matching `uses` rule → walk + run; any click consumes the selection (`select(null)`).
+- **Inventory bar** is buttons now (`pointer-events: auto` on slots, container stays `none` so gaps pass clicks through); selected slot highlighted.
+- **Renamed** `useEffectsFor` → `effectsForUse` — the `use*` name tripped `react-hooks/rules-of-hooks` (false positive on a non-hook function).
+- **Verified:** typecheck + lint + build green; Node test of recipes + combine + picked-flag (10 checks); dev server transforms the new modules. The clicky bits are visual — test in `pnpm dev`.
+**Follow-ups:** M1 remaining — simple **menu** + **audio** (Howler), then optional stealth. The real dialog runtime is M4 (`startDialog` is still an inert marker).
+
 ### 2026-06-13 — M1: pickup + inventory bar + condition-gated door
 **What:** Inventory, first half. Pickables are picked up via the existing click → effect path; a picked item vanishes from the scene and shows in an inventory bar. Added `LayerData.when?` (conditional layers) + a store subscription in `mountScene` that toggles layer visibility as state changes. New `ui/Inventory.tsx` (DOM bar reading `store.inventory`) + styles. Street: a gold `key` pickable (visual + hitArea, both gated `not hasItem(key)`); the room door now gated `hasItem(key)`. Added the `key` item to `gameDoc`.
 **Why:** Deliver the pickup → inventory → condition-gated-transition loop — the spine of inventory puzzles — on the M0 condition/effect foundation.

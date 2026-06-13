@@ -173,7 +173,6 @@ export const streetScene: SceneData = {
       id: 'key',
       item: 'key',
       hitArea: [0.21, 0.74, 0.29, 0.74, 0.29, 0.86, 0.21, 0.86],
-      when: { kind: 'not', of: { kind: 'hasItem', item: 'key' } },
     },
     {
       kind: 'exit',
@@ -194,7 +193,7 @@ export const streetScene: SceneData = {
       builder: 'street.key',
       anchorYFrac: 0.8,
       params: { xFrac: 0.25, yFrac: 0.8 },
-      when: { kind: 'not', of: { kind: 'hasItem', item: 'key' } },
+      when: { kind: 'not', of: { kind: 'flag', flag: 'picked:key' } },
     },
     {
       kind: 'builtin',
