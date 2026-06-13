@@ -39,10 +39,17 @@ So your edits live in a draft until you publish them (Export → `content/game.j
 
 ## Layout
 
-A **left panel** (the tools, top to bottom) beside a **live preview** of the
-selected scene. Edits show in the preview immediately. Each section **collapses**
-when you click its title (accordion), and you can **drag the divider** between the
-panel and the preview to widen the panel.
+A **left panel** beside a **live preview** of the selected scene. Edits show in the
+preview immediately. The panel is split into top-level **tabs**:
+
+- **Scene** — Scenes, Walkable, Layers, Interactables.
+- **Items** — Items, Recipes.
+- **Characters** — character & animation setup (M5).
+- **Project** — Cursors, Document (export / import).
+
+Each section within a tab **collapses** when you click its title (accordion); a
+persistent footer has **▶ Test in game** / **Discard**. Drag the divider between the
+panel and the preview to **widen** the panel.
 
 ---
 

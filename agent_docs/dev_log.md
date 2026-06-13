@@ -23,6 +23,14 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — Editor IA: top-level tabs (Scene / Items / Characters / Project)
+**What:** The editor panel is split into top-level **tabs** instead of one long scroll — **Scene** (Scenes · Walkable · Layers · Interactables), **Items** (Items · Recipes), **Characters** (placeholder for M5), **Project** (Cursors · Document). A persistent **footer** holds **▶ Test in game** / Discard (always reachable). Sections still collapse (accordion) within a tab; the panel stays drag-resizable.
+**Why:** The user flagged the single panel was getting crowded; the big cohesive blocks (scenes / items / characters) deserve separation, and M5's character & animation editor needs its own space ("a second level"). Pre-M5 IA so M5 drops into the Characters tab.
+**How:**
+- **Tabs = a `tab` state** + a content switch; `changeTab` resets the draw modes. Panel layout is now `tabs (fixed) / tab-content (flex:1, scroll) / footer (fixed)`; the preview + overlays + resizer are unchanged. Test / Discard moved into the persistent footer (testing is frequent); Cursors + Document live in **Project**.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200. Tab switching / footer feel is the user's browser check.
+**Follow-ups:** **M5** fills the Characters tab (character list + animation editor, likely its own master-detail level). Test animations for M5 = a **procedural placeholder atlas** (code-drawn frames → `AnimatedSprite`), matching the geometric-placeholder philosophy.
+
 ### 2026-06-13 — M4 cursor polish #2: walk-only-on-walkable + default cursor
 **What:** The `walk` cursor (👣) now shows **only over the walkable area**; anywhere else over the scene (sky, walls, outside any area) shows a new **default** `CursorKind` (↖️ emoji or an uploaded icon). So the game has a fully custom cursor — no native pointer anywhere over the scene. Schema: `CursorKind` gains `default`. `GameCursor` hit-tests the walkable polygon (`containsPoint`) after the hotspot check; `CursorEditor` lists `default` (upload an icon). Also: **dropped #5** (pickable walk-through) — the user re-tested and the current click-on-hit-area pickup is already correct. Guide updated.
 **Why:** The user's last M4 cursor polish — `walk` was showing over non-walkable areas (e.g. the sky); the walk cue should appear only where you can walk, with a custom default elsewhere.

@@ -129,6 +129,9 @@ M4 additions (raised after the core was done):
         map (state, facing) → animation; set anchor + footprint.
   - [ ] Assign triggers: which animation plays for walk / each pickup / interact /
         talk.
+- _Testing:_ a **procedural placeholder atlas** (code-drawn frames → `AnimatedSprite`)
+  so the system is testable before real art; the editor's **Characters tab** (added
+  pre-M5) hosts the upload + animation tools.
 
 ### M6 — Movement & camera
 
