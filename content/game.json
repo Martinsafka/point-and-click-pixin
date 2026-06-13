@@ -1,0 +1,343 @@
+{
+  "start": "street",
+  "scenes": {
+    "street": {
+      "id": "street",
+      "name": "Street",
+      "depth": {
+        "yNearFrac": 0.94,
+        "yFarFrac": 0.5,
+        "scaleNear": 1,
+        "scaleFar": 0.4
+      },
+      "spawn": {
+        "xFrac": 0.42,
+        "yFrac": 0.86
+      },
+      "walkable": [
+        0.004,
+        0.666,
+        0.997,
+        0.665,
+        0.988,
+        0.984,
+        0.008,
+        0.985
+      ],
+      "interactables": [
+        {
+          "kind": "pickable",
+          "id": "key",
+          "item": "key",
+          "hitArea": [
+            0.21,
+            0.74,
+            0.29,
+            0.74,
+            0.29,
+            0.86,
+            0.21,
+            0.86
+          ]
+        },
+        {
+          "kind": "exit",
+          "id": "to-room",
+          "to": "room",
+          "hitArea": [
+            0.6,
+            0.5,
+            0.64,
+            0.5,
+            0.64,
+            0.62,
+            0.6,
+            0.62
+          ],
+          "when": {
+            "kind": "hasItem",
+            "item": "key"
+          }
+        }
+      ],
+      "layers": [
+        {
+          "kind": "builtin",
+          "band": "background",
+          "builder": "street.sky"
+        },
+        {
+          "kind": "builtin",
+          "band": "background",
+          "builder": "street.land"
+        },
+        {
+          "kind": "builtin",
+          "band": "background",
+          "builder": "street.buildings"
+        },
+        {
+          "kind": "builtin",
+          "band": "background",
+          "builder": "street.road"
+        },
+        {
+          "kind": "builtin",
+          "band": "mid",
+          "builder": "street.key",
+          "anchorYFrac": 0.8,
+          "params": {
+            "xFrac": 0.25,
+            "yFrac": 0.8
+          },
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "picked:key"
+            }
+          }
+        },
+        {
+          "kind": "builtin",
+          "band": "mid",
+          "builder": "street.lamppost",
+          "anchorYFrac": 0.58,
+          "params": {
+            "xFrac": 0.45,
+            "yFrac": 0.58
+          }
+        },
+        {
+          "kind": "builtin",
+          "band": "mid",
+          "builder": "street.lamppost",
+          "anchorYFrac": 0.8,
+          "params": {
+            "xFrac": 0.82,
+            "yFrac": 0.8
+          }
+        },
+        {
+          "kind": "builtin",
+          "band": "foreground",
+          "builder": "street.bush",
+          "params": {
+            "xFrac": 0.12,
+            "yFrac": 0.97,
+            "scale": 1.35
+          }
+        },
+        {
+          "kind": "builtin",
+          "band": "foreground",
+          "builder": "street.bush",
+          "params": {
+            "xFrac": 0.34,
+            "yFrac": 1,
+            "scale": 1.05
+          }
+        },
+        {
+          "kind": "builtin",
+          "band": "foreground",
+          "builder": "street.bush",
+          "params": {
+            "xFrac": 0.66,
+            "yFrac": 1.02,
+            "scale": 1.2
+          }
+        },
+        {
+          "kind": "builtin",
+          "band": "foreground",
+          "builder": "street.bush",
+          "params": {
+            "xFrac": 0.88,
+            "yFrac": 0.98,
+            "scale": 1.5
+          }
+        }
+      ]
+    },
+    "room": {
+      "id": "room",
+      "name": "Room",
+      "depth": {
+        "yNearFrac": 0.95,
+        "yFarFrac": 0.66,
+        "scaleNear": 1,
+        "scaleFar": 0.72
+      },
+      "spawn": {
+        "xFrac": 0.5,
+        "yFrac": 0.8
+      },
+      "walkable": [
+        0.08,
+        0.94,
+        0.92,
+        0.94,
+        0.92,
+        0.66,
+        0.08,
+        0.66
+      ],
+      "interactables": [
+        {
+          "kind": "exit",
+          "id": "to-street",
+          "to": "street",
+          "hitArea": [
+            0.45,
+            0.32,
+            0.55,
+            0.32,
+            0.55,
+            0.63,
+            0.45,
+            0.63
+          ]
+        },
+        {
+          "kind": "pickable",
+          "id": "gear",
+          "item": "gear",
+          "hitArea": [
+            0.25,
+            0.79,
+            0.35,
+            0.79,
+            0.35,
+            0.9,
+            0.25,
+            0.9
+          ]
+        },
+        {
+          "kind": "pickable",
+          "id": "handle",
+          "item": "handle",
+          "hitArea": [
+            0.57,
+            0.83,
+            0.67,
+            0.83,
+            0.67,
+            0.93,
+            0.57,
+            0.93
+          ]
+        },
+        {
+          "kind": "interact",
+          "id": "panel",
+          "hitArea": [
+            0.71,
+            0.33,
+            0.81,
+            0.33,
+            0.81,
+            0.47,
+            0.71,
+            0.47
+          ],
+          "effects": [],
+          "uses": [
+            {
+              "item": "crank",
+              "effects": [
+                {
+                  "kind": "giveItem",
+                  "item": "gem"
+                },
+                {
+                  "kind": "setFlag",
+                  "flag": "panel-used"
+                }
+              ]
+            }
+          ],
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "panel-used"
+            }
+          }
+        }
+      ],
+      "layers": [
+        {
+          "kind": "builtin",
+          "band": "background",
+          "builder": "room.bg"
+        },
+        {
+          "kind": "builtin",
+          "band": "mid",
+          "builder": "room.gear",
+          "anchorYFrac": 0.85,
+          "params": {
+            "xFrac": 0.3,
+            "yFrac": 0.85
+          },
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "picked:gear"
+            }
+          }
+        },
+        {
+          "kind": "builtin",
+          "band": "mid",
+          "builder": "room.handle",
+          "anchorYFrac": 0.88,
+          "params": {
+            "xFrac": 0.62,
+            "yFrac": 0.88
+          },
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "picked:handle"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "items": {
+    "key": {
+      "id": "key",
+      "name": "Key"
+    },
+    "gear": {
+      "id": "gear",
+      "name": "Gear"
+    },
+    "handle": {
+      "id": "handle",
+      "name": "Handle"
+    },
+    "crank": {
+      "id": "crank",
+      "name": "Crank"
+    },
+    "gem": {
+      "id": "gem",
+      "name": "Gem"
+    }
+  },
+  "initialFlags": {},
+  "recipes": [
+    {
+      "a": "gear",
+      "b": "handle",
+      "output": "crank"
+    }
+  ]
+}

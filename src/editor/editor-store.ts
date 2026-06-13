@@ -16,6 +16,9 @@ interface EditorStore {
   addScene(): void
   deleteScene(id: SceneId): void
   setDoc(doc: GameDoc): void
+  /** Replace a scene's walkable polygon (fractions). Doesn't bump `revision`, so
+   *  the live preview isn't re-mounted while drawing. */
+  setWalkable(id: SceneId, polygon: number[]): void
 }
 
 function blankScene(id: SceneId): SceneData {
@@ -64,6 +67,11 @@ export const editorStore = createStore<EditorStore>((set, get) => ({
     })
   },
   setDoc: (doc) => set({ doc, selectedSceneId: doc.start, revision: get().revision + 1 }),
+  setWalkable: (id, polygon) => {
+    const { doc } = get()
+    const scene = doc.scenes[id]
+    set({ doc: { ...doc, scenes: { ...doc.scenes, [id]: { ...scene, walkable: polygon } } } })
+  },
 }))
 
 export function useEditor<T>(selector: (state: EditorStore) => T): T {

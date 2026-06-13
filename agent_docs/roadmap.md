@@ -80,8 +80,9 @@ cutscenes, audio, atmosphere, theming) → packaging.
 
 - [x] Edit mode (`?edit`, DEV-only) — React editor shell beside the live preview.
 - [x] Scene panel: list / add / delete / select + live preview; editable working doc.
-- [ ] Layers: upload SVG → place in band, reorder, set role; draw the walkable
-      polygon. _(Save/load `GameDoc` as JSON — export/import — done.)_
+- [ ] Layers: upload SVG → place in band, reorder, set role. _(Walkable drawing ✓ ·
+      save/load `GameDoc` as JSON ✓ · edit→play test loop ✓ · layer upload is the
+      last M3 piece.)_
 
 ### M4 — Editor: interactables, items, recipes, exits
 
@@ -196,6 +197,8 @@ cutscenes, audio, atmosphere, theming) → packaging.
 
 - Already well-positioned: `engine/ systems/ entities/ data/` are React-free,
   `ui/` is React, scenes are data — M13's package boundary mostly exists already.
+  `content/` (top-level) now holds the published `game.json` (the data boundary);
+  the game loads it over the in-code demo when present.
 - Don't split into real npm packages early — keep the internal boundary now, do the
   actual split at M13.
 - Atmosphere (M10) was always anticipated: `architecture.md` plans fog/lights/

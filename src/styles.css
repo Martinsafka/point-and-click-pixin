@@ -63,6 +63,17 @@ body {
   opacity: 0.85;
 }
 
+.overlay__badge {
+  margin-left: 8px;
+  padding: 2px 6px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  border-radius: 4px;
+  background: rgba(232, 181, 82, 0.18);
+  border: 1px solid #e8b552;
+  color: #e8b552;
+}
+
 .overlay__hint {
   margin: 0;
   max-width: 42ch;
@@ -296,6 +307,10 @@ body {
   cursor: not-allowed;
 }
 
+.editor__toolbar button.editor__btn--active {
+  border-color: #e8b552;
+}
+
 .editor__scenes {
   list-style: none;
   margin: 0;
@@ -345,4 +360,42 @@ body {
 
 .preview canvas {
   display: block;
+}
+
+/* Walkable editing overlay (over the preview) */
+.walkable-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.walkable-overlay__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.walkable-overlay__svg polygon {
+  fill: rgba(232, 181, 82, 0.12);
+  stroke: #e8b552;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.walkable-overlay__vertex {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: #e8b552;
+  border: 1px solid #0b0d12;
+}
+
+.walkable-overlay__catcher {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  cursor: crosshair;
 }

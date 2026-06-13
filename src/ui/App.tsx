@@ -5,6 +5,7 @@ import { Menu } from './Menu'
 import { TitleScreen } from './TitleScreen'
 import { useStory } from './use-story'
 import { gameDoc } from '../data/game'
+import { hasDocDraft } from '../data/doc-draft'
 import { storyStore } from '../state/story'
 import { loadGame } from '../state/storage'
 
@@ -42,7 +43,10 @@ export function App() {
     <div className="app-root">
       <GameCanvas />
       <div className="overlay">
-        <header className="overlay__title">Point &amp; Click Adventure</header>
+        <header className="overlay__title">
+          Point &amp; Click Adventure
+          {hasDocDraft() && <span className="overlay__badge">dev draft</span>}
+        </header>
         <p className="overlay__hint">
           Scene: {sceneName} · visited {visited} — click to walk. Pick up items, combine them in the
           bar, and use a selected item on objects.

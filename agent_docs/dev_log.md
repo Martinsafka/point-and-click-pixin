@@ -23,6 +23,39 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-13 — content/ boundary: load a published game.json
+**What:** New top-level **`content/`** (with a README) is the home for the game's data. `data/game.ts` now resolves the document in priority: **editor dev-draft (localStorage) → `content/game.json` → built-in demo** (street + room, in code). `content/game.json` loads via `import.meta.glob` (eager, optional) so the file is optional and bundles into the build when committed.
+**Why:** The user asked where the editor's exported `game.json` should live so it actually drives the game — without a defined home + loader, Export was a dead-end download.
+**How:**
+- **Optional file via glob:** `import.meta.glob('../../content/*.json', { eager: true, import: 'default' })`, then pick the `game.json` entry; no file → empty map → demo. Avoids a static import of a maybe-absent file and keeps the demo as a permanent fallback (the engine always has content).
+- **Demo stays in code, not duplicated as JSON:** deliberately did *not* hand-write `content/game.json` from the demo — that would be a parallel, drift-prone copy. The demo lives in `src/scenes/` (data + painters); `content/game.json` is for the author's *published* doc (their own Export, exact by construction).
+- **Top-level `content/`** (sibling of `src/`, `public/`) for discoverability + matches the roadmap's `content` package boundary. `public/` would be wrong here (runtime-fetched static, not bundled content).
+- Painters still register via the `src/scenes/*` imports regardless of which document wins.
+- **Verified:** format/typecheck/lint/build green; dev smoke 200 (game, `?edit`); glob wiring confirmed — the transformed `game.ts` gains the content import only when `content/game.json` exists (temp file → +2 references → removed).
+**Follow-ups:** a dev-server endpoint that writes `content/game.json` directly (Export without the manual move). Assets (SVGs / atlases / audio) join `content/` as the pipeline grows.
+
+### 2026-06-13 — M3: editor → game test loop (localStorage doc draft)
+**What:** Close the edit → play loop. New `data/doc-draft.ts` (load / save / clear / has a `GameDoc` in localStorage, DEV-only). `data/game.ts` splits into `bakedGameDoc` (the shipped const) + `gameDoc = loadDocDraft() ?? bakedGameDoc` — in dev, an editor draft overrides the baked doc. Editor gains a **Playtest** section: **▶ Test in game** (save the working doc as a draft, then open the game, dropping `?edit`) and **Discard** (clear + reload). The game shows a small **dev draft** badge while a draft is active.
+**Why:** The user's question — after editing you couldn't leave the editor and try the changes in the real game. The editor mutated a clone, the game ran the const `gameDoc`, with no bridge between them.
+**How:**
+- **localStorage (sync), not IndexedDB:** the game's `gameDoc` resolves the draft synchronously when `data/game.ts` evaluates, so no async-boot refactor of the store/host. The save-game slot stays on IndexedDB — different concern (playthrough state vs the authoring document).
+- **Builders still register:** `data/game.ts` keeps importing the scene modules (side-effect registers the `builtin` painters), so a draft reusing those builder keys renders.
+- **DEV-only:** `loadDocDraft` / `hasDocDraft` gate on `import.meta.env.DEV`; prod ignores any localStorage and ships `bakedGameDoc`.
+- **The loop:** `?edit` → Test → title → New game plays the draft; the editor's working clone also starts from `gameDoc` (= the draft), so reopening `?edit` continues editing it. Discard reverts both to baked.
+- **Bug fixed this turn:** `App.tsx` referenced `hasDocDraft()` without importing it (an edit in the previous turn had silently failed on a text mismatch, right before the context compacted); added the import. Caught on re-read, then confirmed by typecheck.
+- **Verified:** format + typecheck + lint + build green; dev smoke 200 for the game, `?edit`, and the new `doc-draft.ts` transform.
+**Follow-ups:** localStorage's ~5 MB ceiling will bite once layers embed SVG data-URLs (M3 step 3) → move the draft to IndexedDB + an async document load then. "Publish to repo" is still Export-JSON-and-bake; a dev-server endpoint that writes `src/data` is the later convenience. **Next:** layer upload — the last M3 core piece.
+
+### 2026-06-13 — M3 step 2b: walkable polygon drawing
+**What:** Draw a scene's walkable area in the editor. New `editor/WalkableOverlay.tsx` — a DOM/SVG overlay over the preview that draws the walkable polygon (filled outline + vertex dots) and, in **Draw** mode, turns clicks into vertices. Editor gains a Walkable section (Draw toggle / Clear / point count); `editor-store` gets `setWalkable(id, polygon)` (no `revision` bump). `ScenePreview` now mounts once (re-mounts via React key only), so walkable edits don't tear the Pixi canvas down.
+**Why:** Walkable was the most painful thing to author by hand — now you click it out on the live preview (and the existing street/room areas show up immediately).
+**How:**
+- **Overlay uses screen fractions directly:** SVG `viewBox="0 0 1 1"` stretched to the pane (`preserveAspectRatio: none`) + `vector-effect: non-scaling-stroke` for crisp lines; vertices are DOM dots positioned by `%`. Aligns with the Pixi scene (also positioned by fractions). Clicks → fractions via `getBoundingClientRect`.
+- **No re-mount while drawing:** `setWalkable` updates the doc but doesn't bump `revision`; the preview keys on `selectedId-revision` and mounts once (effect `[]`), so each point updates only the React overlay, not the canvas. (Mount-once needed an `exhaustive-deps` disable — re-mount is intentional, via the key.)
+- Clicks round to 3 decimals; switching scenes exits Draw mode.
+- **Verified:** typecheck + lint + build green; dev server transforms the modules. Visual — `?edit`: Draw → click the preview → the road polygon appears; Export to see it in the JSON.
+**Follow-ups (M3):** last piece — **layer upload** (SVG → place in band, reorder, set role); then persist the doc into the project (dev endpoint).
+
 ### 2026-06-13 — M3 step 2: editable doc + add/delete scenes + JSON save/load
 **What:** Editor goes from read-only to editable. New `editor/editor-store.ts` (Zustand) holds a **mutable clone of `gameDoc`** + selection + a `revision` counter; actions select / add / delete scene + setDoc. The panel gains **+ Scene / Delete** and **Export / Import** (download/upload the doc as JSON). The live preview re-mounts on `selectedSceneId-revision`.
 **Why:** M3 step 2 — the data-mutation layer + persistence that the visual tools (walkable, layers) build on.

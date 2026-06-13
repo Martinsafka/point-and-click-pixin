@@ -1,13 +1,14 @@
 import type { GameDoc } from './schema'
 import { streetScene } from '../scenes/street'
 import { roomScene } from '../scenes/room'
+import { loadDocDraft } from './doc-draft'
 
 /**
- * The authored game. For now two hand-written scenes; the editor (M2+) will
- * produce this document, and it will eventually load from JSON. Importing a
- * scene module also registers its `builtin` layer painters (side effect).
+ * The built-in demo (street + room), assembled in code. Importing the scene
+ * modules also registers their `builtin` layer painters (side effect), so a
+ * document that reuses those builder keys still renders.
  */
-export const gameDoc: GameDoc = {
+const demoGameDoc: GameDoc = {
   start: 'street',
   scenes: {
     street: streetScene,
@@ -23,3 +24,22 @@ export const gameDoc: GameDoc = {
   initialFlags: {},
   recipes: [{ a: 'gear', b: 'handle', output: 'crank' }],
 }
+
+/**
+ * A published document at `content/game.json` (the editor's Export) takes over
+ * from the demo when present. `import.meta.glob` makes the file optional — no
+ * file → empty map → the demo runs; committing one bundles it into the build.
+ */
+const published = import.meta.glob('../../content/*.json', {
+  eager: true,
+  import: 'default',
+}) as Record<string, GameDoc>
+const publishedDoc = Object.entries(published).find(([path]) => path.endsWith('/game.json'))?.[1]
+
+export const bakedGameDoc: GameDoc = publishedDoc ?? demoGameDoc
+
+/**
+ * The active game document. In dev, an editor draft (localStorage) overrides the
+ * baked one — the editor → game test loop (`src/data/doc-draft.ts`).
+ */
+export const gameDoc: GameDoc = loadDocDraft() ?? bakedGameDoc
