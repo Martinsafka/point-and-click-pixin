@@ -157,6 +157,23 @@ matching items in the inventory consumes both and yields the output.
 - **+ Recipe** — adds a row; pick **a**, **b**, and **output** from the items.
 - **✕** deletes the rule.
 
+### Characters (global)
+
+The protagonist's appearance + animation. With none set, the game uses the built-in
+placeholder figure.
+
+- **Create from placeholder** — start a character from the placeholder's atlas +
+  clips, ready to customise; **Remove** reverts to the placeholder.
+- **Change atlas** — upload a sprite-sheet (PNG); it's stored in the document. The
+  preview overlays the frame **index numbers**.
+- **frame / cols** — the frame size (W × H) and how many columns the sheet has.
+- **anchor** — the sprite origin (0..1); feet at the bottom = `1` for anchor-Y.
+- **Clips** — name each animation + list its frame indices (+ fps, loop):
+  - **`idle.S` / `walk.E` …** — keyed `state.facing`; the 5 base directions
+    (S / SE / E / NE / N) suffice — the W-side mirrors automatically.
+  - **`pickup` / `interact`** — one-shots played on a pickup / use (loop off).
+  - Names + frame lists commit when the field loses focus.
+
 ### Cursors (global)
 
 The in-game pointer changes by what it's over: **walk** (over the walkable area),

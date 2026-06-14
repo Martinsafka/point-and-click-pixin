@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M5 step 4: editor Characters tab (player view descriptor)
+**What:** The protagonist is now **authorable**. `GameDoc.player?: ViewDescriptor` holds the player's atlas + clips; the game + editor preview use it (threaded into `mountScene` / `mountPreview` / `createSceneHost`, default = the placeholder). New `editor/CharacterEditor.tsx` in the **Characters tab**: create-from-placeholder / remove, upload an atlas (with a numbered frame-grid overlay), set the frame grid (W × H, columns) + anchor, and define clips (name + frame indices + fps + loop). `editor-store` gains `createPlayer` / `removePlayer` / `updatePlayer` (bump `revision` so the preview re-mounts the sprite). Closes M5.
+**Why:** M5's editor step — make the character data, not code.
+**How:**
+- **Threaded, not global:** the player view is a param on the engine mount fns (`playerView: ViewDescriptor = placeholderView`); the game passes `gameDoc.player`, the preview passes the editor doc's `player` (undefined → default placeholder). Editing bumps `revision` → the preview re-mounts the new sprite.
+- **Frame-index authoring:** the atlas preview overlays a numbered grid (rows from image-height / frame-height) so clip frame lists are easy to fill. Clips are keyed `state.facing` (5 base dirs, W-side mirrors) + one-shot names — matching the runtime resolver.
+- **Input ergonomics:** clip name + frames commit on **blur** (so typing doesn't re-key the row); grid / anchor / fps + loop are live.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200 (game, `?edit`, CharacterEditor). Authoring + the in-game custom character is the user's browser check.
+**Follow-ups:** a footprint (separate from anchor); a visual frame-picker (click frames on the atlas); per-trigger animation assignment (now by convention); NPC characters (M7). **M5 complete** → next **M6 (Movement & camera)**.
+
 ### 2026-06-14 — M5 step 3: one-shot animations + onComplete
 **What:** Clicking a pickable / interact (or using an item) now walks the character there, plays a **one-shot** animation (pickup = a crouch, interact = a forward reach), and runs the **effects on the animation's completion** (so the item appears after the reach-down). New `CharacterView.playOnce(action, facing, onComplete)`; `createSpriteView` plays a non-looping clip, fires `onComplete`, then reverts to the pose. `Character.setTarget` gains an optional `action`; on arrival it plays the one-shot and defers `onArrive` until it finishes. `scene.ts` maps interactable kind → one-shot (pickable → pickup, interact + use-on-object → interact). The placeholder atlas gained pickup + interact rows.
 **Why:** M5 step 3 — actions land with weight (the protagonist performs the pickup / use before the result), reusing the existing arrive-callback path.

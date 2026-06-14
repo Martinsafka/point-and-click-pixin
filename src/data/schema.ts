@@ -202,4 +202,6 @@ export interface GameDoc {
   recipes?: Recipe[]
   /** Optional per-context cursor icons (image URLs); missing → emoji fallback. */
   cursors?: Partial<Record<CursorKind, string>>
+  /** The protagonist's view (atlas + clips); absent → the built-in placeholder. */
+  player?: ViewDescriptor
 }

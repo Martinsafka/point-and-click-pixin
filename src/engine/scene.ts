@@ -21,6 +21,7 @@ import type {
   SceneBand,
   SceneData,
   SceneId,
+  ViewDescriptor,
 } from '../data/schema'
 
 /** Viewport size in CSS pixels. */
@@ -127,6 +128,7 @@ export async function mountScene(
   app: Application,
   scene: SceneData,
   store: SceneStore,
+  playerView: ViewDescriptor = placeholderView,
 ): Promise<Scene> {
   const screen: Size = { width: app.screen.width, height: app.screen.height }
   const depthScale = resolveDepthScale(scene.depth, screen.height)
@@ -169,7 +171,7 @@ export async function mountScene(
     conditional.length > 0 ? store.subscribe(refreshVisibility) : () => {}
 
   const walkable: WalkArea = { polygon: resolvePolygon(scene.walkable, screen) }
-  const character = new Character(await createSpriteView(placeholderView), depthScale, walkable)
+  const character = new Character(await createSpriteView(playerView), depthScale, walkable)
   interactive.addChild(character.displayObject)
   character.setPosition(scene.spawn.xFrac * screen.width, scene.spawn.yFrac * screen.height)
 
@@ -293,6 +295,7 @@ export async function mountPreview(
   app: Application,
   scene: SceneData,
   opts: PreviewOptions = {},
+  playerView: ViewDescriptor = placeholderView,
 ): Promise<Scene> {
   const screen: Size = { width: app.screen.width, height: app.screen.height }
   const depthScale = resolveDepthScale(scene.depth, screen.height)
@@ -336,7 +339,7 @@ export async function mountPreview(
   }
 
   // Static character placeholder at the spawn point (shows scale + position).
-  const view = await createSpriteView(placeholderView)
+  const view = await createSpriteView(playerView)
   const feetX = scene.spawn.xFrac * screen.width
   const feetY = scene.spawn.yFrac * screen.height
   view.container.position.set(feetX, feetY)
@@ -369,6 +372,7 @@ export function createSceneHost(
   app: Application,
   scenes: Record<SceneId, SceneData>,
   store: SceneStore,
+  playerView: ViewDescriptor = placeholderView,
 ): SceneHost {
   let current: Scene | undefined
   let destroyed = false
@@ -379,7 +383,7 @@ export function createSceneHost(
     shownId = id
     current?.destroy()
     current = undefined
-    const mounted = await mountScene(app, scenes[id], store)
+    const mounted = await mountScene(app, scenes[id], store, playerView)
     if (destroyed || shownId !== id) {
       mounted.destroy()
       return

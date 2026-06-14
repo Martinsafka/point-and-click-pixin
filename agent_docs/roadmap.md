@@ -126,10 +126,12 @@ M4 additions (raised after the core was done):
         effects on the animation's completion. Per-item pickup variants + a `talk`
         one-shot (inspect / dialogue) are follow-ups (M5.4 / M7).
 - Editor:
-  - [ ] Upload frames / sprite atlas; define animations (frames + timing + loop);
-        map (state, facing) → animation; set anchor + footprint.
-  - [ ] Assign triggers: which animation plays for walk / each pickup / interact /
-        talk.
+  - [x] Upload frames / sprite atlas; define clips (frames + fps + loop); map
+        (state, facing) via clip names (e.g. `walk.E`); set anchor. _(Footprint +
+        a visual frame-picker are follow-ups.)_
+  - [x] Assign triggers — by naming convention: `pickup` / `interact` clips play on
+        a pickup / use (the scene maps kind → action). A per-trigger editor UI is a
+        follow-up.
 - _Testing:_ a **procedural placeholder atlas** (code-drawn frames → `AnimatedSprite`)
   so the system is testable before real art; the editor's **Characters tab** (added
   pre-M5) hosts the upload + animation tools.

@@ -39,7 +39,7 @@ export function GameCanvas() {
       hostRef.current?.appendChild(created.canvas)
       // The host keeps the displayed scene in sync with the store's currentScene:
       // it mounts the start scene and swaps when a transition changes it.
-      host = createSceneHost(created, gameDoc.scenes, storyStore)
+      host = createSceneHost(created, gameDoc.scenes, storyStore, gameDoc.player)
     })()
 
     return () => {

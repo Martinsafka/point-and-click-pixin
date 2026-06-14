@@ -16,6 +16,7 @@ import { InteractableForm } from './InteractableForm'
 import { ItemCatalogue } from './ItemCatalogue'
 import { RecipeTable } from './RecipeTable'
 import { CursorEditor } from './CursorEditor'
+import { CharacterEditor } from './CharacterEditor'
 
 const TABS = ['scene', 'items', 'characters', 'project'] as const
 type Tab = (typeof TABS)[number]
@@ -292,9 +293,7 @@ export function Editor() {
             </>
           )}
 
-          {tab === 'characters' && (
-            <p className="editor__hint">Characters &amp; animation — coming in M5.</p>
-          )}
+          {tab === 'characters' && <CharacterEditor player={doc.player} />}
 
           {tab === 'project' && (
             <>

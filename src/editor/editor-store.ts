@@ -15,8 +15,10 @@ import type {
   SceneData,
   SceneId,
   UseRule,
+  ViewDescriptor,
 } from '../data/schema'
 import { gameDoc } from '../data/game'
+import { placeholderView } from '../entities/placeholder-atlas'
 
 /**
  * The editor's working copy of the `GameDoc` — a mutable clone of the authored
@@ -68,6 +70,10 @@ interface EditorStore {
   setItemExamine(id: ItemId, examine: string): void
   setItemIcon(id: ItemId, icon: string | undefined): void
   setCursorIcon(kind: CursorKind, icon: string | undefined): void
+  // Player character (M5) — bumps `revision` so the preview re-mounts the sprite.
+  createPlayer(): void
+  removePlayer(): void
+  updatePlayer(patch: Partial<ViewDescriptor>): void
 }
 
 function blankScene(id: SceneId): SceneData {
@@ -258,6 +264,21 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       patchDoc({ items: { ...items, [id]: { ...items[id], icon } } })
     },
     setCursorIcon: (kind, icon) => patchDoc({ cursors: { ...get().doc.cursors, [kind]: icon } }),
+    createPlayer: () => {
+      const { doc, revision } = get()
+      set({ doc: { ...doc, player: structuredClone(placeholderView) }, revision: revision + 1 })
+    },
+    removePlayer: () => {
+      const { doc, revision } = get()
+      const next = { ...doc }
+      delete next.player
+      set({ doc: next, revision: revision + 1 })
+    },
+    updatePlayer: (patch) => {
+      const { doc, revision } = get()
+      if (!doc.player) return
+      set({ doc: { ...doc, player: { ...doc.player, ...patch } }, revision: revision + 1 })
+    },
   }
 })
 

@@ -38,10 +38,15 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
       }
       app = created
       host.appendChild(created.canvas)
-      preview = await mountPreview(created, scene, {
-        onLayerMove: (index, xFrac, yFrac) =>
-          editorStore.getState().setLayerPos(scene.id, index, xFrac, yFrac),
-      })
+      preview = await mountPreview(
+        created,
+        scene,
+        {
+          onLayerMove: (index, xFrac, yFrac) =>
+            editorStore.getState().setLayerPos(scene.id, index, xFrac, yFrac),
+        },
+        editorStore.getState().doc.player,
+      )
     })()
 
     return () => {
