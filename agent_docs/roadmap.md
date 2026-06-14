@@ -153,8 +153,8 @@ M4 additions (raised after the core was done):
       the viewport.
     - ⚠️ **Scene / window resize is unresolved** — how the world maps to varying
       viewport sizes (and the overlay coordinate space) must be worked out here.
-  - [ ] **Scene transitions** — fade out/in on `goTo` (covers the async mount; no
-        hard cut / blank frame).
+  - [x] **Scene transitions** — fade out / in on `goTo` (the host fades through
+        black around the destroy + async mount; the first scene fades in).
 - Editor:
   - [ ] Refine the walk-mesh / draw obstacles; set scene bounds (for the camera).
 

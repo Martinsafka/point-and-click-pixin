@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M6: scene transitions (fade through black)
+**What:** Scene swaps now **fade through black** instead of hard-cutting. `createSceneHost` adds a black overlay above every scene (a huge rect, `eventMode none`), animated on `app.ticker`: on a `goTo`, fade out → destroy old + mount new → fade in. The first scene fades in from black (a soft intro).
+**Why:** M6 — the `goTo` swap was an instant cut with a possible blank frame during the async mount; the fade hides both.
+**How:**
+- **Fade = alpha-lerp on the ticker** (`FADE_MS` each way); `fadeTo(target)` returns a promise the async `show()` awaits, so the destroy + mount run at full black.
+- The overlay sits at `zIndex 10000` on the sortable stage, so it stays on top across swaps (a scene `destroy` only tears down the bands, not the fade); `eventMode none` so it never blocks clicks.
+- Only the game (`createSceneHost`) fades — the editor preview (`mountPreview`) is a still.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200; `fadeTo` in the transform. The actual fade is the user's browser check (walk the door street ↔ room).
+**Follow-ups:** M6 **pathfinding** (A\* over the walkable mesh) next, then the **camera** (+ the overlay-follows-world note in the roadmap).
+
 ### 2026-06-14 — M5 step 4: editor Characters tab (player view descriptor)
 **What:** The protagonist is now **authorable**. `GameDoc.player?: ViewDescriptor` holds the player's atlas + clips; the game + editor preview use it (threaded into `mountScene` / `mountPreview` / `createSceneHost`, default = the placeholder). New `editor/CharacterEditor.tsx` in the **Characters tab**: create-from-placeholder / remove, upload an atlas (with a numbered frame-grid overlay), set the frame grid (W × H, columns) + anchor, and define clips (name + frame indices + fps + loop). `editor-store` gains `createPlayer` / `removePlayer` / `updatePlayer` (bump `revision` so the preview re-mounts the sprite). Closes M5.
 **Why:** M5's editor step — make the character data, not code.

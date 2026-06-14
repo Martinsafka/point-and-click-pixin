@@ -1,6 +1,7 @@
 import {
   Assets,
   Container,
+  Graphics,
   Sprite,
   type Application,
   type FederatedPointerEvent,
@@ -362,11 +363,15 @@ export async function mountPreview(
   }
 }
 
+/** Fade-to-black duration each way, in ms. */
+const FADE_MS = 180
+
 /**
  * Mounts whichever scene the store says is current, and swaps when it changes.
- * Swaps are deferred to a microtask so a transition fired from inside the ticker
- * (a click → walk → goTo) tears the old scene down *after* the frame, never
- * mid-update.
+ * Swaps **fade through black** — fade out → destroy + mount → fade in — so the
+ * async mount and the hard cut are hidden (no blank frame). The first scene fades
+ * in from black. Swaps are deferred to a microtask so a transition fired from
+ * inside the ticker (click → walk → goTo) never tears the old scene down mid-update.
  */
 export function createSceneHost(
   app: Application,
@@ -378,9 +383,44 @@ export function createSceneHost(
   let destroyed = false
   let shownId: SceneId | undefined
 
+  // A black overlay above every scene, animated on the ticker. Starts opaque so
+  // the first mount fades in. A huge rect so it covers any viewport size.
+  app.stage.sortableChildren = true
+  const fade = new Graphics().rect(-5000, -5000, 10000, 10000).fill(0x000000)
+  fade.zIndex = 10000
+  fade.eventMode = 'none'
+  fade.alpha = 1
+  app.stage.addChild(fade)
+
+  let fadeTarget = 1
+  let fadeResolve: (() => void) | null = null
+  const onFadeTick = (ticker: Ticker) => {
+    if (fade.alpha === fadeTarget) return
+    const step = ticker.deltaMS / FADE_MS
+    fade.alpha =
+      fade.alpha < fadeTarget
+        ? Math.min(fadeTarget, fade.alpha + step)
+        : Math.max(fadeTarget, fade.alpha - step)
+    if (fade.alpha === fadeTarget && fadeResolve) {
+      fadeResolve()
+      fadeResolve = null
+    }
+  }
+  app.ticker.add(onFadeTick)
+
+  const fadeTo = (target: number): Promise<void> => {
+    fadeTarget = target
+    if (fade.alpha === target) return Promise.resolve()
+    return new Promise((resolve) => {
+      fadeResolve = resolve
+    })
+  }
+
   async function show(id: SceneId): Promise<void> {
     if (destroyed || id === shownId) return
     shownId = id
+    if (current) await fadeTo(1) // fade out (the first scene is already black)
+    if (destroyed) return
     current?.destroy()
     current = undefined
     const mounted = await mountScene(app, scenes[id], store, playerView)
@@ -389,6 +429,7 @@ export function createSceneHost(
       return
     }
     current = mounted
+    await fadeTo(0) // fade in
   }
 
   const sync = () => {
@@ -403,8 +444,10 @@ export function createSceneHost(
     destroy() {
       destroyed = true
       unsubscribe()
+      app.ticker.remove(onFadeTick)
       current?.destroy()
       current = undefined
+      fade.destroy()
     },
   }
 }
