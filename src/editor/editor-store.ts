@@ -4,6 +4,9 @@ import type {
   Condition,
   CursorKind,
   DepthStop,
+  DialogId,
+  DialogNode,
+  DialogNodeId,
   Effect,
   GameDoc,
   InteractableData,
@@ -86,6 +89,13 @@ interface EditorStore {
   setNpcDefSpeed(npcId: NpcId, speed: number): void
   /** Merge a partial into a cast NPC's definition (dialog / dialogWhen / inspect / …). */
   patchNpcDef(npcId: NpcId, patch: Partial<NpcDef>): void
+  // Dialogs library (GameDoc.dialogs) + node-tree editing.
+  addDialog(): void
+  removeDialog(id: DialogId): void
+  setDialogStart(id: DialogId, start: DialogNodeId): void
+  addDialogNode(dialogId: DialogId): void
+  removeDialogNode(dialogId: DialogId, nodeId: DialogNodeId): void
+  setDialogNode(dialogId: DialogId, nodeId: DialogNodeId, node: DialogNode): void
   addNpcPlacement(id: SceneId, npc: NpcId): void
   removeNpcPlacement(id: SceneId, index: number): void
   setNpcPlacementNpc(id: SceneId, index: number, npc: NpcId): void
@@ -154,6 +164,14 @@ function uniqueNpcDefId(npcs: Record<NpcId, NpcDef>, base: string): NpcId {
   if (!npcs[base]) return base
   let n = 2
   while (npcs[`${base}-${n}`]) n += 1
+  return `${base}-${n}`
+}
+
+/** A `base` (or `base-2`, `base-3`, …) not already a key of `obj` — for dialog / node ids. */
+function uniqueKey(obj: Record<string, unknown>, base: string): string {
+  if (!obj[base]) return base
+  let n = 2
+  while (obj[`${base}-${n}`]) n += 1
   return `${base}-${n}`
 }
 
@@ -324,6 +342,54 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     patchNpcDef: (npcId, patch) => {
       const npcs = get().doc.npcs ?? {}
       patchDoc({ npcs: { ...npcs, [npcId]: { ...npcs[npcId], ...patch } } })
+    },
+    addDialog: () => {
+      const dialogs = get().doc.dialogs ?? {}
+      const id = uniqueKey(dialogs, 'dialog')
+      patchDoc({
+        dialogs: { ...dialogs, [id]: { start: 'start', nodes: { start: { text: '' } } } },
+      })
+    },
+    removeDialog: (id) => {
+      const dialogs = { ...(get().doc.dialogs ?? {}) }
+      delete dialogs[id]
+      patchDoc({ dialogs })
+    },
+    setDialogStart: (id, start) => {
+      const dialogs = get().doc.dialogs ?? {}
+      if (!dialogs[id]) return
+      patchDoc({ dialogs: { ...dialogs, [id]: { ...dialogs[id], start } } })
+    },
+    addDialogNode: (dialogId) => {
+      const dialogs = get().doc.dialogs ?? {}
+      const dialog = dialogs[dialogId]
+      if (!dialog) return
+      const nodeId = uniqueKey(dialog.nodes, 'node')
+      patchDoc({
+        dialogs: {
+          ...dialogs,
+          [dialogId]: { ...dialog, nodes: { ...dialog.nodes, [nodeId]: { text: '' } } },
+        },
+      })
+    },
+    removeDialogNode: (dialogId, nodeId) => {
+      const dialogs = get().doc.dialogs ?? {}
+      const dialog = dialogs[dialogId]
+      if (!dialog) return
+      const nodes = { ...dialog.nodes }
+      delete nodes[nodeId]
+      patchDoc({ dialogs: { ...dialogs, [dialogId]: { ...dialog, nodes } } })
+    },
+    setDialogNode: (dialogId, nodeId, node) => {
+      const dialogs = get().doc.dialogs ?? {}
+      const dialog = dialogs[dialogId]
+      if (!dialog) return
+      patchDoc({
+        dialogs: {
+          ...dialogs,
+          [dialogId]: { ...dialog, nodes: { ...dialog.nodes, [nodeId]: node } },
+        },
+      })
     },
     addNpcPlacement: (id, npc) =>
       mapNpcs(id, (ps) => [...ps, { npc, spawn: { xFrac: 0.5, yFrac: 0.85 } }]),

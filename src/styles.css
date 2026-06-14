@@ -1404,3 +1404,9 @@ body {
   padding: 14px;
   overflow: auto;
 }
+
+/* Dialogs library row: a muted node count beside the id. */
+.dlg-list__count {
+  font-size: 11px;
+  opacity: 0.6;
+}

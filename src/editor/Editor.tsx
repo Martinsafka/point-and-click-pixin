@@ -25,13 +25,15 @@ import { TransitionEditor } from './TransitionEditor'
 import { NpcList } from './NpcList'
 import { NpcOverlay } from './NpcOverlay'
 import { NpcCast } from './NpcCast'
+import { DialogList } from './DialogList'
 
-const TABS = ['scene', 'items', 'characters', 'project'] as const
+const TABS = ['scene', 'items', 'characters', 'dialogs', 'project'] as const
 type Tab = (typeof TABS)[number]
 const TAB_LABEL: Record<Tab, string> = {
   scene: 'Scene',
   items: 'Items',
   characters: 'Characters',
+  dialogs: 'Dialogs',
   project: 'Project',
 }
 
@@ -495,6 +497,12 @@ export function Editor() {
                 <NpcCast npcs={doc.npcs} />
               </Section>
             </>
+          )}
+
+          {tab === 'dialogs' && (
+            <Section title={`Dialogs · ${Object.keys(doc.dialogs ?? {}).length}`}>
+              <DialogList dialogs={doc.dialogs} />
+            </Section>
           )}
 
           {tab === 'project' && (

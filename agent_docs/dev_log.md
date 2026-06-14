@@ -23,6 +23,13 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M7 step 4d.2: Dialogs library + node-tree editor (modal)
+**What:** A new top-level **Dialogs** tab + a node-tree editor in the modal — author the 4b dialogue trees no-code. The library lists dialogs (add / remove; ids fixed at creation); **Edit** opens the node editor: pick the `start` node, and per node edit **speaker** (player / cast dropdown, or "— partner —"), **text**, **on-enter effects** (`EffectList`, with the animation / target pickers), a conditional **branch** router (`when → to`), reply **choices** (text + `when` + effects + `next`), and the **next** line (when there are no choices). Node references (start / next / branch.to / choice.next) are node-id dropdowns with a text preview; a stale ref stays selectable, flagged. New `DialogList` + `DialogEditor`; the editor store gains `addDialog` / `removeDialog` / `setDialogStart` / `addDialogNode` / `removeDialogNode` / `setDialogNode`.
+**Why:** M7 step 4d's headline — the no-code dialogue authoring, so trees aren't hand-written in `game.json`.
+**How:** Composes the existing `EffectList` / `ConditionEditor` / `EditorModal`. Each node is a collapsible `<details>` (overview when closed; expand to edit). `setDialogNode` replaces a whole node — the `NodeForm` builds the patch (`...node, ...p`), and empty effects / choices / branch collapse to `undefined` to keep the data clean. New nodes get auto ids (`node`, `node-2`, …); existing meaningful ids from JSON are preserved (rename = follow-up). The visual flowchart stays M12.
+**Verified:** format / typecheck / lint / build green; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** 4d.3 per-NPC appearance (generalise `CharacterEditor`); placement dialogue override in `NpcList`; node-id rename (cascade refs); voice = 4c.
+
 ### 2026-06-14 — M7 step 4d.1: NPC definition modal (dialogue / inspect authoring)
 **What:** An editor **modal** + the NPC's interaction config — so the dialogue / inspect runtime is authorable without hand-editing `game.json`. Characters → NPCs → **Edit** opens a modal: assign a **dialogue** (dropdown of the `GameDoc.dialogs` library), set **dialogWhen** (the full `ConditionEditor`, gating the dialogue), and the **inspect** "look at" (text + audio). New `EditorModal` (reusable dev-only modal) + `NpcEditor`; the editor store gains `patchNpcDef(npcId, patch)`.
 **Why:** M7 step 4d (editor), first chunk — complements the NPC dialog↔inspect runtime just built, and establishes the **modal pattern** the dialogue node editor (4d.2) + appearance (4d.3) reuse. (Voice waits for 4c.)
