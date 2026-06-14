@@ -157,7 +157,8 @@ M4 additions (raised after the core was done):
   - [x] **Scene transitions** — fade out / in on `goTo` (the host fades through
         black around the destroy + async mount; the first scene fades in).
 - Editor:
-  - [ ] Refine the walk-mesh / draw obstacles; set scene bounds (for the camera).
+  - [x] Draw obstacle **holes** (Scene tab → Holes; nav-mesh routes around them).
+        _(Scene bounds for the camera come with the M6 camera.)_
 
 ### M7 — NPCs, dialogue & stealth
 

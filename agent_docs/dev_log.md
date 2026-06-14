@@ -23,6 +23,25 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — Fix: nav-mesh funnel portal orientation (direction bug)
+**What:** Fixed pathfinding so the character no longer walks **through** a hole or takes a huge detour when travelling in certain directions. The funnel's portal left/right was derived from the triangle winding, which was only correct for **one** travel direction — right→left channels got flipped orientation, so the funnel string-pulled across the obstacle. Now left/right is oriented by the **travel direction** (curr centroid → next centroid).
+**Why:** User report — a hand-drawn hole: the character walked through it and detoured to the far side of the map and back.
+**How:**
+- For each channel edge, `left` = the shared vertex on the left of the (currC → nextC) direction (`area2 < 0`), `right` = the other. Robust whichever way the channel runs.
+- **Side effect:** also removed the suboptimal routing — the aggressive Node test's path/straight ratios dropped from 1.3–2.3 to **1.0–1.04** (near-optimal); the previous orientation was both wrong (R→L) and long.
+- **Verified by Node tests:** 6 aggressive cases (directional / edge / non-convex incl. the previously-failing **R→L**) all walkable; the original 12-check regression + the street-holes check still pass. Plus format / typecheck / lint / build green; dev smoke 200.
+- **Note on the user's #1 (no pre-added holes):** the editor + game were running the **localStorage dev draft** (from earlier testing), which shadows `content/game.json`, so the street holes I added didn't show. **Discard the draft** to see them — or a freshly drawn hole now routes correctly.
+
+### 2026-06-14 — M6 editor: draw obstacle holes
+**What:** The editor can draw obstacle **holes** (Scene tab → Holes). New `editor/HoleOverlay.tsx` (dashed-red polygons over the preview, the selected one with vertices; draw mode = click to add points). The Editor's draw modes are unified into one `Draw` state (`walkable | hole | hitarea | null`); `editor-store` gains `addHole` / `setHole` / `removeHole`. Also: **two obstacle holes added to the street scene** in `content/game.json` so pathfinding is visibly testable.
+**Why:** M6 — author the obstacles the nav-mesh routes around, and give the demo something to route around (its walkables were convex quads → straight paths).
+**How:**
+- **Holes are navigation-only** (invisible in-game; the nav-mesh cuts them out) → a DOM overlay + no `revision` bump, like walkable. Per-hole select + Draw / Clear / delete, mirroring the interactables list.
+- **One draw mode at a time:** replaced the per-overlay booleans with a single `Draw` union, so walkable / hole / hit-area drawing are mutually exclusive by construction.
+- **Street holes verified:** a Node check on the real street walkable + holes — a left→right path returns **4 waypoints** (routes around) and the hole centre is not `contains`ed.
+- **Verified:** format / typecheck / lint / build green; dev smoke 200; nav check passes.
+**Follow-ups:** vertex dragging on the overlays; in-game obstacle visuals are the author's own layers; then the **camera** (the last M6 piece).
+
 ### 2026-06-14 — M6: nav-mesh pathfinding (A\* + funnel)
 **What:** The character now walks a **nav-mesh path** instead of a straight line. New `systems/navmesh.ts`: triangulate the walkable polygon minus obstacle holes (earcut), A\* over the triangle adjacency graph, then the **funnel** (string-pulling) algorithm → a smooth shortest path of waypoints. Schema: `SceneData.holes?: Polygon[]`. `Character` rewritten to **follow waypoints** (`findPath` on `setTarget`, walk waypoint-to-waypoint, clamp via the mesh); `scene.ts` builds the navigation from the resolved walkable + holes. **New dependency: `earcut`** (3.0.2, ISC, ~2 kB) — the de-facto polygon triangulator; hand-rolling hole-aware triangulation is error-prone.
 **Why:** M6 pathfinding — straight-line + clamp-and-slide cut corners / hugged walls; the nav-mesh routes around concave walls + holes with natural shortest paths.

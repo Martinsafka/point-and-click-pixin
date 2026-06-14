@@ -189,21 +189,16 @@ function buildPortals(m: Mesh, channel: number[], start: Point, goal: Point): [P
     const next = channel[i + 1]
     const shared = m.adj[curr].find((e) => e.tri === next)
     if (!shared) continue
-    const t = m.tris[curr]
-    const dirs: [number, number][] = [
-      [t[0], t[1]],
-      [t[1], t[2]],
-      [t[2], t[0]],
-    ]
-    // The directed edge of `curr` (consistent winding) that is the shared edge.
-    const de = dirs.find(
-      ([x, y]) => (x === shared.a && y === shared.b) || (x === shared.b && y === shared.a),
-    )
-    if (!de) continue
-    const [vi, vj] = de
+    // Orient left / right by the travel direction (curr centroid → next centroid),
+    // so the funnel is correct whichever way the channel runs.
+    const cl = centroid(m, curr)
+    const nl = centroid(m, next)
+    const aIsLeft = area2(cl.x, cl.y, nl.x, nl.y, vx(m, shared.a), vy(m, shared.a)) < 0
+    const left = aIsLeft ? shared.a : shared.b
+    const right = aIsLeft ? shared.b : shared.a
     portals.push([
-      { x: vx(m, vj), y: vy(m, vj) }, // left
-      { x: vx(m, vi), y: vy(m, vi) }, // right
+      { x: vx(m, left), y: vy(m, left) },
+      { x: vx(m, right), y: vy(m, right) },
     ])
   }
   portals.push([goal, goal])

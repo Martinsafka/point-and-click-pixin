@@ -10,6 +10,7 @@ import { clearDocDraft, hasDocDraft, saveDocDraft } from '../data/doc-draft'
 import type { InteractableData } from '../data/schema'
 import { ScenePreview } from './ScenePreview'
 import { WalkableOverlay } from './WalkableOverlay'
+import { HoleOverlay } from './HoleOverlay'
 import { HitAreaOverlay } from './HitAreaOverlay'
 import { LayerList } from './LayerList'
 import { InteractableForm } from './InteractableForm'
@@ -26,6 +27,9 @@ const TAB_LABEL: Record<Tab, string> = {
   characters: 'Characters',
   project: 'Project',
 }
+
+/** Which polygon draw mode is active (overlays share the preview, so only one). */
+type Draw = 'walkable' | 'hole' | 'hitarea' | null
 
 function round(n: number): number {
   return Math.round(n * 1000) / 1000
@@ -56,9 +60,9 @@ export function Editor() {
   const selectedId = useEditor((s) => s.selectedSceneId)
   const revision = useEditor((s) => s.revision)
   const [tab, setTab] = useState<Tab>('scene')
-  const [drawWalkable, setDrawWalkable] = useState(false)
-  const [drawHitArea, setDrawHitArea] = useState(false)
+  const [draw, setDraw] = useState<Draw>(null)
   const [selectedInteractable, setSelectedInteractable] = useState<number | null>(null)
+  const [selectedHole, setSelectedHole] = useState<number | null>(null)
   const [panelWidth, setPanelWidth] = useState(340)
 
   // Resizing the panel changes the preview container; nudge Pixi to re-fit it.
@@ -79,18 +83,18 @@ export function Editor() {
 
   const sceneIds = Object.keys(doc.scenes)
   const scene = doc.scenes[selectedId]
+  const holes = scene?.holes ?? []
 
   const changeTab = (t: Tab) => {
     setTab(t)
-    setDrawWalkable(false)
-    setDrawHitArea(false)
+    setDraw(null)
   }
 
   const select = (id: string) => {
     editorStore.getState().selectScene(id)
-    setDrawWalkable(false)
-    setDrawHitArea(false)
+    setDraw(null)
     setSelectedInteractable(null)
+    setSelectedHole(null)
   }
 
   const onImport = (e: ChangeEvent<HTMLInputElement>) => {
@@ -99,15 +103,7 @@ export function Editor() {
     e.target.value = ''
   }
 
-  // Only one polygon draw mode is active at a time (overlays share the preview).
-  const toggleWalkable = () => {
-    setDrawHitArea(false)
-    setDrawWalkable((v) => !v)
-  }
-  const toggleHitArea = () => {
-    setDrawWalkable(false)
-    setDrawHitArea((v) => !v)
-  }
+  const toggle = (mode: Exclude<Draw, null>) => setDraw((d) => (d === mode ? null : mode))
 
   const addPoint = (xFrac: number, yFrac: number) => {
     const current = editorStore.getState().doc.scenes[selectedId].walkable
@@ -115,21 +111,42 @@ export function Editor() {
   }
   const clearWalkable = () => editorStore.getState().setWalkable(selectedId, [])
 
+  const addHole = () => {
+    setSelectedHole(holes.length) // appended at the end
+    setDraw('hole')
+    editorStore.getState().addHole(selectedId)
+  }
+  const selectHole = (i: number) => {
+    setDraw(null)
+    setSelectedHole(i)
+  }
+  const removeHole = (i: number) => {
+    editorStore.getState().removeHole(selectedId, i)
+    setSelectedHole(null)
+    setDraw(null)
+  }
+  const addHolePoint = (xFrac: number, yFrac: number) => {
+    if (selectedHole === null) return
+    const cur = editorStore.getState().doc.scenes[selectedId].holes?.[selectedHole] ?? []
+    editorStore.getState().setHole(selectedId, selectedHole, [...cur, round(xFrac), round(yFrac)])
+  }
+  const clearHole = () => {
+    if (selectedHole !== null) editorStore.getState().setHole(selectedId, selectedHole, [])
+  }
+
   const addInteractable = (kind: InteractableData['kind']) => {
-    setDrawWalkable(false)
-    setDrawHitArea(false)
+    setDraw(null)
     setSelectedInteractable(scene.interactables.length) // appended at the end
     editorStore.getState().addInteractable(selectedId, kind)
   }
   const selectInteractable = (i: number) => {
-    setDrawWalkable(false)
-    setDrawHitArea(false)
+    setDraw(null)
     setSelectedInteractable(i)
   }
   const removeInteractable = (i: number) => {
     editorStore.getState().removeInteractable(selectedId, i)
     setSelectedInteractable(null)
-    setDrawHitArea(false)
+    setDraw(null)
   }
   const addHitAreaPoint = (xFrac: number, yFrac: number) => {
     if (selectedInteractable === null) return
@@ -205,15 +222,59 @@ export function Editor() {
                 <div className="editor__toolbar">
                   <button
                     type="button"
-                    className={drawWalkable ? 'editor__btn--active' : undefined}
-                    onClick={toggleWalkable}
+                    className={draw === 'walkable' ? 'editor__btn--active' : undefined}
+                    onClick={() => toggle('walkable')}
                   >
-                    {drawWalkable ? 'Done' : 'Draw'}
+                    {draw === 'walkable' ? 'Done' : 'Draw'}
                   </button>
                   <button type="button" onClick={clearWalkable}>
                     Clear
                   </button>
                 </div>
+              </Section>
+
+              <Section title={`Holes · ${holes.length}`}>
+                <div className="editor__toolbar">
+                  <button type="button" onClick={addHole}>
+                    + Hole
+                  </button>
+                </div>
+                {holes.length > 0 && (
+                  <ul className="editor__interactables">
+                    {holes.map((h, i) => (
+                      <li key={i} className="intr-row">
+                        <button
+                          type="button"
+                          className={`intr-row__select${i === selectedHole ? ' intr-row__select--active' : ''}`}
+                          onClick={() => selectHole(i)}
+                        >
+                          Hole {i + 1} · {h.length / 2} pts
+                        </button>
+                        <button
+                          type="button"
+                          className="intr-row__del"
+                          onClick={() => removeHole(i)}
+                        >
+                          ✕
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {selectedHole !== null && (
+                  <div className="editor__toolbar">
+                    <button
+                      type="button"
+                      className={draw === 'hole' ? 'editor__btn--active' : undefined}
+                      onClick={() => toggle('hole')}
+                    >
+                      {draw === 'hole' ? 'Done' : 'Draw'}
+                    </button>
+                    <button type="button" onClick={clearHole}>
+                      Clear
+                    </button>
+                  </div>
+                )}
               </Section>
 
               <Section title={`Layers · ${scene ? scene.layers.length : 0}`}>
@@ -266,17 +327,16 @@ export function Editor() {
                     interactable={selInteractable}
                     items={doc.items}
                     sceneIds={sceneIds}
-                    drawMode={drawHitArea}
-                    onToggleDraw={toggleHitArea}
+                    drawMode={draw === 'hitarea'}
+                    onToggleDraw={() => toggle('hitarea')}
                   />
                 )}
               </Section>
 
-              {(drawWalkable || drawHitArea) && (
+              {draw && (
                 <p className="editor__hint">
-                  {drawWalkable
-                    ? 'Click in the preview to add walkable points.'
-                    : 'Click in the preview to add hit-area points.'}
+                  Click in the preview to add{' '}
+                  {draw === 'walkable' ? 'walkable' : draw === 'hole' ? 'hole' : 'hit-area'} points.
                 </p>
               )}
             </>
@@ -331,13 +391,19 @@ export function Editor() {
             <ScenePreview key={`${selectedId}-${revision}`} scene={scene} />
             <WalkableOverlay
               walkable={scene.walkable}
-              drawMode={drawWalkable}
+              drawMode={draw === 'walkable'}
               onAddPoint={addPoint}
+            />
+            <HoleOverlay
+              holes={holes}
+              selectedIndex={selectedHole}
+              drawMode={draw === 'hole'}
+              onAddPoint={addHolePoint}
             />
             <HitAreaOverlay
               interactables={scene.interactables}
               selectedIndex={selectedInteractable}
-              drawMode={drawHitArea}
+              drawMode={draw === 'hitarea'}
               onAddPoint={addHitAreaPoint}
             />
           </>

@@ -1097,3 +1097,42 @@ body {
   pointer-events: auto;
   cursor: crosshair;
 }
+
+/* Obstacle-hole overlay (editor) */
+.hole-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.hole-overlay__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.hole-overlay__svg .hole {
+  fill: rgba(200, 87, 106, 0.22);
+  stroke: #c8576a;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+}
+.hole-overlay__svg .hole--selected {
+  fill: rgba(200, 87, 106, 0.34);
+  stroke-width: 2.5;
+}
+.hole-overlay__vertex {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: #c8576a;
+  border: 1px solid #0b0d12;
+}
+.hole-overlay__catcher {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  cursor: crosshair;
+}

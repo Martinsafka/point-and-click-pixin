@@ -73,6 +73,17 @@ the nearest point inside it.
 - **Clear** — empties the polygon (redraw from scratch; there's no vertex drag
   yet).
 
+### Holes · _N_
+
+Obstacles cut out of the walkable area — the character routes **around** them
+(nav-mesh pathfinding).
+
+- **+ Hole** — adds a hole and starts drawing it; click in the preview to add its
+  points. Select a hole in the list to edit it (**Draw** / **Clear**), or **✕** to
+  delete.
+- Holes are invisible in the game (navigation only); they show as **dashed red** in
+  the editor.
+
 ### Layers · _N_
 
 The scene's stacked visuals — uploaded images **and** the demo's built-in code

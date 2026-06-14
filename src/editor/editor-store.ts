@@ -36,6 +36,10 @@ interface EditorStore {
   setDoc(doc: GameDoc): void
   /** Replace a scene's walkable polygon (fractions). No `revision` bump. */
   setWalkable(id: SceneId, polygon: number[]): void
+  /** Obstacle holes cut out of the walkable (each a polygon of fractions). */
+  addHole(id: SceneId): void
+  setHole(id: SceneId, index: number, polygon: number[]): void
+  removeHole(id: SceneId, index: number): void
   /** Append an uploaded image as a full-screen background layer (a backdrop). */
   addImageLayer(id: SceneId, src: string): void
   removeLayer(id: SceneId, index: number): void
@@ -156,6 +160,19 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     },
     setDoc: (doc) => set({ doc, selectedSceneId: doc.start, revision: get().revision + 1 }),
     setWalkable: (id, polygon) => patchScene(id, { walkable: polygon }, false),
+    addHole: (id) => patchScene(id, { holes: [...(get().doc.scenes[id].holes ?? []), []] }, false),
+    setHole: (id, index, polygon) =>
+      patchScene(
+        id,
+        { holes: (get().doc.scenes[id].holes ?? []).map((h, i) => (i === index ? polygon : h)) },
+        false,
+      ),
+    removeHole: (id, index) =>
+      patchScene(
+        id,
+        { holes: (get().doc.scenes[id].holes ?? []).filter((_, i) => i !== index) },
+        false,
+      ),
     addImageLayer: (id, src) =>
       mapLayers(id, (ls) => [...ls, { kind: 'image', band: 'background', src, fit: 'cover' }]),
     removeLayer: (id, index) => mapLayers(id, (ls) => ls.filter((_, i) => i !== index)),
