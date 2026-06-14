@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M5 step 3: one-shot animations + onComplete
+**What:** Clicking a pickable / interact (or using an item) now walks the character there, plays a **one-shot** animation (pickup = a crouch, interact = a forward reach), and runs the **effects on the animation's completion** (so the item appears after the reach-down). New `CharacterView.playOnce(action, facing, onComplete)`; `createSpriteView` plays a non-looping clip, fires `onComplete`, then reverts to the pose. `Character.setTarget` gains an optional `action`; on arrival it plays the one-shot and defers `onArrive` until it finishes. `scene.ts` maps interactable kind → one-shot (pickable → pickup, interact + use-on-object → interact). The placeholder atlas gained pickup + interact rows.
+**Why:** M5 step 3 — actions land with weight (the protagonist performs the pickup / use before the result), reusing the existing arrive-callback path.
+**How:**
+- **Pose lock:** during a one-shot, `applyPose` keeps the clip (only turns); the `AnimatedSprite.onComplete` fires the callback + reverts. A new walk (state `walk`) cancels the one-shot **without** firing it (an interrupted pickup = no pickup).
+- **Graceful fallback:** no clip for an action → `onComplete` fires immediately (the cube view + descriptors without one-shots still run the effects).
+- **Placeholder one-shots:** `drawBody` gained `crouch` (lowers the upper body, feet planted) + `reach` (right arm forward); two extra atlas rows (`pickup`, `interact`).
+- **Verified:** format / typecheck / lint / build green; dev smoke 200. The crouch / reach + effects-after-animation timing is the user's browser check.
+**Follow-ups:** per-item pickup variants + a **talk** one-shot for inspect / dialogue (M7); **M5.4** the editor Characters tab (upload atlas, define clips incl. one-shots, map triggers).
+
 ### 2026-06-14 — M5 step 2: 8-direction walk cycle
 **What:** The character plays **directional** clips. `ViewDescriptor.clips` are keyed `state.facing` (e.g. `walk.E`, `idle.S`); `createSpriteView` resolves the clip from the character's `facing` and **mirrors the W-side** (W / SW / NW = E / SE / NE flipped via `sprite.scale.x`), so 8 facings need only ~5 base directions. The procedural placeholder atlas grew to **5 rows** (S / SE / E / NE / N) × 6 frames, with a head/nose marker pointing in the facing direction (N = the back of the head).
 **Why:** M5 step 2 — facing → the right walk cycle; mirror-to-5 keeps the atlas small (the `asset_pipeline.md` plan).

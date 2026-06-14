@@ -18,12 +18,11 @@ const MIRRORED: ReadonlySet<Facing> = new Set<Facing>(['W', 'SW', 'NW'])
 
 /**
  * An `AnimatedSprite` character view built from a baked atlas + a `ViewDescriptor`
- * (clips keyed `state.facing`, e.g. `walk.E`). Swapping the placeholder cube for
- * this is a data change here, not a logic refactor (character.ts drives it via the
- * `CharacterView` interface). 8 facings map to ~5 base directions; the W-side ones
- * are a horizontal mirror (`sprite.scale.x`), independent of the depth scale logic
- * applies to `container`. Resolution falls back `state.facing → state → idle`, so
- * a state-only descriptor still works.
+ * (clips keyed `state.facing`, e.g. `walk.E`; one-shots keyed by action, e.g.
+ * `pickup`). Swapping the placeholder cube for this is a data change here, not a
+ * logic refactor (character.ts drives it via the `CharacterView` interface). 8
+ * facings map to ~5 base directions; the W-side ones are a horizontal mirror
+ * (`sprite.scale.x`), independent of the depth scale logic applies to `container`.
  */
 export async function createSpriteView(desc: ViewDescriptor): Promise<CharacterView> {
   const sheet = await Assets.load<Texture>(desc.atlas)
@@ -53,6 +52,10 @@ export async function createSpriteView(desc: ViewDescriptor): Promise<CharacterV
   container.addChild(sprite)
 
   let current = ''
+  // While a one-shot plays, the looping pose is locked out (the callback fires on
+  // completion). A new walk cancels it without completing.
+  let oneShot: (() => void) | null = null
+
   const setClip = (name: string): void => {
     const clip = desc.clips[name]
     if (!clip || name === current) return
@@ -61,6 +64,10 @@ export async function createSpriteView(desc: ViewDescriptor): Promise<CharacterV
     sprite.animationSpeed = clip.fps / 60
     sprite.loop = clip.loop
     sprite.gotoAndPlay(0)
+  }
+
+  const mirror = (facing: Facing): void => {
+    sprite.scale.x = MIRRORED.has(facing) ? -1 : 1
   }
 
   const resolveKey = (state: MoveState, base: Facing): string => {
@@ -72,14 +79,53 @@ export async function createSpriteView(desc: ViewDescriptor): Promise<CharacterV
   }
 
   const applyPose = (state: MoveState, facing: Facing): void => {
+    if (oneShot) {
+      if (state !== 'walk') {
+        mirror(facing) // still idle — keep the one-shot playing, just turn
+        return
+      }
+      // interrupted by a new walk — cancel the one-shot (no completion)
+      sprite.onComplete = undefined
+      sprite.loop = true
+      oneShot = null
+      current = ''
+    }
     setClip(resolveKey(state, BASE_FACING[facing]))
-    sprite.scale.x = MIRRORED.has(facing) ? -1 : 1
+    mirror(facing)
   }
   applyPose('idle', 'S')
 
   return {
     container,
     setPose: applyPose,
+    playOnce(action, facing, onComplete) {
+      const base = BASE_FACING[facing]
+      const key = desc.clips[`${action}.${base}`]
+        ? `${action}.${base}`
+        : desc.clips[action]
+          ? action
+          : ''
+      const clip = key ? desc.clips[key] : undefined
+      if (!clip) {
+        onComplete() // no clip for this action — resolve immediately
+        return
+      }
+      oneShot = onComplete
+      current = key
+      sprite.textures = clipTextures[key]
+      sprite.animationSpeed = clip.fps / 60
+      sprite.loop = false
+      mirror(facing)
+      sprite.onComplete = () => {
+        sprite.onComplete = undefined
+        sprite.loop = true
+        const done = oneShot
+        oneShot = null
+        current = ''
+        done?.()
+      }
+      sprite.gotoAndPlay(0)
+    },
     destroy() {
       container.destroy({ children: true })
     },

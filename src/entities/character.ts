@@ -19,6 +19,7 @@ export class Character {
   private targetX: number | null = null
   private targetY: number | null = null
   private onArrive?: () => void
+  private action?: string
   private facing: Facing = 'S'
   private state: MoveState = 'idle'
   private readonly speed = WALK_SPEED
@@ -42,6 +43,7 @@ export class Character {
     this.targetX = null
     this.targetY = null
     this.onArrive = undefined
+    this.action = undefined
     this.state = 'idle'
     this.syncView()
   }
@@ -50,16 +52,18 @@ export class Character {
    * Walk toward a feet target (clamped onto the walkable area). `onArrive` fires
    * once, after the character reaches it — replacing any previous pending one.
    */
-  setTarget(x: number, y: number, onArrive?: () => void): void {
+  setTarget(x: number, y: number, onArrive?: () => void, action?: string): void {
     const t = this.walkable ? clampToArea(this.walkable, x, y) : { x, y }
     this.targetX = t.x
     this.targetY = t.y
     this.onArrive = onArrive
+    this.action = action
   }
 
   /** Advance one frame. `deltaMS` is real elapsed milliseconds from the ticker. */
   update(deltaMS: number): void {
     let arrived: (() => void) | undefined
+    let action: string | undefined
 
     if (this.targetX !== null && this.targetY !== null) {
       const dx = this.targetX - this.x
@@ -74,6 +78,8 @@ export class Character {
         this.state = 'idle'
         arrived = this.onArrive
         this.onArrive = undefined
+        action = this.action
+        this.action = undefined
       } else {
         this.facing = facingFromVector(dx, dy)
         this.state = 'walk'
@@ -82,9 +88,15 @@ export class Character {
     }
 
     this.syncView()
-    // Fire after syncView so this frame is consistent; the callback may trigger a
-    // scene swap, which the host defers past the current tick.
-    arrived?.()
+    // After syncView so this frame is consistent. On arrival an optional one-shot
+    // (pickup / interact) plays first and the callback fires on its completion;
+    // otherwise it fires now. The callback may trigger a scene swap (the host
+    // defers that past the tick).
+    if (action) {
+      this.view.playOnce(action, this.facing, () => arrived?.())
+    } else {
+      arrived?.()
+    }
   }
 
   destroy(): void {

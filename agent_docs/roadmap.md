@@ -121,10 +121,10 @@ M4 additions (raised after the core was done):
         atlas (drawn in code) for testing before real art.
   - [x] **8-dir facing → the right walk cycle** — clips keyed `state.facing`, W-side
         mirrored to ~5 base directions; placeholder atlas has the 5 direction rows.
-  - [ ] **One-shot triggers + `onComplete`**: an interactable / effect plays a
-        one-shot on the character — pickup (variant chosen by the picked
-        item/object), interact, talk-while-speaking — resolving the action on the
-        animation's completion.
+  - [x] **One-shot triggers + `onComplete`**: a click plays a one-shot on the
+        character (pickable → pickup, interact / use → interact) and runs the
+        effects on the animation's completion. Per-item pickup variants + a `talk`
+        one-shot (inspect / dialogue) are follow-ups (M5.4 / M7).
 - Editor:
   - [ ] Upload frames / sprite atlas; define animations (frames + timing + loop);
         map (state, facing) → animation; set anchor + footprint.

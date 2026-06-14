@@ -6,10 +6,10 @@ import type { AnimClip, ViewDescriptor } from '../data/schema'
  * agent_docs/asset_pipeline.md). The editor will upload real atlases against the
  * same `ViewDescriptor` shape + load path.
  *
- * Grid: 6 columns (0–1 idle, 2–5 a walk cycle) × 5 rows = the 5 base directions
- * S / SE / E / NE / N. The west-side directions (W / SW / NW) are the runtime
- * horizontal mirror of E / SE / NE, so this covers all 8 facings. A nose marker on
- * the head points in the facing direction (N = the back of the head, no nose).
+ * Grid (6 columns): rows 0–4 are the 5 base directions S / SE / E / NE / N (cols
+ * 0–1 idle, 2–5 a walk cycle); the W-side facings are the runtime mirror. Rows 5–6
+ * are the one-shots `pickup` (a crouch) and `interact` (a forward reach), 4 frames
+ * each. A nose marker on the head shows the facing (N = the back of the head).
  */
 const FW = 64
 const FH = 96
@@ -31,9 +31,17 @@ function noseAngle(dir: string): number | null {
   }
 }
 
-function drawBody(ctx: CanvasRenderingContext2D, cx: number, swing: number, bob: number): void {
+function drawBody(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  swing: number,
+  bob: number,
+  crouch: number,
+  reach: number,
+): void {
   const feet = 92 + bob
-  const hip = 58 + bob
+  const upper = bob + crouch // crouch lowers the upper body, feet stay planted
+  const hip = 58 + upper
   ctx.lineCap = 'round'
 
   // legs (swing opposite each other)
@@ -48,16 +56,16 @@ function drawBody(ctx: CanvasRenderingContext2D, cx: number, swing: number, bob:
   ctx.lineTo(cx + 3 - swing * 9, feet)
   ctx.stroke()
 
-  // arms
+  // arms — the right one reaches forward (east) when `reach` > 0
   ctx.strokeStyle = '#324158'
   ctx.lineWidth = 7
   ctx.beginPath()
-  ctx.moveTo(cx - 11, 34 + bob)
-  ctx.lineTo(cx - 14 - swing * 6, 56 + bob)
+  ctx.moveTo(cx - 11, 34 + upper)
+  ctx.lineTo(cx - 14 - swing * 6, 56 + upper)
   ctx.stroke()
   ctx.beginPath()
-  ctx.moveTo(cx + 11, 34 + bob)
-  ctx.lineTo(cx + 14 + swing * 6, 56 + bob)
+  ctx.moveTo(cx + 11, 34 + upper)
+  ctx.lineTo(cx + 14 + swing * 6 + reach * 16, 56 + upper - reach * 20)
   ctx.stroke()
 
   // torso
@@ -65,7 +73,7 @@ function drawBody(ctx: CanvasRenderingContext2D, cx: number, swing: number, bob:
   ctx.strokeStyle = '#6b86b0'
   ctx.lineWidth = 2
   ctx.beginPath()
-  ctx.roundRect(cx - 13, 28 + bob, 26, 34, 7)
+  ctx.roundRect(cx - 13, 28 + upper, 26, 34, 7)
   ctx.fill()
   ctx.stroke()
 }
@@ -95,7 +103,26 @@ function drawHead(ctx: CanvasRenderingContext2D, cx: number, hy: number, dir: st
   ctx.fill()
 }
 
-const FRAMES: [number, number][] = [
+function drawCell(
+  ctx: CanvasRenderingContext2D,
+  col: number,
+  row: number,
+  dir: string,
+  swing: number,
+  bob: number,
+  crouch: number,
+  reach: number,
+): void {
+  ctx.save()
+  ctx.translate(0, row * FH)
+  const cx = col * FW + FW / 2
+  drawBody(ctx, cx, swing, bob, crouch, reach)
+  drawHead(ctx, cx, 18 + bob + crouch, dir)
+  ctx.restore()
+}
+
+// [swing, bob] per walk-cycle column (0–1 idle, 2–5 walk).
+const WALK: [number, number][] = [
   [0, 0],
   [0, -1],
   [1, -1],
@@ -103,23 +130,23 @@ const FRAMES: [number, number][] = [
   [-1, -1],
   [0, 0],
 ]
+const PICKUP_CROUCH = [0, 8, 14, 8] // a crouch one-shot
+const INTERACT_REACH = [0, 1, 1, 0.4] // a forward reach one-shot
+
+const PICKUP_ROW = DIRS.length
+const INTERACT_ROW = DIRS.length + 1
 
 function makeAtlas(): string {
   const canvas = document.createElement('canvas')
   canvas.width = FW * COLS
-  canvas.height = FH * DIRS.length
+  canvas.height = FH * (DIRS.length + 2)
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('2d canvas context unavailable')
   DIRS.forEach((dir, row) => {
-    FRAMES.forEach(([swing, bob], col) => {
-      ctx.save()
-      ctx.translate(0, row * FH)
-      const cx = col * FW + FW / 2
-      drawBody(ctx, cx, swing, bob)
-      drawHead(ctx, cx, 18 + bob, dir)
-      ctx.restore()
-    })
+    WALK.forEach(([swing, bob], col) => drawCell(ctx, col, row, dir, swing, bob, 0, 0))
   })
+  PICKUP_CROUCH.forEach((crouch, col) => drawCell(ctx, col, PICKUP_ROW, 'S', 0, 0, crouch, 0))
+  INTERACT_REACH.forEach((reach, col) => drawCell(ctx, col, INTERACT_ROW, 'S', 0, 0, 0, reach))
   return canvas.toDataURL('image/png')
 }
 
@@ -129,6 +156,18 @@ DIRS.forEach((dir, row) => {
   clips[`idle.${dir}`] = { frames: [base, base + 1], fps: 2, loop: true }
   clips[`walk.${dir}`] = { frames: [base + 2, base + 3, base + 4, base + 5], fps: 8, loop: true }
 })
+const pickupBase = PICKUP_ROW * COLS
+clips.pickup = {
+  frames: [pickupBase, pickupBase + 1, pickupBase + 2, pickupBase + 3],
+  fps: 8,
+  loop: false,
+}
+const interactBase = INTERACT_ROW * COLS
+clips.interact = {
+  frames: [interactBase, interactBase + 1, interactBase + 2, interactBase + 3],
+  fps: 8,
+  loop: false,
+}
 
 export const placeholderView: ViewDescriptor = {
   atlas: makeAtlas(),

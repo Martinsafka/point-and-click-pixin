@@ -10,6 +10,9 @@ import type { Facing, MoveState } from '../systems/movement'
 export interface CharacterView {
   readonly container: Container
   setPose(state: MoveState, facing: Facing): void
+  /** Play a one-shot action (e.g. 'pickup') once, then call `onComplete` and revert
+   *  to the pose. No clip for `action` → `onComplete` fires immediately. */
+  playOnce(action: string, facing: Facing, onComplete: () => void): void
   destroy(): void
 }
 
@@ -60,6 +63,9 @@ export function createCubeView(): CharacterView {
     setPose(state, facing) {
       marker.rotation = FACING_ANGLE[facing]
       marker.tint = state === 'walk' ? MARKER_WALK : MARKER_IDLE
+    },
+    playOnce(_action, _facing, onComplete) {
+      onComplete() // the cube has no one-shots; resolve immediately
     },
     destroy() {
       container.destroy({ children: true })

@@ -14,7 +14,14 @@ import { depthScaleAt } from '../systems/depth'
 import type { WalkArea } from '../systems/walkable'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
 import { checkCondition, type StoryState, type StoryStore } from '../systems/conditions'
-import type { Condition, LayerData, SceneBand, SceneData, SceneId } from '../data/schema'
+import type {
+  Condition,
+  InteractableData,
+  LayerData,
+  SceneBand,
+  SceneData,
+  SceneId,
+} from '../data/schema'
 
 /** Viewport size in CSS pixels. */
 export interface Size {
@@ -102,6 +109,13 @@ async function buildLayer(layer: LayerData, screen: Size): Promise<Container> {
   return build(screen, layer.params ?? {})
 }
 
+/** The one-shot animation a click on each interactable kind plays before its
+ *  effects run (exit / inspect have none). */
+const ONE_SHOT: Partial<Record<InteractableData['kind'], string>> = {
+  pickable: 'pickup',
+  interact: 'interact',
+}
+
 /**
  * Mounts a `SceneData` onto an initialised Application as three zIndex-ordered
  * bands — background < interactive (mid) < foreground occluder. A click either
@@ -177,7 +191,7 @@ export async function mountScene(
     if (hit && selected) {
       const usageEffects = effectsForUse(hit, selected)
       if (usageEffects) {
-        character.setTarget(local.x, local.y, () => store.getState().run(usageEffects))
+        character.setTarget(local.x, local.y, () => store.getState().run(usageEffects), 'interact')
         return
       }
     }
@@ -192,7 +206,7 @@ export async function mountScene(
       })
     } else if (hit) {
       const effects = effectsFor(hit)
-      character.setTarget(local.x, local.y, () => store.getState().run(effects))
+      character.setTarget(local.x, local.y, () => store.getState().run(effects), ONE_SHOT[hit.kind])
     } else {
       character.setTarget(local.x, local.y)
     }
