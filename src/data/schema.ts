@@ -272,6 +272,13 @@ export interface NpcDef {
   /** Default dialogue (id into `GameDoc.dialogs`), played when the NPC is talked to;
    *  a placement can override it per scene. */
   dialog?: DialogId
+  /** Gate on the dialogue: when set and it fails, clicking the NPC falls back to
+   *  `inspect`. Flip the flag behind it from anywhere (any `setFlag` — a trigger,
+   *  a dialogue, an interaction) to switch the NPC between talk and look. */
+  dialogWhen?: Condition
+  /** "Look at" the NPC — the player walks up and comments (text + optional audio).
+   *  Used when there is no dialogue, or its `dialogWhen` gate fails. */
+  inspect?: { text?: string; audio?: string }
 }
 
 /** A patrol route for a placed NPC: waypoints (design-space fractions) walked in

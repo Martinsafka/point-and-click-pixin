@@ -22,7 +22,6 @@ import { containsPoint } from '../systems/walkable'
 import { checkCondition, type StoryState, type StoryStore } from '../systems/conditions'
 import type {
   Condition,
-  CursorKind,
   Dialog,
   DialogId,
   Effect,
@@ -134,6 +133,27 @@ const ONE_SHOT: Partial<Record<InteractableData['kind'], string>> = {
 /** How far (design px) beside an NPC the player stops to talk, so they don't overlap. */
 const TALK_GAP = 90
 
+/** A placed NPC's click behaviour, resolved against story state at click / hover time:
+ *  the gated dialogue (talk) with the `inspect` ("look at") as the fallback. */
+interface NpcInteraction {
+  dialog?: Dialog
+  dialogWhen?: Condition
+  inspect?: { text?: string; audio?: string }
+}
+
+/** Resolve what clicking an NPC does *right now*: its dialogue if present and its gate
+ *  passes, else its inspect, else nothing (the click falls through to a walk). */
+function resolveNpc(
+  it: NpcInteraction,
+  state: StoryState,
+): { kind: 'dialog'; dialog: Dialog } | { kind: 'inspect'; text?: string; audio?: string } | null {
+  if (it.dialog && (!it.dialogWhen || checkCondition(state, it.dialogWhen))) {
+    return { kind: 'dialog', dialog: it.dialog }
+  }
+  if (it.inspect) return { kind: 'inspect', text: it.inspect.text, audio: it.inspect.audio }
+  return null
+}
+
 /** Drive a placed NPC along its patrol route (once / loop / pingpong). Each leg is
  *  nav-routed (so it rounds holes), chained via the character's onArrive callback. */
 function startNpcPath(npc: Character, path: NpcPath | undefined, design: Size): void {
@@ -241,7 +261,7 @@ export async function mountScene(
   // NPCs: characters placed in the scene. They share the nav-mesh + depth, Y-sort
   // with the player, and `when` gates presence. The actor registry addresses every
   // live character by id (`'player'` + cast ids) so engine effects resolve targets.
-  const npcs: { id: string; character: Character; dialog?: Dialog; cursor?: CursorKind }[] = []
+  const npcs: { id: string; character: Character; interaction: NpcInteraction }[] = []
   const actors = new Map<string, Character>([['player', character]])
   for (const placement of scene.npcs ?? []) {
     // The cast def has no appearance yet → placeholder for all; the placement's `npc`
@@ -260,15 +280,15 @@ export async function mountScene(
       npcChar.displayObject.visible = checkCondition(store.getState(), placement.when)
       conditional.push({ display: npcChar.displayObject, when: placement.when })
     }
-    // Resolve the NPC's dialogue: the placement override, else the cast default.
+    // The NPC's click behaviour: its dialogue (placement override, else cast default) +
+    // the gate + the inspect fallback — resolved against state at click / hover time.
     const dialogId = placement.dialog ?? def?.dialog
-    const dialog = dialogId ? dialogs[dialogId] : undefined
-    npcs.push({
-      id: placement.npc,
-      character: npcChar,
-      dialog,
-      cursor: dialog ? 'talk' : undefined,
-    })
+    const interaction: NpcInteraction = {
+      dialog: dialogId ? dialogs[dialogId] : undefined,
+      dialogWhen: def?.dialogWhen,
+      inspect: def?.inspect,
+    }
+    npcs.push({ id: placement.npc, character: npcChar, interaction })
     actors.set(placement.npc, npcChar)
     startNpcPath(npcChar, placement.path, design)
   }
@@ -343,22 +363,34 @@ export async function mountScene(
     }
   }
 
-  // Talk to an NPC: click it → walk beside it → begin its dialogue. Only NPCs with a
-  // resolved dialogue are interactive (others let the click fall through to a walk).
+  // Interact with an NPC: click it → walk beside it → talk or look, resolved against
+  // state at click time (dialogue if its gate passes, else inspect). NPCs with neither
+  // aren't interactive; a gated-off click falls through to a walk.
   for (const n of npcs) {
-    if (!n.dialog) continue
-    const { character: npcChar, id, dialog } = n
+    const { character: npcChar, id, interaction } = n
+    if (!interaction.dialog && !interaction.inspect) continue
     npcChar.displayObject.eventMode = 'static'
-    npcChar.displayObject.cursor = 'none' // keep the DOM cursor; a talk-cursor is a follow-up
+    npcChar.displayObject.cursor = 'none' // keep the DOM cursor; the talk/look hotspot draws it
     npcChar.displayObject.on('pointertap', (e: FederatedPointerEvent) => {
-      e.stopPropagation() // don't also walk to the raw click point
       if (dialogueStore.getState().active) return
+      const r = resolveNpc(interaction, store.getState())
+      if (!r) return // gated off + no inspect → let the tap fall through to a walk
+      e.stopPropagation() // don't also walk to the raw click point
       const npcX = npcChar.displayObject.x
       const npcY = npcChar.displayObject.y
       const side = character.displayObject.x <= npcX ? -1 : 1
-      character.setTarget(npcX + side * TALK_GAP, npcY, () =>
-        beginDialogue(dialog, { id, char: npcChar }),
-      )
+      character.setTarget(npcX + side * TALK_GAP, npcY, () => {
+        if (r.kind === 'dialog') {
+          beginDialogue(r.dialog, { id, char: npcChar })
+        } else {
+          character.faceToward(npcX, npcY)
+          if (r.text) store.getState().say(r.text)
+          if (r.audio) {
+            const audio = r.audio
+            void import('../audio/audio').then((m) => m.playClip(audio))
+          }
+        }
+      })
     })
   }
 
@@ -368,10 +400,12 @@ export async function mountScene(
   sceneHit.kindAt = (clientX, clientY) => {
     const wx = (clientX - cameraOffset.x) / cameraOffset.scale
     const wy = (clientY - cameraOffset.y) / cameraOffset.scale
+    const state = store.getState()
     for (const n of npcs) {
-      if (!n.cursor) continue
       const disp = n.character.displayObject
       if (!disp.visible) continue
+      const r = resolveNpc(n.interaction, state)
+      if (!r) continue
       const b = disp.getLocalBounds()
       const sc = disp.scale.x
       if (
@@ -380,7 +414,7 @@ export async function mountScene(
         wy >= disp.y + b.minY * sc &&
         wy <= disp.y + b.maxY * sc
       ) {
-        return n.cursor
+        return r.kind === 'dialog' ? 'talk' : 'inspect'
       }
     }
     return null

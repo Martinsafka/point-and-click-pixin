@@ -23,6 +23,17 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — NPC dialog ↔ inspect switch (condition-gated)
+**What:** An NPC can now be **looked at** as well as talked to. `NpcDef` gains `inspect?: { text?, audio? }` (a "look at" line, like the inspect interactable) + `dialogWhen?: Condition` (gates the dialogue). Clicking an NPC resolves **dynamically** against story state: dialogue if present and `dialogWhen` passes, else inspect (walk up + the player comments), else nothing (the click falls through to a walk). The cursor reflects the resolution **live** — 👄 talk vs 👁 look. The "mode" is just flags: any `setFlag` (trigger / dialogue / interaction) flips `dialogWhen`. Demo: the street `stranger` is **inspect-only until you hold the key** (`dialogWhen: hasItem key`) — then clicking talks (cursor 👄).
+**Why:** User wanted NPCs that switch between talk and look, driven from anywhere. Chose the **condition / flag-gated** model — consistent with the one effect/condition vocabulary, no new effect or per-NPC state. (Per-NPC scoped state stays for step 6, the routine.)
+**How:**
+- `NpcDef.inspect` + `dialogWhen`; the scene resolves the NPC's interaction **dynamically** (`resolveNpc(interaction, state)`) at click + hover, instead of fixed at mount. An NPC is interactive if it has either a dialogue or an inspect; a gated-off click with no inspect doesn't `stopPropagation` → falls through to a walk.
+- `sceneHit` (the cursor bridge) returns `talk` / `inspect` from the same resolution, so the icon tracks the gate live as flags change.
+- Inspect reuses the protagonist `say()` + audio path (same as the inspect interactable); the player faces the NPC.
+- Editor (choosing dialogue/inspect + the gate) stays **4d**; authored in `game.json` for now.
+- **Verified:** format / typecheck / lint / build green; `content/game.json` valid; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** 4c voice; 4d the NPC editor (dialogue / inspect / appearance / voice) in the modal.
+
 ### 2026-06-14 — Talk cursor (👄) over dialogue NPCs
 **What:** A new `talk` `CursorKind` — the 👄 emoji (or an uploaded icon) shows over an NPC the player can talk to (one with a resolved dialogue). Editor: `talk` added to the cursor upload list (👄 fallback).
 **Why:** User request — a discoverable affordance that an NPC is talkable. (4b had left the talk-cursor as a follow-up.)

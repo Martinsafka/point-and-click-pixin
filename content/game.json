@@ -359,7 +359,14 @@
     }
   },
   "npcs": {
-    "stranger": { "id": "stranger", "name": "Stranger", "speed": 0.7, "dialog": "stranger" }
+    "stranger": {
+      "id": "stranger",
+      "name": "Stranger",
+      "speed": 0.7,
+      "dialog": "stranger",
+      "dialogWhen": { "kind": "hasItem", "item": "key" },
+      "inspect": { "text": "A wary stranger, sizing me up. They won't talk to someone empty-handed." }
+    }
   },
   "dialogs": {
     "stranger": {
