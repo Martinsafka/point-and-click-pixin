@@ -58,6 +58,9 @@ interface EditorStore {
   moveLayer(id: SceneId, index: number, dir: -1 | 1): void
   setLayerBand(id: SceneId, index: number, band: SceneBand): void
   setLayerFit(id: SceneId, index: number, fit: LayerFit): void
+  /** Parallax scroll factor for a background / foreground layer. No `revision` bump
+   *  (the preview doesn't scroll). */
+  setLayerParallax(id: SceneId, index: number, parallax: number): void
   /** Role is metadata (no visual change), so this doesn't bump `revision`. */
   setLayerRole(id: SceneId, index: number, role: LayerRole | undefined): void
   /** Set an image layer's position (dragged in the preview). No `revision` bump —
@@ -208,6 +211,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapLayers(id, (ls) =>
         ls.map((l, i) => (i === index && l.kind === 'image' ? { ...l, fit } : l)),
       ),
+    setLayerParallax: (id, index, parallax) =>
+      mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, parallax } : l)), false),
     setLayerRole: (id, index, role) =>
       mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, role } : l)), false),
     setLayerPos: (id, index, xFrac, yFrac) =>

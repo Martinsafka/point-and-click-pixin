@@ -71,17 +71,20 @@
         {
           "kind": "builtin",
           "band": "background",
-          "builder": "street.sky"
+          "builder": "street.sky",
+          "parallax": 0.3
         },
         {
           "kind": "builtin",
           "band": "background",
-          "builder": "street.land"
+          "builder": "street.land",
+          "parallax": 0.5
         },
         {
           "kind": "builtin",
           "band": "background",
-          "builder": "street.buildings"
+          "builder": "street.buildings",
+          "parallax": 0.7
         },
         {
           "kind": "builtin",

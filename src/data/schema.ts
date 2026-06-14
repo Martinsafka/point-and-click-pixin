@@ -127,6 +127,10 @@ export type LayerData =
   | {
       kind: 'image'
       band: SceneBand
+      /** Parallax scroll factor: 1 = moves with the world (default), <1 = farther /
+       *  slower, 0 = locked to the viewport, >1 = nearer / faster. Background &
+       *  foreground only (mid is the gameplay plane). */
+      parallax?: number
       src: string
       xFrac?: number
       yFrac?: number
@@ -138,6 +142,8 @@ export type LayerData =
   | {
       kind: 'builtin'
       band: SceneBand
+      /** Parallax scroll factor (see the `image` variant). */
+      parallax?: number
       builder: string
       params?: Record<string, number>
       anchorYFrac?: number

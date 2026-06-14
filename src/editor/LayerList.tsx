@@ -125,6 +125,20 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                   </option>
                 ))}
               </select>
+              {layer.band !== 'mid' && (
+                <input
+                  type="number"
+                  className="logic__in layer-row__parallax"
+                  title="Parallax: 1 = with the world, <1 = farther/slower, 0 = locked"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  value={layer.parallax ?? 1}
+                  onChange={(e) =>
+                    editorStore.getState().setLayerParallax(sceneId, i, Number(e.target.value))
+                  }
+                />
+              )}
             </div>
           </li>
         ))}

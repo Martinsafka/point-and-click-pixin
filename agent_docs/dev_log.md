@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — Parallax backgrounds (per-layer scroll rate)
+**What:** Background / foreground layers can scroll at their own rate via `LayerData.parallax?` (1 = with the world / default, <1 = farther & slower, 0 = locked to the viewport, >1 = nearer & faster). Applied in the camera loop; the editor exposes a per-layer **parallax** input (Layers list, background / foreground only). Demo: the street's sky / land / buildings are set to 0.3 / 0.5 / 0.7.
+**Why:** Depth on scrolling scenes — a distant skyline barely moves while the near ground tracks the character. The last queued piece before M7.
+**How:**
+- In `mountScene` each non-`mid` layer with `parallax !== 1` is recorded with its base position; `updateCamera` (already per-frame) sets `layer.x = baseX + (1 − p) · (−pan) / scale` — shifting the layer back toward rest by `(1 − p)` of the camera pan (world-local design px, hence ÷ scale). `p = 1` → no shift; `p = 0` → fully counter-shifted (locked to the viewport).
+- **Gameplay plane stays at 1:** parallax is restricted to background / foreground; the `mid` / `interactive` band carries the character + hit-areas + the cursor's world-conversion, which must not desync.
+- The editor preview has no camera, so parallax shows only in the game; a slow layer must be wider than the scene to avoid revealing its edge (authoring note in the guide).
+- **Verified:** format / typecheck / lint / build green; `game.json` valid; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** none. **All queued pre-M7 work is done** → next is **M7 (NPCs, dialogue & stealth)**.
+
 ### 2026-06-14 — Task B: scene-transition polish (loading spinner + custom wash / art / min hold)
 **What:** Scene swaps gained a `GameDoc.transition` config — a **wash colour** (default black), an optional **centred art** image, and a **minimum hold** (ms). A **loading spinner** appears in the corner when a scene mount outlasts ~220 ms (quick swaps stay clean). Editor: a **Transition** section (Project tab) — colour / art upload / min-hold.
 **Why:** The await-the-mount-under-cover invariant was already there (no blank frame); this adds feedback for slow mounts and lets a game style its transitions instead of a hard cut to black.

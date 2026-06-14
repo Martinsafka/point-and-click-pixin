@@ -123,6 +123,7 @@ Each layer row:
 | **band**   | background / mid / foreground (paint order; mid is depth-sorted).            |
 | **fit**    | _(images)_ how it sizes to the screen — see the table below.                 |
 | **role**   | scenery / occluder / floor — metadata for now (drives future occlusion).     |
+| **parallax** | _(background / foreground)_ scroll rate: 1 = with the world, <1 = farther / slower, 0 = locked, >1 = nearer. |
 | **↑ / ↓**  | reorder within the band (paint order).                                       |
 | **✕**      | delete the layer.                                                            |
 
@@ -139,6 +140,12 @@ Each layer row:
 **Positioning by drag:** in the preview, drag a **`none`** image anywhere, or a
 **`width`** strip up/down. The cursor hints which (move / ↕). Drag resumes from
 where the layer currently sits.
+
+**Parallax:** in a scrolling scene, give background / foreground layers a scroll rate
+below 1 to sit "farther" — a distant skyline barely moves while the near ground tracks
+the character. It only shows in the **game** (the editor preview is at rest), and a
+slow layer should be **wider than the scene** so its edge doesn't appear as you scroll.
+The **mid** band (the gameplay plane) is always 1.
 
 ### Interactables · _N_
 

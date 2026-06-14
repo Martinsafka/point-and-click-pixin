@@ -160,6 +160,8 @@ export async function mountScene(
 
   // Layers whose `when` toggles their visibility as story state changes.
   const conditional: { display: Container; when: Condition }[] = []
+  // Background / foreground layers that scroll at their own rate (parallax).
+  const parallaxLayers: { display: Container; baseX: number; baseY: number; p: number }[] = []
 
   for (const layer of scene.layers) {
     const display = await buildLayer(layer, design)
@@ -171,6 +173,10 @@ export async function mountScene(
     if (layer.when) {
       display.visible = checkCondition(store.getState(), layer.when)
       conditional.push({ display, when: layer.when })
+    }
+    const p = layer.parallax ?? 1
+    if (p !== 1 && layer.band !== 'mid') {
+      parallaxLayers.push({ display, baseX: display.position.x, baseY: display.position.y, p })
     }
     bandFor(layer.band).addChild(display)
   }
@@ -211,6 +217,13 @@ export async function mountScene(
     cameraOffset.x = x
     cameraOffset.y = y
     cameraOffset.scale = s
+    // Parallax: shift each layer back toward rest by (1 − p) of the pan, so far
+    // layers (p < 1) scroll slower and near ones (p > 1) faster. In world-local
+    // (design) px, hence ÷ s.
+    for (const pl of parallaxLayers) {
+      pl.display.position.x = pl.baseX + ((1 - pl.p) * -x) / s
+      pl.display.position.y = pl.baseY + ((1 - pl.p) * -y) / s
+    }
   }
   updateCamera()
 

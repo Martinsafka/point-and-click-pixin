@@ -622,6 +622,11 @@ body {
   gap: 6px;
 }
 
+/* Per-layer parallax factor (Layers list) */
+.layer-row__parallax {
+  width: 52px;
+}
+
 /* Depth-curve editor (Scene tab) */
 .depth {
   display: flex;
