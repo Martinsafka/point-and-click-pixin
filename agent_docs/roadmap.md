@@ -205,23 +205,30 @@ adventure model: define a character once, place it where it appears.
 
 **Step 4 — Dialogue & narrative**
 
-- [ ] **Two narrative tiers:** a **global story scenario** (orchestrates several NPCs +
-      the action sequence — relates to the M12 story / logic graph) **and** a **per-NPC
-      dialogue** (the character's own conversation bubble). Dialogues are a **reusable
-      library** + inline one-offs; voice / sounds attach to the global NPC.
-- [ ] `startDialog` becomes real — a branching tree with **typewriter text reveal**; click
-      an NPC → dialogue UI (text + optional voice + choices → Effects).
-- [ ] **Talk pauses the NPC:** clicking an NPC walks to it, then **pauses + faces the
-      player** for the dialogue, and **resumes its loop / pingpong** afterwards (the step-3
-      pause primitive; add public `Character.pause()` / `resume()`).
-- [ ] **`wait` effect** (`{ kind: 'wait', ms, anim? }`) — a trigger makes the *entering*
-      NPC linger in the area, then continue (`Character.pauseFor`); an optional **`anim`
-      loops** for the duration (an idle-variant / fidget) and stops on resume. **Never
-      pauses the player** — only NPC movers, so player control stays free. Pause is
-      "longest wins" so `wait` + `playAnim` compose.
-- [ ] **Voice** — short unintelligible gibberish (Sims-style) while a character speaks;
-      real VO swaps in later.
-- [ ] Editor: dialogue-tree editor (library + inline); attach voice.
+Per-NPC **dialogue trees** are the buildable piece; the **global story scenario**
+(orchestrating several NPCs + the action sequence) is expressed via **flags + conditions**
+for now — dialogue effects set flags; conditions gate dialogs / choices / NPC presence.
+The visual story graph is M12; the NPC routine is step 6.
+
+First, a shared **actor registry** (the scene registers `player` + live NPCs by id;
+`runEffects` lifts to a shared module over it) so engine effects (`playAnim` / `wait` /
+pause / face) fire from triggers, clicks **and** dialogue.
+
+- [ ] **4a — Actor registry + `wait` effect.** Shared actor registry + lifted `runEffects`;
+      `Character.pause()` / `resume()` / `pauseFor(ms)` / `faceToward()`. The **`wait`**
+      effect (`{ kind: 'wait', ms, anim? }`) lingers the *entering* NPC (optionally looping
+      `anim`), **never the player**; "longest wins" so `wait` + `playAnim` compose.
+- [ ] **4b — Dialogue runtime + UI.** `GameDoc.dialogs` (reusable **library**) +
+      `NpcDef.dialog` (default) + `NpcPlacement.dialog` (**per-scene override**). `Dialog
+      { start, nodes }`; `DialogNode { speaker?, text?, effects?, choices?, next?, branch? }`
+      — `branch` is a **conditional router** (state-driven openings). A `dialogueStore`
+      runtime; `startDialog` made real; `DialogueBox` UI (**typewriter** + choices). Click
+      an NPC → walk + talk → it **pauses + faces the player**, resumes its loop / pingpong.
+- [ ] **4c — Voice.** Procedural **gibberish** blips while a line reveals (the demo
+      default) **+ uploadable per-NPC voice clips** that replace it (real VO).
+- [ ] **4d — Editor.** A **Dialogs library** + node-tree editor opened in a **modal** (room
+      to work — and the future flowchart); assign dialogs (cast default + placement
+      override); voice settings on the NPC.
 
 **Step 5 — Stealth** _(idea: crouch at cover; NPC vision)_
 

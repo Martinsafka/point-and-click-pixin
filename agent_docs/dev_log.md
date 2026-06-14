@@ -23,6 +23,12 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — Roadmap: M7 step 4 (dialogue) broken into 4a–4d + decisions locked
+**What:** Detailed M7 step 4 into **4a** (actor registry + `wait` effect), **4b** (dialogue runtime + UI), **4c** (voice), **4d** (editor). Decisions locked with the user: conditional **`branch`** router on nodes; **per-placement dialogue override**; voice = procedural **gibberish demo default + uploadable per-NPC clips** (real VO); the dialogue **library / node editor opens in a modal** (room to work, and the future flowchart). The global story scenario stays **flags + conditions** for now (visual graph = M12). Roadmap only.
+**Why:** Lock the dialogue architecture before building. The **actor registry** (shared live-character control: the scene registers `player` + NPCs by id, `runEffects` lifts to a shared module over it) is the central refactor 4b–4d depend on — it's what lets engine effects (`playAnim` / `wait` / pause / face) fire from the dialogue, not just the scene.
+**How:** Roadmap M7 step 4 restructured into the 4a–4d sub-steps.
+**Follow-ups:** start **4a** (actor registry + lifted `runEffects` + `wait`).
+
 ### 2026-06-14 — Roadmap: NPC pause behaviours folded into step 4 (talk-pause + `wait` effect)
 **What:** Filed two requested NPC-pause behaviours into M7 step 4. (1) Talking to an NPC pauses it (+ faces the player) and resumes its loop / pingpong on dialogue end. (2) A `wait` effect (`{ kind: 'wait', ms, anim? }`) lets a trigger make the *entering* NPC linger — optionally **looping an `anim`** (idle-variant / fidget) for the duration — then continue. Both reuse the step-3 pause primitive (`paused`); step 4 adds public `Character.pause()` / `resume()` + `pauseFor(ms)`. Roadmap only — no code yet.
 **Why:** Lock the design before step 4. **Key constraint (user):** the `wait` effect **must not pause the player** — only NPC movers — so player control is never frozen.
