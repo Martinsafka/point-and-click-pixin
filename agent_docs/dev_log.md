@@ -23,6 +23,14 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M7 step 3 follow-up: trigger gestures pause-resume + NPC speed on the cast
+**What:** Two refinements to step 3's NPC system. (1) A trigger-driven `playAnim` on a **walking** character now **pauses the walk, plays the one-shot, then resumes** — so an NPC stops to gesture mid-patrol and walks on (the step-1 "defer to idle" never fired on a loop). (2) Walk **speed** moved from the path to the **global cast** (`NpcDef.speed`, editable in Characters → NPCs). Demo: the `stranger` slowly loops a street patrol and pauses to wave each time it crosses the `greet` trigger (`by: npc`, target `stranger`).
+**Why:** The user's intended flow — an NPC reaches a trigger, stops, plays, continues — and speed is a property of the character, not of a route.
+**How:**
+- `Character.playOnce` while walking sets a `paused` flag (freezes movement at an idle pose so the walk doesn't override the one-shot), plays it, and clears the flag on completion. Replaced the `pendingAction` "defer to idle" from step 1.
+- `NpcDef.speed` (was `NpcPath.speed`); `mountScene` now takes the **cast** (`Record<NpcId, NpcDef>`, threaded `GameCanvas → createSceneHost`) and applies `setSpeedScale` per NPC. Editor: `setNpcDefSpeed` + a speed field in the cast.
+- **Verified:** format / typecheck / lint / build green; `game.json` valid; dev smoke `/` + `/?edit` 200.
+
 ### 2026-06-14 — M7 step 3: in-scene NPC paths + NPC-triggered events
 **What:** A placement can carry a **patrol path** (`NpcPath { points, mode: once | loop | pingpong, speed? }`) — the NPC walks the drawn waypoints via the nav-mesh (each leg rounds holes), chained on arrival. Triggers now fire on **NPC** entry too (`by: npc | any`), tracked per character — so an NPC reaching a spot fires an event (the chaining). Editor: a **Path** control on each placement (draw waypoints + once / loop / pingpong) with a dashed path + waypoints in the preview. Demo: the street `stranger` loops a patrol; the `greet` trigger (`by: any`) makes the player react when either crosses it.
 **Why:** M7 step 3 — NPCs that move + the trigger→NPC chaining the routine (step 6) builds on.

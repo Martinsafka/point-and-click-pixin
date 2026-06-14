@@ -46,6 +46,7 @@ export function GameCanvas() {
         gameDoc.player,
         gameDoc.referenceHeight,
         gameDoc.transition,
+        gameDoc.npcs,
       )
     })()
 

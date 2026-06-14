@@ -220,6 +220,8 @@ export type InteractableData =
 export interface NpcDef {
   id: NpcId
   name?: string
+  /** Walk-speed multiplier (default 1). */
+  speed?: number
 }
 
 /** A patrol route for a placed NPC: waypoints (design-space fractions) walked in
@@ -227,8 +229,6 @@ export interface NpcDef {
 export interface NpcPath {
   points: Polygon
   mode: 'once' | 'loop' | 'pingpong'
-  /** Walk-speed multiplier (default 1). */
-  speed?: number
 }
 
 /** Places a cast NPC into a scene at a spawn, optionally gated by `when`, with an

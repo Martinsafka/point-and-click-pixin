@@ -22,6 +22,8 @@ import type {
   Effect,
   InteractableData,
   LayerData,
+  NpcDef,
+  NpcId,
   NpcPath,
   SceneBand,
   SceneData,
@@ -131,7 +133,6 @@ function startNpcPath(npc: Character, path: NpcPath | undefined, design: Size): 
   for (let i = 0; i + 1 < path.points.length; i += 2) {
     pts.push({ x: path.points[i] * design.width, y: path.points[i + 1] * design.height })
   }
-  if (path.speed) npc.setSpeedScale(path.speed)
   let idx = 0
   let dir = 1
   const advance = () => {
@@ -163,6 +164,7 @@ export async function mountScene(
   store: SceneStore,
   playerView: ViewDescriptor = placeholderView,
   referenceHeight: number = DEFAULT_REFERENCE_HEIGHT,
+  cast: Record<NpcId, NpcDef> = {},
 ): Promise<Scene> {
   // Design space vs viewport: the scene is authored in a fixed design space
   // (`scene.width` × `referenceHeight` px). The world Container holds it; the camera
@@ -238,6 +240,8 @@ export async function mountScene(
       nav,
       charScale,
     )
+    const def = cast[placement.npc]
+    if (def?.speed) npcChar.setSpeedScale(def.speed)
     npcChar.setPosition(placement.spawn.xFrac * design.width, placement.spawn.yFrac * design.height)
     interactive.addChild(npcChar.displayObject)
     if (placement.when) {
@@ -552,6 +556,7 @@ export function createSceneHost(
   playerView: ViewDescriptor = placeholderView,
   referenceHeight: number = DEFAULT_REFERENCE_HEIGHT,
   transition?: TransitionConfig,
+  cast: Record<NpcId, NpcDef> = {},
 ): SceneHost {
   let current: Scene | undefined
   let destroyed = false
@@ -639,7 +644,7 @@ export function createSceneHost(
     const spinTimer = setTimeout(() => {
       if (!destroyed) spinner.visible = true
     }, SPINNER_DELAY_MS)
-    const mounted = await mountScene(app, scenes[id], store, playerView, referenceHeight)
+    const mounted = await mountScene(app, scenes[id], store, playerView, referenceHeight, cast)
     clearTimeout(spinTimer)
     spinner.visible = false
     if (destroyed || shownId !== id) {

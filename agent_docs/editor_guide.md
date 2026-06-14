@@ -199,7 +199,9 @@ one scene at a time, so the pickers only offer NPCs not placed elsewhere.
 - **Path** — draw a patrol: toggle **Path** on and click the preview to drop waypoints
   (dashed line + dots), set the **mode** (`once` stop / `loop` / `pingpong`). The NPC
   walks it via the nav-mesh (rounding holes). **Clear** removes the path. A `trigger`
-  with **by = npc / any** then fires when the NPC walks into it (the chaining).
+  with **by = npc / any** then fires when the NPC walks into it (the chaining) — a
+  `playAnim` on a walking character **pauses it, plays, then resumes**, so an NPC stops
+  to gesture and walks on.
 - NPCs use the placeholder figure for now (appearance / dialogue / routine come later);
   in the game they render as real characters, Y-sorted + depth-scaled like the player.
 
@@ -239,9 +241,10 @@ placeholder figure.
   - **`pickup` / `interact`** — one-shots played on a pickup / use (loop off).
   - Names + frame lists commit when the field loses focus.
 
-**NPCs (cast):** the global roster of characters. **+ NPC** creates one (a fixed id + an
-editable name; appearance / dialogue / routine arrive over M7); place them into scenes
-from each scene's **NPCs** section. **✕** removes a character and any placements of it.
+**NPCs (cast):** the global roster of characters. **+ NPC** creates one (a fixed id, an
+editable **name**, and a walk **speed** ×; appearance / dialogue / routine arrive over M7);
+place them into scenes from each scene's **NPCs** section. **✕** removes a character and
+any placements of it.
 
 ### Display (global)
 

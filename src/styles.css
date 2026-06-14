@@ -627,6 +627,11 @@ body {
   width: 52px;
 }
 
+/* NPC walk speed (cast list) */
+.npc-cast__speed {
+  width: 52px;
+}
+
 /* Depth-curve editor (Scene tab) */
 .depth {
   display: flex;

@@ -21,7 +21,7 @@ export class Character {
   private pathIndex = 0
   private onArrive?: () => void
   private action?: string
-  private pendingAction?: string
+  private paused = false
   private facing: Facing = 'S'
   private state: MoveState = 'idle'
   private speed = WALK_SPEED
@@ -50,7 +50,7 @@ export class Character {
     this.pathIndex = 0
     this.onArrive = undefined
     this.action = undefined
-    this.pendingAction = undefined
+    this.paused = false
     this.state = 'idle'
     this.syncView()
   }
@@ -66,11 +66,16 @@ export class Character {
     this.pathIndex = 0
     this.onArrive = onArrive
     this.action = action
-    this.pendingAction = undefined // a new walk discards a queued trigger gesture
+    this.paused = false // a new walk cancels a paused gesture
   }
 
   /** Advance one frame. `deltaMS` is real elapsed milliseconds from the ticker. */
   update(deltaMS: number): void {
+    // Frozen mid-walk while a trigger gesture plays (resumes on its completion).
+    if (this.paused) {
+      this.syncView()
+      return
+    }
     let arrived: (() => void) | undefined
     let action: string | undefined
 
@@ -110,18 +115,8 @@ export class Character {
     // After syncView so this frame is consistent. On arrival an optional one-shot
     // plays first and the callback fires on its completion; otherwise it fires now.
     // The callback may trigger a scene swap (the host defers that past the tick).
-    if (action) {
-      this.view.playOnce(action, this.facing, () => arrived?.())
-    } else {
-      arrived?.()
-      // A trigger-queued gesture plays once we're standing still — a one-shot fired
-      // mid-walk would be cancelled by the walk pose.
-      if (this.state === 'idle' && this.pendingAction) {
-        const queued = this.pendingAction
-        this.pendingAction = undefined
-        this.view.playOnce(queued, this.facing, () => {})
-      }
-    }
+    if (action) this.view.playOnce(action, this.facing, () => arrived?.())
+    else arrived?.()
   }
 
   /** Scale the walk speed (1 = default); used by NPC patrol paths. */
@@ -129,11 +124,20 @@ export class Character {
     this.speed = WALK_SPEED * scale
   }
 
-  /** Play a one-shot animation (e.g. a trigger gesture). Deferred to the next idle
-   *  frame while walking — a one-shot during a walk is cancelled by the walk pose. */
+  /** Play a one-shot animation (e.g. a trigger gesture). If walking, the character
+   *  pauses (a one-shot is cancelled by the walk pose), plays it, and resumes the
+   *  walk on completion. */
   playOnce(action: string): void {
-    if (this.state === 'walk') this.pendingAction = action
-    else this.view.playOnce(action, this.facing, () => {})
+    if (this.state === 'walk') {
+      this.paused = true
+      this.state = 'idle'
+      this.syncView() // show idle so the walk pose doesn't override the one-shot
+      this.view.playOnce(action, this.facing, () => {
+        this.paused = false
+      })
+    } else {
+      this.view.playOnce(action, this.facing, () => {})
+    }
   }
 
   destroy(): void {

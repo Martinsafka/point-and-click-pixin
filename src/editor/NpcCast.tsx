@@ -29,6 +29,15 @@ export function NpcCast({ npcs }: { npcs: GameDoc['npcs'] }) {
             placeholder="name"
             onChange={(e) => s().setNpcDefName(npc.id, e.target.value)}
           />
+          <input
+            className="logic__in npc-cast__speed"
+            type="number"
+            min="0.1"
+            step="0.1"
+            title="walk speed (× default)"
+            value={npc.speed ?? 1}
+            onChange={(e) => s().setNpcDefSpeed(npc.id, Math.max(0.1, Number(e.target.value) || 1))}
+          />
           <button type="button" className="logic__del" onClick={() => s().removeNpcDef(npc.id)}>
             ✕
           </button>

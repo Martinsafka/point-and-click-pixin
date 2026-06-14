@@ -69,9 +69,9 @@
         {
           "kind": "trigger",
           "id": "greet",
-          "by": "any",
+          "by": "npc",
           "hitArea": [0.46, 0.74, 0.58, 0.74, 0.58, 0.92, 0.46, 0.92],
-          "effects": [{ "kind": "playAnim", "action": "interact" }]
+          "effects": [{ "kind": "playAnim", "action": "interact", "target": "stranger" }]
         }
       ],
       "npcs": [
@@ -358,7 +358,7 @@
       "name": "Gem"
     }
   },
-  "npcs": { "stranger": { "id": "stranger", "name": "Stranger" } },
+  "npcs": { "stranger": { "id": "stranger", "name": "Stranger", "speed": 0.7 } },
   "initialFlags": {},
   "recipes": [
     {
