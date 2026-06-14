@@ -23,6 +23,15 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — Editor: aspect-locked, re-fitting scene preview (areas no longer drift on resize)
+**What:** The editor preview is now a **stage box of the scene's aspect**, centred in the pane; the Pixi canvas and the DOM overlays share that one box, so drawn areas (walkable / holes / hit-areas) stay put when the side panel is resized. `mountPreview` builds in design px under a `root` container scaled to fit the box and **re-fits on resize** (ResizeObserver on the canvas) — no re-mount. Scene **width** edits now re-mount the preview (commit on blur / Enter) so the box re-aspects.
+**Why:** Bug: widening the panel changed the preview pane size, but the Pixi content was laid out once at mount and never re-fit — so the background drifted from the overlay grid, and an area drawn afterwards landed off-target in the game. (Also delivers the deferred aspect-correct preview: a wide scene shows its true shape instead of stretched-to-pane.)
+**How:**
+- **Editor:** a `.editor__stage` div sized in JS to `contain` the design aspect in `.editor__preview` (ResizeObserver on the pane); `<ScenePreview>` + overlays live inside it. Stage-size changes dispatch a `resize` so Pixi (`resizeTo: host`) re-fits the canvas. Width/characterScale use commit-on-release drafts; `setSceneWidth` now re-mounts.
+- **Preview:** content built in design px under `root`; `root.scale = canvasHeight / designHeight` (uniform, undistorted), recomputed by a ResizeObserver on `app.canvas`. Layer drag is now scale-aware (`display.parent.toLocal`).
+- **Verified:** format / typecheck / lint / build green; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** depth-scale stops (next, A.2); game-camera dead-zone still open.
+
 ### 2026-06-14 — M6: camera — height-anchored design space (responsive scaling + per-scene character size)
 **What:** Replaced the viewport-multiple "world" model with a **design space**: the document has a `referenceHeight` (px, default 1080) and each scene a `width` (design px) + `characterScale`. The game wraps the bands in a `world` Container scaled so the **design height always fills the viewport** (one uniform scale `S = viewportHeight / referenceHeight`), then pans horizontally to keep the character centred (clamped; pillar-boxed if the world is narrower). New `engine/camera.ts` shares `{x, y, scale}` so the **DOM cursor** inverts the transform to design space. Editor: **Scene width** + **Characters %** (Scene tab) and **reference height** (Project → Display). Street demo → `width 4224, characterScale 2.2`; room → `1920, 2.4`. Closes M6.
 **Why:** The old model tied the world size to the viewport, so a scene's aspect — and the character's on-screen size — drifted with the device. Anchoring on the **locked axis (height)** keeps art + characters a constant fraction of the screen on phone and 4k alike (the conclusion Unity's ortho camera / Godot `keep_height` also reach); `characterScale` then lets a scene drawn from a different angle resize the cast without retuning the perspective gradient (`depth`).

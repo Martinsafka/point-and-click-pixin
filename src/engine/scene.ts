@@ -304,14 +304,19 @@ function makeLayerDraggable(
   let grabX = 0
   let grabY = 0
   display.on('pointerdown', (e: FederatedPointerEvent) => {
+    if (!display.parent) return
     dragging = true
-    grabX = display.position.x - e.global.x
-    grabY = display.position.y - e.global.y
+    // Work in the parent's (design) space, so the drag tracks the pointer through
+    // the preview's fit scale.
+    const p = display.parent.toLocal(e.global)
+    grabX = display.position.x - p.x
+    grabY = display.position.y - p.y
   })
   display.on('globalpointermove', (e: FederatedPointerEvent) => {
-    if (!dragging) return
-    const x = axis === 'y' ? display.position.x : clamp(e.global.x + grabX, screen.width)
-    display.position.set(x, clamp(e.global.y + grabY, screen.height))
+    if (!dragging || !display.parent) return
+    const p = display.parent.toLocal(e.global)
+    const x = axis === 'y' ? display.position.x : clamp(p.x + grabX, screen.width)
+    display.position.set(x, clamp(p.y + grabY, screen.height))
   })
   const drop = () => {
     if (!dragging) return
@@ -335,8 +340,8 @@ export async function mountPreview(
   playerView: ViewDescriptor = placeholderView,
   referenceHeight: number = DEFAULT_REFERENCE_HEIGHT,
 ): Promise<Scene> {
-  const screen: Size = { width: app.screen.width, height: app.screen.height }
-  const depthScale = resolveDepthScale(scene.depth, screen.height)
+  const design: Size = designSize(scene, referenceHeight)
+  const depthScale = resolveDepthScale(scene.depth, design.height)
   const state: StoryState = {
     currentScene: scene.id,
     flags: {},
@@ -345,7 +350,13 @@ export async function mountPreview(
     selectedItem: null,
   }
 
+  // Build in design px inside a `root` we scale to fit the (design-aspect) preview
+  // box. So the canvas stays aligned with the DOM overlays at any panel size and
+  // re-fits on resize without a re-mount — mirroring the in-game camera, sans scroll.
   app.stage.sortableChildren = true
+  const root = new Container()
+  root.sortableChildren = true
+  app.stage.addChild(root)
   const background = new Container()
   background.zIndex = 0
   const interactive = new Container()
@@ -353,16 +364,16 @@ export async function mountPreview(
   interactive.sortableChildren = true
   const foreground = new Container()
   foreground.zIndex = 20
-  app.stage.addChild(background, interactive, foreground)
+  root.addChild(background, interactive, foreground)
 
   const bandFor = (band: SceneBand): Container =>
     band === 'background' ? background : band === 'foreground' ? foreground : interactive
 
   for (let i = 0; i < scene.layers.length; i += 1) {
     const layer = scene.layers[i]
-    const display = await buildLayer(layer, screen)
+    const display = await buildLayer(layer, design)
     if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
-      const anchorY = layer.anchorYFrac * screen.height
+      const anchorY = layer.anchorYFrac * design.height
       display.zIndex = anchorY
       display.scale.set(depthScaleAt(anchorY, depthScale))
     }
@@ -370,38 +381,39 @@ export async function mountPreview(
     // Editor: drag image layers to place them — `none` freely, `width` on Y only.
     if (opts.onLayerMove && layer.kind === 'image') {
       const fit = layer.fit ?? 'none'
-      if (fit === 'none') makeLayerDraggable(display, i, screen, opts.onLayerMove, 'xy')
-      else if (fit === 'width') makeLayerDraggable(display, i, screen, opts.onLayerMove, 'y')
+      if (fit === 'none') makeLayerDraggable(display, i, design, opts.onLayerMove, 'xy')
+      else if (fit === 'width') makeLayerDraggable(display, i, design, opts.onLayerMove, 'y')
     }
     bandFor(layer.band).addChild(display)
   }
 
-  // Static character placeholder at the spawn point (shows scale + position). Its
-  // size matches the game: depth scale × the scene's characterScale × the preview's
-  // own height-fit (box height ÷ design height), so the % slider reads truthfully.
+  // Static character placeholder at the spawn point (shows scale + position); the
+  // `root` fit below gives it the same on-screen size fraction as the game.
   const view = await createSpriteView(playerView)
-  const feetX = scene.spawn.xFrac * screen.width
-  const feetY = scene.spawn.yFrac * screen.height
+  const feetX = scene.spawn.xFrac * design.width
+  const feetY = scene.spawn.yFrac * design.height
   view.container.position.set(feetX, feetY)
-  view.container.scale.set(
-    depthScaleAt(feetY, depthScale) *
-      (scene.characterScale ?? 1) *
-      (screen.height / referenceHeight),
-  )
+  view.container.scale.set(depthScaleAt(feetY, depthScale) * (scene.characterScale ?? 1))
   view.container.zIndex = feetY
   view.setPose('idle', 'S')
   interactive.addChild(view.container)
+
+  // Fit the design height into the preview box; re-fit when the canvas resizes
+  // (panel drag / window) so the content keeps tracking the DOM overlays.
+  const refit = () => root.scale.set(app.screen.height / design.height)
+  refit()
+  const ro = new ResizeObserver(refit)
+  ro.observe(app.canvas)
 
   let torn = false
   return {
     destroy() {
       if (torn) return
       torn = true
+      ro.disconnect()
       app.stage.sortableChildren = false
       view.destroy()
-      background.destroy({ children: true })
-      interactive.destroy({ children: true })
-      foreground.destroy({ children: true })
+      root.destroy({ children: true })
     },
   }
 }

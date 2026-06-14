@@ -179,7 +179,7 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         { holes: (get().doc.scenes[id].holes ?? []).filter((_, i) => i !== index) },
         false,
       ),
-    setSceneWidth: (id, width) => patchScene(id, { width }, false),
+    setSceneWidth: (id, width) => patchScene(id, { width }, true),
     setCharacterScale: (id, scale) => patchScene(id, { characterScale: scale }, true),
     setReferenceHeight: (height) =>
       set({ doc: { ...get().doc, referenceHeight: height }, revision: get().revision + 1 }),

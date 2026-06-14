@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useRef,
   useState,
   type ChangeEvent,
   type MouseEvent as ReactMouseEvent,
@@ -66,13 +67,11 @@ export function Editor() {
   const [selectedHole, setSelectedHole] = useState<number | null>(null)
   const [panelWidth, setPanelWidth] = useState(340)
   // The character-size slider drives a live % during drag, committing (one preview
-  // re-mount) on release; null means "read the saved value".
+  // re-mount) on release; null means "read the saved value". Width is the same.
   const [charDraft, setCharDraft] = useState<number | null>(null)
-
-  // Resizing the panel changes the preview container; nudge Pixi to re-fit it.
-  useEffect(() => {
-    window.dispatchEvent(new Event('resize'))
-  }, [panelWidth])
+  const [widthDraft, setWidthDraft] = useState<number | null>(null)
+  const mainRef = useRef<HTMLElement>(null)
+  const [stage, setStage] = useState({ w: 0, h: 0 })
 
   const startResize = (e: ReactMouseEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -100,6 +99,7 @@ export function Editor() {
     setSelectedInteractable(null)
     setSelectedHole(null)
     setCharDraft(null)
+    setWidthDraft(null)
   }
 
   const onImport = (e: ChangeEvent<HTMLInputElement>) => {
@@ -112,15 +112,41 @@ export function Editor() {
 
   const refH = doc.referenceHeight ?? DEFAULT_REFERENCE_HEIGHT
   const defaultWidth = Math.round(refH * (16 / 9))
-  const sceneWidth = scene?.width ?? defaultWidth
+  const savedWidth = scene?.width ?? defaultWidth
+  const aspect = savedWidth / refH
+  const sceneWidth = widthDraft ?? savedWidth
   const charScale = charDraft ?? scene?.characterScale ?? 1
-  const setSceneWidth = (w: number) =>
-    editorStore.getState().setSceneWidth(selectedId, Math.max(refH, Math.round(w) || refH))
+  const commitWidth = () => {
+    if (widthDraft === null) return
+    editorStore.getState().setSceneWidth(selectedId, Math.max(refH, Math.round(widthDraft) || refH))
+    setWidthDraft(null)
+  }
   const commitCharScale = () => {
     if (charDraft === null) return
     editorStore.getState().setCharacterScale(selectedId, charDraft)
     setCharDraft(null)
   }
+
+  // The preview "stage" is a box of the scene's aspect, fit inside the preview pane
+  // and centred — so the canvas and the DOM overlays always share one coordinate
+  // box (areas can't drift when the panel is resized).
+  useEffect(() => {
+    const el = mainRef.current
+    if (!el) return
+    const measure = () => {
+      const w = Math.min(el.clientWidth, el.clientHeight * aspect)
+      setStage({ w, h: w / aspect })
+    }
+    measure()
+    const obs = new ResizeObserver(measure)
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [aspect])
+
+  // When the stage box changes, nudge Pixi (resizeTo: host) to re-fit the canvas.
+  useEffect(() => {
+    window.dispatchEvent(new Event('resize'))
+  }, [stage.w, stage.h])
 
   const addPoint = (xFrac: number, yFrac: number) => {
     const current = editorStore.getState().doc.scenes[selectedId].walkable
@@ -241,7 +267,9 @@ export function Editor() {
                     step="20"
                     min={refH}
                     value={sceneWidth}
-                    onChange={(e) => setSceneWidth(Number(e.target.value))}
+                    onChange={(e) => setWidthDraft(Number(e.target.value))}
+                    onBlur={commitWidth}
+                    onKeyDown={(e) => e.key === 'Enter' && commitWidth()}
                   />
                   <span className="intr-form__note">
                     px · {(sceneWidth / refH).toFixed(2)}:1
@@ -454,9 +482,9 @@ export function Editor() {
         </div>
       </aside>
       <div className="editor__resizer" onMouseDown={startResize} />
-      <main className="editor__preview">
-        {scene && (
-          <>
+      <main className="editor__preview" ref={mainRef}>
+        {scene && stage.w > 0 && (
+          <div className="editor__stage" style={{ width: stage.w, height: stage.h }}>
             <ScenePreview key={`${selectedId}-${revision}`} scene={scene} />
             <WalkableOverlay
               walkable={scene.walkable}
@@ -475,7 +503,7 @@ export function Editor() {
               drawMode={draw === 'hitarea'}
               onAddPoint={addHitAreaPoint}
             />
-          </>
+          </div>
         )}
       </main>
     </div>

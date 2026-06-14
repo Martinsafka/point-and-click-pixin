@@ -50,7 +50,9 @@ preview immediately. The panel is split into top-level **tabs**:
 
 Each section within a tab **collapses** when you click its title (accordion); a
 persistent footer has **▶ Test in game** / **Discard**. Drag the divider between the
-panel and the preview to **widen** the panel.
+panel and the preview to **widen** the panel. The preview is shown at the **scene's
+aspect ratio**, so drawn areas keep their exact position however wide you make the
+panel.
 
 ---
 

@@ -595,6 +595,15 @@ body {
   flex: 1;
   min-width: 0;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The scene-aspect box that the canvas + overlays share, centred in the pane. */
+.editor__stage {
+  position: relative;
+  flex: none;
 }
 
 .preview {
