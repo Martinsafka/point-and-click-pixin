@@ -159,17 +159,50 @@ M4 additions (raised after the core was done):
 
 ### M7 — NPCs, dialogue & stealth
 
-- Runtime:
-  - [ ] NPC entities — a character (M5 view descriptor) with at least an idle
-        animation; placement, arrival / departure conditions, item handover.
-  - [ ] Dialogue runtime — branching tree with **typewriter text reveal**.
-  - [ ] **NPC vision / detection** — line-of-sight (distance + cone, optional
-        occlusion); on "sees the player" run Effects = the stealth beat.
-  - [ ] **Voice** — short unintelligible gibberish (Sims-style) while a character
-        speaks; real VO swaps in later.
-- Editor:
-  - [ ] Place NPCs; set visual (upload idle anim + the M5 animation set);
-        dialogue-tree editor; vision settings; attach voice.
+Built so the pieces **chain**: a trigger fires events, an NPC walks a drawn route into
+one, and a trigger at cover plays a crouch — the stealth beat. Ordered into testable steps.
+
+**Step 1 — Triggers** _(extends interactables; testable with the player alone)_
+
+- [ ] `InteractableData` 5th variant **`trigger`** — an **enter-driven** hit-area (fires
+      when a character's feet enter, not on click). `by: player | npc | any`, `once` +
+      per-entry debounce, gated by `when`, runs Effects.
+- [ ] Engine: per-frame feet-in-area test for every character (reuse point-in-polygon).
+- [ ] **Expanded Effects** — `playSound`, `playAnim` (a one-shot / pose on the player or
+      a named NPC), `spawnNpc` / `despawnNpc`. Introduces **engine effects** (touch the
+      scene / characters) beside the existing state effects.
+- [ ] Editor: **+ Trigger** + form (effects / when / by / once); distinct hit-area colour.
+
+**Step 2 — NPC entities**
+
+- [ ] `NpcData` — a character (M5 view descriptor) with spawn + `when` (arrival /
+      departure); multiple characters share the `interactive` band (reuse `Character`,
+      nav-mesh, depth). Item handover via Effects.
+- [ ] Editor: NPC list (add / remove / view / spawn placement).
+
+**Step 3 — NPC movement paths** _(idea: draw a route; chains with triggers)_
+
+- [ ] `NpcData.path` — a **drawn route** of waypoints, `once | loop | pingpong` (+ speed);
+      the NPC walks it via the nav-mesh. Triggers now fire on **NPC** entry too → an NPC
+      reaches a spot and fires an event (the chaining).
+- [ ] Editor: **draw the NPC's path** (polyline overlay, like walkable).
+
+**Step 4 — Dialogue runtime**
+
+- [ ] `startDialog` becomes real — a branching tree with **typewriter text reveal**; click
+      an NPC → dialogue UI (text + optional voice + choices → Effects).
+- [ ] **Voice** — short unintelligible gibberish (Sims-style) while a character speaks;
+      real VO swaps in later.
+- [ ] Editor: dialogue-tree editor; attach voice.
+
+**Step 5 — Stealth** _(idea: crouch at cover; NPC vision)_
+
+- [ ] **NPC vision / detection** — line-of-sight (distance + cone, optional occlusion); on
+      "sees the player" run Effects = the stealth beat. _(Cone vs simple proximity: decide here.)_
+- [ ] **Crouch at cover** — a `trigger` area by a barrel / wall plays a crouch (`playAnim`)
+      and sets a "hidden" flag that lowers detection; **foreground occluders already hide the
+      character** (existing band).
+- [ ] Editor: vision settings; crouch / hidden wiring.
 
 ### M8 — Cutscenes / scripted sequences
 

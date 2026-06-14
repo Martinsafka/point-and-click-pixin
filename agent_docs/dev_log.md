@@ -23,6 +23,12 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — Planned M7 (NPCs, dialogue & stealth) — folded in triggers + NPC paths + stealth crouch
+**What:** Expanded the roadmap's M7 into five chainable steps and added three user-requested mechanics: an **enter-driven `trigger`** interactable (reacts to player + NPCs), **drawn NPC movement paths**, and a **crouch-at-cover** stealth beat. Roadmap only — no code yet.
+**Why:** Lock the M7 scope before building, so the trigger → NPC-path → stealth chaining is designed up front.
+**How:** Step order **triggers → NPC entities → NPC paths → dialogue → stealth**. Triggers are step 1 because they extend the existing interactable model (a 5th hit-area variant, but feet-enter-driven) and are testable with the player alone. New Effects (`playSound` / `playAnim` / `spawnNpc`) introduce **engine effects** beside the existing state effects. Open decision for step 5: NPC detection model (simple proximity vs vision cone).
+**Follow-ups:** start **M7 step 1 (triggers)** next.
+
 ### 2026-06-14 — Parallax backgrounds (per-layer scroll rate)
 **What:** Background / foreground layers can scroll at their own rate via `LayerData.parallax?` (1 = with the world / default, <1 = farther & slower, 0 = locked to the viewport, >1 = nearer & faster). Applied in the camera loop; the editor exposes a per-layer **parallax** input (Layers list, background / foreground only). Demo: the street's sky / land / buildings are set to 0.3 / 0.5 / 0.7.
 **Why:** Depth on scrolling scenes — a distant skyline barely moves while the near ground tracks the character. The last queued piece before M7.
