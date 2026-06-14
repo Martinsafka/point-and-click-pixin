@@ -116,6 +116,10 @@ export type Effect =
   // looping `anim` meanwhile. Never pauses the player. Composes with `playAnim`
   // ("longest wins" — the actor resumes once the longest pause has elapsed).
   | { kind: 'wait'; ms: number; anim?: string }
+  // Holds an idle posture on `target` (default the player) — a looping clip shown in
+  // place of the default idle until cleared (omit `action`). Walking still animates
+  // normally. For crouch-at-cover: set on arrival, clear on exit.
+  | { kind: 'setStance'; action?: string; target?: string }
 
 /** Using `item` on an interactable runs `effects`. */
 export interface UseRule {

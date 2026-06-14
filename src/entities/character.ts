@@ -34,6 +34,9 @@ export class Character {
   private oneShotHold = false
   /** Action clip looped while a timed hold lingers (a `wait`'s optional anim). */
   private loopAnim?: string
+  /** A held idle posture (e.g. `crouch`) shown in place of the default idle, until
+   *  cleared — the `setStance` effect (crouch at cover). */
+  private stance?: string
 
   constructor(
     private readonly view: CharacterView,
@@ -70,6 +73,7 @@ export class Character {
     this.onArrive = undefined
     this.action = undefined
     this.clearHolds()
+    this.stance = undefined
     this.state = 'idle'
     this.syncView()
   }
@@ -226,6 +230,14 @@ export class Character {
     else if (!this.oneShotHold) this.view.setPose(this.state, this.facing)
   }
 
+  /** Hold an idle posture (e.g. `crouch`) in place of the default idle until cleared
+   *  (pass no action). Walking still shows the walk cycle; used by the `setStance`
+   *  effect (crouch at cover). */
+  setStance(action?: string): void {
+    this.stance = action || undefined
+    if (!this.held()) this.syncView()
+  }
+
   destroy(): void {
     this.view.destroy()
   }
@@ -240,6 +252,8 @@ export class Character {
 
   private syncView(): void {
     this.positionView()
-    this.view.setPose(this.state, this.facing)
+    // A held stance (crouch) overrides the default idle; walking shows the walk cycle.
+    if (this.state === 'idle' && this.stance) this.view.loopAction(this.stance, this.facing)
+    else this.view.setPose(this.state, this.facing)
   }
 }

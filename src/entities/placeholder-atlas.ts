@@ -162,6 +162,8 @@ clips.pickup = {
   fps: 8,
   loop: false,
 }
+// A held crouch posture (the deepest pickup frame), for the `setStance` effect.
+clips.crouch = { frames: [pickupBase + 2], fps: 1, loop: true }
 const interactBase = INTERACT_ROW * COLS
 clips.interact = {
   frames: [interactBase, interactBase + 1, interactBase + 2, interactBase + 3],

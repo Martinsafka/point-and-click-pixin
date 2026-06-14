@@ -81,9 +81,13 @@
           "hitArea": [0.66, 0.8, 0.8, 0.8, 0.8, 0.96, 0.66, 0.96],
           "effects": [
             { "kind": "playAnim", "action": "pickup" },
+            { "kind": "setStance", "action": "crouch" },
             { "kind": "setFlag", "flag": "hidden" }
           ],
-          "exitEffects": [{ "kind": "setFlag", "flag": "hidden", "value": false }]
+          "exitEffects": [
+            { "kind": "setStance" },
+            { "kind": "setFlag", "flag": "hidden", "value": false }
+          ]
         }
       ],
       "npcs": [

@@ -137,6 +137,12 @@ export async function createSpriteView(desc: ViewDescriptor): Promise<CharacterV
         applyPose('idle', facing) // no clip for this action — fall back to idle
         return
       }
+      // Already looping this clip (a held stance re-applied each frame) → just face,
+      // don't restart it.
+      if (key === current && !oneShot) {
+        mirror(facing)
+        return
+      }
       // Cancel any in-flight one-shot, then play `key` forced to loop. `current` is
       // set so the next setPose (a different key) switches cleanly off it.
       sprite.onComplete = undefined

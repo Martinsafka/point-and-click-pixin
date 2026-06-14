@@ -39,6 +39,8 @@ export function runEffects(
       actors.get(e.target ?? 'player')?.playOnce(e.action)
     } else if (e.kind === 'wait') {
       if (subject !== 'player') actors.get(subject)?.pauseFor(e.ms, e.anim)
+    } else if (e.kind === 'setStance') {
+      actors.get(e.target ?? 'player')?.setStance(e.action)
     }
   }
   store.getState().run(effects)

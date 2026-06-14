@@ -79,6 +79,7 @@ const EFFECT_KINDS: Effect['kind'][] = [
   'playSound',
   'playAnim',
   'wait',
+  'setStance',
 ]
 
 function defaultEffect(kind: Effect['kind'], sceneIds: SceneId[], itemIds: ItemId[]): Effect {
@@ -99,6 +100,8 @@ function defaultEffect(kind: Effect['kind'], sceneIds: SceneId[], itemIds: ItemI
       return { kind: 'playAnim', action: 'interact' }
     case 'wait':
       return { kind: 'wait', ms: 1000 }
+    case 'setStance':
+      return { kind: 'setStance' }
   }
 }
 
@@ -212,6 +215,22 @@ function EffectFields({
             options={animations}
             empty
             onChange={(anim) => onChange({ ...effect, anim: anim || undefined })}
+          />
+        </>
+      )
+    case 'setStance':
+      return (
+        <>
+          <OptionSelect
+            value={effect.action ?? ''}
+            options={animations}
+            empty
+            onChange={(action) => onChange({ ...effect, action: action || undefined })}
+          />
+          <OptionSelect
+            value={effect.target ?? 'player'}
+            options={targets}
+            onChange={(t) => onChange({ ...effect, target: t === 'player' ? undefined : t })}
           />
         </>
       )
