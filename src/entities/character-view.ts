@@ -13,6 +13,9 @@ export interface CharacterView {
   /** Play a one-shot action (e.g. 'pickup') once, then call `onComplete` and revert
    *  to the pose. No clip for `action` → `onComplete` fires immediately. */
   playOnce(action: string, facing: Facing, onComplete: () => void): void
+  /** Loop a named action clip (forced to repeat) until the next `setPose` / `playOnce` —
+   *  e.g. an idle variant shown while a `wait` lingers. No clip for `action` → idle. */
+  loopAction(action: string, facing: Facing): void
   destroy(): void
 }
 
@@ -66,6 +69,9 @@ export function createCubeView(): CharacterView {
     },
     playOnce(_action, _facing, onComplete) {
       onComplete() // the cube has no one-shots; resolve immediately
+    },
+    loopAction() {
+      // the cube has no action clips — nothing to loop
     },
     destroy() {
       container.destroy({ children: true })

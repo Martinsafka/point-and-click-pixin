@@ -9,6 +9,7 @@ import {
 } from 'pixi.js'
 import { Character } from '../entities/character'
 import { cameraOffset } from './camera'
+import { runEffects } from './effects'
 import { createSpriteView } from '../entities/sprite-view'
 import { placeholderView } from '../entities/placeholder-atlas'
 import { resolveDepthScale, designSize, DEFAULT_REFERENCE_HEIGHT } from '../data/scene-config'
@@ -228,9 +229,11 @@ export async function mountScene(
   interactive.addChild(character.displayObject)
   character.setPosition(scene.spawn.xFrac * design.width, scene.spawn.yFrac * design.height)
 
-  // NPCs: characters placed in the scene (static for now; movement is step 3). They
-  // share the nav-mesh + depth, Y-sort with the player, and `when` gates presence.
+  // NPCs: characters placed in the scene. They share the nav-mesh + depth, Y-sort
+  // with the player, and `when` gates presence. The actor registry addresses every
+  // live character by id (`'player'` + cast ids) so engine effects resolve targets.
   const npcs: { id: string; character: Character }[] = []
+  const actors = new Map<string, Character>([['player', character]])
   for (const placement of scene.npcs ?? []) {
     // The cast def has no appearance yet → placeholder for all; the placement's `npc`
     // is the runtime id (so `playAnim` target + future NPC triggers resolve to it).
@@ -249,6 +252,7 @@ export async function mountScene(
       conditional.push({ display: npcChar.displayObject, when: placement.when })
     }
     npcs.push({ id: placement.npc, character: npcChar })
+    actors.set(placement.npc, npcChar)
     startNpcPath(npcChar, placement.path, design)
   }
 
@@ -280,20 +284,11 @@ export async function mountScene(
   }
   updateCamera()
 
-  // Effects from a click or trigger: engine effects (sound / animation) run here;
-  // the rest go to the story store (state effects). Keeps transient engine actions
-  // out of the discrete state.
-  const runEffects = (effects: readonly Effect[]) => {
-    for (const e of effects) {
-      if (e.kind === 'playSound') void import('../audio/audio').then((m) => m.playClip(e.sound))
-      else if (e.kind === 'playAnim') {
-        const target = e.target ?? 'player'
-        if (target === 'player') character.playOnce(e.action)
-        else npcs.find((n) => n.id === target)?.character.playOnce(e.action)
-      }
-    }
-    store.getState().run(effects)
-  }
+  // Effects from a click, a trigger, or (later) a dialogue node, dispatched over the
+  // actor registry by the shared runtime. `subject` is the actor the batch is "about"
+  // (a trigger's enterer) — it receives `wait`; clicks default to the player.
+  const run = (effects: readonly Effect[], subject = 'player') =>
+    runEffects(effects, actors, store, subject)
 
   // Trigger volumes: run effects when the player's feet ENTER (debounced to the enter
   // edge; `once` stops a re-fire this visit). NPC triggers wait for NPCs (step 2+).
@@ -318,7 +313,7 @@ export async function mountScene(
         const now = containsPoint({ polygon: t.polygon }, m.c.displayObject.x, m.c.displayObject.y)
         if (now && !t.inside.has(m.id) && !(t.data.once && t.fired)) {
           if (!t.data.when || checkCondition(state, t.data.when)) {
-            runEffects(t.data.effects)
+            run(t.data.effects, m.id) // the enterer is the subject (receives `wait`)
             t.fired = true
           }
         }
@@ -346,7 +341,7 @@ export async function mountScene(
     if (hit && selected) {
       const usageEffects = effectsForUse(hit, selected)
       if (usageEffects) {
-        character.setTarget(local.x, local.y, () => runEffects(usageEffects), 'interact')
+        character.setTarget(local.x, local.y, () => run(usageEffects), 'interact')
         return
       }
     }
@@ -361,7 +356,7 @@ export async function mountScene(
       })
     } else if (hit) {
       const effects = effectsFor(hit)
-      character.setTarget(local.x, local.y, () => runEffects(effects), ONE_SHOT[hit.kind])
+      character.setTarget(local.x, local.y, () => run(effects), ONE_SHOT[hit.kind])
     } else {
       character.setTarget(local.x, local.y)
     }

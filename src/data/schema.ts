@@ -112,6 +112,10 @@ export type Effect =
   // Engine effects (touch the scene / characters, not the story state):
   | { kind: 'playSound'; sound: string }
   | { kind: 'playAnim'; action: string; target?: string }
+  // Lingers the *entering* actor (an NPC / dialogue partner) for `ms`, optionally
+  // looping `anim` meanwhile. Never pauses the player. Composes with `playAnim`
+  // ("longest wins" — the actor resumes once the longest pause has elapsed).
+  | { kind: 'wait'; ms: number; anim?: string }
 
 /** Using `item` on an interactable runs `effects`. */
 export interface UseRule {

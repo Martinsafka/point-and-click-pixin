@@ -21,10 +21,19 @@ export class Character {
   private pathIndex = 0
   private onArrive?: () => void
   private action?: string
-  private paused = false
   private facing: Facing = 'S'
   private state: MoveState = 'idle'
   private speed = WALK_SPEED
+  /** Accumulated ticker time (ms) — the clock timed holds (`pauseFor`) measure against. */
+  private clock = 0
+  /** Indefinite hold (`pause()` / `resume()`) — e.g. while talking to this NPC. */
+  private manualHold = false
+  /** Timed hold (`pauseFor`): the `clock` value it lapses at; `≤ clock` = expired. */
+  private holdUntil = 0
+  /** A one-shot gesture (`playOnce`) is freezing the walk until it completes. */
+  private oneShotHold = false
+  /** Action clip looped while a timed hold lingers (a `wait`'s optional anim). */
+  private loopAnim?: string
 
   constructor(
     private readonly view: CharacterView,
@@ -50,9 +59,22 @@ export class Character {
     this.pathIndex = 0
     this.onArrive = undefined
     this.action = undefined
-    this.paused = false
+    this.clearHolds()
     this.state = 'idle'
     this.syncView()
+  }
+
+  /** Drop every pause (manual / timed / one-shot) and its loop anim. */
+  private clearHolds(): void {
+    this.manualHold = false
+    this.holdUntil = 0
+    this.oneShotHold = false
+    this.loopAnim = undefined
+  }
+
+  /** True while any hold freezes the walk (manual, timed, or a one-shot gesture). */
+  private held(): boolean {
+    return this.manualHold || this.oneShotHold || this.holdUntil > this.clock
   }
 
   /**
@@ -66,14 +88,22 @@ export class Character {
     this.pathIndex = 0
     this.onArrive = onArrive
     this.action = action
-    this.paused = false // a new walk cancels a paused gesture
+    this.clearHolds() // a new explicit destination cancels any pause / gesture
   }
 
   /** Advance one frame. `deltaMS` is real elapsed milliseconds from the ticker. */
   update(deltaMS: number): void {
-    // Frozen mid-walk while a trigger gesture plays (resumes on its completion).
-    if (this.paused) {
-      this.syncView()
+    this.clock += deltaMS
+    // A timed hold (a `wait`) lapses once the clock passes it — drop its loop anim so
+    // the resume reverts to the idle / walk pose.
+    if (this.holdUntil && this.holdUntil <= this.clock) {
+      this.holdUntil = 0
+      this.loopAnim = undefined
+    }
+    // Frozen by a gesture, a wait, or dialogue: keep depth scale + Y-sort + position
+    // live, but leave the pose exactly as the hold set it (don't restart a loop clip).
+    if (this.held()) {
+      this.positionView()
       return
     }
     let arrived: (() => void) | undefined
@@ -124,31 +154,82 @@ export class Character {
     this.speed = WALK_SPEED * scale
   }
 
-  /** Play a one-shot animation (e.g. a trigger gesture). If walking, the character
-   *  pauses (a one-shot is cancelled by the walk pose), plays it, and resumes the
-   *  walk on completion. */
+  /** Play a one-shot animation (a gesture). Freezes the walk (a one-shot is cancelled
+   *  by the walk pose), plays it, and resumes on completion — unless a `wait` still
+   *  holds the character, in which case its pose (loop anim / idle) is restored. */
   playOnce(action: string): void {
-    if (this.state === 'walk') {
-      this.paused = true
-      this.state = 'idle'
-      this.syncView() // show idle so the walk pose doesn't override the one-shot
-      this.view.playOnce(action, this.facing, () => {
-        this.paused = false
-      })
+    this.oneShotHold = true
+    this.state = 'idle'
+    this.positionView() // show idle position so the walk pose doesn't override the gesture
+    this.view.playOnce(action, this.facing, () => {
+      this.oneShotHold = false
+      if (this.holdUntil > this.clock) {
+        // A wait still lingers — restore its pose; otherwise the next update reverts.
+        if (this.loopAnim) this.view.loopAction(this.loopAnim, this.facing)
+        else this.view.setPose('idle', this.facing)
+      }
+    })
+  }
+
+  /** Freeze in place (idle), preserving the walk path so `resume()` continues it.
+   *  Used while the player talks to this NPC. */
+  pause(): void {
+    if (this.manualHold) return
+    this.manualHold = true
+    this.state = 'idle'
+    this.positionView()
+    if (!this.oneShotHold && !this.loopAnim) this.view.setPose('idle', this.facing)
+  }
+
+  /** Release a `pause()`; the character continues its existing path. */
+  resume(): void {
+    this.manualHold = false
+  }
+
+  /** Linger in place for `ms`, optionally looping `anim` meanwhile, then resume the
+   *  walk. "Longest wins" — stacking waits / a concurrent gesture extend, never
+   *  shorten, the hold. Used by the `wait` effect (never on the player). */
+  pauseFor(ms: number, anim?: string): void {
+    const until = this.clock + Math.max(0, ms)
+    if (until > this.holdUntil) this.holdUntil = until
+    this.state = 'idle'
+    this.positionView()
+    if (anim) {
+      this.loopAnim = anim
+      if (!this.oneShotHold) this.view.loopAction(anim, this.facing) // a gesture restores it on complete
     } else {
-      this.view.playOnce(action, this.facing, () => {})
+      this.loopAnim = undefined
+      if (!this.oneShotHold) this.view.setPose('idle', this.facing)
     }
+  }
+
+  /** Turn to face a world point (e.g. the player) without moving. */
+  faceToward(x: number, y: number): void {
+    const dx = x - this.x
+    const dy = y - this.y
+    if (dx === 0 && dy === 0) return
+    this.facing = facingFromVector(dx, dy)
+    this.positionView()
+    // Reflect the new facing on whatever pose is currently showing.
+    if (this.loopAnim && this.holdUntil > this.clock)
+      this.view.loopAction(this.loopAnim, this.facing)
+    else if (!this.oneShotHold) this.view.setPose(this.state, this.facing)
   }
 
   destroy(): void {
     this.view.destroy()
   }
 
-  private syncView(): void {
+  /** Position the container (feet, depth scale, Y-sort) without touching the pose. */
+  private positionView(): void {
     const { container } = this.view
     container.position.set(this.x, this.y)
     container.scale.set(depthScaleAt(this.y, this.depthScale) * this.charScale)
     container.zIndex = this.y
+  }
+
+  private syncView(): void {
+    this.positionView()
     this.view.setPose(this.state, this.facing)
   }
 }

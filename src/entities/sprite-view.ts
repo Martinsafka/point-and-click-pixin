@@ -126,6 +126,28 @@ export async function createSpriteView(desc: ViewDescriptor): Promise<CharacterV
       }
       sprite.gotoAndPlay(0)
     },
+    loopAction(action, facing) {
+      const base = BASE_FACING[facing]
+      const key = desc.clips[`${action}.${base}`]
+        ? `${action}.${base}`
+        : desc.clips[action]
+          ? action
+          : ''
+      if (!key) {
+        applyPose('idle', facing) // no clip for this action — fall back to idle
+        return
+      }
+      // Cancel any in-flight one-shot, then play `key` forced to loop. `current` is
+      // set so the next setPose (a different key) switches cleanly off it.
+      sprite.onComplete = undefined
+      oneShot = null
+      current = key
+      sprite.textures = clipTextures[key]
+      sprite.animationSpeed = desc.clips[key].fps / 60
+      sprite.loop = true
+      mirror(facing)
+      sprite.gotoAndPlay(0)
+    },
     destroy() {
       container.destroy({ children: true })
     },

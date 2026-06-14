@@ -51,6 +51,7 @@ const EFFECT_KINDS: Effect['kind'][] = [
   'startDialog',
   'playSound',
   'playAnim',
+  'wait',
 ]
 
 function defaultEffect(kind: Effect['kind'], sceneIds: SceneId[], itemIds: ItemId[]): Effect {
@@ -69,6 +70,8 @@ function defaultEffect(kind: Effect['kind'], sceneIds: SceneId[], itemIds: ItemI
       return { kind: 'playSound', sound: '' }
     case 'playAnim':
       return { kind: 'playAnim', action: 'interact' }
+    case 'wait':
+      return { kind: 'wait', ms: 1000 }
   }
 }
 
@@ -162,6 +165,24 @@ function EffectFields({
             placeholder="target (player)"
             value={effect.target ?? ''}
             onChange={(e) => onChange({ ...effect, target: e.target.value || undefined })}
+          />
+        </>
+      )
+    case 'wait':
+      return (
+        <>
+          <input
+            className="logic__in"
+            type="number"
+            placeholder="ms"
+            value={effect.ms}
+            onChange={(e) => onChange({ ...effect, ms: Number(e.target.value) || 0 })}
+          />
+          <input
+            className="logic__in"
+            placeholder="loop anim (optional)"
+            value={effect.anim ?? ''}
+            onChange={(e) => onChange({ ...effect, anim: e.target.value || undefined })}
           />
         </>
       )

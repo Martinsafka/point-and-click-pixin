@@ -77,7 +77,8 @@ export function applyEffect(state: StoryState, effect: Effect): StoryState {
       return state
     case 'playSound':
     case 'playAnim':
-      // Engine effects (audio / animation): handled by the scene, not the store.
+    case 'wait':
+      // Engine effects (audio / animation / timing): handled by the scene, not the store.
       return state
   }
 }
