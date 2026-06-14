@@ -8,6 +8,7 @@ import {
 import { editorStore, exportDoc, importDocFromFile, useEditor } from './editor-store'
 import { clearDocDraft, hasDocDraft, saveDocDraft } from '../data/doc-draft'
 import type { InteractableData } from '../data/schema'
+import { DEFAULT_REFERENCE_HEIGHT } from '../data/scene-config'
 import { ScenePreview } from './ScenePreview'
 import { WalkableOverlay } from './WalkableOverlay'
 import { HoleOverlay } from './HoleOverlay'
@@ -64,6 +65,9 @@ export function Editor() {
   const [selectedInteractable, setSelectedInteractable] = useState<number | null>(null)
   const [selectedHole, setSelectedHole] = useState<number | null>(null)
   const [panelWidth, setPanelWidth] = useState(340)
+  // The character-size slider drives a live % during drag, committing (one preview
+  // re-mount) on release; null means "read the saved value".
+  const [charDraft, setCharDraft] = useState<number | null>(null)
 
   // Resizing the panel changes the preview container; nudge Pixi to re-fit it.
   useEffect(() => {
@@ -95,6 +99,7 @@ export function Editor() {
     setDraw(null)
     setSelectedInteractable(null)
     setSelectedHole(null)
+    setCharDraft(null)
   }
 
   const onImport = (e: ChangeEvent<HTMLInputElement>) => {
@@ -104,6 +109,18 @@ export function Editor() {
   }
 
   const toggle = (mode: Exclude<Draw, null>) => setDraw((d) => (d === mode ? null : mode))
+
+  const refH = doc.referenceHeight ?? DEFAULT_REFERENCE_HEIGHT
+  const defaultWidth = Math.round(refH * (16 / 9))
+  const sceneWidth = scene?.width ?? defaultWidth
+  const charScale = charDraft ?? scene?.characterScale ?? 1
+  const setSceneWidth = (w: number) =>
+    editorStore.getState().setSceneWidth(selectedId, Math.max(refH, Math.round(w) || refH))
+  const commitCharScale = () => {
+    if (charDraft === null) return
+    editorStore.getState().setCharacterScale(selectedId, charDraft)
+    setCharDraft(null)
+  }
 
   const addPoint = (xFrac: number, yFrac: number) => {
     const current = editorStore.getState().doc.scenes[selectedId].walkable
@@ -216,6 +233,35 @@ export function Editor() {
                     </li>
                   ))}
                 </ul>
+                <div className="intr-form__field">
+                  <span>width</span>
+                  <input
+                    className="logic__in"
+                    type="number"
+                    step="20"
+                    min={refH}
+                    value={sceneWidth}
+                    onChange={(e) => setSceneWidth(Number(e.target.value))}
+                  />
+                  <span className="intr-form__note">
+                    px · {(sceneWidth / refH).toFixed(2)}:1
+                    {sceneWidth > defaultWidth ? ' · scrolls' : ''}
+                  </span>
+                </div>
+                <div className="intr-form__field">
+                  <span>characters</span>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="4"
+                    step="0.05"
+                    value={charScale}
+                    onChange={(e) => setCharDraft(Number(e.target.value))}
+                    onPointerUp={commitCharScale}
+                    onBlur={commitCharScale}
+                  />
+                  <span className="intr-form__note">{Math.round(charScale * 100)}%</span>
+                </div>
               </Section>
 
               <Section title={`Walkable · ${pointCount} pts`}>
@@ -357,6 +403,29 @@ export function Editor() {
 
           {tab === 'project' && (
             <>
+              <Section title="Display">
+                <div className="intr-form__field">
+                  <span>height</span>
+                  <input
+                    className="logic__in"
+                    type="number"
+                    step="10"
+                    min="240"
+                    value={doc.referenceHeight ?? DEFAULT_REFERENCE_HEIGHT}
+                    onChange={(e) =>
+                      editorStore
+                        .getState()
+                        .setReferenceHeight(
+                          Math.max(
+                            240,
+                            Math.round(Number(e.target.value)) || DEFAULT_REFERENCE_HEIGHT,
+                          ),
+                        )
+                    }
+                  />
+                  <span className="intr-form__note">px · the game's vertical resolution</span>
+                </div>
+              </Section>
               <Section title="Cursors">
                 <CursorEditor cursors={doc.cursors} />
               </Section>

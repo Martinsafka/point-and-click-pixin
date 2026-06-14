@@ -2,10 +2,12 @@
 // edits. This is the project's public schema (eventual npm API): keep it minimal
 // and extend via discriminated-union `kind`s, which stays backward-compatible.
 //
-// Coordinate convention: ALL positions/polygons are FRACTIONS of the screen
-// (0..1), so a document is resolution-independent; the engine resolves them to
-// pixels at mount time. Runtime story state lives in src/state/story.ts; the
-// Condition/Effect evaluator in src/systems/conditions.ts.
+// Coordinate convention: ALL positions/polygons are FRACTIONS (0..1) of the
+// scene's design space — its `width` × the document `referenceHeight` (px) — so a
+// document is resolution-independent. At mount the engine resolves them to px and
+// fits the design *height* to the viewport (one uniform scale; the camera scrolls
+// the width). Runtime story state lives in src/state/story.ts; the Condition/Effect
+// evaluator in src/systems/conditions.ts.
 
 export type SceneId = string
 export type ItemId = string
@@ -28,7 +30,7 @@ export type LayerFit = 'stretch' | 'cover' | 'contain' | 'width' | 'none'
 /** Flat polygon as fractions [x0, y0, x1, y1, ...]. */
 export type Polygon = number[]
 
-/** Per-scene 2.5D perspective (fractions of screen height). */
+/** Per-scene 2.5D perspective (fractions of the design height). */
 export interface DepthConfig {
   yNearFrac: number
   yFarFrac: number
@@ -179,14 +181,22 @@ export interface SceneData {
   id: SceneId
   name: string
   layers: LayerData[]
-  /** Where the character may walk (polygon as screen fractions). */
+  /** Where the character may walk (polygon as design-space fractions). */
   walkable: Polygon
-  /** Obstacles cut out of the walkable area (polygons as screen fractions). */
+  /** Obstacles cut out of the walkable area (polygons as design-space fractions). */
   holes?: Polygon[]
   interactables: InteractableData[]
   depth: DepthConfig
-  /** Character spawn (feet), as fractions of the screen. */
+  /** Character spawn (feet), as design-space fractions. */
   spawn: { xFrac: number; yFrac: number }
+  /** Scene width in design px (its height is the document `referenceHeight`).
+   *  Wider than the viewport's aspect → the camera scrolls horizontally to follow
+   *  the character. Default = one 16:9 screen (`referenceHeight × 16/9`). */
+  width?: number
+  /** Per-scene size multiplier for the cast (player + NPCs), default 1. Lets a
+   *  scene drawn from a closer/different angle render characters larger or smaller
+   *  without retuning the perspective gradient (`depth`). */
+  characterScale?: number
 }
 
 /**
@@ -206,4 +216,8 @@ export interface GameDoc {
   cursors?: Partial<Record<CursorKind, string>>
   /** The protagonist's view (atlas + clips); absent → the built-in placeholder. */
   player?: ViewDescriptor
+  /** The game's vertical design resolution in px (default 1080). Every scene is
+   *  this tall; the viewport height maps onto it with one uniform scale, so art and
+   *  characters keep a consistent size across devices. Scene `width` is in these px. */
+  referenceHeight?: number
 }

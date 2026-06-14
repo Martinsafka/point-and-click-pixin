@@ -29,6 +29,8 @@ export class Character {
     private readonly view: CharacterView,
     private readonly depthScale: DepthScale,
     private readonly nav?: Navigation,
+    /** Per-scene size multiplier on top of the depth scale (default 1). */
+    private readonly charScale = 1,
   ) {
     this.syncView()
   }
@@ -116,7 +118,7 @@ export class Character {
   private syncView(): void {
     const { container } = this.view
     container.position.set(this.x, this.y)
-    container.scale.set(depthScaleAt(this.y, this.depthScale))
+    container.scale.set(depthScaleAt(this.y, this.depthScale) * this.charScale)
     container.zIndex = this.y
     this.view.setPose(this.state, this.facing)
   }

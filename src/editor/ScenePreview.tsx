@@ -46,6 +46,7 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
             editorStore.getState().setLayerPos(scene.id, index, xFrac, yFrac),
         },
         editorStore.getState().doc.player,
+        editorStore.getState().doc.referenceHeight,
       )
     })()
 

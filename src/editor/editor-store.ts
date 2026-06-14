@@ -40,6 +40,12 @@ interface EditorStore {
   addHole(id: SceneId): void
   setHole(id: SceneId, index: number, polygon: number[]): void
   removeHole(id: SceneId, index: number): void
+  /** Scene width in design px (camera scrolls when wider than the viewport). */
+  setSceneWidth(id: SceneId, width: number): void
+  /** Per-scene character size multiplier (player + NPCs); re-mounts the preview. */
+  setCharacterScale(id: SceneId, scale: number): void
+  /** The document's vertical design resolution (px); re-mounts the preview. */
+  setReferenceHeight(height: number): void
   /** Append an uploaded image as a full-screen background layer (a backdrop). */
   addImageLayer(id: SceneId, src: string): void
   removeLayer(id: SceneId, index: number): void
@@ -173,6 +179,10 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         { holes: (get().doc.scenes[id].holes ?? []).filter((_, i) => i !== index) },
         false,
       ),
+    setSceneWidth: (id, width) => patchScene(id, { width }, false),
+    setCharacterScale: (id, scale) => patchScene(id, { characterScale: scale }, true),
+    setReferenceHeight: (height) =>
+      set({ doc: { ...get().doc, referenceHeight: height }, revision: get().revision + 1 }),
     addImageLayer: (id, src) =>
       mapLayers(id, (ls) => [...ls, { kind: 'image', band: 'background', src, fit: 'cover' }]),
     removeLayer: (id, index) => mapLayers(id, (ls) => ls.filter((_, i) => i !== index)),

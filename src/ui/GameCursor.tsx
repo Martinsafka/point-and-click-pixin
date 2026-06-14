@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { pickInteractable } from '../systems/interactions'
 import { containsPoint } from '../systems/walkable'
+import { cameraOffset } from '../engine/camera'
+import { designSize } from '../data/scene-config'
 import { storyStore } from '../state/story'
 import { gameDoc } from '../data/game'
 import type { CursorKind } from '../data/schema'
@@ -41,16 +43,20 @@ export function GameCursor() {
       }
       const state = storyStore.getState()
       const scene = gameDoc.scenes[state.currentScene]
-      const screen = { width: window.innerWidth, height: window.innerHeight }
-      // Hotspot → its kind; else walkable → walk; else (sky / walls) → default.
+      // Convert the viewport pointer to world coords (the camera may have scrolled)
+      // and resolve the walkable / interactables against the world size.
       let kind: CursorKind = 'default'
       if (scene) {
-        const hit = pickInteractable(scene.interactables, e.clientX, e.clientY, screen, state)
+        // Invert the camera: map the viewport pointer back to design space.
+        const design = designSize(scene, gameDoc.referenceHeight)
+        const wx = (e.clientX - cameraOffset.x) / cameraOffset.scale
+        const wy = (e.clientY - cameraOffset.y) / cameraOffset.scale
+        const hit = pickInteractable(scene.interactables, wx, wy, design, state)
         if (hit) {
           kind = hit.kind
         } else {
-          const px = scene.walkable.map((v, i) => v * (i % 2 === 0 ? screen.width : screen.height))
-          kind = containsPoint({ polygon: px }, e.clientX, e.clientY) ? 'walk' : 'default'
+          const px = scene.walkable.map((v, i) => v * (i % 2 === 0 ? design.width : design.height))
+          kind = containsPoint({ polygon: px }, wx, wy) ? 'walk' : 'default'
         }
       }
       setKind(kind)

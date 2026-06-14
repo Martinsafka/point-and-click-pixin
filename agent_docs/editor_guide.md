@@ -29,8 +29,9 @@ So your edits live in a draft until you publish them (Export → `content/game.j
 
 ## Core ideas
 
-- **Everything is a fraction of the screen (0–1).** Positions, polygons, sizes —
-  all resolution-independent. The engine turns them into pixels at runtime.
+- **Everything is a fraction of the scene (0–1).** Positions, polygons, sizes — all
+  resolution-independent. The engine resolves them against the scene's design space
+  (its **width** × the **reference height**) and fits that to the player's screen.
 - **Bands** stack the visuals: **background < mid < foreground** (paint order).
   The **mid** band is depth-sorted by feet position, and the character lives
   there — so foreground layers can pass in front of it.
@@ -45,7 +46,7 @@ preview immediately. The panel is split into top-level **tabs**:
 - **Scene** — Scenes, Walkable, Layers, Interactables.
 - **Items** — Items, Recipes.
 - **Characters** — character & animation setup (M5).
-- **Project** — Cursors, Document (export / import).
+- **Project** — Display, Cursors, Document (export / import).
 
 Each section within a tab **collapses** when you click its title (accordion); a
 persistent footer has **▶ Test in game** / **Discard**. Drag the divider between the
@@ -62,6 +63,13 @@ selected scene, and the preview shows it).
 
 - **+ Scene** — adds a blank scene (a default floor walkable + a spawn point).
 - **Delete** — removes the selected scene (always keeps at least one).
+- **width** — the scene's width in **design px** (its height is the project's
+  reference height — see **Project → Display**, default 1080). A scene wider than the
+  screen's aspect makes the game's **camera** scroll horizontally to follow the
+  character; the readout shows the aspect (e.g. `2.20:1`) and whether it scrolls.
+- **characters** — a per-scene **size multiplier** (%) for the player and NPCs, for
+  scenes drawn from a closer or different angle. It rides on top of the perspective
+  (Walkable depth), not instead of it; the preview updates on release.
 
 ### Walkable · _N_ pts
 
@@ -184,6 +192,14 @@ placeholder figure.
     (S / SE / E / NE / N) suffice — the W-side mirrors automatically.
   - **`pickup` / `interact`** — one-shots played on a pickup / use (loop off).
   - Names + frame lists commit when the field loses focus.
+
+### Display (global)
+
+The game's vertical **reference height** in px (default 1080) — the design resolution
+every scene is authored against. The player's screen height is fitted to it with one
+uniform scale, so characters and art keep a consistent size on any device (phone to
+4k). Each scene's **width** (Scene tab) is in these px; widening a scene past the
+screen's aspect is what makes the camera scroll.
 
 ### Cursors (global)
 

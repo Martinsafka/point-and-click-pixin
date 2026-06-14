@@ -143,17 +143,13 @@ M4 additions (raised after the core was done):
         triangulated minus obstacle holes, via earcut); replaces straight-line +
         clamp-and-slide so the character routes around concave walls + holes. Editor
         hole-drawing is the next editor piece.
-  - [ ] **Camera** — for scenes larger than the viewport: a world transform that
-        follows the character. The viewport **centres on the character** (especially
-        on smaller resolutions) and scrolls with them as they move sideways (bounds
-        + dead-zone). Depth / Y-sort / input already work in world space.
-    - ⚠️ **Overlays must follow the world, not the window.** Walkable, hit-areas
-      and every other overlay (editor + runtime) are currently positioned by
-      *screen* fractions; under a camera they must track the world/camera transform
-      and **must not resize relative to the window** — they pan with the scene, not
-      the viewport.
-    - ⚠️ **Scene / window resize is unresolved** — how the world maps to varying
-      viewport sizes (and the overlay coordinate space) must be worked out here.
+  - [x] **Camera** — a `world` container scaled so each scene's **design height fills
+        the viewport** (one uniform scale), panned horizontally to follow the
+        character (clamped; pillar-boxed when narrower). `GameDoc.referenceHeight` +
+        `SceneData.width` define the design space in px; `SceneData.characterScale`
+        sizes the cast per scene. Resize-safe (re-fits each frame, no re-mount); the
+        DOM cursor inverts the transform. _(Aspect-correct editor preview + dead-zone
+        smoothing are follow-ups.)_
   - [x] **Scene transitions** — fade out / in on `goTo` (the host fades through
         black around the destroy + async mount; the first scene fades in).
 - Editor:

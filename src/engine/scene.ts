@@ -8,9 +8,10 @@ import {
   type Ticker,
 } from 'pixi.js'
 import { Character } from '../entities/character'
+import { cameraOffset } from './camera'
 import { createSpriteView } from '../entities/sprite-view'
 import { placeholderView } from '../entities/placeholder-atlas'
-import { resolveDepthScale } from '../data/scene-config'
+import { resolveDepthScale, designSize, DEFAULT_REFERENCE_HEIGHT } from '../data/scene-config'
 import { depthScaleAt } from '../systems/depth'
 import { buildNavigation } from '../systems/navmesh'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
@@ -130,11 +131,20 @@ export async function mountScene(
   scene: SceneData,
   store: SceneStore,
   playerView: ViewDescriptor = placeholderView,
+  referenceHeight: number = DEFAULT_REFERENCE_HEIGHT,
 ): Promise<Scene> {
-  const screen: Size = { width: app.screen.width, height: app.screen.height }
-  const depthScale = resolveDepthScale(scene.depth, screen.height)
+  // Design space vs viewport: the scene is authored in a fixed design space
+  // (`scene.width` × `referenceHeight` px). The world Container holds it; the camera
+  // (below) fits the design *height* to the viewport with one uniform scale, then
+  // scrolls the width to follow the character — so fractions resolve against the
+  // design, and characters/art keep one size across resolutions.
+  const design: Size = designSize(scene, referenceHeight)
+  const depthScale = resolveDepthScale(scene.depth, design.height)
 
   app.stage.sortableChildren = true
+  const world = new Container()
+  world.sortableChildren = true
+  app.stage.addChild(world)
   const background = new Container()
   background.zIndex = 0
   const interactive = new Container()
@@ -142,7 +152,7 @@ export async function mountScene(
   interactive.sortableChildren = true // Y-sort by feet Y happens in here
   const foreground = new Container()
   foreground.zIndex = 20
-  app.stage.addChild(background, interactive, foreground)
+  world.addChild(background, interactive, foreground)
 
   const bandFor = (band: SceneBand): Container =>
     band === 'background' ? background : band === 'foreground' ? foreground : interactive
@@ -151,9 +161,9 @@ export async function mountScene(
   const conditional: { display: Container; when: Condition }[] = []
 
   for (const layer of scene.layers) {
-    const display = await buildLayer(layer, screen)
+    const display = await buildLayer(layer, design)
     if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
-      const anchorY = layer.anchorYFrac * screen.height
+      const anchorY = layer.anchorYFrac * design.height
       display.zIndex = anchorY
       display.scale.set(depthScaleAt(anchorY, depthScale))
     }
@@ -171,15 +181,37 @@ export async function mountScene(
   const unsubscribeVisibility =
     conditional.length > 0 ? store.subscribe(refreshVisibility) : () => {}
 
-  const walkablePx = resolvePolygon(scene.walkable, screen)
-  const holesPx = (scene.holes ?? []).map((h) => resolvePolygon(h, screen))
+  const walkablePx = resolvePolygon(scene.walkable, design)
+  const holesPx = (scene.holes ?? []).map((h) => resolvePolygon(h, design))
   const character = new Character(
     await createSpriteView(playerView),
     depthScale,
     buildNavigation(walkablePx, holesPx),
+    scene.characterScale ?? 1,
   )
   interactive.addChild(character.displayObject)
-  character.setPosition(scene.spawn.xFrac * screen.width, scene.spawn.yFrac * screen.height)
+  character.setPosition(scene.spawn.xFrac * design.width, scene.spawn.yFrac * design.height)
+
+  // Camera: height-anchored + resize-safe. Each frame we read the *current*
+  // viewport (so a window resize re-fits with no re-mount), scale the world so the
+  // design height fills it, then pan horizontally to keep the character centred —
+  // clamped to the world bounds, or centred (pillar-boxed) when the world is
+  // narrower than the viewport. `cameraOffset` lets the DOM cursor invert this.
+  const place = (content: number, viewport: number, target: number): number =>
+    content <= viewport
+      ? (viewport - content) / 2
+      : Math.max(viewport - content, Math.min(0, viewport / 2 - target))
+  const updateCamera = () => {
+    const s = app.screen.height / design.height
+    world.scale.set(s)
+    const x = place(design.width * s, app.screen.width, character.displayObject.x * s)
+    const y = place(design.height * s, app.screen.height, character.displayObject.y * s)
+    world.position.set(x, y)
+    cameraOffset.x = x
+    cameraOffset.y = y
+    cameraOffset.scale = s
+  }
+  updateCamera()
 
   app.stage.eventMode = 'static'
   app.stage.hitArea = app.screen
@@ -187,7 +219,7 @@ export async function mountScene(
   const onTap = (event: FederatedPointerEvent) => {
     const local = interactive.toLocal(event.global)
     const state = store.getState()
-    const hit = pickInteractable(scene.interactables, local.x, local.y, screen, state)
+    const hit = pickInteractable(scene.interactables, local.x, local.y, design, state)
     const selected = state.selectedItem
     if (selected) store.getState().select(null) // any click consumes the selection
     // "look at" flavour (inspect has its own `text`, handled below).
@@ -223,6 +255,7 @@ export async function mountScene(
 
   const onTick = (ticker: Ticker) => {
     character.update(ticker.deltaMS)
+    updateCamera()
   }
   app.ticker.add(onTick)
 
@@ -239,9 +272,7 @@ export async function mountScene(
       app.stage.cursor = 'default'
       app.stage.sortableChildren = false
       character.destroy()
-      background.destroy({ children: true })
-      interactive.destroy({ children: true })
-      foreground.destroy({ children: true })
+      world.destroy({ children: true })
     },
   }
 }
@@ -302,6 +333,7 @@ export async function mountPreview(
   scene: SceneData,
   opts: PreviewOptions = {},
   playerView: ViewDescriptor = placeholderView,
+  referenceHeight: number = DEFAULT_REFERENCE_HEIGHT,
 ): Promise<Scene> {
   const screen: Size = { width: app.screen.width, height: app.screen.height }
   const depthScale = resolveDepthScale(scene.depth, screen.height)
@@ -344,12 +376,18 @@ export async function mountPreview(
     bandFor(layer.band).addChild(display)
   }
 
-  // Static character placeholder at the spawn point (shows scale + position).
+  // Static character placeholder at the spawn point (shows scale + position). Its
+  // size matches the game: depth scale × the scene's characterScale × the preview's
+  // own height-fit (box height ÷ design height), so the % slider reads truthfully.
   const view = await createSpriteView(playerView)
   const feetX = scene.spawn.xFrac * screen.width
   const feetY = scene.spawn.yFrac * screen.height
   view.container.position.set(feetX, feetY)
-  view.container.scale.set(depthScaleAt(feetY, depthScale))
+  view.container.scale.set(
+    depthScaleAt(feetY, depthScale) *
+      (scene.characterScale ?? 1) *
+      (screen.height / referenceHeight),
+  )
   view.container.zIndex = feetY
   view.setPose('idle', 'S')
   interactive.addChild(view.container)
@@ -383,6 +421,7 @@ export function createSceneHost(
   scenes: Record<SceneId, SceneData>,
   store: SceneStore,
   playerView: ViewDescriptor = placeholderView,
+  referenceHeight: number = DEFAULT_REFERENCE_HEIGHT,
 ): SceneHost {
   let current: Scene | undefined
   let destroyed = false
@@ -428,7 +467,7 @@ export function createSceneHost(
     if (destroyed) return
     current?.destroy()
     current = undefined
-    const mounted = await mountScene(app, scenes[id], store, playerView)
+    const mounted = await mountScene(app, scenes[id], store, playerView, referenceHeight)
     if (destroyed || shownId !== id) {
       mounted.destroy()
       return
