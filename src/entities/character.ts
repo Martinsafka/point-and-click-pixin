@@ -1,7 +1,7 @@
 import type { CharacterView } from './character-view'
 import { facingFromVector, WALK_SPEED, type Facing, type MoveState } from '../systems/movement'
 import { depthScaleAt, type DepthScale } from '../systems/depth'
-import { clampToArea, type WalkArea } from '../systems/walkable'
+import type { Navigation, Point } from '../systems/navmesh'
 
 /**
  * One logical entity = mutable per-frame state + a swappable view. Every
@@ -9,15 +9,16 @@ import { clampToArea, type WalkArea } from '../systems/walkable'
  * never routed through Zustand (agent_docs/architecture.md, "State").
  *
  * Positioned by its **feet** (x, y): the view sits on it, depth scale + Y-sort
- * come from its Y, and movement is clamped to an optional walkable area. An
- * optional `onArrive` callback fires once the character reaches a target — used
- * to trigger an interaction after walking to it.
+ * come from its Y. It walks a **nav-mesh path** (waypoints) to a target — routing
+ * around concave walls + obstacle holes instead of a straight line — and an
+ * optional `onArrive` fires once it reaches the final waypoint (used to trigger an
+ * interaction after walking to it).
  */
 export class Character {
   private x = 0
   private y = 0
-  private targetX: number | null = null
-  private targetY: number | null = null
+  private path: Point[] = []
+  private pathIndex = 0
   private onArrive?: () => void
   private action?: string
   private facing: Facing = 'S'
@@ -27,7 +28,7 @@ export class Character {
   constructor(
     private readonly view: CharacterView,
     private readonly depthScale: DepthScale,
-    private readonly walkable?: WalkArea,
+    private readonly nav?: Navigation,
   ) {
     this.syncView()
   }
@@ -37,11 +38,13 @@ export class Character {
     return this.view.container
   }
 
-  /** Place the character instantly (e.g. on scene entry), cancelling any walk. */
+  /** Place the character instantly (clamped onto the walkable), cancelling any walk. */
   setPosition(x: number, y: number): void {
-    this.moveTo(x, y)
-    this.targetX = null
-    this.targetY = null
+    const p = this.nav ? this.nav.clamp(x, y) : { x, y }
+    this.x = p.x
+    this.y = p.y
+    this.path = []
+    this.pathIndex = 0
     this.onArrive = undefined
     this.action = undefined
     this.state = 'idle'
@@ -49,13 +52,14 @@ export class Character {
   }
 
   /**
-   * Walk toward a feet target (clamped onto the walkable area). `onArrive` fires
-   * once, after the character reaches it — replacing any previous pending one.
+   * Walk to a feet target along a nav-mesh path. `onArrive` fires once (after an
+   * optional one-shot `action`), replacing any pending one. With no nav, walks
+   * straight to the point.
    */
   setTarget(x: number, y: number, onArrive?: () => void, action?: string): void {
-    const t = this.walkable ? clampToArea(this.walkable, x, y) : { x, y }
-    this.targetX = t.x
-    this.targetY = t.y
+    this.path = this.nav ? this.nav.findPath(this.x, this.y, x, y) : [{ x, y }]
+    if (this.path.length === 0) this.path = [{ x, y }]
+    this.pathIndex = 0
     this.onArrive = onArrive
     this.action = action
   }
@@ -65,54 +69,48 @@ export class Character {
     let arrived: (() => void) | undefined
     let action: string | undefined
 
-    if (this.targetX !== null && this.targetY !== null) {
-      const dx = this.targetX - this.x
-      const dy = this.targetY - this.y
-      const dist = Math.hypot(dx, dy)
-      const step = (this.speed * deltaMS) / 1000
-
-      if (dist <= step || dist < 0.5) {
-        this.moveTo(this.targetX, this.targetY)
-        this.targetX = null
-        this.targetY = null
+    if (this.pathIndex < this.path.length) {
+      let step = (this.speed * deltaMS) / 1000
+      // Consume waypoints — several can be crossed in one frame on short segments.
+      while (this.pathIndex < this.path.length && step > 0) {
+        const wp = this.path[this.pathIndex]
+        const dx = wp.x - this.x
+        const dy = wp.y - this.y
+        const d = Math.hypot(dx, dy)
+        if (d <= step || d < 0.5) {
+          this.x = wp.x
+          this.y = wp.y
+          step -= d
+          this.pathIndex += 1
+        } else {
+          this.facing = facingFromVector(dx, dy)
+          this.state = 'walk'
+          this.x += (dx / d) * step
+          this.y += (dy / d) * step
+          step = 0
+        }
+      }
+      if (this.pathIndex >= this.path.length) {
+        this.path = []
+        this.pathIndex = 0
         this.state = 'idle'
         arrived = this.onArrive
         this.onArrive = undefined
         action = this.action
         this.action = undefined
-      } else {
-        this.facing = facingFromVector(dx, dy)
-        this.state = 'walk'
-        this.moveTo(this.x + (dx / dist) * step, this.y + (dy / dist) * step)
       }
     }
 
     this.syncView()
     // After syncView so this frame is consistent. On arrival an optional one-shot
-    // (pickup / interact) plays first and the callback fires on its completion;
-    // otherwise it fires now. The callback may trigger a scene swap (the host
-    // defers that past the tick).
-    if (action) {
-      this.view.playOnce(action, this.facing, () => arrived?.())
-    } else {
-      arrived?.()
-    }
+    // plays first and the callback fires on its completion; otherwise it fires now.
+    // The callback may trigger a scene swap (the host defers that past the tick).
+    if (action) this.view.playOnce(action, this.facing, () => arrived?.())
+    else arrived?.()
   }
 
   destroy(): void {
     this.view.destroy()
-  }
-
-  /** Move to a point, clamped to the walkable area if one is set. */
-  private moveTo(x: number, y: number): void {
-    if (this.walkable) {
-      const c = clampToArea(this.walkable, x, y)
-      this.x = c.x
-      this.y = c.y
-    } else {
-      this.x = x
-      this.y = y
-    }
   }
 
   private syncView(): void {

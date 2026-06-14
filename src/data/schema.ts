@@ -181,6 +181,8 @@ export interface SceneData {
   layers: LayerData[]
   /** Where the character may walk (polygon as screen fractions). */
   walkable: Polygon
+  /** Obstacles cut out of the walkable area (polygons as screen fractions). */
+  holes?: Polygon[]
   interactables: InteractableData[]
   depth: DepthConfig
   /** Character spawn (feet), as fractions of the screen. */

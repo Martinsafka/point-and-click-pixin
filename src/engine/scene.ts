@@ -12,7 +12,7 @@ import { createSpriteView } from '../entities/sprite-view'
 import { placeholderView } from '../entities/placeholder-atlas'
 import { resolveDepthScale } from '../data/scene-config'
 import { depthScaleAt } from '../systems/depth'
-import type { WalkArea } from '../systems/walkable'
+import { buildNavigation } from '../systems/navmesh'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
 import { checkCondition, type StoryState, type StoryStore } from '../systems/conditions'
 import type {
@@ -171,8 +171,13 @@ export async function mountScene(
   const unsubscribeVisibility =
     conditional.length > 0 ? store.subscribe(refreshVisibility) : () => {}
 
-  const walkable: WalkArea = { polygon: resolvePolygon(scene.walkable, screen) }
-  const character = new Character(await createSpriteView(playerView), depthScale, walkable)
+  const walkablePx = resolvePolygon(scene.walkable, screen)
+  const holesPx = (scene.holes ?? []).map((h) => resolvePolygon(h, screen))
+  const character = new Character(
+    await createSpriteView(playerView),
+    depthScale,
+    buildNavigation(walkablePx, holesPx),
+  )
   interactive.addChild(character.displayObject)
   character.setPosition(scene.spawn.xFrac * screen.width, scene.spawn.yFrac * screen.height)
 

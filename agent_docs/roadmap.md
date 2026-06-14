@@ -139,9 +139,10 @@ M4 additions (raised after the core was done):
 ### M6 — Movement & camera
 
 - Runtime:
-  - [ ] **Pathfinding** — A\* over a walk-mesh (the walkable polygon, optionally
-        with holes/obstacles); replaces straight-line + clamp-and-slide so the
-        character routes around obstacles.
+  - [x] **Pathfinding** — A\* + funnel over a **nav-mesh** (walkable polygon
+        triangulated minus obstacle holes, via earcut); replaces straight-line +
+        clamp-and-slide so the character routes around concave walls + holes. Editor
+        hole-drawing is the next editor piece.
   - [ ] **Camera** — for scenes larger than the viewport: a world transform that
         follows the character. The viewport **centres on the character** (especially
         on smaller resolutions) and scrolls with them as they move sideways (bounds

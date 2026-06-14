@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M6: nav-mesh pathfinding (A\* + funnel)
+**What:** The character now walks a **nav-mesh path** instead of a straight line. New `systems/navmesh.ts`: triangulate the walkable polygon minus obstacle holes (earcut), A\* over the triangle adjacency graph, then the **funnel** (string-pulling) algorithm → a smooth shortest path of waypoints. Schema: `SceneData.holes?: Polygon[]`. `Character` rewritten to **follow waypoints** (`findPath` on `setTarget`, walk waypoint-to-waypoint, clamp via the mesh); `scene.ts` builds the navigation from the resolved walkable + holes. **New dependency: `earcut`** (3.0.2, ISC, ~2 kB) — the de-facto polygon triangulator; hand-rolling hole-aware triangulation is error-prone.
+**Why:** M6 pathfinding — straight-line + clamp-and-slide cut corners / hugged walls; the nav-mesh routes around concave walls + holes with natural shortest paths.
+**How:**
+- **Nav-mesh, not grid** (the user's choice): exact geometry, smooth funnel paths, scales to large open areas; holes = polygons cut from the triangulation. Pure geometry (no Pixi) → unit-testable.
+- **Verified by a Node test** (`--experimental-strip-types`, 12 checks): a straight path on a convex square, routing around an **L-shape**'s inner corner, **avoiding a central hole**, plus clamp / contains — which confirmed the funnel portal orientation.
+- The demo's walkables are convex quads (so straight paths) — the win shows on concave areas + holes (editor hole-drawing is the next M6 editor piece).
+- **Verified:** format / typecheck / lint / build green; nav test 12/12; dev smoke 200.
+**Follow-ups:** editor **hole drawing** (M6 editor); the cursor's walk-check still uses the outer polygon (ignores holes); a priority-queue A\* if meshes grow large; then the **camera**.
+
 ### 2026-06-14 — M6: scene transitions (fade through black)
 **What:** Scene swaps now **fade through black** instead of hard-cutting. `createSceneHost` adds a black overlay above every scene (a huge rect, `eventMode none`), animated on `app.ticker`: on a `goTo`, fade out → destroy old + mount new → fade in. The first scene fades in from black (a soft intro).
 **Why:** M6 — the `goTo` swap was an instant cut with a possible blank frame during the async mount; the fade hides both.
