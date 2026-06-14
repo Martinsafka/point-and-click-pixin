@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { dialogueStore } from '../state/dialogue'
 import { useDialogue } from './use-dialogue'
+import { speakBlip } from '../audio/voice'
 
 /** Chars per second the typewriter reveals a line at. */
 const TYPE_CPS = 55
@@ -16,6 +17,7 @@ export function DialogueBox() {
   const speaker = useDialogue((s) => s.speaker)
   const line = useDialogue((s) => s.line)
   const choices = useDialogue((s) => s.choices)
+  const voice = useDialogue((s) => s.voice)
   const [revealed, setRevealed] = useState(0)
   const [typing, setTyping] = useState(line)
   // Reset the reveal when the line changes — a render-phase adjustment (React re-runs
@@ -39,6 +41,13 @@ export function DialogueBox() {
     }, 1000 / TYPE_CPS)
     return () => clearInterval(id)
   }, [line])
+
+  // Blip the voice as each (non-space) character is revealed — throttled in speakBlip.
+  useEffect(() => {
+    if (!active) return
+    const ch = line[revealed - 1]
+    if (ch && !/\s/.test(ch)) speakBlip(voice ?? undefined)
+  }, [revealed, active, line, voice])
 
   if (!active) return null
   const done = revealed >= line.length

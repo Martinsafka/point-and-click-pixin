@@ -23,6 +23,13 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M7 step 4c: dialogue voice (gibberish blips + per-NPC clips) — step 4 complete
+**What:** Dialogue lines now "speak" as they type. New `src/audio/voice.ts`: `speakBlip` plays a short blip per revealed non-space char (throttled ~70 ms so it reads as speech, not a buzz) — default a **procedural** square-wave note pitched by `NpcDef.voice.pitch`; an uploaded `voice.sound` replaces it with a custom blip. Wired through: `VoiceConfig { sound?, pitch? }` + `NpcDef.voice`; the `dialogueStore` carries the current speaker's voice (`deps.voiceOf`, mirroring `nameOf`); the `DialogueBox` blips on each reveal; the scene resolves `voiceOf(speaker, partner)`. Editor: a **voice** row in the NPC modal (pitch + blip upload + a **Test** button via `previewVoice`). Demo: the `stranger` speaks at pitch 0.8.
+**Why:** M7 step 4c — the demo voice + uploadable per-NPC voice. **Completes M7 step 4** (4a actor registry + `wait`, 4b dialogue runtime + UI, 4c voice, 4d editor).
+**How:** Blips are a side effect of `revealed` advancing (a small effect keyed on it), throttled inside `speakBlip`; the uploaded clip reuses `audio.ts` `playClip`; procedural is Web Audio (oscillator + a short gain envelope). Respects mute (`isMuted`); the `AudioContext` is lazy + `resume`d (dialogue starts from a click, so it's allowed). Per-line VO (per-node audio) + a player voice stay follow-ups — this is the per-NPC blip model.
+**Verified:** format / typecheck / lint / build green; `content/game.json` valid; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** M7 **step 5 (stealth)** + **step 6 (NPC routine)** remain; per-line VO is a nice-to-have.
+
 ### 2026-06-14 — M7 step 4d.3: per-NPC appearance + placement dialogue override
 **What:** NPCs can have their own look. `NpcDef.view?: ViewDescriptor` (atlas + clips); the runtime renders `cast[npc].view ?? placeholder`. The player's `CharacterEditor` is **generalised to any view** (`{ view, onCreate, onChange, onRemove }`) and reused: the player wires its `createPlayer` / `updatePlayer` / `removePlayer`, and the NPC modal gains an **Appearance** section wired to `patchNpcDef`. Plus a **placement dialogue override** dropdown in `NpcList` (per-scene; falls back to the cast `NpcDef.dialog`).
 **Why:** M7 step 4d.3 — finishes the NPC definition editor's appearance (pinned earlier into 4d) + surfaces the per-placement override the schema already had.

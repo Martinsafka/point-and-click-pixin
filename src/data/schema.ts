@@ -260,6 +260,18 @@ export type InteractableData =
     }
 
 /**
+ * An NPC's "voice" — the blips played while a dialogue line types out. Default is
+ * procedural gibberish (an oscillator, pitched per NPC); an uploaded `sound` replaces
+ * it with a custom blip clip.
+ */
+export interface VoiceConfig {
+  /** Uploaded blip sound (data-URL) — replaces the procedural gibberish. */
+  sound?: string
+  /** Procedural pitch multiplier (default 1) — gives each NPC a distinct voice. */
+  pitch?: number
+}
+
+/**
  * A character in the global cast (the player is "character 0"). Identity for now —
  * appearance / sounds / dialogue / routine layer in over M7. A cast NPC is placed
  * into a scene via `SceneData.npcs`, and lives in at most one scene at a time.
@@ -281,6 +293,8 @@ export interface NpcDef {
   inspect?: { text?: string; audio?: string }
   /** The NPC's appearance (atlas + clips); absent → the built-in placeholder figure. */
   view?: ViewDescriptor
+  /** The NPC's dialogue voice (procedural pitch / an uploaded blip); absent → default. */
+  voice?: VoiceConfig
 }
 
 /** A patrol route for a placed NPC: waypoints (design-space fractions) walked in

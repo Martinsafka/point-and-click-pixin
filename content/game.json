@@ -365,7 +365,8 @@
       "speed": 0.7,
       "dialog": "stranger",
       "dialogWhen": { "kind": "hasItem", "item": "key" },
-      "inspect": { "text": "A wary stranger, sizing me up. They won't talk to someone empty-handed." }
+      "inspect": { "text": "A wary stranger, sizing me up. They won't talk to someone empty-handed." },
+      "voice": { "pitch": 0.8 }
     }
   },
   "dialogs": {

@@ -4,6 +4,8 @@ import { EditorModal } from './EditorModal'
 import { ConditionEditor } from './ConditionEditor'
 import { CharacterEditor } from './CharacterEditor'
 import { placeholderView } from '../entities/placeholder-atlas'
+import { previewVoice } from '../audio/voice'
+import type { VoiceConfig } from '../data/schema'
 
 /** Drop an inspect with no text + no audio (so an emptied form clears the field). */
 function trimInspect(inspect: { text?: string; audio?: string }) {
@@ -12,11 +14,19 @@ function trimInspect(inspect: { text?: string; audio?: string }) {
   return text || audio ? { text, audio } : undefined
 }
 
+/** Drop a voice with default pitch + no sound (so an emptied form clears the field). */
+function trimVoice(voice: VoiceConfig): VoiceConfig | undefined {
+  const pitch = voice.pitch && voice.pitch !== 1 ? voice.pitch : undefined
+  const sound = voice.sound || undefined
+  return pitch || sound ? { pitch, sound } : undefined
+}
+
 /**
- * The NPC's definition (modal): how the player interacts with it — a **dialogue** (from
- * the Dialogs library) gated by `dialogWhen`, with an **inspect** ("look at") fallback
- * when the gate fails or there's no dialogue. Appearance + voice land here next
- * (4d.3 / 4c). Reads the cast NPC live from the store; edits via `patchNpcDef`.
+ * The NPC's full definition (modal): a **dialogue** (from the Dialogs library) gated by
+ * `dialogWhen`, with an **inspect** ("look at") fallback; its **voice** (procedural
+ * pitch / an uploaded blip, with a Test); and its **appearance** (atlas + clips, reusing
+ * the player's `CharacterEditor`). Reads the cast NPC live from the store; edits via
+ * `patchNpcDef`.
  */
 export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => void }) {
   const s = () => editorStore.getState()
@@ -33,6 +43,16 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
     const reader = new FileReader()
     reader.onload = () =>
       s().patchNpcDef(npcId, { inspect: { ...npc.inspect, audio: String(reader.result) } })
+    reader.readAsDataURL(file)
+  }
+
+  const onVoiceSound = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () =>
+      s().patchNpcDef(npcId, { voice: trimVoice({ ...npc.voice, sound: String(reader.result) }) })
     reader.readAsDataURL(file)
   }
 
@@ -94,6 +114,41 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
             ✕
           </button>
         )}
+      </div>
+
+      <div className="intr-form__field">
+        <span>voice</span>
+        <input
+          className="logic__in"
+          type="number"
+          step="0.1"
+          min="0.3"
+          title="pitch (× base); 1 = default"
+          value={npc.voice?.pitch ?? 1}
+          onChange={(e) =>
+            s().patchNpcDef(npcId, {
+              voice: trimVoice({ ...npc.voice, pitch: Number(e.target.value) || 1 }),
+            })
+          }
+        />
+        <label className="editor__import">
+          {npc.voice?.sound ? 'blip ✓' : '+ Blip'}
+          <input type="file" accept="audio/*" hidden onChange={onVoiceSound} />
+        </label>
+        {npc.voice?.sound && (
+          <button
+            type="button"
+            className="logic__del"
+            onClick={() =>
+              s().patchNpcDef(npcId, { voice: trimVoice({ ...npc.voice, sound: undefined }) })
+            }
+          >
+            ✕
+          </button>
+        )}
+        <button type="button" onClick={() => previewVoice(npc.voice ?? undefined)}>
+          Test
+        </button>
       </div>
 
       <div className="intr-form__field intr-form__field--col">

@@ -35,6 +35,7 @@ import type {
   SceneId,
   TransitionConfig,
   ViewDescriptor,
+  VoiceConfig,
 } from '../data/schema'
 
 /** Viewport size in CSS pixels. */
@@ -329,6 +330,13 @@ export async function mountScene(
     return cast[id]?.name ?? id
   }
 
+  // Resolve a `speaker` (or undefined → the partner) to its voice; player / unknown →
+  // none (the default procedural blip).
+  const voiceOf = (speaker: string | undefined, partnerId?: string): VoiceConfig | undefined => {
+    const id = speaker ?? partnerId
+    return id && id !== 'player' ? cast[id]?.voice : undefined
+  }
+
   // Start a conversation: pause + turn the partner NPC to the player (and the player
   // to it), then drive the dialogue store (which resumes the NPC on end). Node / choice
   // effects run back through `run` (engine + state, addressing the partner as subject).
@@ -344,6 +352,7 @@ export async function mountScene(
       run: (fx, subj) => run(fx, subj ?? partner?.id ?? 'player'),
       check: (cond) => checkCondition(store.getState(), cond),
       nameOf: (speaker) => nameOf(speaker, partner?.id),
+      voiceOf: (speaker) => voiceOf(speaker, partner?.id),
       onEnd: () => partner?.char.resume(),
     })
   }

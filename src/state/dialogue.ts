@@ -1,5 +1,5 @@
 import { createStore } from 'zustand/vanilla'
-import type { Condition, Dialog, DialogNodeId, Effect } from '../data/schema'
+import type { Condition, Dialog, DialogNodeId, Effect, VoiceConfig } from '../data/schema'
 
 /** A reply offered at a choice node (`index` points into the node's original `choices`). */
 export interface DialogueChoiceView {
@@ -16,6 +16,8 @@ export interface DialogueState {
   line: string
   /** Replies at a choice node, or null for a click-to-continue line. */
   choices: DialogueChoiceView[] | null
+  /** The current speaker's voice (blips played while the line types), or null. */
+  voice: VoiceConfig | null
 }
 
 /**
@@ -31,6 +33,8 @@ export interface DialogueDeps {
   check: (cond: Condition) => boolean
   /** Resolve a `speaker` id (or undefined → the partner) to a display name. */
   nameOf: (speaker: string | undefined) => string
+  /** Resolve a `speaker` id (or undefined → the partner) to its voice (or none). */
+  voiceOf: (speaker: string | undefined) => VoiceConfig | undefined
   /** The conversation partner's actor id — the effect subject + default speaker. */
   subject: string
   /** Called once when the conversation ends (e.g. the scene resumes the NPC). */
@@ -48,7 +52,7 @@ export interface DialogueStore extends DialogueState {
   end(): void
 }
 
-const IDLE: DialogueState = { active: false, speaker: null, line: '', choices: null }
+const IDLE: DialogueState = { active: false, speaker: null, line: '', choices: null, voice: null }
 const MAX_HOPS = 50 // guards branch / passthrough redirect loops
 
 export function createDialogueStore() {
@@ -103,7 +107,13 @@ export function createDialogueStore() {
             .filter(({ c }) => !c.when || d.check(c.when))
             .map(({ c, index }) => ({ text: c.text, index }))
         : null
-      set({ active: true, speaker: d.nameOf(node.speaker), line: node.text ?? '', choices })
+      set({
+        active: true,
+        speaker: d.nameOf(node.speaker),
+        line: node.text ?? '',
+        choices,
+        voice: d.voiceOf(node.speaker) ?? null,
+      })
     }
 
     return {

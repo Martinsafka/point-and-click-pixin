@@ -215,19 +215,20 @@ First, a shared **actor registry** (the scene registers `player` + live NPCs by 
 `runEffects` lifts to a shared module over it) so engine effects (`playAnim` / `wait` /
 pause / face) fire from triggers, clicks **and** dialogue.
 
-- [ ] **4a — Actor registry + `wait` effect.** Shared actor registry + lifted `runEffects`;
+- [x] **4a — Actor registry + `wait` effect.** Shared actor registry + lifted `runEffects`;
       `Character.pause()` / `resume()` / `pauseFor(ms)` / `faceToward()`. The **`wait`**
       effect (`{ kind: 'wait', ms, anim? }`) lingers the *entering* NPC (optionally looping
       `anim`), **never the player**; "longest wins" so `wait` + `playAnim` compose.
-- [ ] **4b — Dialogue runtime + UI.** `GameDoc.dialogs` (reusable **library**) +
+- [x] **4b — Dialogue runtime + UI.** `GameDoc.dialogs` (reusable **library**) +
       `NpcDef.dialog` (default) + `NpcPlacement.dialog` (**per-scene override**). `Dialog
       { start, nodes }`; `DialogNode { speaker?, text?, effects?, choices?, next?, branch? }`
       — `branch` is a **conditional router** (state-driven openings). A `dialogueStore`
       runtime; `startDialog` made real; `DialogueBox` UI (**typewriter** + choices). Click
       an NPC → walk + talk → it **pauses + faces the player**, resumes its loop / pingpong.
-- [ ] **4c — Voice.** Procedural **gibberish** blips while a line reveals (the demo
-      default) **+ uploadable per-NPC voice clips** that replace it (real VO).
-- [ ] **4d — Editor.** The NPC's **full-definition editor**, opened in a **modal** (room to
+- [x] **4c — Voice.** Procedural **gibberish** blips while a line reveals (the demo
+      default) **+ uploadable per-NPC voice clips** that replace it. _(Per-NPC blip model;
+      per-line VO is a follow-up.)_
+- [x] **4d — Editor.** The NPC's **full-definition editor**, opened in a **modal** (room to
       work — and the future flowchart). Three parts:
   - **Appearance** — per-NPC atlas + clips (`NpcDef.view: ViewDescriptor`), by **generalising
     the player's `CharacterEditor`** to any view (`{ view, onCreate, onChange, onRemove }`);
