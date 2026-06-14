@@ -10,6 +10,8 @@ import {
 import { Character } from '../entities/character'
 import { cameraOffset } from './camera'
 import { runEffects } from './effects'
+import { sceneHit } from './hotspots'
+import { dialogueStore } from '../state/dialogue'
 import { createSpriteView } from '../entities/sprite-view'
 import { placeholderView } from '../entities/placeholder-atlas'
 import { resolveDepthScale, designSize, DEFAULT_REFERENCE_HEIGHT } from '../data/scene-config'
@@ -20,6 +22,9 @@ import { containsPoint } from '../systems/walkable'
 import { checkCondition, type StoryState, type StoryStore } from '../systems/conditions'
 import type {
   Condition,
+  CursorKind,
+  Dialog,
+  DialogId,
   Effect,
   InteractableData,
   LayerData,
@@ -126,6 +131,9 @@ const ONE_SHOT: Partial<Record<InteractableData['kind'], string>> = {
   interact: 'interact',
 }
 
+/** How far (design px) beside an NPC the player stops to talk, so they don't overlap. */
+const TALK_GAP = 90
+
 /** Drive a placed NPC along its patrol route (once / loop / pingpong). Each leg is
  *  nav-routed (so it rounds holes), chained via the character's onArrive callback. */
 function startNpcPath(npc: Character, path: NpcPath | undefined, design: Size): void {
@@ -166,6 +174,7 @@ export async function mountScene(
   playerView: ViewDescriptor = placeholderView,
   referenceHeight: number = DEFAULT_REFERENCE_HEIGHT,
   cast: Record<NpcId, NpcDef> = {},
+  dialogs: Record<DialogId, Dialog> = {},
 ): Promise<Scene> {
   // Design space vs viewport: the scene is authored in a fixed design space
   // (`scene.width` × `referenceHeight` px). The world Container holds it; the camera
@@ -232,7 +241,7 @@ export async function mountScene(
   // NPCs: characters placed in the scene. They share the nav-mesh + depth, Y-sort
   // with the player, and `when` gates presence. The actor registry addresses every
   // live character by id (`'player'` + cast ids) so engine effects resolve targets.
-  const npcs: { id: string; character: Character }[] = []
+  const npcs: { id: string; character: Character; dialog?: Dialog; cursor?: CursorKind }[] = []
   const actors = new Map<string, Character>([['player', character]])
   for (const placement of scene.npcs ?? []) {
     // The cast def has no appearance yet → placeholder for all; the placement's `npc`
@@ -251,7 +260,15 @@ export async function mountScene(
       npcChar.displayObject.visible = checkCondition(store.getState(), placement.when)
       conditional.push({ display: npcChar.displayObject, when: placement.when })
     }
-    npcs.push({ id: placement.npc, character: npcChar })
+    // Resolve the NPC's dialogue: the placement override, else the cast default.
+    const dialogId = placement.dialog ?? def?.dialog
+    const dialog = dialogId ? dialogs[dialogId] : undefined
+    npcs.push({
+      id: placement.npc,
+      character: npcChar,
+      dialog,
+      cursor: dialog ? 'talk' : undefined,
+    })
     actors.set(placement.npc, npcChar)
     startNpcPath(npcChar, placement.path, design)
   }
@@ -284,11 +301,90 @@ export async function mountScene(
   }
   updateCamera()
 
-  // Effects from a click, a trigger, or (later) a dialogue node, dispatched over the
-  // actor registry by the shared runtime. `subject` is the actor the batch is "about"
-  // (a trigger's enterer) — it receives `wait`; clicks default to the player.
-  const run = (effects: readonly Effect[], subject = 'player') =>
+  // Resolve a `speaker` id (or undefined → the conversation partner) to a display name.
+  const nameOf = (speaker: string | undefined, partnerId?: string): string => {
+    const id = speaker ?? partnerId
+    if (!id) return ''
+    if (id === 'player') return 'You'
+    return cast[id]?.name ?? id
+  }
+
+  // Start a conversation: pause + turn the partner NPC to the player (and the player
+  // to it), then drive the dialogue store (which resumes the NPC on end). Node / choice
+  // effects run back through `run` (engine + state, addressing the partner as subject).
+  const beginDialogue = (dialog: Dialog, partner?: { id: string; char: Character }) => {
+    if (partner) {
+      partner.char.pause()
+      partner.char.faceToward(character.displayObject.x, character.displayObject.y)
+      character.faceToward(partner.char.displayObject.x, partner.char.displayObject.y)
+    }
+    dialogueStore.getState().begin({
+      dialog,
+      subject: partner?.id ?? 'player',
+      run: (fx, subj) => run(fx, subj ?? partner?.id ?? 'player'),
+      check: (cond) => checkCondition(store.getState(), cond),
+      nameOf: (speaker) => nameOf(speaker, partner?.id),
+      onEnd: () => partner?.char.resume(),
+    })
+  }
+
+  // Effects from a click, a trigger, or a dialogue node, dispatched over the actor
+  // registry by the shared runtime. `subject` is the actor the batch is "about" (a
+  // trigger's enterer / the dialogue partner) — it receives `wait`; clicks default to
+  // the player. `startDialog` is handled here (it needs the scene's dialogs + actors).
+  function run(effects: readonly Effect[], subject = 'player'): void {
     runEffects(effects, actors, store, subject)
+    for (const e of effects) {
+      if (e.kind !== 'startDialog') continue
+      const dialog = dialogs[e.dialog]
+      if (!dialog) continue
+      const char = subject !== 'player' ? actors.get(subject) : undefined
+      beginDialogue(dialog, char ? { id: subject, char } : undefined)
+    }
+  }
+
+  // Talk to an NPC: click it → walk beside it → begin its dialogue. Only NPCs with a
+  // resolved dialogue are interactive (others let the click fall through to a walk).
+  for (const n of npcs) {
+    if (!n.dialog) continue
+    const { character: npcChar, id, dialog } = n
+    npcChar.displayObject.eventMode = 'static'
+    npcChar.displayObject.cursor = 'none' // keep the DOM cursor; a talk-cursor is a follow-up
+    npcChar.displayObject.on('pointertap', (e: FederatedPointerEvent) => {
+      e.stopPropagation() // don't also walk to the raw click point
+      if (dialogueStore.getState().active) return
+      const npcX = npcChar.displayObject.x
+      const npcY = npcChar.displayObject.y
+      const side = character.displayObject.x <= npcX ? -1 : 1
+      character.setTarget(npcX + side * TALK_GAP, npcY, () =>
+        beginDialogue(dialog, { id, char: npcChar }),
+      )
+    })
+  }
+
+  // Publish a hit-tester so the DOM cursor shows the right icon over a (moving) NPC —
+  // it can't see live entities itself. Pointer → design space, then the NPC's box
+  // (its view's local bounds × the depth scale, around the feet).
+  sceneHit.kindAt = (clientX, clientY) => {
+    const wx = (clientX - cameraOffset.x) / cameraOffset.scale
+    const wy = (clientY - cameraOffset.y) / cameraOffset.scale
+    for (const n of npcs) {
+      if (!n.cursor) continue
+      const disp = n.character.displayObject
+      if (!disp.visible) continue
+      const b = disp.getLocalBounds()
+      const sc = disp.scale.x
+      if (
+        wx >= disp.x + b.minX * sc &&
+        wx <= disp.x + b.maxX * sc &&
+        wy >= disp.y + b.minY * sc &&
+        wy <= disp.y + b.maxY * sc
+      ) {
+        return n.cursor
+      }
+    }
+    return null
+  }
 
   // Trigger volumes: run effects when the player's feet ENTER (debounced to the enter
   // edge; `once` stops a re-fire this visit). NPC triggers wait for NPCs (step 2+).
@@ -327,6 +423,7 @@ export async function mountScene(
   app.stage.hitArea = app.screen
   app.stage.cursor = 'none' // the DOM GameCursor draws the pointer; hide the native one
   const onTap = (event: FederatedPointerEvent) => {
+    if (dialogueStore.getState().active) return // dialogue captures input; don't walk
     const local = interactive.toLocal(event.global)
     const state = store.getState()
     const hit = pickInteractable(scene.interactables, local.x, local.y, design, state)
@@ -376,6 +473,9 @@ export async function mountScene(
     destroy() {
       if (torn) return
       torn = true
+      sceneHit.kindAt = null
+      // Close a conversation tied to this scene (e.g. a dialogue `goTo` swapped scenes).
+      if (dialogueStore.getState().active) dialogueStore.getState().end()
       unsubscribeVisibility()
       app.ticker.remove(onTick)
       app.stage.off('pointertap', onTap)
@@ -552,6 +652,7 @@ export function createSceneHost(
   referenceHeight: number = DEFAULT_REFERENCE_HEIGHT,
   transition?: TransitionConfig,
   cast: Record<NpcId, NpcDef> = {},
+  dialogs: Record<DialogId, Dialog> = {},
 ): SceneHost {
   let current: Scene | undefined
   let destroyed = false
@@ -639,7 +740,15 @@ export function createSceneHost(
     const spinTimer = setTimeout(() => {
       if (!destroyed) spinner.visible = true
     }, SPINNER_DELAY_MS)
-    const mounted = await mountScene(app, scenes[id], store, playerView, referenceHeight, cast)
+    const mounted = await mountScene(
+      app,
+      scenes[id],
+      store,
+      playerView,
+      referenceHeight,
+      cast,
+      dialogs,
+    )
     clearTimeout(spinTimer)
     spinner.visible = false
     if (destroyed || shownId !== id) {

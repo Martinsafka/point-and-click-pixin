@@ -358,7 +358,42 @@
       "name": "Gem"
     }
   },
-  "npcs": { "stranger": { "id": "stranger", "name": "Stranger", "speed": 0.7 } },
+  "npcs": {
+    "stranger": { "id": "stranger", "name": "Stranger", "speed": 0.7, "dialog": "stranger" }
+  },
+  "dialogs": {
+    "stranger": {
+      "start": "root",
+      "nodes": {
+        "root": {
+          "branch": [{ "when": { "kind": "flag", "flag": "met-stranger" }, "to": "again" }],
+          "speaker": "stranger",
+          "text": "Oh — a new face. Careful out here after dark, stranger.",
+          "effects": [{ "kind": "setFlag", "flag": "met-stranger" }],
+          "next": "ask"
+        },
+        "again": {
+          "speaker": "stranger",
+          "text": "You again. Still wandering?",
+          "next": "ask"
+        },
+        "ask": {
+          "speaker": "stranger",
+          "text": "What do you want?",
+          "choices": [
+            { "text": "Who are you?", "next": "who" },
+            { "text": "Seen anything strange around here?", "next": "strange" },
+            { "text": "Nothing. Goodbye." }
+          ]
+        },
+        "who": { "text": "Just someone passing through. Like you.", "next": "ask" },
+        "strange": {
+          "text": "Strange? This whole street is strange after dark.",
+          "next": "ask"
+        }
+      }
+    }
+  },
   "initialFlags": {},
   "recipes": [
     {

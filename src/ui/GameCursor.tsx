@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { pickInteractable } from '../systems/interactions'
 import { containsPoint } from '../systems/walkable'
 import { cameraOffset } from '../engine/camera'
+import { sceneHit } from '../engine/hotspots'
 import { designSize } from '../data/scene-config'
 import { storyStore } from '../state/story'
 import { gameDoc } from '../data/game'
@@ -13,6 +14,7 @@ const EMOJI: Record<CursorKind, string> = {
   interact: '⚙️',
   exit: '🚪',
   inspect: '👁',
+  talk: '👄',
   default: '↖️',
 }
 
@@ -46,7 +48,12 @@ export function GameCursor() {
       // Convert the viewport pointer to world coords (the camera may have scrolled)
       // and resolve the walkable / interactables against the world size.
       let kind: CursorKind = 'default'
-      if (scene) {
+      // A clickable NPC under the pointer wins (matches the click: NPCs capture it over
+      // interactables). The engine answers — the cursor can't see moving entities.
+      const npcKind = sceneHit.kindAt?.(e.clientX, e.clientY) ?? null
+      if (npcKind) {
+        kind = npcKind
+      } else if (scene) {
         // Invert the camera: map the viewport pointer back to design space.
         const design = designSize(scene, gameDoc.referenceHeight)
         const wx = (e.clientX - cameraOffset.x) / cameraOffset.scale

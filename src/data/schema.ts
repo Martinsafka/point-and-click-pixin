@@ -123,6 +123,49 @@ export interface UseRule {
   effects: Effect[]
 }
 
+// --- Dialogue ---------------------------------------------------------------
+
+export type DialogNodeId = string
+
+/** One selectable reply at a choice node: offered when `when` passes; picking it runs
+ *  `effects`, then goes to `next` (absent → ends the dialogue). */
+export interface DialogChoice {
+  text: string
+  when?: Condition
+  effects?: Effect[]
+  next?: DialogNodeId
+}
+
+/** A conditional jump evaluated when a node is entered (a state-driven router): the
+ *  first branch whose `when` passes redirects to `to`, showing nothing of this node. */
+export interface DialogBranch {
+  when?: Condition
+  to: DialogNodeId
+}
+
+/**
+ * One step of a dialogue. On entry, `branch` routes first (state-driven openings,
+ * evaluated against the incoming state); if none matches, `effects` run and `text` is
+ * shown (spoken by `speaker` — a character id, or the conversation partner when
+ * absent). `choices` present replies; otherwise it is a click-to-continue line that
+ * advances to `next` (absent → ends).
+ */
+export interface DialogNode {
+  speaker?: string
+  text?: string
+  effects?: Effect[]
+  choices?: DialogChoice[]
+  next?: DialogNodeId
+  branch?: DialogBranch[]
+}
+
+/** A reusable dialogue tree: nodes entered from `start`. Lives in the `GameDoc.dialogs`
+ *  library; referenced by an NPC (`NpcDef.dialog`) or a placement override. */
+export interface Dialog {
+  start: DialogNodeId
+  nodes: Record<DialogNodeId, DialogNode>
+}
+
 // --- Scene content ----------------------------------------------------------
 
 /**
@@ -226,6 +269,9 @@ export interface NpcDef {
   name?: string
   /** Walk-speed multiplier (default 1). */
   speed?: number
+  /** Default dialogue (id into `GameDoc.dialogs`), played when the NPC is talked to;
+   *  a placement can override it per scene. */
+  dialog?: DialogId
 }
 
 /** A patrol route for a placed NPC: waypoints (design-space fractions) walked in
@@ -242,6 +288,8 @@ export interface NpcPlacement {
   spawn: { xFrac: number; yFrac: number }
   when?: Condition
   path?: NpcPath
+  /** Per-scene dialogue override (id into `GameDoc.dialogs`); falls back to `NpcDef.dialog`. */
+  dialog?: DialogId
 }
 
 export interface SceneData {
@@ -272,7 +320,7 @@ export interface SceneData {
  * Pointer cursor per interaction context — an optional uploaded icon (image URL),
  * else an emoji fallback shown by the runtime.
  */
-export type CursorKind = 'walk' | 'pickable' | 'interact' | 'exit' | 'inspect' | 'default'
+export type CursorKind = 'walk' | 'pickable' | 'interact' | 'exit' | 'inspect' | 'talk' | 'default'
 
 /** Scene-swap transition: a colour wash (default black) + optional art, held ≥ `minMs`. */
 export interface TransitionConfig {
@@ -297,6 +345,8 @@ export interface GameDoc {
   player?: ViewDescriptor
   /** The global NPC cast (id → definition); placed into scenes via `SceneData.npcs`. */
   npcs?: Record<NpcId, NpcDef>
+  /** The reusable dialogue library (id → tree); referenced by NPCs / placements. */
+  dialogs?: Record<DialogId, Dialog>
   /** The game's vertical design resolution in px (default 1080). Every scene is
    *  this tall; the viewport height maps onto it with one uniform scale, so art and
    *  characters keep a consistent size across devices. Scene `width` is in these px. */

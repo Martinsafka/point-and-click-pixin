@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { GameCanvas } from './GameCanvas'
 import { Inventory } from './Inventory'
 import { Menu } from './Menu'
+import { DialogueBox } from './DialogueBox'
 import { GameCursor } from './GameCursor'
 import { TitleScreen } from './TitleScreen'
 import { useStory } from './use-story'
@@ -62,6 +63,7 @@ export function App() {
         </p>
         {narration && <p className="overlay__narration">{narration}</p>}
         <Inventory />
+        <DialogueBox />
         <Menu onExit={() => setPlaying(false)} />
       </div>
       <GameCursor />
