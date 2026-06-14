@@ -82,6 +82,8 @@ interface EditorStore {
   setInteractableTo(id: SceneId, index: number, to: SceneId): void
   setTriggerBy(id: SceneId, index: number, by: 'player' | 'npc' | 'any'): void
   setTriggerOnce(id: SceneId, index: number, once: boolean): void
+  setTriggerOn(id: SceneId, index: number, on: 'enter' | 'rest'): void
+  setTriggerExitEffects(id: SceneId, index: number, exitEffects: Effect[]): void
   // NPC cast (global) + per-scene placements (M7 step 2b). DOM markers, no re-mount.
   addNpcDef(): void
   removeNpcDef(npcId: NpcId): void
@@ -313,6 +315,18 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setTriggerOnce: (id, index, once) =>
       mapInteractables(id, (its) =>
         its.map((it, i) => (i === index && it.kind === 'trigger' ? { ...it, once } : it)),
+      ),
+    setTriggerOn: (id, index, on) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) => (i === index && it.kind === 'trigger' ? { ...it, on } : it)),
+      ),
+    setTriggerExitEffects: (id, index, exitEffects) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) =>
+          i === index && it.kind === 'trigger'
+            ? { ...it, exitEffects: exitEffects.length ? exitEffects : undefined }
+            : it,
+        ),
       ),
     addNpcDef: () => {
       const npcs = get().doc.npcs ?? {}

@@ -2,10 +2,12 @@ import { type ChangeEvent } from 'react'
 import { editorStore } from './editor-store'
 import { EditorModal } from './EditorModal'
 import { ConditionEditor } from './ConditionEditor'
+import { EffectList } from './EffectList'
 import { CharacterEditor } from './CharacterEditor'
+import { actionNames, actorIds } from './effect-options'
 import { placeholderView } from '../entities/placeholder-atlas'
 import { previewVoice } from '../audio/voice'
-import type { VoiceConfig } from '../data/schema'
+import type { ItemDef, ItemId, VisionConfig, VoiceConfig } from '../data/schema'
 
 /** Drop an inspect with no text + no audio (so an emptied form clears the field). */
 function trimInspect(inspect: { text?: string; audio?: string }) {
@@ -19,6 +21,94 @@ function trimVoice(voice: VoiceConfig): VoiceConfig | undefined {
   const pitch = voice.pitch && voice.pitch !== 1 ? voice.pitch : undefined
   const sound = voice.sound || undefined
   return pitch || sound ? { pitch, sound } : undefined
+}
+
+/** Stealth vision config — range (fraction of height) + cone width (° or all-round) +
+ *  the on-seen effects, gated by an optional `unless` (e.g. while the player is hidden). */
+function VisionEditor({
+  npcId,
+  vision,
+  items,
+  sceneIds,
+  animations,
+  targets,
+}: {
+  npcId: string
+  vision: VisionConfig
+  items: Record<ItemId, ItemDef>
+  sceneIds: string[]
+  animations: string[]
+  targets: string[]
+}) {
+  const s = () => editorStore.getState()
+  const patch = (p: Partial<VisionConfig>) =>
+    s().patchNpcDef(npcId, { vision: { ...vision, ...p } })
+  return (
+    <div className="logic">
+      <div className="logic__head">
+        <span>Vision (stealth)</span>
+        <button
+          type="button"
+          className="logic__del"
+          onClick={() => s().patchNpcDef(npcId, { vision: undefined })}
+        >
+          Remove
+        </button>
+      </div>
+      <div className="intr-form__field">
+        <span>range</span>
+        <input
+          className="logic__in"
+          type="number"
+          step="0.05"
+          min="0"
+          title="detection range, as a fraction of the design height"
+          value={vision.range}
+          onChange={(e) => patch({ range: Number(e.target.value) || 0 })}
+        />
+        <span>angle°</span>
+        <input
+          className="logic__in"
+          type="number"
+          step="5"
+          min="0"
+          max="360"
+          placeholder="360"
+          title="cone width in degrees; empty = all-round"
+          value={vision.angle ?? ''}
+          onChange={(e) =>
+            patch({ angle: e.target.value === '' ? undefined : Number(e.target.value) })
+          }
+        />
+        <label className="logic__chk">
+          <input
+            type="checkbox"
+            checked={vision.once ?? false}
+            onChange={(e) => patch({ once: e.target.checked || undefined })}
+          />
+          once
+        </label>
+      </div>
+      <div className="intr-form__field intr-form__field--col">
+        <span>unless (no detection while)</span>
+        <ConditionEditor
+          condition={vision.unless}
+          onChange={(c) => patch({ unless: c })}
+          items={items}
+          sceneIds={sceneIds}
+        />
+      </div>
+      <EffectList
+        effects={vision.effects}
+        onChange={(fx) => patch({ effects: fx })}
+        items={items}
+        sceneIds={sceneIds}
+        animations={animations}
+        targets={targets}
+        label="On seen"
+      />
+    </div>
+  )
 }
 
 /**
@@ -35,6 +125,8 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
   if (!npc) return null
   const dialogIds = Object.keys(doc.dialogs ?? {})
   const sceneIds = Object.keys(doc.scenes)
+  const animations = actionNames(doc)
+  const targets = actorIds(doc)
 
   const onAudio = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -150,6 +242,29 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
           Test
         </button>
       </div>
+
+      {npc.vision ? (
+        <VisionEditor
+          npcId={npcId}
+          vision={npc.vision}
+          items={doc.items}
+          sceneIds={sceneIds}
+          animations={animations}
+          targets={targets}
+        />
+      ) : (
+        <div className="intr-form__field">
+          <span>vision</span>
+          <button
+            type="button"
+            onClick={() =>
+              s().patchNpcDef(npcId, { vision: { range: 0.4, angle: 70, effects: [] } })
+            }
+          >
+            + Vision (stealth)
+          </button>
+        </div>
+      )}
 
       <div className="intr-form__field intr-form__field--col">
         <span>appearance</span>

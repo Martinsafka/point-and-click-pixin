@@ -240,12 +240,15 @@ pause / face) fire from triggers, clicks **and** dialogue.
 
 **Step 5 — Stealth** _(idea: crouch at cover; NPC vision)_
 
-- [ ] **NPC vision / detection** — line-of-sight (distance + cone, optional occlusion); on
-      "sees the player" run Effects = the stealth beat. _(Cone vs simple proximity: decide here.)_
-- [ ] **Crouch at cover** — a `trigger` area by a barrel / wall plays a crouch (`playAnim`)
-      and sets a "hidden" flag that lowers detection; **foreground occluders already hide the
-      character** (existing band).
-- [ ] Editor: vision settings; crouch / hidden wiring.
+- [x] **NPC vision / detection** — `NpcDef.vision { range, angle?, effects, unless?, once? }`:
+      per-frame range + cone (follows facing; omit `angle` for all-round) + line-of-sight
+      (`Navigation.los`; holes occlude); the unseen→seen edge runs Effects. _(Cone **and**
+      proximity, via the optional `angle`.)_
+- [x] **Crouch at cover** — a `trigger` (`on: 'rest'`, fires on arrival) plays a crouch +
+      `setStance crouch` (held posture) + sets `hidden`; `exitEffects` stand up + clear it on
+      leave; `vision.unless: { flag: hidden }` lowers detection. (Foreground occluders also hide.)
+- [x] Editor: vision settings (NPC modal) + trigger `on` / `exitEffects` + a **vision-cone**
+      overlay in the preview.
 
 **Step 6 — NPC routine (cross-scene behaviour)** _(the grand piece; builds on step 3)_
 

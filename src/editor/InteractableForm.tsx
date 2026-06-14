@@ -143,6 +143,16 @@ export function InteractableForm({
               onChange={(e) => s().setTriggerOnce(sceneId, index, e.target.checked)}
             />
           </label>
+          <label className="intr-form__field">
+            <span>fire on</span>
+            <select
+              value={interactable.on ?? 'enter'}
+              onChange={(e) => s().setTriggerOn(sceneId, index, e.target.value as 'enter' | 'rest')}
+            >
+              <option value="enter">enter (cross in)</option>
+              <option value="rest">rest (stop inside)</option>
+            </select>
+          </label>
         </>
       )}
 
@@ -175,6 +185,19 @@ export function InteractableForm({
           sceneIds={sceneIds}
           animations={animations}
           targets={targets}
+          label={isTrigger ? 'On enter' : 'Effects'}
+        />
+      )}
+
+      {interactable.kind === 'trigger' && (
+        <EffectList
+          effects={interactable.exitEffects ?? []}
+          onChange={(e) => s().setTriggerExitEffects(sceneId, index, e)}
+          items={items}
+          sceneIds={sceneIds}
+          animations={animations}
+          targets={targets}
+          label="On exit"
         />
       )}
 

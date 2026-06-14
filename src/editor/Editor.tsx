@@ -589,6 +589,8 @@ export function Editor() {
             />
             <NpcOverlay
               placements={scene.npcs ?? []}
+              cast={doc.npcs ?? {}}
+              aspect={aspect}
               selectedIndex={selectedNpc}
               mode={draw === 'npc' ? 'place' : draw === 'npcpath' ? 'path' : null}
               onPlace={placeNpc}

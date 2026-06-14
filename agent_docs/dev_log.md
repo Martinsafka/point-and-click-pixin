@@ -23,6 +23,13 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M7 step 5b: stealth editor (vision config + trigger on/exit + cone viz) — step 5 complete
+**What:** Stealth is authorable in the editor (no JSON). The **NPC modal** gains a **Vision** section — range / angle / `once` / **`unless`** (`ConditionEditor`) / **on-seen effects** (`EffectList`), with **+ Vision** / **Remove**. The **trigger form** gains the **fire mode** (`enter` / `rest`) + an **On exit** `EffectList` (the main effects relabel "On enter" for triggers). The **Scene preview** draws each visioned NPC's **vision cone** — an aspect-corrected SVG wedge from the spawn toward the first patrol waypoint (else straight down) — so range / angle tune visually. (`setStance` was already in the effect dropdown.) Store: `setTriggerOn`, `setTriggerExitEffects`.
+**Why:** M7 step 5b — the editor side of stealth; **completes M7 step 5**.
+**How:** a local `VisionEditor` (in `NpcEditor`) edits `NpcDef.vision` via `patchNpcDef`. The cone is computed in design px then squished by **`aspect` (= width / height)** so the preview's `preserveAspectRatio="none"` stretch un-squishes it to true proportions; `vector-effect: non-scaling-stroke` keeps the outline even. Trigger `on` / `exitEffects` narrow via the `interactable.kind === 'trigger'` discriminant.
+**Verified:** format / typecheck / lint / build green; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** **M7 step 6 (NPC routine — cross-scene)** is the last M7 piece.
+
 ### 2026-06-14 — `setStance` effect — held crouch posture (5a polish)
 **What:** A new **`setStance { action?, target? }`** engine effect holds an idle **posture** — a looping clip shown in place of the default idle until cleared (omit `action`) — so the player **stays crouched** at cover instead of bobbing back up. Walking still animates normally. The cover trigger now does `playAnim pickup` (crouch down) + **`setStance crouch`** (hold) on arrival, and **`setStance`** (clear, → stand up) on exit. Added a held **`crouch`** clip to the placeholder atlas; made `view.loopAction` **idempotent** (re-applying the same stance each frame no longer restarts it). `setStance` is in the editor effect dropdown (action + target pickers).
 **Why:** User feedback — the cover crouch played its one-shot then popped back to the default idle, so it didn't read as "hiding". A persistent stance was noted as a 5a follow-up; pulling it in now.
