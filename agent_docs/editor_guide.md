@@ -45,7 +45,7 @@ preview immediately. The panel is split into top-level **tabs**:
 
 - **Scene** — Scenes, Walkable, Depth, Holes, Layers, Interactables, NPCs.
 - **Items** — Items, Recipes.
-- **Characters** — character & animation setup (M5).
+- **Characters** — the player's animation set + the global **NPC cast**.
 - **Project** — Display, Cursors, Transition, Document (export / import).
 
 Each section within a tab **collapses** when you click its title (accordion); a
@@ -187,15 +187,17 @@ inventory item, shows that text as a transient narration line in the game.
 
 ### NPCs · _N_
 
-The characters that populate the scene (static for now — movement paths arrive next).
-Shown in the preview as **orange markers** at their spawns.
+**Place** cast characters into this scene (the cast is defined in **Characters → NPCs**).
+Shown in the preview as **orange markers** at their spawns. A character lives in at most
+one scene at a time, so the pickers only offer NPCs not placed elsewhere.
 
-- **+ NPC** — add a character; **✕** removes one. Click a row to **select**.
-- For the selected NPC: edit its **id** (referenced by `playAnim` effects + future
-  NPC triggers), its **when** gate (present only while the Condition holds), and
-  **Place** it — click the preview to set its spawn.
-- NPCs use the built-in placeholder figure for now (per-NPC art is a follow-up); in the
-  game they render as real characters, Y-sorted + depth-scaled like the player.
+- **+ Place NPC** — adds a placement (the first un-placed cast NPC); **✕** removes it.
+  Click a row to **select**.
+- For the selected placement: pick **which npc** (from the cast), its **when** gate
+  (present only while the Condition holds), and **Place** it — click the preview for its
+  spawn.
+- NPCs use the placeholder figure for now (appearance / dialogue / routine come later);
+  in the game they render as real characters, Y-sorted + depth-scaled like the player.
 
 ### Items · _N_ and Recipes · _N_ (global)
 
@@ -232,6 +234,10 @@ placeholder figure.
     (S / SE / E / NE / N) suffice — the W-side mirrors automatically.
   - **`pickup` / `interact`** — one-shots played on a pickup / use (loop off).
   - Names + frame lists commit when the field loses focus.
+
+**NPCs (cast):** the global roster of characters. **+ NPC** creates one (a fixed id + an
+editable name; appearance / dialogue / routine arrive over M7); place them into scenes
+from each scene's **NPCs** section. **✕** removes a character and any placements of it.
 
 ### Display (global)
 

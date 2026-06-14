@@ -24,6 +24,7 @@ import { DepthEditor } from './DepthEditor'
 import { TransitionEditor } from './TransitionEditor'
 import { NpcList } from './NpcList'
 import { NpcOverlay } from './NpcOverlay'
+import { NpcCast } from './NpcCast'
 
 const TABS = ['scene', 'items', 'characters', 'project'] as const
 type Tab = (typeof TABS)[number]
@@ -92,6 +93,10 @@ export function Editor() {
   const sceneIds = Object.keys(doc.scenes)
   const scene = doc.scenes[selectedId]
   const holes = scene?.holes ?? []
+  // Every cast NPC already placed somewhere (a character lives in one scene at a time).
+  const placedNpcIds = new Set(
+    Object.values(doc.scenes).flatMap((sc) => (sc.npcs ?? []).map((p) => p.npc)),
+  )
 
   const changeTab = (t: Tab) => {
     setTab(t)
@@ -212,7 +217,9 @@ export function Editor() {
   }
   const placeNpc = (xFrac: number, yFrac: number) => {
     if (selectedNpc !== null) {
-      editorStore.getState().setNpcSpawn(selectedId, selectedNpc, round(xFrac), round(yFrac))
+      editorStore
+        .getState()
+        .setNpcPlacementSpawn(selectedId, selectedNpc, round(xFrac), round(yFrac))
     }
   }
 
@@ -434,7 +441,9 @@ export function Editor() {
                 {scene && (
                   <NpcList
                     sceneId={selectedId}
-                    npcs={scene.npcs ?? []}
+                    placements={scene.npcs ?? []}
+                    cast={doc.npcs ?? {}}
+                    placedNpcIds={placedNpcIds}
                     selectedIndex={selectedNpc}
                     onSelect={selectNpc}
                     placeMode={draw === 'npc'}
@@ -468,7 +477,16 @@ export function Editor() {
             </>
           )}
 
-          {tab === 'characters' && <CharacterEditor player={doc.player} />}
+          {tab === 'characters' && (
+            <>
+              <Section title="Player">
+                <CharacterEditor player={doc.player} />
+              </Section>
+              <Section title={`NPCs · ${Object.keys(doc.npcs ?? {}).length}`}>
+                <NpcCast npcs={doc.npcs} />
+              </Section>
+            </>
+          )}
 
           {tab === 'project' && (
             <>
@@ -548,7 +566,7 @@ export function Editor() {
               onAddPoint={addHitAreaPoint}
             />
             <NpcOverlay
-              npcs={scene.npcs ?? []}
+              placements={scene.npcs ?? []}
               selectedIndex={selectedNpc}
               placeMode={draw === 'npc'}
               onPlace={placeNpc}

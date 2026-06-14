@@ -13,6 +13,7 @@ export type SceneId = string
 export type ItemId = string
 export type FlagId = string
 export type DialogId = string
+export type NpcId = string
 
 /** Which depth band a layer sits in (background < mid < foreground). */
 export type SceneBand = 'background' | 'mid' | 'foreground'
@@ -212,16 +213,19 @@ export type InteractableData =
     }
 
 /**
- * A non-player character placed in a scene: a character (the M5 view descriptor;
- * default the placeholder) at a spawn, optionally gated by `when` (arrival /
- * departure). Movement paths arrive in M7 step 3.
+ * A character in the global cast (the player is "character 0"). Identity for now —
+ * appearance / sounds / dialogue / routine layer in over M7. A cast NPC is placed
+ * into a scene via `SceneData.npcs`, and lives in at most one scene at a time.
  */
-export interface NpcData {
-  id: string
+export interface NpcDef {
+  id: NpcId
+  name?: string
+}
+
+/** Places a cast NPC into a scene at a spawn, optionally gated by `when`. */
+export interface NpcPlacement {
+  npc: NpcId
   spawn: { xFrac: number; yFrac: number }
-  /** Appearance (atlas + clips); absent → the built-in placeholder. */
-  view?: ViewDescriptor
-  /** Present only while this Condition holds (absent → always present). */
   when?: Condition
 }
 
@@ -234,8 +238,8 @@ export interface SceneData {
   /** Obstacles cut out of the walkable area (polygons as design-space fractions). */
   holes?: Polygon[]
   interactables: InteractableData[]
-  /** Non-player characters in the scene. */
-  npcs?: NpcData[]
+  /** NPC placements (reference the global cast `GameDoc.npcs`). */
+  npcs?: NpcPlacement[]
   depth: DepthConfig
   /** Character spawn (feet), as design-space fractions. */
   spawn: { xFrac: number; yFrac: number }
@@ -276,6 +280,8 @@ export interface GameDoc {
   cursors?: Partial<Record<CursorKind, string>>
   /** The protagonist's view (atlas + clips); absent → the built-in placeholder. */
   player?: ViewDescriptor
+  /** The global NPC cast (id → definition); placed into scenes via `SceneData.npcs`. */
+  npcs?: Record<NpcId, NpcDef>
   /** The game's vertical design resolution in px (default 1080). Every scene is
    *  this tall; the viewport height maps onto it with one uniform scale, so art and
    *  characters keep a consistent size across devices. Scene `width` is in these px. */

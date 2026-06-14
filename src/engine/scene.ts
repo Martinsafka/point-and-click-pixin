@@ -201,20 +201,22 @@ export async function mountScene(
   // NPCs: characters placed in the scene (static for now; movement is step 3). They
   // share the nav-mesh + depth, Y-sort with the player, and `when` gates presence.
   const npcs: { id: string; character: Character }[] = []
-  for (const npc of scene.npcs ?? []) {
+  for (const placement of scene.npcs ?? []) {
+    // The cast def has no appearance yet → placeholder for all; the placement's `npc`
+    // is the runtime id (so `playAnim` target + future NPC triggers resolve to it).
     const npcChar = new Character(
-      await createSpriteView(npc.view ?? placeholderView),
+      await createSpriteView(placeholderView),
       depthScale,
       nav,
       charScale,
     )
-    npcChar.setPosition(npc.spawn.xFrac * design.width, npc.spawn.yFrac * design.height)
+    npcChar.setPosition(placement.spawn.xFrac * design.width, placement.spawn.yFrac * design.height)
     interactive.addChild(npcChar.displayObject)
-    if (npc.when) {
-      npcChar.displayObject.visible = checkCondition(store.getState(), npc.when)
-      conditional.push({ display: npcChar.displayObject, when: npc.when })
+    if (placement.when) {
+      npcChar.displayObject.visible = checkCondition(store.getState(), placement.when)
+      conditional.push({ display: npcChar.displayObject, when: placement.when })
     }
-    npcs.push({ id: npc.id, character: npcChar })
+    npcs.push({ id: placement.npc, character: npcChar })
   }
 
   // Camera: height-anchored + resize-safe. Each frame we read the *current*

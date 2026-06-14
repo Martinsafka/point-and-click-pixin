@@ -181,20 +181,20 @@ one, and a trigger at cover plays a crouch — the stealth beat. Ordered into te
 - [x] Editor: NPC list (add / remove / id / when / spawn placement; orange markers).
       _(Per-NPC art upload is a follow-up — NPCs use the placeholder for now.)_
 
-**Step 2b — Global NPC cast + per-scene placement** _(refactor of step 2)_
+**Step 2b — Global NPC cast + per-scene placement** ✅ _(refactor of step 2)_
 
 NPCs become **global characters** placed into scenes, not per-scene data — the standard
 adventure model: define a character once, place it where it appears.
 
-- [ ] `GameDoc.npcs` — the global **cast**: `NpcDef { id, name }` now; **appearance +
+- [x] `GameDoc.npcs` — the global **cast**: `NpcDef { id, name }` now; **appearance +
       animations + sounds + dialogue + routine layer in over steps 3–6**. Lives in the
       Characters tab beside the player ("character 0").
-- [ ] `SceneData.npcs` becomes **placements**: `{ npc, spawn, when }` referencing the cast
-      (click-to-place stays). **Unique** — one NPC is placed in at most one scene.
+- [x] `SceneData.npcs` becomes **placements**: `{ npc, spawn, when }` referencing the cast
+      (click-to-place stays). **Unique** — one NPC is placed in at most one scene
+      (editor-enforced; cast id fixed at creation, removal cascades to placements).
 - [ ] An NPC's **current scene is runtime state** (its placement is only the *start*); a
-      `moveNpc` / `despawnNpc` effect + its routine move it between scenes. "Appears in
-      another scene" = a logical action (solve a puzzle → it leaves here, shows up there),
-      not a second placement.
+      `moveNpc` / `despawnNpc` effect + its routine move it between scenes — **lands with
+      the routine (step 6)**.
 
 **Step 3 — NPC movement paths (in-scene)** _(idea: draw a route; chains with triggers)_
 

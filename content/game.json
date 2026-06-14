@@ -73,7 +73,7 @@
           "effects": [{ "kind": "playAnim", "action": "interact", "target": "stranger" }]
         }
       ],
-      "npcs": [{ "id": "stranger", "spawn": { "xFrac": 0.62, "yFrac": 0.82 } }],
+      "npcs": [{ "npc": "stranger", "spawn": { "xFrac": 0.62, "yFrac": 0.82 } }],
       "layers": [
         {
           "kind": "builtin",
@@ -351,6 +351,7 @@
       "name": "Gem"
     }
   },
+  "npcs": { "stranger": { "id": "stranger", "name": "Stranger" } },
   "initialFlags": {},
   "recipes": [
     {

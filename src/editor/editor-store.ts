@@ -11,7 +11,9 @@ import type {
   LayerData,
   LayerFit,
   LayerRole,
-  NpcData,
+  NpcDef,
+  NpcId,
+  NpcPlacement,
   Recipe,
   SceneBand,
   SceneData,
@@ -76,12 +78,15 @@ interface EditorStore {
   setInteractableTo(id: SceneId, index: number, to: SceneId): void
   setTriggerBy(id: SceneId, index: number, by: 'player' | 'npc' | 'any'): void
   setTriggerOnce(id: SceneId, index: number, once: boolean): void
-  // NPCs (M7 step 2) — placed characters; DOM markers, no preview re-mount.
-  addNpc(id: SceneId): void
-  removeNpc(id: SceneId, index: number): void
-  setNpcId(id: SceneId, index: number, value: string): void
-  setNpcSpawn(id: SceneId, index: number, xFrac: number, yFrac: number): void
-  setNpcWhen(id: SceneId, index: number, when: Condition | undefined): void
+  // NPC cast (global) + per-scene placements (M7 step 2b). DOM markers, no re-mount.
+  addNpcDef(): void
+  removeNpcDef(npcId: NpcId): void
+  setNpcDefName(npcId: NpcId, name: string): void
+  addNpcPlacement(id: SceneId, npc: NpcId): void
+  removeNpcPlacement(id: SceneId, index: number): void
+  setNpcPlacementNpc(id: SceneId, index: number, npc: NpcId): void
+  setNpcPlacementSpawn(id: SceneId, index: number, xFrac: number, yFrac: number): void
+  setNpcPlacementWhen(id: SceneId, index: number, when: Condition | undefined): void
   setInteractableWhen(id: SceneId, index: number, when: Condition | undefined): void
   setInteractableEffects(id: SceneId, index: number, effects: Effect[]): void
   setInteractableUses(id: SceneId, index: number, uses: UseRule[]): void
@@ -138,11 +143,10 @@ function uniqueItemId(items: GameDoc['items'], base: string): ItemId {
   return `${base}-${n}`
 }
 
-function uniqueNpcId(taken: readonly NpcData[], base: string): string {
-  const ids = new Set(taken.map((n) => n.id))
-  if (!ids.has(base)) return base
+function uniqueNpcDefId(npcs: Record<NpcId, NpcDef>, base: string): NpcId {
+  if (!npcs[base]) return base
   let n = 2
-  while (ids.has(`${base}-${n}`)) n += 1
+  while (npcs[`${base}-${n}`]) n += 1
   return `${base}-${n}`
 }
 
@@ -161,7 +165,7 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     patchScene(id, { layers: fn(get().doc.scenes[id].layers) }, remount)
   const mapInteractables = (id: SceneId, fn: (its: InteractableData[]) => InteractableData[]) =>
     patchScene(id, { interactables: fn(get().doc.scenes[id].interactables) }, false)
-  const mapNpcs = (id: SceneId, fn: (npcs: NpcData[]) => NpcData[]) =>
+  const mapNpcs = (id: SceneId, fn: (npcs: NpcPlacement[]) => NpcPlacement[]) =>
     patchScene(id, { npcs: fn(get().doc.scenes[id].npcs ?? []) }, false)
   // Document-level patch (items / recipes); never touches the Pixi preview.
   const patchDoc = (patch: Partial<GameDoc>) => set({ doc: { ...get().doc, ...patch } })
@@ -283,18 +287,38 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapInteractables(id, (its) =>
         its.map((it, i) => (i === index && it.kind === 'trigger' ? { ...it, once } : it)),
       ),
-    addNpc: (id) =>
-      mapNpcs(id, (ns) => [
-        ...ns,
-        { id: uniqueNpcId(ns, 'npc'), spawn: { xFrac: 0.5, yFrac: 0.85 } },
-      ]),
-    removeNpc: (id, index) => mapNpcs(id, (ns) => ns.filter((_, i) => i !== index)),
-    setNpcId: (id, index, value) =>
-      mapNpcs(id, (ns) => ns.map((n, i) => (i === index ? { ...n, id: value } : n))),
-    setNpcSpawn: (id, index, xFrac, yFrac) =>
-      mapNpcs(id, (ns) => ns.map((n, i) => (i === index ? { ...n, spawn: { xFrac, yFrac } } : n))),
-    setNpcWhen: (id, index, when) =>
-      mapNpcs(id, (ns) => ns.map((n, i) => (i === index ? { ...n, when } : n))),
+    addNpcDef: () => {
+      const npcs = get().doc.npcs ?? {}
+      const id = uniqueNpcDefId(npcs, 'npc')
+      patchDoc({ npcs: { ...npcs, [id]: { id, name: 'NPC' } } })
+    },
+    removeNpcDef: (npcId) => {
+      const { doc } = get()
+      const npcs = { ...(doc.npcs ?? {}) }
+      delete npcs[npcId]
+      // Cascade: drop placements referencing it across all scenes.
+      const scenes = { ...doc.scenes }
+      for (const sid of Object.keys(scenes)) {
+        const placements = scenes[sid].npcs
+        if (placements?.some((p) => p.npc === npcId)) {
+          scenes[sid] = { ...scenes[sid], npcs: placements.filter((p) => p.npc !== npcId) }
+        }
+      }
+      set({ doc: { ...doc, npcs, scenes } })
+    },
+    setNpcDefName: (npcId, name) => {
+      const npcs = get().doc.npcs ?? {}
+      patchDoc({ npcs: { ...npcs, [npcId]: { ...npcs[npcId], name } } })
+    },
+    addNpcPlacement: (id, npc) =>
+      mapNpcs(id, (ps) => [...ps, { npc, spawn: { xFrac: 0.5, yFrac: 0.85 } }]),
+    removeNpcPlacement: (id, index) => mapNpcs(id, (ps) => ps.filter((_, i) => i !== index)),
+    setNpcPlacementNpc: (id, index, npc) =>
+      mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, npc } : p))),
+    setNpcPlacementSpawn: (id, index, xFrac, yFrac) =>
+      mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, spawn: { xFrac, yFrac } } : p))),
+    setNpcPlacementWhen: (id, index, when) =>
+      mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, when } : p))),
     setInteractableWhen: (id, index, when) =>
       mapInteractables(id, (its) => its.map((it, i) => (i === index ? { ...it, when } : it))),
     setInteractableEffects: (id, index, effects) =>

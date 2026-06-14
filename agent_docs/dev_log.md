@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M7 step 2b: NPCs reworked to a global cast + per-scene placement
+**What:** NPCs are now **global characters** (`GameDoc.npcs: Record<id, NpcDef>` — id + name; appearance / dialogue / routine layer in later) **placed** into scenes (`SceneData.npcs: NpcPlacement[]` = `{ npc, spawn, when }`). A character is placed in **at most one scene** (editor-enforced — the pickers only offer un-placed NPCs). Editor: a **Characters → NPCs** cast section + the scene's **NPCs** section becomes placement (pick a cast NPC + click-to-place + when). Demo: a global `stranger` placed in the street.
+**Why:** Step 2's per-scene NPC data didn't suit recurring characters or the per-character dialogue / voice / routine coming up (which belong to the character, not the scene).
+**How:**
+- Schema: `NpcDef` (cast) + `NpcPlacement` (replaces `NpcData`); `GameDoc.npcs` + `SceneData.npcs: NpcPlacement[]`.
+- Engine: `mountScene` iterates placements, spawns a placeholder `Character` per placement (the cast def has no appearance yet); runtime id = `placement.npc` so `playAnim` target still resolves. No cast lookup needed yet.
+- Editor: cast id is **fixed at creation** (like items — placements + effects reference it), name editable; removing a cast NPC **cascades** to drop its placements. A `placedNpcIds` set (across all scenes) drives the one-scene-per-NPC constraint on the place pickers.
+- **Verified:** format / typecheck / lint / build green; `game.json` valid; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** an NPC's **current scene as runtime state** + a `moveNpc` effect (move between scenes) lands with the routine (step 6); per-NPC appearance / dialogue over steps 3–4.
+
 ### 2026-06-14 — Roadmap: NPC model reworked (global cast + per-scene placement) + narrative tiers
 **What:** Recorded the agreed NPC architecture in M7. NPCs become **global characters** (a cast defined once: id / name now, appearance / sounds / dialogue / routine later) **placed** into scenes (`{ npc, spawn, when }`, click-to-place), **unique** — one NPC is placed in at most one scene. An NPC's current scene is **runtime state**; a `moveNpc` / `despawnNpc` effect + its routine move it between scenes ("appears elsewhere" = a logical action, not a second placement). Narrative is **two-tier**: a global **story scenario** (orchestrates several NPCs + the action sequence) + per-NPC **dialogue** bubbles (a reusable library + inline one-offs). Added **Step 2b** (the global-cast refactor) and **Step 6** (cross-scene routine flowchart). Roadmap only — no code yet.
 **Why:** Step 2's per-scene NPCs don't suit recurring characters or dialogue / voice (which belong to the character). Lock the model before step 3 so paths / dialogue build on placements, not per-scene data.

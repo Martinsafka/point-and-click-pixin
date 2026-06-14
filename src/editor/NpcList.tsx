@@ -1,15 +1,18 @@
-import type { ItemDef, ItemId, NpcData, SceneId } from '../data/schema'
+import type { ItemDef, ItemId, NpcDef, NpcId, NpcPlacement, SceneId } from '../data/schema'
 import { editorStore } from './editor-store'
 import { ConditionEditor } from './ConditionEditor'
 
 /**
- * Per-scene NPC list: add / remove / select a character, edit its id + `when` gate,
- * and **Place** it (click the preview to set its spawn). NPCs are static for now;
- * movement paths arrive in M7 step 3.
+ * Per-scene NPC **placements**: place a cast NPC here (click the preview for its
+ * spawn), pick which one, edit its `when` gate. A cast NPC can be placed in at most
+ * one scene — the pickers only offer NPCs not placed elsewhere. The global cast is
+ * edited in the Characters tab.
  */
 export function NpcList({
   sceneId,
-  npcs,
+  placements,
+  cast,
+  placedNpcIds,
   selectedIndex,
   onSelect,
   placeMode,
@@ -18,7 +21,9 @@ export function NpcList({
   sceneIds,
 }: {
   sceneId: SceneId
-  npcs: NpcData[]
+  placements: NpcPlacement[]
+  cast: Record<NpcId, NpcDef>
+  placedNpcIds: Set<NpcId>
   selectedIndex: number | null
   onSelect: (i: number) => void
   placeMode: boolean
@@ -27,25 +32,33 @@ export function NpcList({
   sceneIds: SceneId[]
 }) {
   const s = () => editorStore.getState()
-  const sel = selectedIndex !== null ? npcs[selectedIndex] : undefined
+  const castList = Object.values(cast)
+  const firstFree = castList.find((n) => !placedNpcIds.has(n.id))
+  const sel = selectedIndex !== null ? placements[selectedIndex] : undefined
+  const label = (n: NpcDef) => (n.name ? `${n.name} (${n.id})` : n.id)
 
   return (
     <>
       <div className="editor__toolbar">
         <button
           type="button"
+          disabled={!firstFree}
           onClick={() => {
-            const i = npcs.length
-            s().addNpc(sceneId)
+            if (!firstFree) return
+            const i = placements.length
+            s().addNpcPlacement(sceneId, firstFree.id)
             onSelect(i)
           }}
         >
-          + NPC
+          + Place NPC
         </button>
       </div>
-      {npcs.length > 0 && (
+      {castList.length === 0 && (
+        <p className="layer-list__empty">Add NPCs to the cast (Characters tab) first.</p>
+      )}
+      {placements.length > 0 && (
         <ul className="editor__interactables">
-          {npcs.map((npc, i) => (
+          {placements.map((p, i) => (
             <li key={i} className="intr-row">
               <button
                 type="button"
@@ -54,12 +67,12 @@ export function NpcList({
                 }`}
                 onClick={() => onSelect(i)}
               >
-                <span className="intr-row__kind">npc</span> {npc.id}
+                <span className="intr-row__kind">npc</span> {cast[p.npc]?.name ?? p.npc}
               </button>
               <button
                 type="button"
                 className="intr-row__del"
-                onClick={() => s().removeNpc(sceneId, i)}
+                onClick={() => s().removeNpcPlacement(sceneId, i)}
               >
                 ✕
               </button>
@@ -70,17 +83,25 @@ export function NpcList({
       {sel && selectedIndex !== null && (
         <div className="intr-form">
           <label className="intr-form__field">
-            <span>id</span>
-            <input
-              value={sel.id}
-              onChange={(e) => s().setNpcId(sceneId, selectedIndex, e.target.value)}
-            />
+            <span>npc</span>
+            <select
+              value={sel.npc}
+              onChange={(e) => s().setNpcPlacementNpc(sceneId, selectedIndex, e.target.value)}
+            >
+              {castList
+                .filter((n) => n.id === sel.npc || !placedNpcIds.has(n.id))
+                .map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {label(n)}
+                  </option>
+                ))}
+            </select>
           </label>
           <div className="intr-form__field intr-form__field--col">
             <span>when</span>
             <ConditionEditor
               condition={sel.when}
-              onChange={(c) => s().setNpcWhen(sceneId, selectedIndex, c)}
+              onChange={(c) => s().setNpcPlacementWhen(sceneId, selectedIndex, c)}
               items={items}
               sceneIds={sceneIds}
             />
