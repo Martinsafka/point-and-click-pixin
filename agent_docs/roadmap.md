@@ -196,12 +196,12 @@ adventure model: define a character once, place it where it appears.
       `moveNpc` / `despawnNpc` effect + its routine move it between scenes — **lands with
       the routine (step 6)**.
 
-**Step 3 — NPC movement paths (in-scene)** _(idea: draw a route; chains with triggers)_
+**Step 3 — NPC movement paths (in-scene)** ✅ _(idea: draw a route; chains with triggers)_
 
-- [ ] A placement's **path** — a **drawn route** of waypoints, `once | loop | pingpong`
+- [x] A placement's **path** — a **drawn route** of waypoints, `once | loop | pingpong`
       (+ speed); the NPC walks it via the nav-mesh. Triggers now fire on **NPC** entry too
-      → an NPC reaches a spot and fires an event (the chaining).
-- [ ] Editor: **draw the NPC's path** (polyline overlay, like walkable).
+      (`by: npc | any`, per-character edge) → an NPC reaches a spot and fires an event.
+- [x] Editor: **draw the NPC's path** (dashed polyline + waypoints; once / loop / pingpong).
 
 **Step 4 — Dialogue & narrative**
 

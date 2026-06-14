@@ -36,7 +36,7 @@ const TAB_LABEL: Record<Tab, string> = {
 }
 
 /** Which polygon draw / placement mode is active (overlays share the preview). */
-type Draw = 'walkable' | 'hole' | 'hitarea' | 'npc' | null
+type Draw = 'walkable' | 'hole' | 'hitarea' | 'npc' | 'npcpath' | null
 
 function round(n: number): number {
   return Math.round(n * 1000) / 1000
@@ -220,6 +220,11 @@ export function Editor() {
       editorStore
         .getState()
         .setNpcPlacementSpawn(selectedId, selectedNpc, round(xFrac), round(yFrac))
+    }
+  }
+  const addNpcPathPoint = (xFrac: number, yFrac: number) => {
+    if (selectedNpc !== null) {
+      editorStore.getState().addNpcPathPoint(selectedId, selectedNpc, round(xFrac), round(yFrac))
     }
   }
 
@@ -448,6 +453,8 @@ export function Editor() {
                     onSelect={selectNpc}
                     placeMode={draw === 'npc'}
                     onTogglePlace={() => toggle('npc')}
+                    pathMode={draw === 'npcpath'}
+                    onTogglePath={() => toggle('npcpath')}
                     items={doc.items}
                     sceneIds={sceneIds}
                   />
@@ -458,9 +465,11 @@ export function Editor() {
                 <p className="editor__hint">
                   {draw === 'npc'
                     ? "Click in the preview to set the NPC's spawn."
-                    : `Click in the preview to add ${
-                        draw === 'walkable' ? 'walkable' : draw === 'hole' ? 'hole' : 'hit-area'
-                      } points.`}
+                    : draw === 'npcpath'
+                      ? "Click in the preview to add waypoints to the NPC's path."
+                      : `Click in the preview to add ${
+                          draw === 'walkable' ? 'walkable' : draw === 'hole' ? 'hole' : 'hit-area'
+                        } points.`}
                 </p>
               )}
             </>
@@ -568,8 +577,9 @@ export function Editor() {
             <NpcOverlay
               placements={scene.npcs ?? []}
               selectedIndex={selectedNpc}
-              placeMode={draw === 'npc'}
+              mode={draw === 'npc' ? 'place' : draw === 'npcpath' ? 'path' : null}
               onPlace={placeNpc}
+              onAddPathPoint={addNpcPathPoint}
             />
           </div>
         )}

@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M7 step 3: in-scene NPC paths + NPC-triggered events
+**What:** A placement can carry a **patrol path** (`NpcPath { points, mode: once | loop | pingpong, speed? }`) — the NPC walks the drawn waypoints via the nav-mesh (each leg rounds holes), chained on arrival. Triggers now fire on **NPC** entry too (`by: npc | any`), tracked per character — so an NPC reaching a spot fires an event (the chaining). Editor: a **Path** control on each placement (draw waypoints + once / loop / pingpong) with a dashed path + waypoints in the preview. Demo: the street `stranger` loops a patrol; the `greet` trigger (`by: any`) makes the player react when either crosses it.
+**Why:** M7 step 3 — NPCs that move + the trigger→NPC chaining the routine (step 6) builds on.
+**How:**
+- `startNpcPath` resolves the path to design px and drives the NPC `Character` via `setTarget(waypoint, onArrive)`, advancing the index per mode; `Character.setSpeedScale` applies the optional per-path speed.
+- `checkTriggers` now iterates the **movers** a trigger's `by` allows (player and/or NPCs) and tracks `inside` as a **Set of character ids** for per-character enter edges (`once` still fires once total).
+- Editor: a unified `draw === 'npcpath'` mode appends waypoints (alongside `'npc'` for the spawn); `addNpcPathPoint` / `clearNpcPath` / `setNpcPathMode` — no preview re-mount.
+- **Verified:** format / typecheck / lint / build green; `game.json` valid; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** the cross-scene routine + runtime NPC location (step 6) builds on these in-scene paths; per-NPC appearance + dialogue layer onto the cast (step 4).
+
 ### 2026-06-14 — M7 step 2b: NPCs reworked to a global cast + per-scene placement
 **What:** NPCs are now **global characters** (`GameDoc.npcs: Record<id, NpcDef>` — id + name; appearance / dialogue / routine layer in later) **placed** into scenes (`SceneData.npcs: NpcPlacement[]` = `{ npc, spawn, when }`). A character is placed in **at most one scene** (editor-enforced — the pickers only offer un-placed NPCs). Editor: a **Characters → NPCs** cast section + the scene's **NPCs** section becomes placement (pick a cast NPC + click-to-place + when). Demo: a global `stranger` placed in the street.
 **Why:** Step 2's per-scene NPC data didn't suit recurring characters or the per-character dialogue / voice / routine coming up (which belong to the character, not the scene).

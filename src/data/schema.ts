@@ -222,11 +222,22 @@ export interface NpcDef {
   name?: string
 }
 
-/** Places a cast NPC into a scene at a spawn, optionally gated by `when`. */
+/** A patrol route for a placed NPC: waypoints (design-space fractions) walked in
+ *  order, then `once` (stop), `loop` (back to start), or `pingpong` (reverse). */
+export interface NpcPath {
+  points: Polygon
+  mode: 'once' | 'loop' | 'pingpong'
+  /** Walk-speed multiplier (default 1). */
+  speed?: number
+}
+
+/** Places a cast NPC into a scene at a spawn, optionally gated by `when`, with an
+ *  optional in-scene patrol `path`. */
 export interface NpcPlacement {
   npc: NpcId
   spawn: { xFrac: number; yFrac: number }
   when?: Condition
+  path?: NpcPath
 }
 
 export interface SceneData {

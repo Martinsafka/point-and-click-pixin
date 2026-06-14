@@ -13,6 +13,7 @@ import type {
   LayerRole,
   NpcDef,
   NpcId,
+  NpcPath,
   NpcPlacement,
   Recipe,
   SceneBand,
@@ -87,6 +88,9 @@ interface EditorStore {
   setNpcPlacementNpc(id: SceneId, index: number, npc: NpcId): void
   setNpcPlacementSpawn(id: SceneId, index: number, xFrac: number, yFrac: number): void
   setNpcPlacementWhen(id: SceneId, index: number, when: Condition | undefined): void
+  addNpcPathPoint(id: SceneId, index: number, xFrac: number, yFrac: number): void
+  clearNpcPath(id: SceneId, index: number): void
+  setNpcPathMode(id: SceneId, index: number, mode: NpcPath['mode']): void
   setInteractableWhen(id: SceneId, index: number, when: Condition | undefined): void
   setInteractableEffects(id: SceneId, index: number, effects: Effect[]): void
   setInteractableUses(id: SceneId, index: number, uses: UseRule[]): void
@@ -319,6 +323,20 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, spawn: { xFrac, yFrac } } : p))),
     setNpcPlacementWhen: (id, index, when) =>
       mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, when } : p))),
+    addNpcPathPoint: (id, index, xFrac, yFrac) =>
+      mapNpcs(id, (ps) =>
+        ps.map((p, i) => {
+          if (i !== index) return p
+          const points = [...(p.path?.points ?? []), xFrac, yFrac]
+          return { ...p, path: p.path ? { ...p.path, points } : { points, mode: 'loop' } }
+        }),
+      ),
+    clearNpcPath: (id, index) =>
+      mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, path: undefined } : p))),
+    setNpcPathMode: (id, index, mode) =>
+      mapNpcs(id, (ps) =>
+        ps.map((p, i) => (i === index && p.path ? { ...p, path: { ...p.path, mode } } : p)),
+      ),
     setInteractableWhen: (id, index, when) =>
       mapInteractables(id, (its) => its.map((it, i) => (i === index ? { ...it, when } : it))),
     setInteractableEffects: (id, index, effects) =>

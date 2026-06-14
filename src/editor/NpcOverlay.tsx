@@ -1,29 +1,55 @@
 import type { MouseEvent } from 'react'
 import type { NpcPlacement } from '../data/schema'
 
+function toPoints(poly: number[]): [number, number][] {
+  const pts: [number, number][] = []
+  for (let i = 0; i + 1 < poly.length; i += 2) pts.push([poly[i], poly[i + 1]])
+  return pts
+}
+
 /**
- * DOM overlay marking each NPC placement's spawn (a dot + id) over the scene
- * preview, the selected one highlighted. In place mode, clicking the preview sets
- * the selected placement's spawn. NPCs render as real sprites in the game.
+ * DOM overlay over the scene preview: each NPC placement's spawn (a dot + id, the
+ * selected one highlighted) plus the selected placement's **patrol path** (dashed
+ * polyline + waypoints). In `place` mode a click sets the spawn; in `path` mode a
+ * click appends a waypoint. NPCs render as real sprites in the game.
  */
 export function NpcOverlay({
   placements,
   selectedIndex,
-  placeMode,
+  mode,
   onPlace,
+  onAddPathPoint,
 }: {
   placements: NpcPlacement[]
   selectedIndex: number | null
-  placeMode: boolean
+  mode: 'place' | 'path' | null
   onPlace: (xFrac: number, yFrac: number) => void
+  onAddPathPoint: (xFrac: number, yFrac: number) => void
 }) {
-  const onClick = (e: MouseEvent<HTMLDivElement>) => {
+  const sel = selectedIndex !== null ? placements[selectedIndex] : undefined
+  const pathPts = sel?.path ? toPoints(sel.path.points) : []
+  const click = (cb: (x: number, y: number) => void) => (e: MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
-    onPlace((e.clientX - rect.left) / rect.width, (e.clientY - rect.top) / rect.height)
+    cb((e.clientX - rect.left) / rect.width, (e.clientY - rect.top) / rect.height)
   }
 
   return (
     <div className="npc-overlay">
+      {pathPts.length >= 2 && (
+        <svg className="npc-overlay__svg" viewBox="0 0 1 1" preserveAspectRatio="none">
+          <polyline
+            className="npc-overlay__path"
+            points={pathPts.map((p) => p.join(',')).join(' ')}
+          />
+        </svg>
+      )}
+      {pathPts.map(([x, y], i) => (
+        <span
+          key={`wp${i}`}
+          className="npc-overlay__waypoint"
+          style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
+        />
+      ))}
       {placements.map((p, i) => (
         <span
           key={i}
@@ -33,7 +59,8 @@ export function NpcOverlay({
           {p.npc}
         </span>
       ))}
-      {placeMode && <div className="npc-overlay__catcher" onClick={onClick} />}
+      {mode === 'place' && <div className="npc-overlay__catcher" onClick={click(onPlace)} />}
+      {mode === 'path' && <div className="npc-overlay__catcher" onClick={click(onAddPathPoint)} />}
     </div>
   )
 }

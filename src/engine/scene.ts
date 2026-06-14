@@ -22,6 +22,7 @@ import type {
   Effect,
   InteractableData,
   LayerData,
+  NpcPath,
   SceneBand,
   SceneData,
   SceneId,
@@ -122,6 +123,33 @@ const ONE_SHOT: Partial<Record<InteractableData['kind'], string>> = {
   interact: 'interact',
 }
 
+/** Drive a placed NPC along its patrol route (once / loop / pingpong). Each leg is
+ *  nav-routed (so it rounds holes), chained via the character's onArrive callback. */
+function startNpcPath(npc: Character, path: NpcPath | undefined, design: Size): void {
+  if (!path || path.points.length < 4) return
+  const pts: { x: number; y: number }[] = []
+  for (let i = 0; i + 1 < path.points.length; i += 2) {
+    pts.push({ x: path.points[i] * design.width, y: path.points[i + 1] * design.height })
+  }
+  if (path.speed) npc.setSpeedScale(path.speed)
+  let idx = 0
+  let dir = 1
+  const advance = () => {
+    if (path.mode === 'once') {
+      if (idx >= pts.length - 1) return
+      idx += 1
+    } else if (path.mode === 'loop') {
+      idx = (idx + 1) % pts.length
+    } else {
+      if (idx === 0) dir = 1
+      else if (idx === pts.length - 1) dir = -1
+      idx += dir
+    }
+    npc.setTarget(pts[idx].x, pts[idx].y, advance)
+  }
+  npc.setTarget(pts[0].x, pts[0].y, advance)
+}
+
 /**
  * Mounts a `SceneData` onto an initialised Application as three zIndex-ordered
  * bands — background < interactive (mid) < foreground occluder. A click either
@@ -217,6 +245,7 @@ export async function mountScene(
       conditional.push({ display: npcChar.displayObject, when: placement.when })
     }
     npcs.push({ id: placement.npc, character: npcChar })
+    startNpcPath(npcChar, placement.path, design)
   }
 
   // Camera: height-anchored + resize-safe. Each frame we read the *current*
@@ -269,24 +298,29 @@ export async function mountScene(
     .map((it) => ({
       data: it,
       polygon: resolvePolygon(it.hitArea, design),
-      inside: false,
+      inside: new Set<string>(), // ids of characters currently inside (per-character edge)
       fired: false,
     }))
   const checkTriggers = () => {
     if (triggers.length === 0) return
     const state = store.getState()
-    const fx = character.displayObject.x
-    const fy = character.displayObject.y
     for (const t of triggers) {
-      const now = containsPoint({ polygon: t.polygon }, fx, fy)
       const by = t.data.by ?? 'player'
-      if (now && !t.inside && !(t.data.once && t.fired) && (by === 'player' || by === 'any')) {
-        if (!t.data.when || checkCondition(state, t.data.when)) {
-          runEffects(t.data.effects)
-          t.fired = true
+      const movers: { id: string; c: Character }[] = []
+      if (by === 'player' || by === 'any') movers.push({ id: 'player', c: character })
+      if (by === 'npc' || by === 'any')
+        for (const n of npcs) movers.push({ id: n.id, c: n.character })
+      for (const m of movers) {
+        const now = containsPoint({ polygon: t.polygon }, m.c.displayObject.x, m.c.displayObject.y)
+        if (now && !t.inside.has(m.id) && !(t.data.once && t.fired)) {
+          if (!t.data.when || checkCondition(state, t.data.when)) {
+            runEffects(t.data.effects)
+            t.fired = true
+          }
         }
+        if (now) t.inside.add(m.id)
+        else t.inside.delete(m.id)
       }
-      t.inside = now
     }
   }
 

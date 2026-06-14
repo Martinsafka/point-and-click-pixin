@@ -196,6 +196,10 @@ one scene at a time, so the pickers only offer NPCs not placed elsewhere.
 - For the selected placement: pick **which npc** (from the cast), its **when** gate
   (present only while the Condition holds), and **Place** it — click the preview for its
   spawn.
+- **Path** — draw a patrol: toggle **Path** on and click the preview to drop waypoints
+  (dashed line + dots), set the **mode** (`once` stop / `loop` / `pingpong`). The NPC
+  walks it via the nav-mesh (rounding holes). **Clear** removes the path. A `trigger`
+  with **by = npc / any** then fires when the NPC walks into it (the chaining).
 - NPCs use the placeholder figure for now (appearance / dialogue / routine come later);
   in the game they render as real characters, Y-sorted + depth-scaled like the player.
 

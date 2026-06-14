@@ -69,11 +69,18 @@
         {
           "kind": "trigger",
           "id": "greet",
+          "by": "any",
           "hitArea": [0.46, 0.74, 0.58, 0.74, 0.58, 0.92, 0.46, 0.92],
-          "effects": [{ "kind": "playAnim", "action": "interact", "target": "stranger" }]
+          "effects": [{ "kind": "playAnim", "action": "interact" }]
         }
       ],
-      "npcs": [{ "npc": "stranger", "spawn": { "xFrac": 0.62, "yFrac": 0.82 } }],
+      "npcs": [
+        {
+          "npc": "stranger",
+          "spawn": { "xFrac": 0.62, "yFrac": 0.82 },
+          "path": { "points": [0.5, 0.86, 0.72, 0.82, 0.6, 0.93], "mode": "loop" }
+        }
+      ],
       "layers": [
         {
           "kind": "builtin",

@@ -24,7 +24,7 @@ export class Character {
   private pendingAction?: string
   private facing: Facing = 'S'
   private state: MoveState = 'idle'
-  private readonly speed = WALK_SPEED
+  private speed = WALK_SPEED
 
   constructor(
     private readonly view: CharacterView,
@@ -122,6 +122,11 @@ export class Character {
         this.view.playOnce(queued, this.facing, () => {})
       }
     }
+  }
+
+  /** Scale the walk speed (1 = default); used by NPC patrol paths. */
+  setSpeedScale(scale: number): void {
+    this.speed = WALK_SPEED * scale
   }
 
   /** Play a one-shot animation (e.g. a trigger gesture). Deferred to the next idle

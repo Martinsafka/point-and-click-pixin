@@ -1,4 +1,4 @@
-import type { ItemDef, ItemId, NpcDef, NpcId, NpcPlacement, SceneId } from '../data/schema'
+import type { ItemDef, ItemId, NpcDef, NpcId, NpcPath, NpcPlacement, SceneId } from '../data/schema'
 import { editorStore } from './editor-store'
 import { ConditionEditor } from './ConditionEditor'
 
@@ -17,6 +17,8 @@ export function NpcList({
   onSelect,
   placeMode,
   onTogglePlace,
+  pathMode,
+  onTogglePath,
   items,
   sceneIds,
 }: {
@@ -28,6 +30,8 @@ export function NpcList({
   onSelect: (i: number) => void
   placeMode: boolean
   onTogglePlace: () => void
+  pathMode: boolean
+  onTogglePath: () => void
   items: Record<ItemId, ItemDef>
   sceneIds: SceneId[]
 }) {
@@ -117,6 +121,30 @@ export function NpcList({
             <span className="intr-form__note">
               spawn {sel.spawn.xFrac.toFixed(2)}, {sel.spawn.yFrac.toFixed(2)}
             </span>
+          </div>
+          <div className="editor__toolbar">
+            <button
+              type="button"
+              className={pathMode ? 'editor__btn--active' : undefined}
+              onClick={onTogglePath}
+            >
+              {pathMode ? 'Done' : `Path · ${(sel.path?.points.length ?? 0) / 2} pts`}
+            </button>
+            <button type="button" onClick={() => s().clearNpcPath(sceneId, selectedIndex)}>
+              Clear
+            </button>
+            <select
+              className="logic__sel"
+              value={sel.path?.mode ?? 'loop'}
+              disabled={!sel.path}
+              onChange={(e) =>
+                s().setNpcPathMode(sceneId, selectedIndex, e.target.value as NpcPath['mode'])
+              }
+            >
+              <option value="once">once</option>
+              <option value="loop">loop</option>
+              <option value="pingpong">pingpong</option>
+            </select>
           </div>
         </div>
       )}
