@@ -23,6 +23,12 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — Roadmap: NPC pause behaviours folded into step 4 (talk-pause + `wait` effect)
+**What:** Filed two requested NPC-pause behaviours into M7 step 4. (1) Talking to an NPC pauses it (+ faces the player) and resumes its loop / pingpong on dialogue end. (2) A `wait` effect (`{ kind: 'wait', ms, anim? }`) lets a trigger make the *entering* NPC linger — optionally **looping an `anim`** (idle-variant / fidget) for the duration — then continue. Both reuse the step-3 pause primitive (`paused`); step 4 adds public `Character.pause()` / `resume()` + `pauseFor(ms)`. Roadmap only — no code yet.
+**Why:** Lock the design before step 4. **Key constraint (user):** the `wait` effect **must not pause the player** — only NPC movers — so player control is never frozen.
+**How:** Roadmap M7 step 4 (two bullets). Pause resolves "longest wins" so `wait` + `playAnim` compose without cutting each other short.
+**Follow-ups:** implement with step 4 (dialogue).
+
 ### 2026-06-14 — M7 step 3 follow-up: trigger gestures pause-resume + NPC speed on the cast
 **What:** Two refinements to step 3's NPC system. (1) A trigger-driven `playAnim` on a **walking** character now **pauses the walk, plays the one-shot, then resumes** — so an NPC stops to gesture mid-patrol and walks on (the step-1 "defer to idle" never fired on a loop). (2) Walk **speed** moved from the path to the **global cast** (`NpcDef.speed`, editable in Characters → NPCs). Demo: the `stranger` slowly loops a street patrol and pauses to wave each time it crosses the `greet` trigger (`by: npc`, target `stranger`).
 **Why:** The user's intended flow — an NPC reaches a trigger, stops, plays, continues — and speed is a property of the character, not of a route.

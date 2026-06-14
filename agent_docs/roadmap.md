@@ -211,6 +211,14 @@ adventure model: define a character once, place it where it appears.
       library** + inline one-offs; voice / sounds attach to the global NPC.
 - [ ] `startDialog` becomes real — a branching tree with **typewriter text reveal**; click
       an NPC → dialogue UI (text + optional voice + choices → Effects).
+- [ ] **Talk pauses the NPC:** clicking an NPC walks to it, then **pauses + faces the
+      player** for the dialogue, and **resumes its loop / pingpong** afterwards (the step-3
+      pause primitive; add public `Character.pause()` / `resume()`).
+- [ ] **`wait` effect** (`{ kind: 'wait', ms, anim? }`) — a trigger makes the *entering*
+      NPC linger in the area, then continue (`Character.pauseFor`); an optional **`anim`
+      loops** for the duration (an idle-variant / fidget) and stops on resume. **Never
+      pauses the player** — only NPC movers, so player control stays free. Pause is
+      "longest wins" so `wait` + `playAnim` compose.
 - [ ] **Voice** — short unintelligible gibberish (Sims-style) while a character speaks;
       real VO swaps in later.
 - [ ] Editor: dialogue-tree editor (library + inline); attach voice.
