@@ -252,12 +252,38 @@ export type InteractableData =
       id: string
       hitArea: Polygon
       effects: Effect[]
+      /** When `effects` fire: `'enter'` (default) when feet cross in, or `'rest'` when a
+       *  character comes to a stop inside (reaches a target there) — e.g. crouch at cover
+       *  only on arrival, not while passing through. */
+      on?: 'enter' | 'rest'
+      /** Effects run when a character LEAVES the area (the exit edge) — e.g. un-set a
+       *  `hidden` flag when stepping out of cover. */
+      exitEffects?: Effect[]
       /** Who fires it: the player, an NPC, or any character (default 'player'). */
       by?: 'player' | 'npc' | 'any'
       /** Fire once per scene visit (always debounced to the enter edge). */
       once?: boolean
       when?: Condition
     }
+
+/**
+ * An NPC's stealth vision. Each frame the engine checks the player against the NPC's
+ * range + cone (the cone follows the NPC's facing; omit `angle` for all-round) with
+ * line-of-sight (obstacle holes occlude). On the first detection it runs `effects` (the
+ * stealth beat); `unless` suppresses detection (e.g. the player is `hidden` at cover).
+ */
+export interface VisionConfig {
+  /** Detection range as a fraction of the design height. */
+  range: number
+  /** Cone width in degrees (centred on the NPC's facing); omit → all-round (360°). */
+  angle?: number
+  /** Effects run when the NPC first sees the player. */
+  effects: Effect[]
+  /** Detection is suppressed while this Condition passes (e.g. `flag: hidden`). */
+  unless?: Condition
+  /** Fire once per scene visit (else re-fires on each fresh detection edge). */
+  once?: boolean
+}
 
 /**
  * An NPC's "voice" — the blips played while a dialogue line types out. Default is
@@ -295,6 +321,8 @@ export interface NpcDef {
   view?: ViewDescriptor
   /** The NPC's dialogue voice (procedural pitch / an uploaded blip); absent → default. */
   voice?: VoiceConfig
+  /** Stealth vision — on seeing the player, run its effects; absent → the NPC doesn't watch. */
+  vision?: VisionConfig
 }
 
 /** A patrol route for a placed NPC: waypoints (design-space fractions) walked in

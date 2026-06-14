@@ -28,6 +28,8 @@ export interface Navigation {
   /** Nearest point inside the mesh (for spawning / snapping a target). */
   clamp(x: number, y: number): Point
   contains(x: number, y: number): boolean
+  /** Clear line of sight between two points (no obstacle / wall between) — for vision. */
+  los(ax: number, ay: number, bx: number, by: number): boolean
 }
 
 const vx = (m: Mesh, i: number) => m.verts[i * 2]
@@ -239,5 +241,6 @@ export function buildNavigation(walkable: number[], holes: number[][] = []): Nav
     findPath: (sx, sy, gx, gy) => findPath(mesh, corners, cornerVis, sx, sy, gx, gy),
     clamp: (x, y) => clampToMesh(mesh, x, y),
     contains: (x, y) => triangleAt(mesh, x, y) >= 0,
+    los: (ax, ay, bx, by) => lineOfSight(mesh, { x: ax, y: ay }, { x: bx, y: by }),
   }
 }

@@ -25,3 +25,9 @@ export function facingFromVector(dx: number, dy: number): Facing {
   const index = ((sector % 8) + 8) % 8 // wrap -4..4 into 0..7
   return FACINGS[index]
 }
+
+/** The representative screen-space angle (radians) of a facing — the inverse of
+ *  `facingFromVector`. Points a vision cone along the NPC's facing. */
+export function facingToAngle(facing: Facing): number {
+  return FACINGS.indexOf(facing) * (Math.PI / 4)
+}

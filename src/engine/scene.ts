@@ -17,6 +17,7 @@ import { placeholderView } from '../entities/placeholder-atlas'
 import { resolveDepthScale, designSize, DEFAULT_REFERENCE_HEIGHT } from '../data/scene-config'
 import { depthScaleAt } from '../systems/depth'
 import { buildNavigation } from '../systems/navmesh'
+import { facingToAngle } from '../systems/movement'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
 import { containsPoint } from '../systems/walkable'
 import { checkCondition, type StoryState, type StoryStore } from '../systems/conditions'
@@ -35,6 +36,7 @@ import type {
   SceneId,
   TransitionConfig,
   ViewDescriptor,
+  VisionConfig,
   VoiceConfig,
 } from '../data/schema'
 
@@ -294,6 +296,31 @@ export async function mountScene(
     startNpcPath(npcChar, placement.path, design)
   }
 
+  // Stealth vision: per-NPC watchers with a precomputed range (px) + cone half-angle
+  // (rad). `seen` tracks the per-NPC detection edge so the beat fires once per spotting.
+  const visions: {
+    char: Character
+    id: string
+    cfg: VisionConfig
+    rangePx: number
+    half: number
+    seen: boolean
+    fired: boolean
+  }[] = []
+  for (const n of npcs) {
+    const cfg = cast[n.id]?.vision
+    if (!cfg) continue
+    visions.push({
+      char: n.character,
+      id: n.id,
+      cfg,
+      rangePx: cfg.range * design.height,
+      half: ((cfg.angle ?? 360) / 2) * (Math.PI / 180),
+      seen: false,
+      fired: false,
+    })
+  }
+
   // Camera: height-anchored + resize-safe. Each frame we read the *current*
   // viewport (so a window resize re-fits with no re-mount), scale the world so the
   // design height fills it, then pan horizontally to keep the character centred —
@@ -436,7 +463,8 @@ export async function mountScene(
     .map((it) => ({
       data: it,
       polygon: resolvePolygon(it.hitArea, design),
-      inside: new Set<string>(), // ids of characters currently inside (per-character edge)
+      inside: new Set<string>(), // ids of characters in the AREA (drives the exit edge)
+      active: new Set<string>(), // ids for whom the fire condition holds (the fire edge)
       fired: false,
     }))
   const checkTriggers = () => {
@@ -449,16 +477,62 @@ export async function mountScene(
       if (by === 'npc' || by === 'any')
         for (const n of npcs) movers.push({ id: n.id, c: n.character })
       for (const m of movers) {
-        const now = containsPoint({ polygon: t.polygon }, m.c.displayObject.x, m.c.displayObject.y)
-        if (now && !t.inside.has(m.id) && !(t.data.once && t.fired)) {
+        const inArea = containsPoint(
+          { polygon: t.polygon },
+          m.c.displayObject.x,
+          m.c.displayObject.y,
+        )
+        // 'rest' fires once the mover has stopped inside (reached a target there); the
+        // default 'enter' fires the moment its feet cross in.
+        const fireNow = t.data.on === 'rest' ? inArea && !m.c.isMoving() : inArea
+        if (fireNow && !t.active.has(m.id) && !(t.data.once && t.fired)) {
           if (!t.data.when || checkCondition(state, t.data.when)) {
             run(t.data.effects, m.id) // the enterer is the subject (receives `wait`)
             t.fired = true
           }
         }
-        if (now) t.inside.add(m.id)
-        else t.inside.delete(m.id)
+        if (fireNow) t.active.add(m.id)
+        else t.active.delete(m.id)
+        // Area containment drives the exit edge, independent of the fire mode.
+        if (inArea) {
+          t.inside.add(m.id)
+        } else {
+          // Leaving edge — e.g. un-set a `hidden` flag when stepping out of cover.
+          if (t.inside.has(m.id) && t.data.exitEffects) run(t.data.exitEffects, m.id)
+          t.inside.delete(m.id)
+        }
       }
+    }
+  }
+
+  // Stealth: each frame test the player against every watcher's range + cone + LOS,
+  // suppressed while `unless` passes (the player is hidden). Fire the beat on the
+  // unseen→seen edge (subject = the watcher), once if `once`.
+  const checkVision = () => {
+    if (visions.length === 0) return
+    const state = store.getState()
+    const px = character.displayObject.x
+    const py = character.displayObject.y
+    for (const v of visions) {
+      const disp = v.char.displayObject
+      let sees = disp.visible
+      if (sees) {
+        const dx = px - disp.x
+        const dy = py - disp.y
+        sees = Math.hypot(dx, dy) <= v.rangePx
+        if (sees && v.half < Math.PI) {
+          let ad = Math.atan2(dy, dx) - facingToAngle(v.char.getFacing())
+          ad = Math.atan2(Math.sin(ad), Math.cos(ad)) // normalise to [-π, π]
+          sees = Math.abs(ad) <= v.half
+        }
+        if (sees && v.cfg.unless && checkCondition(state, v.cfg.unless)) sees = false
+        if (sees && !nav.los(disp.x, disp.y, px, py)) sees = false
+      }
+      if (sees && !v.seen && !(v.cfg.once && v.fired)) {
+        run(v.cfg.effects, v.id) // the stealth beat — the watcher is the subject
+        v.fired = true
+      }
+      v.seen = sees
     }
   }
 
@@ -508,6 +582,7 @@ export async function mountScene(
     for (const n of npcs) n.character.update(ticker.deltaMS)
     updateCamera()
     checkTriggers()
+    checkVision()
   }
   app.ticker.add(onTick)
 

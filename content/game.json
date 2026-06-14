@@ -72,6 +72,18 @@
           "by": "npc",
           "hitArea": [0.46, 0.74, 0.58, 0.74, 0.58, 0.92, 0.46, 0.92],
           "effects": [{ "kind": "wait", "ms": 1500, "anim": "interact" }]
+        },
+        {
+          "kind": "trigger",
+          "id": "cover",
+          "by": "player",
+          "on": "rest",
+          "hitArea": [0.66, 0.8, 0.8, 0.8, 0.8, 0.96, 0.66, 0.96],
+          "effects": [
+            { "kind": "playAnim", "action": "pickup" },
+            { "kind": "setFlag", "flag": "hidden" }
+          ],
+          "exitEffects": [{ "kind": "setFlag", "flag": "hidden", "value": false }]
         }
       ],
       "npcs": [
@@ -79,6 +91,11 @@
           "npc": "stranger",
           "spawn": { "xFrac": 0.62, "yFrac": 0.82 },
           "path": { "points": [0.5, 0.86, 0.72, 0.82, 0.6, 0.93], "mode": "loop" }
+        },
+        {
+          "npc": "guard",
+          "spawn": { "xFrac": 0.88, "yFrac": 0.83 },
+          "path": { "points": [0.8, 0.83, 0.95, 0.83], "mode": "pingpong" }
         }
       ],
       "layers": [
@@ -367,6 +384,20 @@
       "dialogWhen": { "kind": "hasItem", "item": "key" },
       "inspect": { "text": "A wary stranger, sizing me up. They won't talk to someone empty-handed." },
       "voice": { "pitch": 0.8 }
+    },
+    "guard": {
+      "id": "guard",
+      "name": "Guard",
+      "speed": 0.6,
+      "vision": {
+        "range": 0.42,
+        "angle": 70,
+        "effects": [
+          { "kind": "playAnim", "action": "interact", "target": "guard" },
+          { "kind": "setFlag", "flag": "spotted" }
+        ],
+        "unless": { "kind": "flag", "flag": "hidden" }
+      }
     }
   },
   "dialogs": {

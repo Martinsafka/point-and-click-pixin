@@ -50,6 +50,16 @@ export class Character {
     return this.view.container
   }
 
+  /** The character's current facing — for an NPC's vision cone. */
+  getFacing(): Facing {
+    return this.facing
+  }
+
+  /** True while actively walking (not idle / held / arrived) — for `rest`-edge triggers. */
+  isMoving(): boolean {
+    return this.state === 'walk'
+  }
+
   /** Place the character instantly (clamped onto the walkable), cancelling any walk. */
   setPosition(x: number, y: number): void {
     const p = this.nav ? this.nav.clamp(x, y) : { x, y }
