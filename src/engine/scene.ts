@@ -264,15 +264,15 @@ export async function mountScene(
   const npcs: { id: string; character: Character; interaction: NpcInteraction }[] = []
   const actors = new Map<string, Character>([['player', character]])
   for (const placement of scene.npcs ?? []) {
-    // The cast def has no appearance yet → placeholder for all; the placement's `npc`
-    // is the runtime id (so `playAnim` target + future NPC triggers resolve to it).
+    // Per-NPC appearance (`NpcDef.view`) when set, else the shared placeholder. The
+    // placement's `npc` is the runtime id (playAnim target / NPC triggers resolve to it).
+    const def = cast[placement.npc]
     const npcChar = new Character(
-      await createSpriteView(placeholderView),
+      await createSpriteView(def?.view ?? placeholderView),
       depthScale,
       nav,
       charScale,
     )
-    const def = cast[placement.npc]
     if (def?.speed) npcChar.setSpeedScale(def.speed)
     npcChar.setPosition(placement.spawn.xFrac * design.width, placement.spawn.yFrac * design.height)
     interactive.addChild(npcChar.displayObject)

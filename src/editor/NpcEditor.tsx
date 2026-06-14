@@ -2,6 +2,8 @@ import { type ChangeEvent } from 'react'
 import { editorStore } from './editor-store'
 import { EditorModal } from './EditorModal'
 import { ConditionEditor } from './ConditionEditor'
+import { CharacterEditor } from './CharacterEditor'
+import { placeholderView } from '../entities/placeholder-atlas'
 
 /** Drop an inspect with no text + no audio (so an emptied form clears the field). */
 function trimInspect(inspect: { text?: string; audio?: string }) {
@@ -92,6 +94,18 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
             ✕
           </button>
         )}
+      </div>
+
+      <div className="intr-form__field intr-form__field--col">
+        <span>appearance</span>
+        <CharacterEditor
+          view={npc.view}
+          onCreate={() => s().patchNpcDef(npcId, { view: structuredClone(placeholderView) })}
+          onChange={(patch) =>
+            npc.view && s().patchNpcDef(npcId, { view: { ...npc.view, ...patch } })
+          }
+          onRemove={() => s().patchNpcDef(npcId, { view: undefined })}
+        />
       </div>
     </EditorModal>
   )

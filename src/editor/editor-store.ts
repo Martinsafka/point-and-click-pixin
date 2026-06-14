@@ -101,6 +101,8 @@ interface EditorStore {
   setNpcPlacementNpc(id: SceneId, index: number, npc: NpcId): void
   setNpcPlacementSpawn(id: SceneId, index: number, xFrac: number, yFrac: number): void
   setNpcPlacementWhen(id: SceneId, index: number, when: Condition | undefined): void
+  /** Per-scene dialogue override for a placement (falls back to the cast `NpcDef.dialog`). */
+  setNpcPlacementDialog(id: SceneId, index: number, dialog: DialogId | undefined): void
   addNpcPathPoint(id: SceneId, index: number, xFrac: number, yFrac: number): void
   clearNpcPath(id: SceneId, index: number): void
   setNpcPathMode(id: SceneId, index: number, mode: NpcPath['mode']): void
@@ -400,6 +402,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, spawn: { xFrac, yFrac } } : p))),
     setNpcPlacementWhen: (id, index, when) =>
       mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, when } : p))),
+    setNpcPlacementDialog: (id, index, dialog) =>
+      mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, dialog } : p))),
     addNpcPathPoint: (id, index, xFrac, yFrac) =>
       mapNpcs(id, (ps) =>
         ps.map((p, i) => {

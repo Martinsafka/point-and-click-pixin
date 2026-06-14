@@ -1,5 +1,4 @@
 import { useState, type ChangeEvent } from 'react'
-import { editorStore } from './editor-store'
 import type { AnimClip, ViewDescriptor } from '../data/schema'
 
 function parseFrames(text: string): number[] {
@@ -50,23 +49,31 @@ function AtlasPreview({ desc }: { desc: ViewDescriptor }) {
 }
 
 /**
- * The protagonist's view editor (Characters tab). Upload an atlas, set the frame
- * grid + anchor, and define clips (`idle.S`, `walk.E`, `pickup`, …) — frame indices
- * (shown numbered on the atlas) + fps + loop. Absent → the game uses the built-in
- * placeholder. Runtime: entities/sprite-view.ts. Name / frames commit on blur (so
- * typing doesn't re-key the row).
+ * A character view editor — controlled, so it serves both the player (Characters tab)
+ * and any NPC (the NPC modal). Upload an atlas, set the frame grid + anchor, and define
+ * clips (`idle.S`, `walk.E`, `pickup`, …) — frame indices (shown numbered on the atlas)
+ * + fps + loop. Absent `view` → the game uses the built-in placeholder; `onCreate`
+ * seeds one. Runtime: entities/sprite-view.ts. Clip name / frames commit on blur.
  */
-export function CharacterEditor({ player }: { player: ViewDescriptor | undefined }) {
-  const s = () => editorStore.getState()
-
-  if (!player) {
+export function CharacterEditor({
+  view,
+  onCreate,
+  onChange,
+  onRemove,
+}: {
+  view: ViewDescriptor | undefined
+  onCreate: () => void
+  onChange: (patch: Partial<ViewDescriptor>) => void
+  onRemove: () => void
+}) {
+  if (!view) {
     return (
       <div className="char-editor">
         <p className="editor__hint">
           No character yet — the game uses the built-in placeholder figure.
         </p>
         <div className="editor__toolbar">
-          <button type="button" onClick={() => s().createPlayer()}>
+          <button type="button" onClick={onCreate}>
             Create from placeholder
           </button>
         </div>
@@ -79,12 +86,12 @@ export function CharacterEditor({ player }: { player: ViewDescriptor | undefined
     e.target.value = ''
     if (!file) return
     const reader = new FileReader()
-    reader.onload = () => s().updatePlayer({ atlas: String(reader.result) })
+    reader.onload = () => onChange({ atlas: String(reader.result) })
     reader.readAsDataURL(file)
   }
 
-  const clips = player.clips
-  const setClips = (next: Record<string, AnimClip>) => s().updatePlayer({ clips: next })
+  const clips = view.clips
+  const setClips = (next: Record<string, AnimClip>) => onChange({ clips: next })
   const renameClip = (oldName: string, newName: string) => {
     if (!newName || (newName !== oldName && clips[newName])) return
     const next: Record<string, AnimClip> = {}
@@ -110,13 +117,13 @@ export function CharacterEditor({ player }: { player: ViewDescriptor | undefined
 
   return (
     <div className="char-editor">
-      <AtlasPreview desc={player} />
+      <AtlasPreview desc={view} />
       <div className="editor__toolbar">
         <label className="editor__import">
           Change atlas
           <input type="file" accept="image/*,.svg" hidden onChange={onAtlas} />
         </label>
-        <button type="button" onClick={() => s().removePlayer()}>
+        <button type="button" onClick={onRemove}>
           Remove
         </button>
       </div>
@@ -126,17 +133,15 @@ export function CharacterEditor({ player }: { player: ViewDescriptor | undefined
         <input
           className="logic__in"
           type="number"
-          value={player.frameWidth}
-          onChange={(e) => s().updatePlayer({ frameWidth: num(e.target.value, player.frameWidth) })}
+          value={view.frameWidth}
+          onChange={(e) => onChange({ frameWidth: num(e.target.value, view.frameWidth) })}
         />
         <span>×</span>
         <input
           className="logic__in"
           type="number"
-          value={player.frameHeight}
-          onChange={(e) =>
-            s().updatePlayer({ frameHeight: num(e.target.value, player.frameHeight) })
-          }
+          value={view.frameHeight}
+          onChange={(e) => onChange({ frameHeight: num(e.target.value, view.frameHeight) })}
         />
       </div>
       <div className="intr-form__field">
@@ -144,23 +149,23 @@ export function CharacterEditor({ player }: { player: ViewDescriptor | undefined
         <input
           className="logic__in"
           type="number"
-          value={player.columns}
-          onChange={(e) => s().updatePlayer({ columns: num(e.target.value, player.columns) })}
+          value={view.columns}
+          onChange={(e) => onChange({ columns: num(e.target.value, view.columns) })}
         />
         <span>anchor</span>
         <input
           className="logic__in"
           type="number"
           step="0.1"
-          value={player.anchorX}
-          onChange={(e) => s().updatePlayer({ anchorX: num(e.target.value, player.anchorX) })}
+          value={view.anchorX}
+          onChange={(e) => onChange({ anchorX: num(e.target.value, view.anchorX) })}
         />
         <input
           className="logic__in"
           type="number"
           step="0.1"
-          value={player.anchorY}
-          onChange={(e) => s().updatePlayer({ anchorY: num(e.target.value, player.anchorY) })}
+          value={view.anchorY}
+          onChange={(e) => onChange({ anchorY: num(e.target.value, view.anchorY) })}
         />
       </div>
 

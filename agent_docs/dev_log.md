@@ -23,6 +23,13 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M7 step 4d.3: per-NPC appearance + placement dialogue override
+**What:** NPCs can have their own look. `NpcDef.view?: ViewDescriptor` (atlas + clips); the runtime renders `cast[npc].view ?? placeholder`. The player's `CharacterEditor` is **generalised to any view** (`{ view, onCreate, onChange, onRemove }`) and reused: the player wires its `createPlayer` / `updatePlayer` / `removePlayer`, and the NPC modal gains an **Appearance** section wired to `patchNpcDef`. Plus a **placement dialogue override** dropdown in `NpcList` (per-scene; falls back to the cast `NpcDef.dialog`).
+**Why:** M7 step 4d.3 — finishes the NPC definition editor's appearance (pinned earlier into 4d) + surfaces the per-placement override the schema already had.
+**How:** `CharacterEditor` became fully controlled (dropped its store import). The NPC `onChange` merges `{ ...npc.view, ...patch }` (guarded by `npc.view`, defined whenever the form shows); `onCreate` seeds `structuredClone(placeholderView)`. Runtime is a one-line swap (`def?.view ?? placeholderView`, with `def` read before the Character is built). `setNpcPlacementDialog` + a dialog dropdown in the placement form.
+**Verified:** format / typecheck / lint / build green; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** **voice = 4c** is the last piece of step 4; dialogue node-id rename (cascade refs) stays a nicety.
+
 ### 2026-06-14 — M7 step 4d.2: Dialogs library + node-tree editor (modal)
 **What:** A new top-level **Dialogs** tab + a node-tree editor in the modal — author the 4b dialogue trees no-code. The library lists dialogs (add / remove; ids fixed at creation); **Edit** opens the node editor: pick the `start` node, and per node edit **speaker** (player / cast dropdown, or "— partner —"), **text**, **on-enter effects** (`EffectList`, with the animation / target pickers), a conditional **branch** router (`when → to`), reply **choices** (text + `when` + effects + `next`), and the **next** line (when there are no choices). Node references (start / next / branch.to / choice.next) are node-id dropdowns with a text preview; a stale ref stays selectable, flagged. New `DialogList` + `DialogEditor`; the editor store gains `addDialog` / `removeDialog` / `setDialogStart` / `addDialogNode` / `removeDialogNode` / `setDialogNode`.
 **Why:** M7 step 4d's headline — the no-code dialogue authoring, so trees aren't hand-written in `game.json`.

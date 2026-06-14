@@ -36,6 +36,7 @@ export function NpcList({
   sceneIds: SceneId[]
 }) {
   const s = () => editorStore.getState()
+  const dialogIds = Object.keys(s().doc.dialogs ?? {})
   const castList = Object.values(cast)
   const firstFree = castList.find((n) => !placedNpcIds.has(n.id))
   const sel = selectedIndex !== null ? placements[selectedIndex] : undefined
@@ -110,6 +111,23 @@ export function NpcList({
               sceneIds={sceneIds}
             />
           </div>
+          <label className="intr-form__field">
+            <span>dialog</span>
+            <select
+              className="logic__sel"
+              value={sel.dialog ?? ''}
+              onChange={(e) =>
+                s().setNpcPlacementDialog(sceneId, selectedIndex, e.target.value || undefined)
+              }
+            >
+              <option value="">— cast default —</option>
+              {dialogIds.map((id) => (
+                <option key={id} value={id}>
+                  {id}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="editor__toolbar">
             <button
               type="button"

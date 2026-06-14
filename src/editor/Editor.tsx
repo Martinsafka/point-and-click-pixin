@@ -491,7 +491,12 @@ export function Editor() {
           {tab === 'characters' && (
             <>
               <Section title="Player">
-                <CharacterEditor player={doc.player} />
+                <CharacterEditor
+                  view={doc.player}
+                  onCreate={() => editorStore.getState().createPlayer()}
+                  onChange={(patch) => editorStore.getState().updatePlayer(patch)}
+                  onRemove={() => editorStore.getState().removePlayer()}
+                />
               </Section>
               <Section title={`NPCs · ${Object.keys(doc.npcs ?? {}).length}`}>
                 <NpcCast npcs={doc.npcs} />

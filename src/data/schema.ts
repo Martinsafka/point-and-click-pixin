@@ -279,6 +279,8 @@ export interface NpcDef {
   /** "Look at" the NPC — the player walks up and comments (text + optional audio).
    *  Used when there is no dialogue, or its `dialogWhen` gate fails. */
   inspect?: { text?: string; audio?: string }
+  /** The NPC's appearance (atlas + clips); absent → the built-in placeholder figure. */
+  view?: ViewDescriptor
 }
 
 /** A patrol route for a placed NPC: waypoints (design-space fractions) walked in
