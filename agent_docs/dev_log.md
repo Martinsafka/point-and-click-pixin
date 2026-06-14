@@ -23,6 +23,15 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M5 step 2: 8-direction walk cycle
+**What:** The character plays **directional** clips. `ViewDescriptor.clips` are keyed `state.facing` (e.g. `walk.E`, `idle.S`); `createSpriteView` resolves the clip from the character's `facing` and **mirrors the W-side** (W / SW / NW = E / SE / NE flipped via `sprite.scale.x`), so 8 facings need only ~5 base directions. The procedural placeholder atlas grew to **5 rows** (S / SE / E / NE / N) × 6 frames, with a head/nose marker pointing in the facing direction (N = the back of the head).
+**Why:** M5 step 2 — facing → the right walk cycle; mirror-to-5 keeps the atlas small (the `asset_pipeline.md` plan).
+**How:**
+- **Mirror map:** `BASE_FACING` sends each facing to its base direction (W→E, SW→SE, NW→NE); `MIRRORED` flips `scale.x` for the W-side. Resolution falls back `state.facing → state → idle.facing → idle`, so a state-only descriptor (M5.1 style) still works.
+- **Placeholder conveys direction via the head:** the body + walk cycle are shared across rows; only the head/nose differs (front / diagonals show a nose pointing the right way; N is the darker back of the head). Real per-direction art comes from the editor upload (M5.4).
+- **Verified:** format / typecheck / lint / build green; dev smoke 200. The actual 8-dir cycle + W-side mirror is the user's browser check.
+**Follow-ups:** **M5.3** one-shots (pickup / interact) + `onComplete`; **M5.4** the editor Characters tab (upload atlas, define clips, map state / facing, anchor + footprint).
+
 ### 2026-06-13 — M5 step 1: AnimatedSprite character + view descriptor + placeholder atlas
 **What:** The character is now an **`AnimatedSprite`** driven by a **`ViewDescriptor`** (atlas + grid + `state → clip`), replacing the placeholder cube — a data change via the `CharacterView` interface, not a logic refactor. New: `data/schema.ts` `ViewDescriptor` + `AnimClip` types; `entities/placeholder-atlas.ts` (a procedural character spritesheet drawn in code → PNG data-URL + its descriptor, idle + walk clips); `entities/sprite-view.ts` `createSpriteView` (loads the atlas, slices frame sub-textures, builds clips, plays idle / walk per `MoveState`, mirrors for west facing). `scene.ts` mounts it in both the game + the editor preview.
 **Why:** M5 step 1 — realise the view-descriptor model from `asset_pipeline.md`; swap the cube for a real animated sprite, testable now via a procedural placeholder (no real art needed).

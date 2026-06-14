@@ -3,15 +3,27 @@ import type { CharacterView } from './character-view'
 import type { Facing, MoveState } from '../systems/movement'
 import type { ViewDescriptor } from '../data/schema'
 
-const WESTWARD: ReadonlySet<Facing> = new Set<Facing>(['W', 'NW', 'SW'])
+/** Each facing → the base direction whose clips it uses (W-side mirrors E-side). */
+const BASE_FACING: Record<Facing, Facing> = {
+  E: 'E',
+  W: 'E',
+  SE: 'SE',
+  SW: 'SE',
+  NE: 'NE',
+  NW: 'NE',
+  S: 'S',
+  N: 'N',
+}
+const MIRRORED: ReadonlySet<Facing> = new Set<Facing>(['W', 'SW', 'NW'])
 
 /**
  * An `AnimatedSprite` character view built from a baked atlas + a `ViewDescriptor`
- * (state → clip). Swapping the placeholder cube for this is a data change here, not
- * a logic refactor (character.ts drives it via the `CharacterView` interface). M5.1:
- * idle / walk clips keyed by `MoveState`; facing is a horizontal mirror — real
- * 8-direction frames come in M5.2. The sprite is a child of `container`, so the
- * mirror (`scale.x`) is independent of the depth scale logic applies to `container`.
+ * (clips keyed `state.facing`, e.g. `walk.E`). Swapping the placeholder cube for
+ * this is a data change here, not a logic refactor (character.ts drives it via the
+ * `CharacterView` interface). 8 facings map to ~5 base directions; the W-side ones
+ * are a horizontal mirror (`sprite.scale.x`), independent of the depth scale logic
+ * applies to `container`. Resolution falls back `state.facing → state → idle`, so
+ * a state-only descriptor still works.
  */
 export async function createSpriteView(desc: ViewDescriptor): Promise<CharacterView> {
   const sheet = await Assets.load<Texture>(desc.atlas)
@@ -33,7 +45,7 @@ export async function createSpriteView(desc: ViewDescriptor): Promise<CharacterV
     clipTextures[name] = clip.frames.map(frameTexture)
   }
 
-  const initial = clipTextures.idle ?? Object.values(clipTextures)[0] ?? [Texture.WHITE]
+  const initial = Object.values(clipTextures)[0] ?? [Texture.WHITE]
   const sprite = new AnimatedSprite(initial)
   sprite.anchor.set(desc.anchorX, desc.anchorY)
 
@@ -50,14 +62,24 @@ export async function createSpriteView(desc: ViewDescriptor): Promise<CharacterV
     sprite.loop = clip.loop
     sprite.gotoAndPlay(0)
   }
-  setClip('idle')
+
+  const resolveKey = (state: MoveState, base: Facing): string => {
+    if (desc.clips[`${state}.${base}`]) return `${state}.${base}`
+    if (desc.clips[state]) return state
+    if (desc.clips[`idle.${base}`]) return `idle.${base}`
+    if (desc.clips.idle) return 'idle'
+    return Object.keys(desc.clips)[0] ?? ''
+  }
+
+  const applyPose = (state: MoveState, facing: Facing): void => {
+    setClip(resolveKey(state, BASE_FACING[facing]))
+    sprite.scale.x = MIRRORED.has(facing) ? -1 : 1
+  }
+  applyPose('idle', 'S')
 
   return {
     container,
-    setPose(state: MoveState, facing: Facing) {
-      setClip(desc.clips[state] ? state : 'idle')
-      sprite.scale.x = WESTWARD.has(facing) ? -1 : 1
-    },
+    setPose: applyPose,
     destroy() {
       container.destroy({ children: true })
     },

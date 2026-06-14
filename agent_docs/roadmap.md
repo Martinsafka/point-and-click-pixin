@@ -119,8 +119,8 @@ M4 additions (raised after the core was done):
   - [x] **AnimatedSprite** view from a baked PNG atlas; placeholder cube → an animated
         figure (a data change via the view, not a refactor). Procedural placeholder
         atlas (drawn in code) for testing before real art.
-  - [ ] **8-dir facing → the right walk cycle** (depth-scale + Y-sort already feed
-        off the feet point).
+  - [x] **8-dir facing → the right walk cycle** — clips keyed `state.facing`, W-side
+        mirrored to ~5 base directions; placeholder atlas has the 5 direction rows.
   - [ ] **One-shot triggers + `onComplete`**: an interactable / effect plays a
         one-shot on the character — pickup (variant chosen by the picked
         item/object), interact, talk-while-speaking — resolving the action on the
