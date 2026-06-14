@@ -186,9 +186,10 @@ one, and a trigger at cover plays a crouch — the stealth beat. Ordered into te
 NPCs become **global characters** placed into scenes, not per-scene data — the standard
 adventure model: define a character once, place it where it appears.
 
-- [x] `GameDoc.npcs` — the global **cast**: `NpcDef { id, name }` now; **appearance +
-      animations + sounds + dialogue + routine layer in over steps 3–6**. Lives in the
-      Characters tab beside the player ("character 0").
+- [x] `GameDoc.npcs` — the global **cast**: `NpcDef { id, name, speed }` now (`view` /
+      `dialog` / voice land with their steps). Lives in the Characters tab beside the
+      player ("character 0"). **Per-NPC appearance + dialogue + voice are authored in 4d**
+      (the NPC-definition modal); the cross-scene **routine is step 6**.
 - [x] `SceneData.npcs` becomes **placements**: `{ npc, spawn, when }` referencing the cast
       (click-to-place stays). **Unique** — one NPC is placed in at most one scene
       (editor-enforced; cast id fixed at creation, removal cascades to placements).
@@ -226,9 +227,15 @@ pause / face) fire from triggers, clicks **and** dialogue.
       an NPC → walk + talk → it **pauses + faces the player**, resumes its loop / pingpong.
 - [ ] **4c — Voice.** Procedural **gibberish** blips while a line reveals (the demo
       default) **+ uploadable per-NPC voice clips** that replace it (real VO).
-- [ ] **4d — Editor.** A **Dialogs library** + node-tree editor opened in a **modal** (room
-      to work — and the future flowchart); assign dialogs (cast default + placement
-      override); voice settings on the NPC.
+- [ ] **4d — Editor.** The NPC's **full-definition editor**, opened in a **modal** (room to
+      work — and the future flowchart). Three parts:
+  - **Appearance** — per-NPC atlas + clips (`NpcDef.view: ViewDescriptor`), by **generalising
+    the player's `CharacterEditor`** to any view (`{ view, onCreate, onChange, onRemove }`);
+    runtime falls back to the placeholder when absent. _(Today only the player has a view
+    editor — NPCs hardcode the placeholder in `scene.ts`.)_
+  - **Dialogue** — a **Dialogs library** + node-tree editor; assign dialogs (cast default +
+    placement override).
+  - **Voice** — the gibberish toggle + per-NPC clip upload (4c).
 
 **Step 5 — Stealth** _(idea: crouch at cover; NPC vision)_
 

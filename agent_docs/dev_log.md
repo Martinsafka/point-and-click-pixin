@@ -23,6 +23,12 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — Roadmap: per-NPC appearance pinned into step 4d
+**What:** Pinned **per-NPC appearance** (atlas + clips, `NpcDef.view`) as an explicit task in **4d**, which was only loosely implied before ("appearance … layers in over steps 3–6"). 4d is now the NPC's **full-definition editor** (appearance + dialogue + voice) in the modal — appearance by **generalising the player's `CharacterEditor`** to any view (`{ view, onCreate, onChange, onRemove }`), runtime falling back to the placeholder. The cross-scene routine stays step 6.
+**Why:** Spotted in the editor — an NPC can set only name + speed; only the player has a view editor (NPCs hardcode the placeholder in `scene.ts`). Folding appearance into 4d keeps the whole NPC definition authored in one modal.
+**How:** Roadmap only — 4d expanded into appearance / dialogue / voice; the step-2b cast bullet de-vagued. Implementation lands with 4d.
+**Follow-ups:** continue with **4b** (dialogue runtime + UI).
+
 ### 2026-06-14 — M7 step 4a: actor registry + `wait` effect
 **What:** Lifted `runEffects` out of `mountScene` into a shared module (`src/engine/effects.ts`) over an **actor registry** (`Map<string, Character>` — `'player'` + each cast id), and added the **`wait`** engine effect (`{ kind: 'wait', ms, anim? }`). New `Character` controls: **`pause()` / `resume()`** (indefinite hold, preserves the walk path — for talk-pause), **`pauseFor(ms, anim?)`** (timed hold, optional looping `anim`), **`faceToward(x, y)`** (turn without moving). `CharacterView` gains **`loopAction(action, facing)`** (force-loop a clip; cube = no-op). Editor: `wait` added to the effect dropdown (ms + optional loop-anim). Demo: the street `greet` trigger now `playAnim` + `wait 1500` — the `stranger` reaches forward then lingers ~1.5 s before resuming its loop.
 **Why:** M7 step 4a — the foundation 4b–4d (dialogue) stand on. The shared registry is what lets engine effects (`playAnim` / `wait` / pause / face) fire from triggers, clicks **and** (next) dialogue, all addressing the same live characters by id.
