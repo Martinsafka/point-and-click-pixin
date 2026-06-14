@@ -173,27 +173,47 @@ one, and a trigger at cover plays a crouch — the stealth beat. Ordered into te
       _(`spawnNpc` / `despawnNpc` move to step 2 with NPC entities.)_
 - [x] Editor: **+ Trigger** + form (effects / when / by / once); violet hit-area.
 
-**Step 2 — NPC entities**
+**Step 2 — NPC entities** ✅
 
-- [ ] `NpcData` — a character (M5 view descriptor) with spawn + `when` (arrival /
-      departure); multiple characters share the `interactive` band (reuse `Character`,
-      nav-mesh, depth). Item handover via Effects.
-- [ ] Editor: NPC list (add / remove / view / spawn placement).
+- [x] `NpcData` — a character (M5 view; default placeholder) with spawn + `when`
+      (arrival / departure); multiple characters share the `interactive` band (reuse
+      `Character`, the shared nav-mesh, depth + Y-sort). `playAnim` can target an NPC.
+- [x] Editor: NPC list (add / remove / id / when / spawn placement; orange markers).
+      _(Per-NPC art upload is a follow-up — NPCs use the placeholder for now.)_
 
-**Step 3 — NPC movement paths** _(idea: draw a route; chains with triggers)_
+**Step 2b — Global NPC cast + per-scene placement** _(refactor of step 2)_
 
-- [ ] `NpcData.path` — a **drawn route** of waypoints, `once | loop | pingpong` (+ speed);
-      the NPC walks it via the nav-mesh. Triggers now fire on **NPC** entry too → an NPC
-      reaches a spot and fires an event (the chaining).
+NPCs become **global characters** placed into scenes, not per-scene data — the standard
+adventure model: define a character once, place it where it appears.
+
+- [ ] `GameDoc.npcs` — the global **cast**: `NpcDef { id, name }` now; **appearance +
+      animations + sounds + dialogue + routine layer in over steps 3–6**. Lives in the
+      Characters tab beside the player ("character 0").
+- [ ] `SceneData.npcs` becomes **placements**: `{ npc, spawn, when }` referencing the cast
+      (click-to-place stays). **Unique** — one NPC is placed in at most one scene.
+- [ ] An NPC's **current scene is runtime state** (its placement is only the *start*); a
+      `moveNpc` / `despawnNpc` effect + its routine move it between scenes. "Appears in
+      another scene" = a logical action (solve a puzzle → it leaves here, shows up there),
+      not a second placement.
+
+**Step 3 — NPC movement paths (in-scene)** _(idea: draw a route; chains with triggers)_
+
+- [ ] A placement's **path** — a **drawn route** of waypoints, `once | loop | pingpong`
+      (+ speed); the NPC walks it via the nav-mesh. Triggers now fire on **NPC** entry too
+      → an NPC reaches a spot and fires an event (the chaining).
 - [ ] Editor: **draw the NPC's path** (polyline overlay, like walkable).
 
-**Step 4 — Dialogue runtime**
+**Step 4 — Dialogue & narrative**
 
+- [ ] **Two narrative tiers:** a **global story scenario** (orchestrates several NPCs +
+      the action sequence — relates to the M12 story / logic graph) **and** a **per-NPC
+      dialogue** (the character's own conversation bubble). Dialogues are a **reusable
+      library** + inline one-offs; voice / sounds attach to the global NPC.
 - [ ] `startDialog` becomes real — a branching tree with **typewriter text reveal**; click
       an NPC → dialogue UI (text + optional voice + choices → Effects).
 - [ ] **Voice** — short unintelligible gibberish (Sims-style) while a character speaks;
       real VO swaps in later.
-- [ ] Editor: dialogue-tree editor; attach voice.
+- [ ] Editor: dialogue-tree editor (library + inline); attach voice.
 
 **Step 5 — Stealth** _(idea: crouch at cover; NPC vision)_
 
@@ -203,6 +223,13 @@ one, and a trigger at cover plays a crouch — the stealth beat. Ordered into te
       and sets a "hidden" flag that lowers detection; **foreground occluders already hide the
       character** (existing band).
 - [ ] Editor: vision settings; crouch / hidden wiring.
+
+**Step 6 — NPC routine (cross-scene behaviour)** _(the grand piece; builds on step 3)_
+
+- [ ] A per-NPC **routine flowchart** — schedules / reactions that move an NPC between
+      scenes and along its in-scene paths over time + story state. Runtime NPC location
+      lives in story state; `moveNpc` / `despawnNpc` are its primitives.
+- [ ] Editor: a node-graph routine editor (inside the NPC's global definition).
 
 ### M8 — Cutscenes / scripted sequences
 
