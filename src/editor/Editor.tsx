@@ -21,6 +21,7 @@ import { RecipeTable } from './RecipeTable'
 import { CursorEditor } from './CursorEditor'
 import { CharacterEditor } from './CharacterEditor'
 import { DepthEditor } from './DepthEditor'
+import { TransitionEditor } from './TransitionEditor'
 
 const TABS = ['scene', 'items', 'characters', 'project'] as const
 type Tab = (typeof TABS)[number]
@@ -461,6 +462,9 @@ export function Editor() {
               </Section>
               <Section title="Cursors">
                 <CursorEditor cursors={doc.cursors} />
+              </Section>
+              <Section title="Transition">
+                <TransitionEditor transition={doc.transition} />
               </Section>
               <Section title="Document">
                 <div className="editor__toolbar">

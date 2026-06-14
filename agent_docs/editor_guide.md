@@ -46,7 +46,7 @@ preview immediately. The panel is split into top-level **tabs**:
 - **Scene** — Scenes, Walkable, Layers, Interactables.
 - **Items** — Items, Recipes.
 - **Characters** — character & animation setup (M5).
-- **Project** — Display, Cursors, Document (export / import).
+- **Project** — Display, Cursors, Transition, Document (export / import).
 
 Each section within a tab **collapses** when you click its title (accordion); a
 persistent footer has **▶ Test in game** / **Discard**. Drag the divider between the
@@ -224,6 +224,18 @@ The in-game pointer changes by what it's over: **walk** (over the walkable area)
 sky, walls, outside any area). Upload an icon per context (SVG/PNG), or leave it
 for the emoji fallback (👣 / ✋ / ⚙️ / 🚪 / 👁 / ↖️). The game has **no native
 cursor**; over the game UI the normal pointer returns.
+
+### Transition (global)
+
+How scene swaps look. By default the game fades through **black**; here you can set:
+
+- **colour** — the wash colour the swap fades through.
+- **art** — an optional image shown (centred, covering) over the wash during the swap.
+- **min hold** — a minimum time (ms) the wash stays up, so a styled transition lingers
+  even when the next scene loads instantly.
+
+If a scene takes a moment to load, a **loading spinner** shows in the corner while the
+screen is covered — the game never reveals a half-loaded scene.
 
 ### Playtest
 

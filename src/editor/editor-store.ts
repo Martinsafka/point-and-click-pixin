@@ -15,6 +15,7 @@ import type {
   SceneBand,
   SceneData,
   SceneId,
+  TransitionConfig,
   UseRule,
   ViewDescriptor,
 } from '../data/schema'
@@ -49,6 +50,8 @@ interface EditorStore {
   setReferenceHeight(height: number): void
   /** Per-scene depth curve (scale-by-Y stops); drawn in the panel, no re-mount. */
   setDepthStops(id: SceneId, stops: DepthStop[]): void
+  /** Scene-swap transition (wash colour / art / min hold); document-level. */
+  setTransition(patch: Partial<TransitionConfig>): void
   /** Append an uploaded image as a full-screen background layer (a backdrop). */
   addImageLayer(id: SceneId, src: string): void
   removeLayer(id: SceneId, index: number): void
@@ -296,6 +299,7 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       patchDoc({ items: { ...items, [id]: { ...items[id], icon } } })
     },
     setCursorIcon: (kind, icon) => patchDoc({ cursors: { ...get().doc.cursors, [kind]: icon } }),
+    setTransition: (patch) => patchDoc({ transition: { ...get().doc.transition, ...patch } }),
     createPlayer: () => {
       const { doc, revision } = get()
       set({ doc: { ...doc, player: structuredClone(placeholderView) }, revision: revision + 1 })

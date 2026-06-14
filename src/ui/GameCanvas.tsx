@@ -45,6 +45,7 @@ export function GameCanvas() {
         storyStore,
         gameDoc.player,
         gameDoc.referenceHeight,
+        gameDoc.transition,
       )
     })()
 

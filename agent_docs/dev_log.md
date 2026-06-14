@@ -23,6 +23,15 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — Task B: scene-transition polish (loading spinner + custom wash / art / min hold)
+**What:** Scene swaps gained a `GameDoc.transition` config — a **wash colour** (default black), an optional **centred art** image, and a **minimum hold** (ms). A **loading spinner** appears in the corner when a scene mount outlasts ~220 ms (quick swaps stay clean). Editor: a **Transition** section (Project tab) — colour / art upload / min-hold.
+**Why:** The await-the-mount-under-cover invariant was already there (no blank frame); this adds feedback for slow mounts and lets a game style its transitions instead of a hard cut to black.
+**How:**
+- `createSceneHost`: the fade overlay is now a `Container` (colour-wash `Graphics` + optional cover-fit art `Sprite`), alpha-animated as before. The spinner is a rotating arc above it, raised by a `setTimeout(SPINNER_DELAY_MS)` that's cleared the moment `mountScene` resolves; `transition.minMs` then holds the wash for a floor duration. Re-confirmed invariant: **the fade-in never starts until the mount (and its assets) resolves.**
+- Schema: `TransitionConfig { color?, image?, minMs? }`, threaded `GameCanvas → createSceneHost`. Editor `setTransition` (document-level, no preview re-mount).
+- **Verified:** format / typecheck / lint / build green; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** none essential. Next: **parallax backgrounds** (the last queued piece before M7).
+
 ### 2026-06-14 — Fix: pathfinding rewritten to a visibility graph (no more "walk across the scene")
 **What:** Replaced the triangle-channel A\* + funnel with a **visibility-graph** path search. The earcut triangulation now only serves point-in-area tests (spawn / target clamp); the route is the shortest path through a graph over the obstacle corners (+ start / goal), edges being mutually visible (line-of-sight) pairs, A\* over Euclidean distance.
 **Why:** Regression after the height-anchored design space: scenes now triangulate at a fixed wide aspect (e.g. 4224×1080), and aligned hole tops (collinear Y) made earcut emit degenerate triangles — which broke the triangle adjacency, so the channel A\* routed "the long way round" and the funnel faithfully followed → the character walked to the far side of the map and back. A randomized street check found 4.6% of paths with a >2.5× detour (worst 21–51×) and 3.6% leaving the walkable.

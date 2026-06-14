@@ -23,6 +23,7 @@ import type {
   SceneBand,
   SceneData,
   SceneId,
+  TransitionConfig,
   ViewDescriptor,
 } from '../data/schema'
 
@@ -418,15 +419,18 @@ export async function mountPreview(
   }
 }
 
-/** Fade-to-black duration each way, in ms. */
+/** Fade duration each way, in ms; and how long a mount may run before the loading
+ *  spinner appears (so quick swaps stay clean). */
 const FADE_MS = 180
+const SPINNER_DELAY_MS = 220
 
 /**
  * Mounts whichever scene the store says is current, and swaps when it changes.
- * Swaps **fade through black** — fade out → destroy + mount → fade in — so the
- * async mount and the hard cut are hidden (no blank frame). The first scene fades
- * in from black. Swaps are deferred to a microtask so a transition fired from
- * inside the ticker (click → walk → goTo) never tears the old scene down mid-update.
+ * Swaps **fade through a wash** (`GameDoc.transition`: colour / art / min hold;
+ * default black) — fade out → destroy + mount → fade in — so the async mount and the
+ * hard cut are hidden (no blank frame), and a slow mount shows a loading spinner.
+ * The first scene fades in. Swaps are deferred to a microtask so a transition fired
+ * from inside the ticker (click → walk → goTo) never tears the old scene down mid-update.
  */
 export function createSceneHost(
   app: Application,
@@ -434,23 +438,60 @@ export function createSceneHost(
   store: SceneStore,
   playerView: ViewDescriptor = placeholderView,
   referenceHeight: number = DEFAULT_REFERENCE_HEIGHT,
+  transition?: TransitionConfig,
 ): SceneHost {
   let current: Scene | undefined
   let destroyed = false
   let shownId: SceneId | undefined
 
-  // A black overlay above every scene, animated on the ticker. Starts opaque so
-  // the first mount fades in. A huge rect so it covers any viewport size.
+  // The overlay swaps cross through: a colour wash (default black) + optional art,
+  // animated on the ticker. Starts opaque so the first mount fades in. A huge rect
+  // covers any viewport size.
   app.stage.sortableChildren = true
-  const fade = new Graphics().rect(-5000, -5000, 10000, 10000).fill(0x000000)
+  const fade = new Container()
   fade.zIndex = 10000
   fade.eventMode = 'none'
   fade.alpha = 1
+  const wash = new Graphics()
+    .rect(-5000, -5000, 10000, 10000)
+    .fill({ color: transition?.color ?? 0x000000 })
+  fade.addChild(wash)
   app.stage.addChild(fade)
+
+  // Optional transition art, centred + covering the viewport (placed each tick).
+  let art: Sprite | undefined
+  if (transition?.image) {
+    void Assets.load(transition.image).then((tex) => {
+      if (destroyed) return
+      art = new Sprite(tex)
+      art.anchor.set(0.5)
+      fade.addChild(art)
+    })
+  }
+
+  // Loading spinner — a rotating arc in the corner, above the wash, shown only when
+  // a mount outlasts SPINNER_DELAY_MS.
+  const spinner = new Graphics()
+    .arc(0, 0, 13, 0, Math.PI * 1.5)
+    .stroke({ width: 3, color: 0xffffff, alpha: 0.85, cap: 'round' })
+  spinner.zIndex = 10001
+  spinner.eventMode = 'none'
+  spinner.visible = false
+  app.stage.addChild(spinner)
 
   let fadeTarget = 1
   let fadeResolve: (() => void) | null = null
   const onFadeTick = (ticker: Ticker) => {
+    if (spinner.visible) {
+      spinner.position.set(app.screen.width - 38, app.screen.height - 38)
+      spinner.rotation += ticker.deltaMS / 110
+    }
+    if (art && fade.alpha > 0) {
+      art.position.set(app.screen.width / 2, app.screen.height / 2)
+      art.scale.set(
+        Math.max(app.screen.width / art.texture.width, app.screen.height / art.texture.height),
+      )
+    }
     if (fade.alpha === fadeTarget) return
     const step = ticker.deltaMS / FADE_MS
     fade.alpha =
@@ -475,11 +516,25 @@ export function createSceneHost(
   async function show(id: SceneId): Promise<void> {
     if (destroyed || id === shownId) return
     shownId = id
-    if (current) await fadeTo(1) // fade out (the first scene is already black)
+    if (current) await fadeTo(1) // fade out (the first scene is already washed)
     if (destroyed) return
     current?.destroy()
     current = undefined
+    // The fade-in never starts until the new scene (and its assets) is fully mounted;
+    // a slow mount raises the spinner, and `minMs` can hold a styled wash longer.
+    const startedAt = performance.now()
+    const spinTimer = setTimeout(() => {
+      if (!destroyed) spinner.visible = true
+    }, SPINNER_DELAY_MS)
     const mounted = await mountScene(app, scenes[id], store, playerView, referenceHeight)
+    clearTimeout(spinTimer)
+    spinner.visible = false
+    if (destroyed || shownId !== id) {
+      mounted.destroy()
+      return
+    }
+    const wait = (transition?.minMs ?? 0) - (performance.now() - startedAt)
+    if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait))
     if (destroyed || shownId !== id) {
       mounted.destroy()
       return
@@ -503,7 +558,8 @@ export function createSceneHost(
       app.ticker.remove(onFadeTick)
       current?.destroy()
       current = undefined
-      fade.destroy()
+      spinner.destroy()
+      fade.destroy({ children: true })
     },
   }
 }

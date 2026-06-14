@@ -217,6 +217,16 @@ export interface SceneData {
  */
 export type CursorKind = 'walk' | 'pickable' | 'interact' | 'exit' | 'inspect' | 'default'
 
+/** Scene-swap transition: a colour wash (default black) + optional art, held ≥ `minMs`. */
+export interface TransitionConfig {
+  /** Wash colour (CSS string / hex), default black. */
+  color?: string
+  /** Optional centred image (data-URL) shown over the wash during the swap. */
+  image?: string
+  /** Minimum time (ms) the wash is held — for a styled transition. */
+  minMs?: number
+}
+
 /** The whole authored game. */
 export interface GameDoc {
   start: SceneId
@@ -232,4 +242,6 @@ export interface GameDoc {
    *  this tall; the viewport height maps onto it with one uniform scale, so art and
    *  characters keep a consistent size across devices. Scene `width` is in these px. */
   referenceHeight?: number
+  /** Scene-swap transition (wash colour / art / minimum hold; default black). */
+  transition?: TransitionConfig
 }

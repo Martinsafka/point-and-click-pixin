@@ -615,6 +615,13 @@ body {
   display: block;
 }
 
+/* Transition editor (Project tab) */
+.transition {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 /* Depth-curve editor (Scene tab) */
 .depth {
   display: flex;
