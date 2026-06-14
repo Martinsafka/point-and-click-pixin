@@ -1352,3 +1352,55 @@ body {
   pointer-events: auto;
   cursor: crosshair;
 }
+
+/* Editor modal (dev-only) — a centered overlay for roomy editors (NPC definition,
+   the dialogue node tree). Sits above the editor panel + preview. */
+.editor-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 6, 10, 0.6);
+}
+.editor-modal__panel {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 92vw);
+  max-height: 86vh;
+  background: #11151d;
+  border: 1px solid #2a3650;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.editor-modal__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #222d44;
+}
+.editor-modal__title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.editor-modal__close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.editor-modal__close:hover {
+  opacity: 1;
+}
+.editor-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  overflow: auto;
+}

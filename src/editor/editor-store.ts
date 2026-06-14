@@ -84,6 +84,8 @@ interface EditorStore {
   removeNpcDef(npcId: NpcId): void
   setNpcDefName(npcId: NpcId, name: string): void
   setNpcDefSpeed(npcId: NpcId, speed: number): void
+  /** Merge a partial into a cast NPC's definition (dialog / dialogWhen / inspect / …). */
+  patchNpcDef(npcId: NpcId, patch: Partial<NpcDef>): void
   addNpcPlacement(id: SceneId, npc: NpcId): void
   removeNpcPlacement(id: SceneId, index: number): void
   setNpcPlacementNpc(id: SceneId, index: number, npc: NpcId): void
@@ -318,6 +320,10 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setNpcDefSpeed: (npcId, speed) => {
       const npcs = get().doc.npcs ?? {}
       patchDoc({ npcs: { ...npcs, [npcId]: { ...npcs[npcId], speed } } })
+    },
+    patchNpcDef: (npcId, patch) => {
+      const npcs = get().doc.npcs ?? {}
+      patchDoc({ npcs: { ...npcs, [npcId]: { ...npcs[npcId], ...patch } } })
     },
     addNpcPlacement: (id, npc) =>
       mapNpcs(id, (ps) => [...ps, { npc, spawn: { xFrac: 0.5, yFrac: 0.85 } }]),

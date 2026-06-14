@@ -23,6 +23,13 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M7 step 4d.1: NPC definition modal (dialogue / inspect authoring)
+**What:** An editor **modal** + the NPC's interaction config — so the dialogue / inspect runtime is authorable without hand-editing `game.json`. Characters → NPCs → **Edit** opens a modal: assign a **dialogue** (dropdown of the `GameDoc.dialogs` library), set **dialogWhen** (the full `ConditionEditor`, gating the dialogue), and the **inspect** "look at" (text + audio). New `EditorModal` (reusable dev-only modal) + `NpcEditor`; the editor store gains `patchNpcDef(npcId, patch)`.
+**Why:** M7 step 4d (editor), first chunk — complements the NPC dialog↔inspect runtime just built, and establishes the **modal pattern** the dialogue node editor (4d.2) + appearance (4d.3) reuse. (Voice waits for 4c.)
+**How:** `EditorModal` is a fixed backdrop + roomy panel (close on ✕ / backdrop; clicks inside don't bubble). `NpcEditor` reads the cast NPC live from the store and writes via `patchNpcDef` (a generic merge, so dialog / dialogWhen / inspect — and later view / voice — share one action); empty inspect (no text + no audio) clears the field. Name + speed stay inline in the cast row; Edit opens the deeper modal.
+**Verified:** format / typecheck / lint / build green; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** 4d.2 the Dialogs library + node editor (modal); 4d.3 per-NPC appearance (generalise `CharacterEditor` to any view); placement dialogue override in `NpcList`; voice = 4c.
+
 ### 2026-06-14 — NPC dialog ↔ inspect switch (condition-gated)
 **What:** An NPC can now be **looked at** as well as talked to. `NpcDef` gains `inspect?: { text?, audio? }` (a "look at" line, like the inspect interactable) + `dialogWhen?: Condition` (gates the dialogue). Clicking an NPC resolves **dynamically** against story state: dialogue if present and `dialogWhen` passes, else inspect (walk up + the player comments), else nothing (the click falls through to a walk). The cursor reflects the resolution **live** — 👄 talk vs 👁 look. The "mode" is just flags: any `setFlag` (trigger / dialogue / interaction) flips `dialogWhen`. Demo: the street `stranger` is **inspect-only until you hold the key** (`dialogWhen: hasItem key`) — then clicking talks (cursor 👄).
 **Why:** User wanted NPCs that switch between talk and look, driven from anywhere. Chose the **condition / flag-gated** model — consistent with the one effect/condition vocabulary, no new effect or per-NPC state. (Per-NPC scoped state stays for step 6, the routine.)
