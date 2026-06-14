@@ -6,6 +6,8 @@ interface Props {
   onChange: (uses: UseRule[]) => void
   items: Record<ItemId, ItemDef>
   sceneIds: SceneId[]
+  animations: string[]
+  targets: string[]
 }
 
 /**
@@ -13,7 +15,7 @@ interface Props {
  * the effects of using it on the object (reusing `EffectList`). The runtime fires
  * these when the selected inventory item is used on the object.
  */
-export function UsesList({ uses, onChange, items, sceneIds }: Props) {
+export function UsesList({ uses, onChange, items, sceneIds, animations, targets }: Props) {
   const setAt = (i: number, rule: UseRule) => onChange(uses.map((u, j) => (j === i ? rule : u)))
 
   return (
@@ -49,6 +51,8 @@ export function UsesList({ uses, onChange, items, sceneIds }: Props) {
             onChange={(e) => setAt(i, { ...u, effects: e })}
             items={items}
             sceneIds={sceneIds}
+            animations={animations}
+            targets={targets}
             label="→ effects"
           />
         </div>

@@ -43,6 +43,33 @@ export function SceneSelect({
   )
 }
 
+/** A `<select>` for the effect pickers (animation names, target actors). A current
+ *  value not among `options` stays selectable, so custom / stale values are never
+ *  silently dropped. `empty` adds a leading "—" for optional fields. */
+function OptionSelect({
+  value,
+  options,
+  onChange,
+  empty = false,
+}: {
+  value: string
+  options: string[]
+  onChange: (v: string) => void
+  empty?: boolean
+}) {
+  const opts = value && !options.includes(value) ? [value, ...options] : options
+  return (
+    <select className="logic__sel" value={value} onChange={(e) => onChange(e.target.value)}>
+      {empty && <option value="">—</option>}
+      {opts.map((o) => (
+        <option key={o} value={o}>
+          {o}
+        </option>
+      ))}
+    </select>
+  )
+}
+
 const EFFECT_KINDS: Effect['kind'][] = [
   'setFlag',
   'giveItem',
@@ -80,11 +107,15 @@ function EffectFields({
   onChange,
   items,
   sceneIds,
+  animations,
+  targets,
 }: {
   effect: Effect
   onChange: (e: Effect) => void
   items: Record<ItemId, ItemDef>
   sceneIds: SceneId[]
+  animations: string[]
+  targets: string[]
 }) {
   switch (effect.kind) {
     case 'setFlag':
@@ -154,17 +185,15 @@ function EffectFields({
     case 'playAnim':
       return (
         <>
-          <input
-            className="logic__in"
-            placeholder="action (e.g. interact)"
+          <OptionSelect
             value={effect.action}
-            onChange={(e) => onChange({ ...effect, action: e.target.value })}
+            options={animations}
+            onChange={(action) => onChange({ ...effect, action })}
           />
-          <input
-            className="logic__in"
-            placeholder="target (player)"
-            value={effect.target ?? ''}
-            onChange={(e) => onChange({ ...effect, target: e.target.value || undefined })}
+          <OptionSelect
+            value={effect.target ?? 'player'}
+            options={targets}
+            onChange={(t) => onChange({ ...effect, target: t === 'player' ? undefined : t })}
           />
         </>
       )
@@ -178,11 +207,11 @@ function EffectFields({
             value={effect.ms}
             onChange={(e) => onChange({ ...effect, ms: Number(e.target.value) || 0 })}
           />
-          <input
-            className="logic__in"
-            placeholder="loop anim (optional)"
+          <OptionSelect
             value={effect.anim ?? ''}
-            onChange={(e) => onChange({ ...effect, anim: e.target.value || undefined })}
+            options={animations}
+            empty
+            onChange={(anim) => onChange({ ...effect, anim: anim || undefined })}
           />
         </>
       )
@@ -199,12 +228,18 @@ export function EffectList({
   onChange,
   items,
   sceneIds,
+  animations,
+  targets,
   label = 'Effects',
 }: {
   effects: Effect[]
   onChange: (effects: Effect[]) => void
   items: Record<ItemId, ItemDef>
   sceneIds: SceneId[]
+  /** Action-clip names offered by the `playAnim` / `wait` pickers (see actionNames). */
+  animations: string[]
+  /** Actor ids offered by the `playAnim` target picker — player + cast (see actorIds). */
+  targets: string[]
   label?: string
 }) {
   const itemIds = Object.keys(items)
@@ -242,6 +277,8 @@ export function EffectList({
             onChange={(e2) => setAt(i, e2)}
             items={items}
             sceneIds={sceneIds}
+            animations={animations}
+            targets={targets}
           />
           <button
             type="button"

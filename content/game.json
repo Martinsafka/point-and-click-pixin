@@ -71,10 +71,7 @@
           "id": "greet",
           "by": "npc",
           "hitArea": [0.46, 0.74, 0.58, 0.74, 0.58, 0.92, 0.46, 0.92],
-          "effects": [
-            { "kind": "playAnim", "action": "interact", "target": "stranger" },
-            { "kind": "wait", "ms": 1500 }
-          ]
+          "effects": [{ "kind": "wait", "ms": 1500, "anim": "interact" }]
         }
       ],
       "npcs": [

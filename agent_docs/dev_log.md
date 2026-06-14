@@ -23,6 +23,14 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — Editor QoL: effect pickers as dropdowns (animation + target) + greet loop fix
+**What:** The effect editor's free-text fields became **dropdowns**: `playAnim` **action** + `wait` **anim** pick from the cast's available action clips, and `playAnim` **target** picks from the player + NPC cast. New `src/editor/effect-options.ts` derives the lists — `actionNames(doc)` (clip-key bases, e.g. `walk.E` → `walk`, unioned across the placeholder + the player view; per-NPC views join in 4d) and `actorIds(doc)` (`'player'` + cast ids). Also fixed the demo: the street `greet` trigger's `wait` now sets `anim: "interact"` so the `stranger` visibly **loops** the gesture during the pause.
+**Why:** User feedback — authors couldn't tell which animation names / targets were valid. The reported "gesture isn't looping" was **not a bug**: `playAnim` is a one-shot by design, and the demo's `wait` had no `anim`, so nothing looped. The dropdowns make valid values discoverable; the demo now demonstrates the loop.
+**How:**
+- One `OptionSelect` (a select like `ItemSelect` / `SceneSelect`) in `EffectList` serves all three pickers; a current value not among the options stays selectable, so custom / stale names + removed cast ids are never silently dropped. `wait.anim` keeps an empty "—" option (optional). Target maps `'player'` ↔ `undefined` (the default) to keep the data minimal.
+- `effect-options.ts` is pure derives over the working `GameDoc`. Threaded `animations` + `targets` through `InteractableForm` → `EffectList` / `UsesList`; `EffectList` stays controlled (props, not store reads). 4d's dialogue-node effects reuse `EffectList`, so they inherit the pickers for free.
+- **Verified:** format / typecheck / lint / build green; `content/game.json` valid; dev smoke `/` + `/?edit` 200.
+
 ### 2026-06-14 — Roadmap: per-NPC appearance pinned into step 4d
 **What:** Pinned **per-NPC appearance** (atlas + clips, `NpcDef.view`) as an explicit task in **4d**, which was only loosely implied before ("appearance … layers in over steps 3–6"). 4d is now the NPC's **full-definition editor** (appearance + dialogue + voice) in the modal — appearance by **generalising the player's `CharacterEditor`** to any view (`{ view, onCreate, onChange, onRemove }`), runtime falling back to the placeholder. The cross-scene routine stays step 6.
 **Why:** Spotted in the editor — an NPC can set only name + speed; only the player has a view editor (NPCs hardcode the placeholder in `scene.ts`). Folding appearance into 4d keeps the whole NPC definition authored in one modal.

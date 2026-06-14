@@ -4,6 +4,7 @@ import type { InteractableData, ItemDef, ItemId, SceneId } from '../data/schema'
 import { EffectList } from './EffectList'
 import { ConditionEditor } from './ConditionEditor'
 import { UsesList } from './UsesList'
+import { actionNames, actorIds } from './effect-options'
 
 interface Props {
   sceneId: SceneId
@@ -31,6 +32,9 @@ export function InteractableForm({
   onToggleDraw,
 }: Props) {
   const s = () => editorStore.getState()
+  const doc = s().doc
+  const animations = actionNames(doc)
+  const targets = actorIds(doc)
   const points = interactable.hitArea.length / 2
   const isInspect = interactable.kind === 'inspect'
   const isTrigger = interactable.kind === 'trigger'
@@ -169,6 +173,8 @@ export function InteractableForm({
           onChange={(e) => s().setInteractableEffects(sceneId, index, e)}
           items={items}
           sceneIds={sceneIds}
+          animations={animations}
+          targets={targets}
         />
       )}
 
@@ -178,6 +184,8 @@ export function InteractableForm({
           onChange={(u) => s().setInteractableUses(sceneId, index, u)}
           items={items}
           sceneIds={sceneIds}
+          animations={animations}
+          targets={targets}
         />
       )}
 
