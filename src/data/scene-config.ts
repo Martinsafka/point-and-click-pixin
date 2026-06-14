@@ -3,12 +3,17 @@ import type { DepthScale } from '../systems/depth'
 
 /** Resolve a scene's fractional depth config to concrete pixel values. */
 export function resolveDepthScale(config: DepthConfig, screenHeight: number): DepthScale {
-  return {
-    yNear: screenHeight * config.yNearFrac,
-    yFar: screenHeight * config.yFarFrac,
-    scaleNear: config.scaleNear,
-    scaleFar: config.scaleFar,
-  }
+  const raw =
+    config.stops && config.stops.length >= 2
+      ? config.stops
+      : [
+          { yFrac: config.yFarFrac, scale: config.scaleFar },
+          { yFrac: config.yNearFrac, scale: config.scaleNear },
+        ]
+  const stops = raw
+    .map((s) => ({ y: s.yFrac * screenHeight, scale: s.scale }))
+    .sort((a, b) => a.y - b.y)
+  return { stops }
 }
 
 /** Vertical design resolution (px) used when a document omits `referenceHeight`. */

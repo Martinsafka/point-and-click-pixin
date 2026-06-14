@@ -20,6 +20,7 @@ import { ItemCatalogue } from './ItemCatalogue'
 import { RecipeTable } from './RecipeTable'
 import { CursorEditor } from './CursorEditor'
 import { CharacterEditor } from './CharacterEditor'
+import { DepthEditor } from './DepthEditor'
 
 const TABS = ['scene', 'items', 'characters', 'project'] as const
 type Tab = (typeof TABS)[number]
@@ -305,6 +306,10 @@ export function Editor() {
                     Clear
                   </button>
                 </div>
+              </Section>
+
+              <Section title="Depth">
+                {scene && <DepthEditor sceneId={selectedId} depth={scene.depth} />}
               </Section>
 
               <Section title={`Holes · ${holes.length}`}>

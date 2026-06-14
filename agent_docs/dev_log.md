@@ -23,6 +23,24 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — Fix: pathfinding rewritten to a visibility graph (no more "walk across the scene")
+**What:** Replaced the triangle-channel A\* + funnel with a **visibility-graph** path search. The earcut triangulation now only serves point-in-area tests (spawn / target clamp); the route is the shortest path through a graph over the obstacle corners (+ start / goal), edges being mutually visible (line-of-sight) pairs, A\* over Euclidean distance.
+**Why:** Regression after the height-anchored design space: scenes now triangulate at a fixed wide aspect (e.g. 4224×1080), and aligned hole tops (collinear Y) made earcut emit degenerate triangles — which broke the triangle adjacency, so the channel A\* routed "the long way round" and the funnel faithfully followed → the character walked to the far side of the map and back. A randomized street check found 4.6% of paths with a >2.5× detour (worst 21–51×) and 3.6% leaving the walkable.
+**How:**
+- The **visibility graph** is robust to how earcut splits the polygon (the triangle dual is unreliable for thin / aligned geometry). Corners = the input polygon vertices (walkable + each hole). Corner↔corner visibility is precomputed once; start/goal edges are tested per query.
+- **Line-of-sight** = no *proper* crossing of any walkable / hole outline edge **and** the segment midpoint is inside the walkable. The midpoint test is essential: a chord between two *opposite corners of one hole* shares an endpoint with every hole edge, so the strict segment-cross test alone never flags it (it would cut diagonally through the hole). Outline edges come from the **input polygons**, not the triangulation (collinear vertices leave phantom unmatched edges).
+- **Verified (Node):** over 4–6k randomized street paths — **0 leave the walkable, 0 cut through a hole interior**; the worst detour is now 2.70× (a legitimate route around a hole). Directed cases (clear line, around-a-corner, weave-the-gaps) all optimal. format / typecheck / lint / build green; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** building the graph is O(corners²) (fine for hand-authored scenes; revisit only if one ever has hundreds of hole corners). Supersedes the earlier "funnel portal orientation" fix below.
+
+### 2026-06-14 — Per-scene depth curve: piecewise scale stops + editor control
+**What:** The per-scene depth scaling (character size by feet Y) is now a **piecewise-linear curve** of `{ yFrac, scale }` stops instead of a single near→far ramp. `DepthConfig.stops?` (≥2) defines it; scenes without it fall back to the `near/far` pair (a 2-stop ramp) — fully backward-compatible. New **Depth** section in the editor (Scene tab): a live curve graph + an editable stop list (add / remove / y / scale).
+**Why:** A linear 2-point ramp can't express non-linear perspective (e.g. a compressed back wall). Stops give arbitrary control — the smooth version of "scale per Y-third" (hard thirds would pop the character at the boundaries). Composes with `characterScale` (per-scene baseline) and the resolution fit `S`.
+**How:**
+- `systems/depth.ts`: `DepthScale` now holds sorted px `stops`; `depthScaleAt` walks them (linear between, clamp outside). `data/scene-config.ts` `resolveDepthScale` builds + sorts the px stops from `stops`, or the near/far fallback.
+- Editor: `DepthEditor.tsx` (curve `<svg>` + stop rows) writes `setDepthStops` (no preview re-mount — the graph is the live feedback; the spawn character updates on the next mount / Test in game).
+- **Verified:** format / typecheck / lint / build green; a Node test confirms back-compat equals the old linear ramp, and piecewise interpolation + end-clamp + unsorted-input sorting; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** ghost characters at a few Y in the preview (richer feedback); demo scenes still use near/far (exercises the fallback). Next: **parallax backgrounds**; **Task B** (transition polish) still pending.
+
 ### 2026-06-14 — Editor: aspect-locked, re-fitting scene preview (areas no longer drift on resize)
 **What:** The editor preview is now a **stage box of the scene's aspect**, centred in the pane; the Pixi canvas and the DOM overlays share that one box, so drawn areas (walkable / holes / hit-areas) stay put when the side panel is resized. `mountPreview` builds in design px under a `root` container scaled to fit the box and **re-fits on resize** (ResizeObserver on the canvas) — no re-mount. Scene **width** edits now re-mount the preview (commit on blur / Enter) so the box re-aspects.
 **Why:** Bug: widening the panel changed the preview pane size, but the Pixi content was laid out once at mount and never re-fit — so the background drifted from the overlay grid, and an area drawn afterwards landed off-target in the game. (Also delivers the deferred aspect-correct preview: a wide scene shows its true shape instead of stretched-to-pane.)

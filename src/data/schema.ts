@@ -30,12 +30,24 @@ export type LayerFit = 'stretch' | 'cover' | 'contain' | 'width' | 'none'
 /** Flat polygon as fractions [x0, y0, x1, y1, ...]. */
 export type Polygon = number[]
 
-/** Per-scene 2.5D perspective (fractions of the design height). */
+/** One point on a scene's depth curve: the character's `scale` when its feet sit
+ *  at `yFrac` (a fraction of the design height). */
+export interface DepthStop {
+  yFrac: number
+  scale: number
+}
+
+/**
+ * Per-scene 2.5D perspective (fractions of the design height). `stops` (≥2 points),
+ * when set, defines the scale curve (piecewise-linear, clamped at the ends);
+ * otherwise the near/far pair is used as a 2-point ramp.
+ */
 export interface DepthConfig {
   yNearFrac: number
   yFarFrac: number
   scaleNear: number
   scaleFar: number
+  stops?: DepthStop[]
 }
 
 /** One animation: frame indices into the atlas grid + playback. */

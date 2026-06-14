@@ -1,10 +1,13 @@
 import earcut from 'earcut'
 
 /**
- * Navigation mesh over the walkable polygon (minus hole/obstacle polygons): the
- * area is triangulated (earcut), A* searches the triangle adjacency graph, and the
- * funnel (string-pulling) algorithm turns the triangle channel into a smooth,
- * shortest path of straight segments. Pure geometry (no Pixi) so it's unit-testable.
+ * Navigation over the walkable polygon (minus hole / obstacle polygons). The area is
+ * triangulated (earcut) only for point-in-area tests (spawning / snapping a target);
+ * the path itself is the shortest route through a **visibility graph** over the
+ * obstacle corners. The visibility graph is robust to how earcut chooses its
+ * diagonals — a triangle-adjacency channel can fan "the long way round" for thin or
+ * aligned geometry, which a funnel then faithfully (wrongly) follows. Pure geometry
+ * (no Pixi) so it's unit-testable.
  *
  * All coordinates are pixels (the engine resolves the fractional polygons first).
  */
@@ -14,9 +17,9 @@ export interface Point {
 }
 
 interface Mesh {
-  verts: number[] // flat [x0, y0, x1, y1, ...]
-  tris: [number, number, number][] // vertex indices, re-wound to a consistent order
-  adj: { tri: number; a: number; b: number }[][] // per-tri neighbours + shared edge
+  verts: number[] // flat [x0, y0, ...] — walkable ring then each hole ring (the corners)
+  tris: [number, number, number][] // triangulation, for point-in-area tests only
+  boundary: [Point, Point][] // walkable outline + hole outlines (for line-of-sight)
 }
 
 export interface Navigation {
@@ -34,11 +37,6 @@ const dist = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y)
 /** 2× signed area of triangle (a, b, c); sign encodes winding / side. */
 const area2 = (ax: number, ay: number, bx: number, by: number, cx: number, cy: number) =>
   (bx - ax) * (cy - ay) - (cx - ax) * (by - ay)
-
-function centroid(m: Mesh, t: number): Point {
-  const [i, j, k] = m.tris[t]
-  return { x: (vx(m, i) + vx(m, j) + vx(m, k)) / 3, y: (vy(m, i) + vy(m, j) + vy(m, k)) / 3 }
-}
 
 function pointInTri(m: Mesh, t: [number, number, number], x: number, y: number): boolean {
   const d1 = area2(vx(m, t[0]), vy(m, t[0]), vx(m, t[1]), vy(m, t[1]), x, y)
@@ -91,6 +89,20 @@ function clampToMesh(m: Mesh, x: number, y: number): Point {
   return best
 }
 
+/** Edges of a polygon ring, as point pairs (closing the loop). */
+function ring(poly: number[]): [Point, Point][] {
+  const out: [Point, Point][] = []
+  const n = poly.length / 2
+  for (let i = 0; i < n; i += 1) {
+    const j = (i + 1) % n
+    out.push([
+      { x: poly[i * 2], y: poly[i * 2 + 1] },
+      { x: poly[j * 2], y: poly[j * 2 + 1] },
+    ])
+  }
+  return out
+}
+
 function buildMesh(walkable: number[], holes: number[][]): Mesh {
   const verts = [...walkable]
   const holeIndices: number[] = []
@@ -102,176 +114,108 @@ function buildMesh(walkable: number[], holes: number[][]): Mesh {
 
   const tris: [number, number, number][] = []
   for (let i = 0; i + 2 < flat.length; i += 3) {
-    const a = flat[i]
-    let b = flat[i + 1]
-    let c = flat[i + 2]
-    // Re-wind to a consistent order so portal left/right is consistent.
-    if (
-      area2(
-        verts[a * 2],
-        verts[a * 2 + 1],
-        verts[b * 2],
-        verts[b * 2 + 1],
-        verts[c * 2],
-        verts[c * 2 + 1],
-      ) < 0
-    ) {
-      ;[b, c] = [c, b]
-    }
-    tris.push([a, b, c])
+    tris.push([flat[i], flat[i + 1], flat[i + 2]])
   }
 
-  const adj: { tri: number; a: number; b: number }[][] = tris.map(() => [])
-  const edgeMap = new Map<string, { tri: number; a: number; b: number }>()
-  tris.forEach((t, ti) => {
-    const edges: [number, number][] = [
-      [t[0], t[1]],
-      [t[1], t[2]],
-      [t[2], t[0]],
-    ]
-    for (const [a, b] of edges) {
-      const key = a < b ? `${a}_${b}` : `${b}_${a}`
-      const found = edgeMap.get(key)
-      if (found) {
-        adj[ti].push({ tri: found.tri, a, b })
-        adj[found.tri].push({ tri: ti, a, b })
-        edgeMap.delete(key)
-      } else {
-        edgeMap.set(key, { tri: ti, a, b })
-      }
-    }
-  })
+  // The obstacle segments for line-of-sight: the walkable outline + each hole
+  // outline (the input polygons). Deriving them from the triangulation is unsafe —
+  // collinear vertices leave phantom unmatched edges.
+  const boundary: [Point, Point][] = [ring(walkable), ...holes.map(ring)].flat()
 
-  return { verts, tris, adj }
+  return { verts, tris, boundary }
 }
 
-/** A* over triangle adjacency → the triangle channel (or null). */
-function findChannel(m: Mesh, startTri: number, goalTri: number): number[] | null {
-  const goalC = centroid(m, goalTri)
-  const open = [startTri]
+/** Do segments ab and cd properly cross (strictly, not merely touch at an endpoint)? */
+function segCross(a: Point, b: Point, c: Point, d: Point): boolean {
+  const d1 = area2(c.x, c.y, d.x, d.y, a.x, a.y)
+  const d2 = area2(c.x, c.y, d.x, d.y, b.x, b.y)
+  const d3 = area2(a.x, a.y, b.x, b.y, c.x, c.y)
+  const d4 = area2(a.x, a.y, b.x, b.y, d.x, d.y)
+  return d1 * d2 < 0 && d3 * d4 < 0
+}
+
+/** Clear straight line between two points? (Crosses no walkable / hole outline edge.) */
+function lineOfSight(m: Mesh, a: Point, b: Point): boolean {
+  // Midpoint inside the walkable: rejects a chord straight through a hole whose two
+  // ends are both hole corners — it shares an endpoint with every hole edge, so
+  // `segCross` (which ignores shared endpoints) never flags it.
+  if (triangleAt(m, (a.x + b.x) / 2, (a.y + b.y) / 2) < 0) return false
+  for (const [c, d] of m.boundary) if (segCross(a, b, c, d)) return false
+  return true
+}
+
+/**
+ * Shortest path start → goal through the visibility graph: nodes are the obstacle
+ * corners plus start + goal, edges connect mutually visible nodes, A* over Euclidean
+ * distance. Returns [start, ...corners, goal]. `cornerVis` is the precomputed
+ * corner↔corner visibility (start/goal edges are tested per query).
+ */
+function visibilityPath(
+  m: Mesh,
+  corners: Point[],
+  cornerVis: boolean[][],
+  start: Point,
+  goal: Point,
+): Point[] {
+  const n = corners.length + 2 // node 0 = start, 1 = goal, 2 + i = corners[i]
+  const pt = (k: number): Point => (k === 0 ? start : k === 1 ? goal : corners[k - 2])
+  const visible = (a: number, b: number): boolean =>
+    a >= 2 && b >= 2 ? cornerVis[a - 2][b - 2] : lineOfSight(m, pt(a), pt(b))
+
+  const g = new Map<number, number>([[0, 0]])
+  const f = new Map<number, number>([[0, dist(start, goal)]])
   const came = new Map<number, number>()
-  const g = new Map<number, number>([[startTri, 0]])
-  const f = new Map<number, number>([[startTri, dist(centroid(m, startTri), goalC)]])
+  const open = new Set<number>([0])
   const closed = new Set<number>()
 
-  while (open.length) {
-    open.sort((p, q) => (f.get(p) ?? Infinity) - (f.get(q) ?? Infinity))
-    const cur = open.shift() as number
-    if (cur === goalTri) {
-      const path = [cur]
-      let c = cur
+  while (open.size) {
+    let cur = -1
+    let best = Infinity
+    for (const k of open) {
+      const fk = f.get(k) ?? Infinity
+      if (fk < best) {
+        best = fk
+        cur = k
+      }
+    }
+    if (cur === 1) {
+      const path = [goal]
+      let c = 1
       while (came.has(c)) {
         c = came.get(c) as number
-        path.unshift(c)
+        path.unshift(pt(c))
       }
       return path
     }
+    open.delete(cur)
     closed.add(cur)
-    for (const n of m.adj[cur]) {
-      if (closed.has(n.tri)) continue
-      const tentative = (g.get(cur) ?? Infinity) + dist(centroid(m, cur), centroid(m, n.tri))
-      if (tentative < (g.get(n.tri) ?? Infinity)) {
-        came.set(n.tri, cur)
-        g.set(n.tri, tentative)
-        f.set(n.tri, tentative + dist(centroid(m, n.tri), goalC))
-        if (!open.includes(n.tri)) open.push(n.tri)
+    for (let nb = 0; nb < n; nb += 1) {
+      if (nb === cur || closed.has(nb) || !visible(cur, nb)) continue
+      const tentative = (g.get(cur) ?? Infinity) + dist(pt(cur), pt(nb))
+      if (tentative < (g.get(nb) ?? Infinity)) {
+        came.set(nb, cur)
+        g.set(nb, tentative)
+        f.set(nb, tentative + dist(pt(nb), goal))
+        open.add(nb)
       }
     }
   }
-  return null
+  return [goal] // disconnected (shouldn't happen for in-mesh points) → straight
 }
 
-/** Build the funnel portals (left, right) for a triangle channel. */
-function buildPortals(m: Mesh, channel: number[], start: Point, goal: Point): [Point, Point][] {
-  const portals: [Point, Point][] = [[start, start]]
-  for (let i = 0; i + 1 < channel.length; i += 1) {
-    const curr = channel[i]
-    const next = channel[i + 1]
-    const shared = m.adj[curr].find((e) => e.tri === next)
-    if (!shared) continue
-    // Orient left / right by the travel direction (curr centroid → next centroid),
-    // so the funnel is correct whichever way the channel runs.
-    const cl = centroid(m, curr)
-    const nl = centroid(m, next)
-    const aIsLeft = area2(cl.x, cl.y, nl.x, nl.y, vx(m, shared.a), vy(m, shared.a)) < 0
-    const left = aIsLeft ? shared.a : shared.b
-    const right = aIsLeft ? shared.b : shared.a
-    portals.push([
-      { x: vx(m, left), y: vy(m, left) },
-      { x: vx(m, right), y: vy(m, right) },
-    ])
-  }
-  portals.push([goal, goal])
-  return portals
-}
-
-const eq = (a: Point, b: Point) => a.x === b.x && a.y === b.y
-const tri2 = (a: Point, b: Point, c: Point) => (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y)
-
-/** Simple Stupid Funnel — string-pull a smooth path through the portals. */
-function funnel(portals: [Point, Point][]): Point[] {
-  const pts: Point[] = [portals[0][0]]
-  let apex = portals[0][0]
-  let left = portals[0][0]
-  let right = portals[0][1]
-  // eslint-disable-next-line no-useless-assignment -- apex index; the SSFA resets it before each read
-  let apexI = 0
-  let leftI = 0
-  let rightI = 0
-
-  for (let i = 1; i < portals.length; i += 1) {
-    const pLeft = portals[i][0]
-    const pRight = portals[i][1]
-
-    if (tri2(apex, right, pRight) <= 0) {
-      if (eq(apex, right) || tri2(apex, left, pRight) > 0) {
-        right = pRight
-        rightI = i
-      } else {
-        pts.push(left)
-        apex = left
-        apexI = leftI
-        left = apex
-        right = apex
-        leftI = apexI
-        rightI = apexI
-        i = apexI
-        continue
-      }
-    }
-
-    if (tri2(apex, left, pLeft) >= 0) {
-      if (eq(apex, left) || tri2(apex, right, pLeft) < 0) {
-        left = pLeft
-        leftI = i
-      } else {
-        pts.push(right)
-        apex = right
-        apexI = rightI
-        left = apex
-        right = apex
-        leftI = apexI
-        rightI = apexI
-        i = apexI
-        continue
-      }
-    }
-  }
-
-  const last = portals[portals.length - 1][0]
-  if (!eq(pts[pts.length - 1], last)) pts.push(last)
-  return pts
-}
-
-function findPath(m: Mesh, sx: number, sy: number, gx: number, gy: number): Point[] {
+function findPath(
+  m: Mesh,
+  corners: Point[],
+  cornerVis: boolean[][],
+  sx: number,
+  sy: number,
+  gx: number,
+  gy: number,
+): Point[] {
   const start = clampToMesh(m, sx, sy)
   const goal = clampToMesh(m, gx, gy)
-  const st = triangleAt(m, start.x, start.y)
-  const gt = triangleAt(m, goal.x, goal.y)
-  if (st < 0 || gt < 0 || st === gt) return [goal]
-  const channel = findChannel(m, st, gt)
-  if (!channel) return [goal]
-  const path = funnel(buildPortals(m, channel, start, goal))
+  if (lineOfSight(m, start, goal)) return [goal]
+  const path = visibilityPath(m, corners, cornerVis, start, goal)
   // Drop the start point (the character is already there); keep the waypoints + goal.
   const waypoints = path.slice(1)
   return waypoints.length ? waypoints : [goal]
@@ -280,8 +224,19 @@ function findPath(m: Mesh, sx: number, sy: number, gx: number, gy: number): Poin
 /** Build a `Navigation` from the walkable polygon + obstacle holes (all in px). */
 export function buildNavigation(walkable: number[], holes: number[][] = []): Navigation {
   const mesh = buildMesh(walkable, holes)
+  const corners: Point[] = []
+  for (let i = 0; i < mesh.verts.length; i += 2) {
+    corners.push({ x: mesh.verts[i], y: mesh.verts[i + 1] })
+  }
+  // Precompute corner↔corner visibility once (the graph backbone).
+  const cornerVis: boolean[][] = corners.map(() => [])
+  for (let i = 0; i < corners.length; i += 1) {
+    for (let j = 0; j < corners.length; j += 1) {
+      cornerVis[i][j] = i !== j && lineOfSight(mesh, corners[i], corners[j])
+    }
+  }
   return {
-    findPath: (sx, sy, gx, gy) => findPath(mesh, sx, sy, gx, gy),
+    findPath: (sx, sy, gx, gy) => findPath(mesh, corners, cornerVis, sx, sy, gx, gy),
     clamp: (x, y) => clampToMesh(mesh, x, y),
     contains: (x, y) => triangleAt(mesh, x, y) >= 0,
   }

@@ -4,19 +4,25 @@
 // perspective differs per background (agent_docs/architecture.md, "Depth scaling").
 
 export interface DepthScale {
-  /** Feet Y nearest the camera — where the character is drawn biggest. */
-  yNear: number
-  /** Feet Y at the far edge / horizon — where it is drawn smallest. */
-  yFar: number
-  scaleNear: number
-  scaleFar: number
+  /** Scale stops along feet Y (px), sorted ascending; linear between, clamped
+   *  outside. A 2-stop list is the classic near/far ramp. */
+  stops: { y: number; scale: number }[]
 }
 
-const clamp = (v: number, lo: number, hi: number): number => Math.min(Math.max(v, lo), hi)
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * t
 
-/** Scale factor for a character whose feet sit at `feetY`. */
+/** Scale factor for a character whose feet sit at `feetY` (piecewise-linear). */
 export function depthScaleAt(feetY: number, ds: DepthScale): number {
-  const t = clamp((feetY - ds.yFar) / (ds.yNear - ds.yFar), 0, 1)
-  return lerp(ds.scaleFar, ds.scaleNear, t)
+  const { stops } = ds
+  if (feetY <= stops[0].y) return stops[0].scale
+  const last = stops[stops.length - 1]
+  if (feetY >= last.y) return last.scale
+  for (let i = 1; i < stops.length; i += 1) {
+    const b = stops[i]
+    if (feetY <= b.y) {
+      const a = stops[i - 1]
+      return b.y > a.y ? lerp(a.scale, b.scale, (feetY - a.y) / (b.y - a.y)) : b.scale
+    }
+  }
+  return last.scale
 }

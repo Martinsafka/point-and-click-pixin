@@ -139,10 +139,11 @@ M4 additions (raised after the core was done):
 ### M6 — Movement & camera
 
 - Runtime:
-  - [x] **Pathfinding** — A\* + funnel over a **nav-mesh** (walkable polygon
-        triangulated minus obstacle holes, via earcut); replaces straight-line +
-        clamp-and-slide so the character routes around concave walls + holes. Editor
-        hole-drawing is the next editor piece.
+  - [x] **Pathfinding** — shortest path through a **visibility graph** over the
+        obstacle corners (walkable polygon minus holes); earcut triangulation is kept
+        only for point-in-area tests. Replaces straight-line + clamp-and-slide so the
+        character routes around concave walls + holes. _(Was A\* + funnel over the
+        triangle dual; that mis-routed on degenerate triangulations — see dev_log.)_
   - [x] **Camera** — a `world` container scaled so each scene's **design height fills
         the viewport** (one uniform scale), panned horizontally to follow the
         character (clamped; pillar-boxed when narrower). `GameDoc.referenceHeight` +

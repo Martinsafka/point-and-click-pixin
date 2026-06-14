@@ -615,6 +615,58 @@ body {
   display: block;
 }
 
+/* Depth-curve editor (Scene tab) */
+.depth {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.depth__curve {
+  width: 100%;
+  height: 72px;
+  background: #0d1017;
+  border: 1px solid #2a2f3a;
+  border-radius: 4px;
+}
+
+.depth__curve polyline {
+  fill: none;
+  stroke: #6cc5e8;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.depth__curve circle {
+  fill: #e8b552;
+}
+
+.depth__stops {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.depth__stop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.depth__stop label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.depth__stop input {
+  width: 60px;
+}
+
 /* Walkable editing overlay (over the preview) */
 .walkable-overlay {
   position: absolute;

@@ -83,6 +83,20 @@ the nearest point inside it.
 - **Clear** — empties the polygon (redraw from scratch; there's no vertex drag
   yet).
 
+### Depth
+
+How the character (and NPCs) **scale by depth** — bigger near the camera (low on
+screen), smaller toward the back. It's a **curve** of stops: each stop sets the
+`scale` at a feet **y** (0 = top, 1 = bottom). The little graph plots it live; the
+in-game size is this × the scene's **characters** % × the screen fit.
+
+- **+ stop** adds a point; **✕** removes one (min 2). Edit each stop's **y** and
+  **scale**.
+- Two stops = a straight near→far ramp (the classic look). Add stops for a
+  non-linear curve (e.g. a compressed back third) — the size changes **smoothly**,
+  with no popping. The spawn character in the preview updates on the next re-mount /
+  Test in game.
+
 ### Holes · _N_
 
 Obstacles cut out of the walkable area — the character routes **around** them

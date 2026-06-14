@@ -3,6 +3,7 @@ import { useStore } from 'zustand'
 import type {
   Condition,
   CursorKind,
+  DepthStop,
   Effect,
   GameDoc,
   InteractableData,
@@ -46,6 +47,8 @@ interface EditorStore {
   setCharacterScale(id: SceneId, scale: number): void
   /** The document's vertical design resolution (px); re-mounts the preview. */
   setReferenceHeight(height: number): void
+  /** Per-scene depth curve (scale-by-Y stops); drawn in the panel, no re-mount. */
+  setDepthStops(id: SceneId, stops: DepthStop[]): void
   /** Append an uploaded image as a full-screen background layer (a backdrop). */
   addImageLayer(id: SceneId, src: string): void
   removeLayer(id: SceneId, index: number): void
@@ -183,6 +186,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setCharacterScale: (id, scale) => patchScene(id, { characterScale: scale }, true),
     setReferenceHeight: (height) =>
       set({ doc: { ...get().doc, referenceHeight: height }, revision: get().revision + 1 }),
+    setDepthStops: (id, stops) =>
+      patchScene(id, { depth: { ...get().doc.scenes[id].depth, stops } }, false),
     addImageLayer: (id, src) =>
       mapLayers(id, (ls) => [...ls, { kind: 'image', band: 'background', src, fit: 'cover' }]),
     removeLayer: (id, index) => mapLayers(id, (ls) => ls.filter((_, i) => i !== index)),
