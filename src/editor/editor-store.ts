@@ -73,6 +73,8 @@ interface EditorStore {
   setInteractableId(id: SceneId, index: number, value: string): void
   setInteractableItem(id: SceneId, index: number, item: ItemId): void
   setInteractableTo(id: SceneId, index: number, to: SceneId): void
+  setTriggerBy(id: SceneId, index: number, by: 'player' | 'npc' | 'any'): void
+  setTriggerOnce(id: SceneId, index: number, once: boolean): void
   setInteractableWhen(id: SceneId, index: number, when: Condition | undefined): void
   setInteractableEffects(id: SceneId, index: number, effects: Effect[]): void
   setInteractableUses(id: SceneId, index: number, uses: UseRule[]): void
@@ -233,6 +235,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         it = { kind, id: newId, to: Object.keys(doc.scenes).find((s) => s !== id) ?? id, hitArea }
       } else if (kind === 'inspect') {
         it = { kind, id: newId, hitArea, text: '' }
+      } else if (kind === 'trigger') {
+        it = { kind, id: newId, hitArea, effects: [] }
       } else {
         it = { kind, id: newId, hitArea, effects: [] }
       }
@@ -253,6 +257,14 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setInteractableTo: (id, index, to) =>
       mapInteractables(id, (its) =>
         its.map((it, i) => (i === index && it.kind === 'exit' ? { ...it, to } : it)),
+      ),
+    setTriggerBy: (id, index, by) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) => (i === index && it.kind === 'trigger' ? { ...it, by } : it)),
+      ),
+    setTriggerOnce: (id, index, once) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) => (i === index && it.kind === 'trigger' ? { ...it, once } : it)),
       ),
     setInteractableWhen: (id, index, when) =>
       mapInteractables(id, (its) => its.map((it, i) => (i === index ? { ...it, when } : it))),

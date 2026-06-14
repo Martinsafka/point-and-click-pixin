@@ -149,13 +149,17 @@ The **mid** band (the gameplay plane) is always 1.
 
 ### Interactables · _N_
 
-The clickable objects. Shown in the preview as coloured hit-areas, labelled by id:
-**green = pickable**, **amber = interact (use)**, **blue = exit**, **teal = look
-(inspect)**; the selected one is highlighted.
+The clickable objects — plus invisible **trigger** volumes. Shown in the preview as
+coloured hit-areas, labelled by id: **green = pickable**, **amber = interact (use)**,
+**blue = exit**, **teal = look (inspect)**, **violet = trigger**; the selected one is
+highlighted.
 
-- **+ Pick / + Use / + Exit / + Look** — add an object (with a centred default
-  hit-area and a unique id). Pickable defaults to the first item, exit to another
-  scene; **Look** (inspect) makes the protagonist comment.
+- **+ Pick / + Use / + Exit / + Look** — add a clickable object (centred default
+  hit-area + unique id). Pickable defaults to the first item, exit to another scene;
+  **Look** (inspect) makes the protagonist comment.
+- **+ Trigger** — an **enter-driven** volume: it runs its **effects** when a character's
+  feet enter the area (no click). Set **by** (player / npc / any) and **once**. Great for
+  sounds, animations, cutscenes and — with NPCs — chaining events.
 - Click a row to **select**; **✕** deletes it.
 
 The **selected object's form**:
@@ -168,8 +172,9 @@ The **selected object's form**:
 | **text**      | inspect        | What the protagonist says when clicked.                             |
 | **audio**     | inspect        | Optional uploaded voice clip played with the text.                  |
 | **look**      | pick / use / exit | "Look at" text shown on a plain click (no item selected).        |
+| **by / once** | trigger        | Who fires it (player / npc / any) + whether it fires once a visit.   |
 | **when**      | all            | A Condition that gates it ("(always)" = no gate). See Conditions.   |
-| **effects**   | pick / use / exit | Effects run when clicked. See Effects.                           |
+| **effects**   | pick / use / exit / trigger | Effects run — on click, or on **enter** for a trigger.|
 | **uses**      | interact, exit | "Use item on object" rules: an item + the effects of using it.      |
 | **Hit-area**  | all            | **Draw** (click the preview to add points) / **Clear**.             |
 
@@ -285,6 +290,8 @@ screen is covered — the game never reveals a half-loaded scene.
 | `takeItem`    | remove an item.                                  |
 | `goTo`        | switch to a scene.                               |
 | `startDialog` | marker only — the dialogue runtime arrives in M7.|
+| `playSound`   | play an uploaded sound clip.                     |
+| `playAnim`    | play a one-shot animation (`action`) on a character (default the player). |
 
 ---
 

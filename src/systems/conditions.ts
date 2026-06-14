@@ -73,7 +73,11 @@ export function applyEffect(state: StoryState, effect: Effect): StoryState {
           : [...state.visited, effect.scene],
       }
     case 'startDialog':
-      // Dialog runtime arrives in M4; for now this is an inert marker.
+      // Dialog runtime arrives in M7; for now this is an inert marker.
+      return state
+    case 'playSound':
+    case 'playAnim':
+      // Engine effects (audio / animation): handled by the scene, not the store.
       return state
   }
 }

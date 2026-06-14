@@ -108,6 +108,9 @@ export type Effect =
   | { kind: 'takeItem'; item: ItemId }
   | { kind: 'goTo'; scene: SceneId }
   | { kind: 'startDialog'; dialog: DialogId }
+  // Engine effects (touch the scene / characters, not the story state):
+  | { kind: 'playSound'; sound: string }
+  | { kind: 'playAnim'; action: string; target?: string }
 
 /** Using `item` on an interactable runs `effects`. */
 export interface UseRule {
@@ -192,6 +195,19 @@ export type InteractableData =
       text?: string
       /** Optional voice clip (audio URL) played alongside the text. */
       audio?: string
+      when?: Condition
+    }
+  | {
+      // A volume that runs `effects` when a character's feet ENTER it (not on a
+      // click) — for sounds, animations, cutscenes, stealth beats, NPC chaining.
+      kind: 'trigger'
+      id: string
+      hitArea: Polygon
+      effects: Effect[]
+      /** Who fires it: the player, an NPC, or any character (default 'player'). */
+      by?: 'player' | 'npc' | 'any'
+      /** Fire once per scene visit (always debounced to the enter edge). */
+      once?: boolean
       when?: Condition
     }
 

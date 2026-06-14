@@ -162,16 +162,16 @@ M4 additions (raised after the core was done):
 Built so the pieces **chain**: a trigger fires events, an NPC walks a drawn route into
 one, and a trigger at cover plays a crouch — the stealth beat. Ordered into testable steps.
 
-**Step 1 — Triggers** _(extends interactables; testable with the player alone)_
+**Step 1 — Triggers** ✅ _(extends interactables; testable with the player alone)_
 
-- [ ] `InteractableData` 5th variant **`trigger`** — an **enter-driven** hit-area (fires
+- [x] `InteractableData` 5th variant **`trigger`** — an **enter-driven** hit-area (fires
       when a character's feet enter, not on click). `by: player | npc | any`, `once` +
-      per-entry debounce, gated by `when`, runs Effects.
-- [ ] Engine: per-frame feet-in-area test for every character (reuse point-in-polygon).
-- [ ] **Expanded Effects** — `playSound`, `playAnim` (a one-shot / pose on the player or
-      a named NPC), `spawnNpc` / `despawnNpc`. Introduces **engine effects** (touch the
-      scene / characters) beside the existing state effects.
-- [ ] Editor: **+ Trigger** + form (effects / when / by / once); distinct hit-area colour.
+      enter-edge debounce, gated by `when`, runs Effects.
+- [x] Engine: per-frame feet-in-area test (player now; NPCs join the loop in step 2).
+- [x] **Expanded Effects** — `playSound`, `playAnim` (one-shot on a character). Introduces
+      **engine effects** (touch the scene / characters) beside the existing state effects.
+      _(`spawnNpc` / `despawnNpc` move to step 2 with NPC entities.)_
+- [x] Editor: **+ Trigger** + form (effects / when / by / once); violet hit-area.
 
 **Step 2 — NPC entities**
 

@@ -33,6 +33,7 @@ export function InteractableForm({
   const s = () => editorStore.getState()
   const points = interactable.hitArea.length / 2
   const isInspect = interactable.kind === 'inspect'
+  const isTrigger = interactable.kind === 'trigger'
 
   const onAudio = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -115,7 +116,33 @@ export function InteractableForm({
         </>
       )}
 
-      {!isInspect && (
+      {isTrigger && (
+        <>
+          <label className="intr-form__field">
+            <span>by</span>
+            <select
+              value={interactable.by ?? 'player'}
+              onChange={(e) =>
+                s().setTriggerBy(sceneId, index, e.target.value as 'player' | 'npc' | 'any')
+              }
+            >
+              <option value="player">player</option>
+              <option value="npc">npc</option>
+              <option value="any">any</option>
+            </select>
+          </label>
+          <label className="intr-form__field">
+            <span>once</span>
+            <input
+              type="checkbox"
+              checked={interactable.once ?? false}
+              onChange={(e) => s().setTriggerOnce(sceneId, index, e.target.checked)}
+            />
+          </label>
+        </>
+      )}
+
+      {!isInspect && !isTrigger && (
         <label className="intr-form__field">
           <span>look</span>
           <input

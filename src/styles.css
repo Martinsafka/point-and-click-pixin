@@ -762,6 +762,9 @@ body {
 .intr-row__select--inspect {
   border-left-color: #4fd1c5;
 }
+.intr-row__select--trigger {
+  border-left-color: #b07cff;
+}
 .intr-row__select--active {
   border-color: #e8b552;
 }
@@ -1133,6 +1136,10 @@ body {
 .hitarea--inspect {
   fill: #4fd1c5;
   stroke: #4fd1c5;
+}
+.hitarea--trigger {
+  fill: #b07cff;
+  stroke: #b07cff;
 }
 .hitarea--selected {
   fill-opacity: 0.26;

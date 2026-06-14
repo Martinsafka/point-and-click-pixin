@@ -24,13 +24,14 @@ export function effectsFor(it: InteractableData): Effect[] {
     case 'exit':
       return [{ kind: 'goTo', scene: it.to }, ...(it.effects ?? [])]
     case 'inspect':
+    case 'trigger':
       return []
   }
 }
 
 /** The Effects of using `item` on an interactable, or undefined if no rule. */
 export function effectsForUse(it: InteractableData, item: ItemId): Effect[] | undefined {
-  if (it.kind === 'pickable' || it.kind === 'inspect') return undefined
+  if (it.kind === 'pickable' || it.kind === 'inspect' || it.kind === 'trigger') return undefined
   return it.uses?.find((u) => u.item === item)?.effects
 }
 
@@ -45,9 +46,10 @@ export function pickInteractable(
   y: number,
   screen: { width: number; height: number },
   state: StoryState,
-): InteractableData | undefined {
+): Exclude<InteractableData, { kind: 'trigger' }> | undefined {
   for (let i = interactables.length - 1; i >= 0; i -= 1) {
     const it = interactables[i]
+    if (it.kind === 'trigger') continue // enter-driven, never clicked
     if (it.kind === 'pickable' && state.flags[pickedFlag(it.id)]) continue
     if (it.when && !checkCondition(state, it.when)) continue
     const polygon = it.hitArea.map((v, idx) => v * (idx % 2 === 0 ? screen.width : screen.height))

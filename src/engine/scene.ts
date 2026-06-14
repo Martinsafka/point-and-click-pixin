@@ -15,9 +15,11 @@ import { resolveDepthScale, designSize, DEFAULT_REFERENCE_HEIGHT } from '../data
 import { depthScaleAt } from '../systems/depth'
 import { buildNavigation } from '../systems/navmesh'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
+import { containsPoint } from '../systems/walkable'
 import { checkCondition, type StoryState, type StoryStore } from '../systems/conditions'
 import type {
   Condition,
+  Effect,
   InteractableData,
   LayerData,
   SceneBand,
@@ -227,6 +229,47 @@ export async function mountScene(
   }
   updateCamera()
 
+  // Effects from a click or trigger: engine effects (sound / animation) run here;
+  // the rest go to the story store (state effects). Keeps transient engine actions
+  // out of the discrete state.
+  const runEffects = (effects: readonly Effect[]) => {
+    for (const e of effects) {
+      if (e.kind === 'playSound') void import('../audio/audio').then((m) => m.playClip(e.sound))
+      else if (e.kind === 'playAnim' && (!e.target || e.target === 'player')) {
+        character.playOnce(e.action)
+      }
+    }
+    store.getState().run(effects)
+  }
+
+  // Trigger volumes: run effects when the player's feet ENTER (debounced to the enter
+  // edge; `once` stops a re-fire this visit). NPC triggers wait for NPCs (step 2+).
+  const triggers = scene.interactables
+    .filter((it): it is Extract<InteractableData, { kind: 'trigger' }> => it.kind === 'trigger')
+    .map((it) => ({
+      data: it,
+      polygon: resolvePolygon(it.hitArea, design),
+      inside: false,
+      fired: false,
+    }))
+  const checkTriggers = () => {
+    if (triggers.length === 0) return
+    const state = store.getState()
+    const fx = character.displayObject.x
+    const fy = character.displayObject.y
+    for (const t of triggers) {
+      const now = containsPoint({ polygon: t.polygon }, fx, fy)
+      const by = t.data.by ?? 'player'
+      if (now && !t.inside && !(t.data.once && t.fired) && (by === 'player' || by === 'any')) {
+        if (!t.data.when || checkCondition(state, t.data.when)) {
+          runEffects(t.data.effects)
+          t.fired = true
+        }
+      }
+      t.inside = now
+    }
+  }
+
   app.stage.eventMode = 'static'
   app.stage.hitArea = app.screen
   app.stage.cursor = 'none' // the DOM GameCursor draws the pointer; hide the native one
@@ -245,7 +288,7 @@ export async function mountScene(
     if (hit && selected) {
       const usageEffects = effectsForUse(hit, selected)
       if (usageEffects) {
-        character.setTarget(local.x, local.y, () => store.getState().run(usageEffects), 'interact')
+        character.setTarget(local.x, local.y, () => runEffects(usageEffects), 'interact')
         return
       }
     }
@@ -260,7 +303,7 @@ export async function mountScene(
       })
     } else if (hit) {
       const effects = effectsFor(hit)
-      character.setTarget(local.x, local.y, () => store.getState().run(effects), ONE_SHOT[hit.kind])
+      character.setTarget(local.x, local.y, () => runEffects(effects), ONE_SHOT[hit.kind])
     } else {
       character.setTarget(local.x, local.y)
     }
@@ -270,6 +313,7 @@ export async function mountScene(
   const onTick = (ticker: Ticker) => {
     character.update(ticker.deltaMS)
     updateCamera()
+    checkTriggers()
   }
   app.ticker.add(onTick)
 

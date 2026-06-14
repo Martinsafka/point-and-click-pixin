@@ -65,6 +65,12 @@
             "kind": "hasItem",
             "item": "key"
           }
+        },
+        {
+          "kind": "trigger",
+          "id": "wave",
+          "hitArea": [0.85, 0.74, 0.96, 0.74, 0.96, 0.92, 0.85, 0.92],
+          "effects": [{ "kind": "playAnim", "action": "interact" }]
         }
       ],
       "layers": [

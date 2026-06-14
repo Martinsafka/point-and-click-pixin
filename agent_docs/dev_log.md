@@ -23,6 +23,16 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — M7 step 1: trigger interactables + engine effects
+**What:** A 5th interactable kind **`trigger`** — an **enter-driven** hit-area that runs its `effects` when a character's feet enter it (not on click). `by: player | npc | any`, `once` + enter-edge debounce, gated by `when`. New **engine effects** `playSound` + `playAnim` (a one-shot on the player; NPC targets land in step 2). Editor: **+ Trigger** + form (by / once / effects), violet hit-area. Demo: a street trigger that waves (`playAnim 'interact'`) on entering the right side.
+**Why:** First M7 piece — a generic "run anything on enter" volume that later reacts to NPCs (chaining) and drives the stealth crouch.
+**How:**
+- `mountScene` collects trigger volumes (hit-areas → design px) and, each tick, fires the ones the player's feet just entered (tracking `inside` for the edge + `fired` for `once`), gated by `by` + `when`. `pickInteractable` skips triggers (never clicked) and its return type now **excludes** the trigger variant — which kept the click / cursor code type-safe without changes.
+- **Engine effects vs state effects:** the scene's new `runEffects` handles `playSound` (audio) / `playAnim` (`character.playOnce`) locally and forwards the list to the story store (which treats the engine kinds as no-ops via `applyEffect`). Both clicks and triggers route through it.
+- **Gesture timing:** a trigger fires *mid-walk* (the feet cross into the area before the click point), and a one-shot during a walk is cancelled by the walk pose — so `Character.playOnce` **defers** the gesture to the next idle frame (it plays on arrival). A new walk discards a queued gesture.
+- **Verified:** format / typecheck / lint / build green; `game.json` valid; dev smoke `/` + `/?edit` 200. `sprite-view.playOnce` already no-ops on a missing clip.
+**Follow-ups:** `by: npc`, `playAnim` on NPC targets, and `spawnNpc` land in **step 2 (NPC entities)**.
+
 ### 2026-06-14 — Planned M7 (NPCs, dialogue & stealth) — folded in triggers + NPC paths + stealth crouch
 **What:** Expanded the roadmap's M7 into five chainable steps and added three user-requested mechanics: an **enter-driven `trigger`** interactable (reacts to player + NPCs), **drawn NPC movement paths**, and a **crouch-at-cover** stealth beat. Roadmap only — no code yet.
 **Why:** Lock the M7 scope before building, so the trigger → NPC-path → stealth chaining is designed up front.

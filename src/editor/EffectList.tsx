@@ -43,7 +43,15 @@ export function SceneSelect({
   )
 }
 
-const EFFECT_KINDS: Effect['kind'][] = ['setFlag', 'giveItem', 'takeItem', 'goTo', 'startDialog']
+const EFFECT_KINDS: Effect['kind'][] = [
+  'setFlag',
+  'giveItem',
+  'takeItem',
+  'goTo',
+  'startDialog',
+  'playSound',
+  'playAnim',
+]
 
 function defaultEffect(kind: Effect['kind'], sceneIds: SceneId[], itemIds: ItemId[]): Effect {
   switch (kind) {
@@ -57,6 +65,10 @@ function defaultEffect(kind: Effect['kind'], sceneIds: SceneId[], itemIds: ItemI
       return { kind: 'goTo', scene: sceneIds[0] ?? '' }
     case 'startDialog':
       return { kind: 'startDialog', dialog: '' }
+    case 'playSound':
+      return { kind: 'playSound', sound: '' }
+    case 'playAnim':
+      return { kind: 'playAnim', action: 'interact' }
   }
 }
 
@@ -116,6 +128,42 @@ function EffectFields({
           value={effect.dialog}
           onChange={(e) => onChange({ ...effect, dialog: e.target.value })}
         />
+      )
+    case 'playSound':
+      return (
+        <label className="editor__import">
+          {effect.sound ? 'sound ✓' : '+ Sound'}
+          <input
+            type="file"
+            accept="audio/*"
+            hidden
+            onChange={(ev) => {
+              const file = ev.target.files?.[0]
+              ev.target.value = ''
+              if (!file) return
+              const reader = new FileReader()
+              reader.onload = () => onChange({ ...effect, sound: String(reader.result) })
+              reader.readAsDataURL(file)
+            }}
+          />
+        </label>
+      )
+    case 'playAnim':
+      return (
+        <>
+          <input
+            className="logic__in"
+            placeholder="action (e.g. interact)"
+            value={effect.action}
+            onChange={(e) => onChange({ ...effect, action: e.target.value })}
+          />
+          <input
+            className="logic__in"
+            placeholder="target (player)"
+            value={effect.target ?? ''}
+            onChange={(e) => onChange({ ...effect, target: e.target.value || undefined })}
+          />
+        </>
       )
   }
 }

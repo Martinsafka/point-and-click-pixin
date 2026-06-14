@@ -21,6 +21,7 @@ export class Character {
   private pathIndex = 0
   private onArrive?: () => void
   private action?: string
+  private pendingAction?: string
   private facing: Facing = 'S'
   private state: MoveState = 'idle'
   private readonly speed = WALK_SPEED
@@ -49,6 +50,7 @@ export class Character {
     this.pathIndex = 0
     this.onArrive = undefined
     this.action = undefined
+    this.pendingAction = undefined
     this.state = 'idle'
     this.syncView()
   }
@@ -64,6 +66,7 @@ export class Character {
     this.pathIndex = 0
     this.onArrive = onArrive
     this.action = action
+    this.pendingAction = undefined // a new walk discards a queued trigger gesture
   }
 
   /** Advance one frame. `deltaMS` is real elapsed milliseconds from the ticker. */
@@ -107,8 +110,25 @@ export class Character {
     // After syncView so this frame is consistent. On arrival an optional one-shot
     // plays first and the callback fires on its completion; otherwise it fires now.
     // The callback may trigger a scene swap (the host defers that past the tick).
-    if (action) this.view.playOnce(action, this.facing, () => arrived?.())
-    else arrived?.()
+    if (action) {
+      this.view.playOnce(action, this.facing, () => arrived?.())
+    } else {
+      arrived?.()
+      // A trigger-queued gesture plays once we're standing still — a one-shot fired
+      // mid-walk would be cancelled by the walk pose.
+      if (this.state === 'idle' && this.pendingAction) {
+        const queued = this.pendingAction
+        this.pendingAction = undefined
+        this.view.playOnce(queued, this.facing, () => {})
+      }
+    }
+  }
+
+  /** Play a one-shot animation (e.g. a trigger gesture). Deferred to the next idle
+   *  frame while walking — a one-shot during a walk is cancelled by the walk pose. */
+  playOnce(action: string): void {
+    if (this.state === 'walk') this.pendingAction = action
+    else this.view.playOnce(action, this.facing, () => {})
   }
 
   destroy(): void {
