@@ -22,6 +22,8 @@ import { CursorEditor } from './CursorEditor'
 import { CharacterEditor } from './CharacterEditor'
 import { DepthEditor } from './DepthEditor'
 import { TransitionEditor } from './TransitionEditor'
+import { NpcList } from './NpcList'
+import { NpcOverlay } from './NpcOverlay'
 
 const TABS = ['scene', 'items', 'characters', 'project'] as const
 type Tab = (typeof TABS)[number]
@@ -32,8 +34,8 @@ const TAB_LABEL: Record<Tab, string> = {
   project: 'Project',
 }
 
-/** Which polygon draw mode is active (overlays share the preview, so only one). */
-type Draw = 'walkable' | 'hole' | 'hitarea' | null
+/** Which polygon draw / placement mode is active (overlays share the preview). */
+type Draw = 'walkable' | 'hole' | 'hitarea' | 'npc' | null
 
 function round(n: number): number {
   return Math.round(n * 1000) / 1000
@@ -67,6 +69,7 @@ export function Editor() {
   const [draw, setDraw] = useState<Draw>(null)
   const [selectedInteractable, setSelectedInteractable] = useState<number | null>(null)
   const [selectedHole, setSelectedHole] = useState<number | null>(null)
+  const [selectedNpc, setSelectedNpc] = useState<number | null>(null)
   const [panelWidth, setPanelWidth] = useState(340)
   // The character-size slider drives a live % during drag, committing (one preview
   // re-mount) on release; null means "read the saved value". Width is the same.
@@ -100,6 +103,7 @@ export function Editor() {
     setDraw(null)
     setSelectedInteractable(null)
     setSelectedHole(null)
+    setSelectedNpc(null)
     setCharDraft(null)
     setWidthDraft(null)
   }
@@ -200,6 +204,16 @@ export function Editor() {
     editorStore
       .getState()
       .setHitArea(selectedId, selectedInteractable, [...it.hitArea, round(xFrac), round(yFrac)])
+  }
+
+  const selectNpc = (i: number) => {
+    setDraw(null)
+    setSelectedNpc(i)
+  }
+  const placeNpc = (xFrac: number, yFrac: number) => {
+    if (selectedNpc !== null) {
+      editorStore.getState().setNpcSpawn(selectedId, selectedNpc, round(xFrac), round(yFrac))
+    }
   }
 
   // Save the working doc as a dev draft and open the game (drops `?edit`).
@@ -416,10 +430,28 @@ export function Editor() {
                 )}
               </Section>
 
+              <Section title={`NPCs · ${scene ? (scene.npcs?.length ?? 0) : 0}`}>
+                {scene && (
+                  <NpcList
+                    sceneId={selectedId}
+                    npcs={scene.npcs ?? []}
+                    selectedIndex={selectedNpc}
+                    onSelect={selectNpc}
+                    placeMode={draw === 'npc'}
+                    onTogglePlace={() => toggle('npc')}
+                    items={doc.items}
+                    sceneIds={sceneIds}
+                  />
+                )}
+              </Section>
+
               {draw && (
                 <p className="editor__hint">
-                  Click in the preview to add{' '}
-                  {draw === 'walkable' ? 'walkable' : draw === 'hole' ? 'hole' : 'hit-area'} points.
+                  {draw === 'npc'
+                    ? "Click in the preview to set the NPC's spawn."
+                    : `Click in the preview to add ${
+                        draw === 'walkable' ? 'walkable' : draw === 'hole' ? 'hole' : 'hit-area'
+                      } points.`}
                 </p>
               )}
             </>
@@ -514,6 +546,12 @@ export function Editor() {
               selectedIndex={selectedInteractable}
               drawMode={draw === 'hitarea'}
               onAddPoint={addHitAreaPoint}
+            />
+            <NpcOverlay
+              npcs={scene.npcs ?? []}
+              selectedIndex={selectedNpc}
+              placeMode={draw === 'npc'}
+              onPlace={placeNpc}
             />
           </div>
         )}

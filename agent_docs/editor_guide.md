@@ -43,7 +43,7 @@ So your edits live in a draft until you publish them (Export → `content/game.j
 A **left panel** beside a **live preview** of the selected scene. Edits show in the
 preview immediately. The panel is split into top-level **tabs**:
 
-- **Scene** — Scenes, Walkable, Layers, Interactables.
+- **Scene** — Scenes, Walkable, Depth, Holes, Layers, Interactables, NPCs.
 - **Items** — Items, Recipes.
 - **Characters** — character & animation setup (M5).
 - **Project** — Display, Cursors, Transition, Document (export / import).
@@ -184,6 +184,18 @@ inventory item, shows that text as a transient narration line in the game.
 > For a **pickable**, giving the item and hiding it (the `picked:` flag) are
 > automatic — its **effects** are *extra* things on top. For an **exit**, the
 > `goTo` is automatic; effects run after it.
+
+### NPCs · _N_
+
+The characters that populate the scene (static for now — movement paths arrive next).
+Shown in the preview as **orange markers** at their spawns.
+
+- **+ NPC** — add a character; **✕** removes one. Click a row to **select**.
+- For the selected NPC: edit its **id** (referenced by `playAnim` effects + future
+  NPC triggers), its **when** gate (present only while the Condition holds), and
+  **Place** it — click the preview to set its spawn.
+- NPCs use the built-in placeholder figure for now (per-NPC art is a follow-up); in the
+  game they render as real characters, Y-sorted + depth-scaled like the player.
 
 ### Items · _N_ and Recipes · _N_ (global)
 

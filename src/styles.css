@@ -1141,6 +1141,33 @@ body {
   fill: #b07cff;
   stroke: #b07cff;
 }
+
+/* NPC spawn markers (editor) */
+.npc-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.npc-overlay__marker {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  padding: 1px 5px;
+  font-size: 10px;
+  white-space: nowrap;
+  color: #0d1017;
+  background: #ff9e64;
+  border-radius: 3px 3px 3px 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+.npc-overlay__marker--selected {
+  outline: 2px solid #fff;
+}
+.npc-overlay__catcher {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  cursor: crosshair;
+}
 .hitarea--selected {
   fill-opacity: 0.26;
   stroke-width: 2.5;

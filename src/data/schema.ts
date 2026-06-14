@@ -211,6 +211,20 @@ export type InteractableData =
       when?: Condition
     }
 
+/**
+ * A non-player character placed in a scene: a character (the M5 view descriptor;
+ * default the placeholder) at a spawn, optionally gated by `when` (arrival /
+ * departure). Movement paths arrive in M7 step 3.
+ */
+export interface NpcData {
+  id: string
+  spawn: { xFrac: number; yFrac: number }
+  /** Appearance (atlas + clips); absent → the built-in placeholder. */
+  view?: ViewDescriptor
+  /** Present only while this Condition holds (absent → always present). */
+  when?: Condition
+}
+
 export interface SceneData {
   id: SceneId
   name: string
@@ -220,6 +234,8 @@ export interface SceneData {
   /** Obstacles cut out of the walkable area (polygons as design-space fractions). */
   holes?: Polygon[]
   interactables: InteractableData[]
+  /** Non-player characters in the scene. */
+  npcs?: NpcData[]
   depth: DepthConfig
   /** Character spawn (feet), as design-space fractions. */
   spawn: { xFrac: number; yFrac: number }

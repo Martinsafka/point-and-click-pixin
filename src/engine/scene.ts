@@ -187,19 +187,35 @@ export async function mountScene(
     const state = store.getState()
     for (const c of conditional) c.display.visible = checkCondition(state, c.when)
   }
-  const unsubscribeVisibility =
-    conditional.length > 0 ? store.subscribe(refreshVisibility) : () => {}
+  // Subscribe unconditionally — NPCs (below) may add conditional entries after this.
+  const unsubscribeVisibility = store.subscribe(refreshVisibility)
 
   const walkablePx = resolvePolygon(scene.walkable, design)
   const holesPx = (scene.holes ?? []).map((h) => resolvePolygon(h, design))
-  const character = new Character(
-    await createSpriteView(playerView),
-    depthScale,
-    buildNavigation(walkablePx, holesPx),
-    scene.characterScale ?? 1,
-  )
+  const nav = buildNavigation(walkablePx, holesPx) // shared by the player + every NPC
+  const charScale = scene.characterScale ?? 1
+  const character = new Character(await createSpriteView(playerView), depthScale, nav, charScale)
   interactive.addChild(character.displayObject)
   character.setPosition(scene.spawn.xFrac * design.width, scene.spawn.yFrac * design.height)
+
+  // NPCs: characters placed in the scene (static for now; movement is step 3). They
+  // share the nav-mesh + depth, Y-sort with the player, and `when` gates presence.
+  const npcs: { id: string; character: Character }[] = []
+  for (const npc of scene.npcs ?? []) {
+    const npcChar = new Character(
+      await createSpriteView(npc.view ?? placeholderView),
+      depthScale,
+      nav,
+      charScale,
+    )
+    npcChar.setPosition(npc.spawn.xFrac * design.width, npc.spawn.yFrac * design.height)
+    interactive.addChild(npcChar.displayObject)
+    if (npc.when) {
+      npcChar.displayObject.visible = checkCondition(store.getState(), npc.when)
+      conditional.push({ display: npcChar.displayObject, when: npc.when })
+    }
+    npcs.push({ id: npc.id, character: npcChar })
+  }
 
   // Camera: height-anchored + resize-safe. Each frame we read the *current*
   // viewport (so a window resize re-fits with no re-mount), scale the world so the
@@ -235,8 +251,10 @@ export async function mountScene(
   const runEffects = (effects: readonly Effect[]) => {
     for (const e of effects) {
       if (e.kind === 'playSound') void import('../audio/audio').then((m) => m.playClip(e.sound))
-      else if (e.kind === 'playAnim' && (!e.target || e.target === 'player')) {
-        character.playOnce(e.action)
+      else if (e.kind === 'playAnim') {
+        const target = e.target ?? 'player'
+        if (target === 'player') character.playOnce(e.action)
+        else npcs.find((n) => n.id === target)?.character.playOnce(e.action)
       }
     }
     store.getState().run(effects)
@@ -312,6 +330,7 @@ export async function mountScene(
 
   const onTick = (ticker: Ticker) => {
     character.update(ticker.deltaMS)
+    for (const n of npcs) n.character.update(ticker.deltaMS)
     updateCamera()
     checkTriggers()
   }
@@ -330,6 +349,7 @@ export async function mountScene(
       app.stage.cursor = 'default'
       app.stage.sortableChildren = false
       character.destroy()
+      for (const n of npcs) n.character.destroy()
       world.destroy({ children: true })
     },
   }

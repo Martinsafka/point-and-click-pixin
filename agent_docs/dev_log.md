@@ -23,6 +23,21 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-14 — Roadmap: NPC model reworked (global cast + per-scene placement) + narrative tiers
+**What:** Recorded the agreed NPC architecture in M7. NPCs become **global characters** (a cast defined once: id / name now, appearance / sounds / dialogue / routine later) **placed** into scenes (`{ npc, spawn, when }`, click-to-place), **unique** — one NPC is placed in at most one scene. An NPC's current scene is **runtime state**; a `moveNpc` / `despawnNpc` effect + its routine move it between scenes ("appears elsewhere" = a logical action, not a second placement). Narrative is **two-tier**: a global **story scenario** (orchestrates several NPCs + the action sequence) + per-NPC **dialogue** bubbles (a reusable library + inline one-offs). Added **Step 2b** (the global-cast refactor) and **Step 6** (cross-scene routine flowchart). Roadmap only — no code yet.
+**Why:** Step 2's per-scene NPCs don't suit recurring characters or dialogue / voice (which belong to the character). Lock the model before step 3 so paths / dialogue build on placements, not per-scene data.
+**How:** Roadmap M7 restructured (2b + 6 inserted; 3 / 4 reworded). The player is conceptually "character 0" (unify later). The routine flowchart is its own grand step on top of the in-scene paths (step 3).
+**Follow-ups:** implement **Step 2b** (global `GameDoc.npcs` cast + `SceneData.npcs` placements + uniqueness), then step 3.
+
+### 2026-06-14 — M7 step 2: NPC entities
+**What:** `SceneData.npcs?: NpcData[]` — characters placed in a scene (id + spawn + optional `view` + `when` gate), spawned alongside the player and **Y-sorted + depth-scaled** in the same band. Static for now (movement is step 3). The `playAnim` effect can now **target an NPC by id**, so a trigger can make an NPC react (a taste of the chaining). Editor: an **NPCs** section (Scene tab) — add / remove / id / when / **Place** (click the preview for spawn) + orange spawn markers. Demo: a `stranger` the street's `greet` trigger waves at when the player approaches.
+**Why:** M7 step 2 — the cast that dialogue / paths / stealth build on.
+**How:**
+- `mountScene` builds the nav-mesh **once** and shares it across the player + every NPC (the visibility graph is O(corners²) to build — don't repeat it per character). Each NPC is a `Character` (placeholder view by default), positioned at its spawn, added to `interactive`, updated each tick, destroyed on teardown. A `when` NPC joins the existing conditional-visibility list — the store subscription is now **unconditional** so entries added after it (NPCs) are still refreshed. `runEffects` resolves `playAnim` `target` → the player or an NPC by id.
+- Editor: NPCs are **DOM markers** (no Pixi re-mount on edit), placed via a unified `draw === 'npc'` mode; they render as sprites only in the game.
+- **Verified:** format / typecheck / lint / build green; `game.json` valid; dev smoke `/` + `/?edit` 200.
+**Follow-ups:** per-NPC art upload; `by: npc` trigger checks + NPC movement paths (step 3) → NPCs walk into triggers and chain events.
+
 ### 2026-06-14 — M7 step 1: trigger interactables + engine effects
 **What:** A 5th interactable kind **`trigger`** — an **enter-driven** hit-area that runs its `effects` when a character's feet enter it (not on click). `by: player | npc | any`, `once` + enter-edge debounce, gated by `when`. New **engine effects** `playSound` + `playAnim` (a one-shot on the player; NPC targets land in step 2). Editor: **+ Trigger** + form (by / once / effects), violet hit-area. Demo: a street trigger that waves (`playAnim 'interact'`) on entering the right side.
 **Why:** First M7 piece — a generic "run anything on enter" volume that later reacts to NPCs (chaining) and drives the stealth crouch.

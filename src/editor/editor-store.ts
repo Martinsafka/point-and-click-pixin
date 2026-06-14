@@ -11,6 +11,7 @@ import type {
   LayerData,
   LayerFit,
   LayerRole,
+  NpcData,
   Recipe,
   SceneBand,
   SceneData,
@@ -75,6 +76,12 @@ interface EditorStore {
   setInteractableTo(id: SceneId, index: number, to: SceneId): void
   setTriggerBy(id: SceneId, index: number, by: 'player' | 'npc' | 'any'): void
   setTriggerOnce(id: SceneId, index: number, once: boolean): void
+  // NPCs (M7 step 2) — placed characters; DOM markers, no preview re-mount.
+  addNpc(id: SceneId): void
+  removeNpc(id: SceneId, index: number): void
+  setNpcId(id: SceneId, index: number, value: string): void
+  setNpcSpawn(id: SceneId, index: number, xFrac: number, yFrac: number): void
+  setNpcWhen(id: SceneId, index: number, when: Condition | undefined): void
   setInteractableWhen(id: SceneId, index: number, when: Condition | undefined): void
   setInteractableEffects(id: SceneId, index: number, effects: Effect[]): void
   setInteractableUses(id: SceneId, index: number, uses: UseRule[]): void
@@ -131,6 +138,14 @@ function uniqueItemId(items: GameDoc['items'], base: string): ItemId {
   return `${base}-${n}`
 }
 
+function uniqueNpcId(taken: readonly NpcData[], base: string): string {
+  const ids = new Set(taken.map((n) => n.id))
+  if (!ids.has(base)) return base
+  let n = 2
+  while (ids.has(`${base}-${n}`)) n += 1
+  return `${base}-${n}`
+}
+
 export const editorStore = createStore<EditorStore>((set, get) => {
   /** Replace one scene immutably. `remount` bumps `revision` so the preview
    *  re-mounts (needed when the change is visual in the Pixi canvas). */
@@ -146,6 +161,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     patchScene(id, { layers: fn(get().doc.scenes[id].layers) }, remount)
   const mapInteractables = (id: SceneId, fn: (its: InteractableData[]) => InteractableData[]) =>
     patchScene(id, { interactables: fn(get().doc.scenes[id].interactables) }, false)
+  const mapNpcs = (id: SceneId, fn: (npcs: NpcData[]) => NpcData[]) =>
+    patchScene(id, { npcs: fn(get().doc.scenes[id].npcs ?? []) }, false)
   // Document-level patch (items / recipes); never touches the Pixi preview.
   const patchDoc = (patch: Partial<GameDoc>) => set({ doc: { ...get().doc, ...patch } })
 
@@ -266,6 +283,18 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapInteractables(id, (its) =>
         its.map((it, i) => (i === index && it.kind === 'trigger' ? { ...it, once } : it)),
       ),
+    addNpc: (id) =>
+      mapNpcs(id, (ns) => [
+        ...ns,
+        { id: uniqueNpcId(ns, 'npc'), spawn: { xFrac: 0.5, yFrac: 0.85 } },
+      ]),
+    removeNpc: (id, index) => mapNpcs(id, (ns) => ns.filter((_, i) => i !== index)),
+    setNpcId: (id, index, value) =>
+      mapNpcs(id, (ns) => ns.map((n, i) => (i === index ? { ...n, id: value } : n))),
+    setNpcSpawn: (id, index, xFrac, yFrac) =>
+      mapNpcs(id, (ns) => ns.map((n, i) => (i === index ? { ...n, spawn: { xFrac, yFrac } } : n))),
+    setNpcWhen: (id, index, when) =>
+      mapNpcs(id, (ns) => ns.map((n, i) => (i === index ? { ...n, when } : n))),
     setInteractableWhen: (id, index, when) =>
       mapInteractables(id, (its) => its.map((it, i) => (i === index ? { ...it, when } : it))),
     setInteractableEffects: (id, index, effects) =>
