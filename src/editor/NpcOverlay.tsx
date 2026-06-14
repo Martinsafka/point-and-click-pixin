@@ -62,7 +62,10 @@ export function NpcOverlay({
   onAddPathPoint: (xFrac: number, yFrac: number) => void
 }) {
   const sel = selectedIndex !== null ? placements[selectedIndex] : undefined
-  const pathPts = sel?.path ? toPoints(sel.path.points) : []
+  // The selected NPC's route(s): the default `path` plus any conditional `paths`.
+  const routes = sel
+    ? [...(sel.path ? [sel.path] : []), ...(sel.paths ?? [])].map((p) => toPoints(p.points))
+    : []
   const cones = placements.flatMap((p, i) => {
     const vision = cast[p.npc]?.vision
     return vision ? [{ i, d: conePath(p, vision, aspect) }] : []
@@ -74,26 +77,31 @@ export function NpcOverlay({
 
   return (
     <div className="npc-overlay">
-      {(cones.length > 0 || pathPts.length >= 2) && (
+      {(cones.length > 0 || routes.some((r) => r.length >= 2)) && (
         <svg className="npc-overlay__svg" viewBox="0 0 1 1" preserveAspectRatio="none">
           {cones.map(({ i, d }) => (
             <path key={`cone${i}`} className="npc-overlay__cone" d={d} />
           ))}
-          {pathPts.length >= 2 && (
-            <polyline
-              className="npc-overlay__path"
-              points={pathPts.map((p) => p.join(',')).join(' ')}
-            />
+          {routes.map((pts, ri) =>
+            pts.length >= 2 ? (
+              <polyline
+                key={`route${ri}`}
+                className="npc-overlay__path"
+                points={pts.map((p) => p.join(',')).join(' ')}
+              />
+            ) : null,
           )}
         </svg>
       )}
-      {pathPts.map(([x, y], i) => (
-        <span
-          key={`wp${i}`}
-          className="npc-overlay__waypoint"
-          style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
-        />
-      ))}
+      {routes.flatMap((pts, ri) =>
+        pts.map(([x, y], i) => (
+          <span
+            key={`wp${ri}-${i}`}
+            className="npc-overlay__waypoint"
+            style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
+          />
+        )),
+      )}
       {placements.map((p, i) => (
         <span
           key={i}

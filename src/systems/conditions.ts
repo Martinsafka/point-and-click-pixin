@@ -1,4 +1,4 @@
-import type { Condition, Effect, FlagId, GameDoc, ItemId, SceneId } from '../data/schema'
+import type { Condition, Effect, FlagId, GameDoc, ItemId, NpcId, SceneId } from '../data/schema'
 
 /**
  * Live discrete state of a playthrough — what Conditions read and Effects mutate.
@@ -12,6 +12,9 @@ export interface StoryState {
   visited: SceneId[]
   /** Item selected in the inventory (for combine / use-on), or null. */
   selectedItem: ItemId | null
+  /** Each NPC's current scene (runtime location), overriding its placement's home;
+   *  `''` = despawned (nowhere). Absent → the NPC is at its home / placement scene. */
+  npcScene?: Record<NpcId, SceneId>
 }
 
 /**
@@ -73,8 +76,12 @@ export function applyEffect(state: StoryState, effect: Effect): StoryState {
           : [...state.visited, effect.scene],
       }
     case 'startDialog':
-      // Dialog runtime arrives in M7; for now this is an inert marker.
+      // The scene starts the dialogue (it needs the actor registry); inert here.
       return state
+    case 'moveNpc':
+      return { ...state, npcScene: { ...(state.npcScene ?? {}), [effect.npc]: effect.scene } }
+    case 'despawnNpc':
+      return { ...state, npcScene: { ...(state.npcScene ?? {}), [effect.npc]: '' } }
     case 'playSound':
     case 'playAnim':
     case 'wait':

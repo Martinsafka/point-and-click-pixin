@@ -26,6 +26,7 @@ function freshState(doc: GameDoc): StoryState {
     inventory: [],
     visited: [doc.start],
     selectedItem: null,
+    npcScene: {},
   }
 }
 

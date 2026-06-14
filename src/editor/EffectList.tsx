@@ -76,6 +76,8 @@ const EFFECT_KINDS: Effect['kind'][] = [
   'takeItem',
   'goTo',
   'startDialog',
+  'moveNpc',
+  'despawnNpc',
   'playSound',
   'playAnim',
   'wait',
@@ -94,6 +96,10 @@ function defaultEffect(kind: Effect['kind'], sceneIds: SceneId[], itemIds: ItemI
       return { kind: 'goTo', scene: sceneIds[0] ?? '' }
     case 'startDialog':
       return { kind: 'startDialog', dialog: '' }
+    case 'moveNpc':
+      return { kind: 'moveNpc', npc: '', scene: sceneIds[0] ?? '' }
+    case 'despawnNpc':
+      return { kind: 'despawnNpc', npc: '' }
     case 'playSound':
       return { kind: 'playSound', sound: '' }
     case 'playAnim':
@@ -164,6 +170,29 @@ function EffectFields({
           placeholder="dialog"
           value={effect.dialog}
           onChange={(e) => onChange({ ...effect, dialog: e.target.value })}
+        />
+      )
+    case 'moveNpc':
+      return (
+        <>
+          <OptionSelect
+            value={effect.npc}
+            options={targets.filter((t) => t !== 'player')}
+            onChange={(npc) => onChange({ ...effect, npc })}
+          />
+          <SceneSelect
+            value={effect.scene}
+            sceneIds={sceneIds}
+            onChange={(scene) => onChange({ ...effect, scene })}
+          />
+        </>
+      )
+    case 'despawnNpc':
+      return (
+        <OptionSelect
+          value={effect.npc}
+          options={targets.filter((t) => t !== 'player')}
+          onChange={(npc) => onChange({ ...effect, npc })}
         />
       )
     case 'playSound':

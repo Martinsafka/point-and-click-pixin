@@ -27,10 +27,7 @@
         0.008,
         0.985
       ],
-      "holes": [
-        [0.3, 0.72, 0.4, 0.72, 0.4, 0.9, 0.3, 0.9],
-        [0.58, 0.72, 0.7, 0.72, 0.7, 0.9, 0.58, 0.9]
-      ],
+      "holes": [[0.3, 0.72, 0.4, 0.72, 0.4, 0.9, 0.3, 0.9]],
       "interactables": [
         {
           "kind": "pickable",
@@ -51,16 +48,7 @@
           "kind": "exit",
           "id": "to-room",
           "to": "room",
-          "hitArea": [
-            0.6,
-            0.5,
-            0.64,
-            0.5,
-            0.64,
-            0.62,
-            0.6,
-            0.62
-          ],
+          "hitArea": [0.6, 0.5, 0.64, 0.5, 0.64, 0.72, 0.6, 0.72],
           "when": {
             "kind": "hasItem",
             "item": "key"
@@ -88,13 +76,30 @@
             { "kind": "setStance" },
             { "kind": "setFlag", "flag": "hidden", "value": false }
           ]
+        },
+        {
+          "kind": "trigger",
+          "id": "stranger-enters",
+          "by": "npc",
+          "once": true,
+          "on": "rest",
+          "when": { "kind": "flag", "flag": "stranger-leaving" },
+          "hitArea": [0.56, 0.66, 0.68, 0.66, 0.68, 0.78, 0.56, 0.78],
+          "effects": [{ "kind": "moveNpc", "npc": "stranger", "scene": "room" }]
         }
       ],
       "npcs": [
         {
           "npc": "stranger",
           "spawn": { "xFrac": 0.62, "yFrac": 0.82 },
-          "path": { "points": [0.5, 0.86, 0.72, 0.82, 0.6, 0.93], "mode": "loop" }
+          "path": { "points": [0.5, 0.86, 0.72, 0.82, 0.6, 0.93], "mode": "loop" },
+          "paths": [
+            {
+              "when": { "kind": "flag", "flag": "stranger-leaving" },
+              "points": [0.55, 0.8, 0.62, 0.7],
+              "mode": "once"
+            }
+          ]
         },
         {
           "npc": "guard",
@@ -118,8 +123,7 @@
         {
           "kind": "builtin",
           "band": "background",
-          "builder": "street.buildings",
-          "parallax": 0.7
+          "builder": "street.buildings"
         },
         {
           "kind": "builtin",
@@ -314,6 +318,7 @@
           }
         }
       ],
+      "npcs": [{ "npc": "stranger", "spawn": { "xFrac": 0.5, "yFrac": 0.8 } }],
       "layers": [
         {
           "kind": "builtin",
@@ -387,7 +392,8 @@
       "dialog": "stranger",
       "dialogWhen": { "kind": "hasItem", "item": "key" },
       "inspect": { "text": "A wary stranger, sizing me up. They won't talk to someone empty-handed." },
-      "voice": { "pitch": 0.8 }
+      "voice": { "pitch": 0.8 },
+      "home": "street"
     },
     "guard": {
       "id": "guard",
@@ -426,6 +432,10 @@
           "choices": [
             { "text": "Who are you?", "next": "who" },
             { "text": "Seen anything strange around here?", "next": "strange" },
+            {
+              "text": "Wait for me inside.",
+              "effects": [{ "kind": "setFlag", "flag": "stranger-leaving" }]
+            },
             { "text": "Nothing. Goodbye." }
           ]
         },

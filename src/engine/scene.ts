@@ -198,6 +198,7 @@ export async function mountScene(
   referenceHeight: number = DEFAULT_REFERENCE_HEIGHT,
   cast: Record<NpcId, NpcDef> = {},
   dialogs: Record<DialogId, Dialog> = {},
+  npcHome: Record<NpcId, SceneId> = {},
 ): Promise<Scene> {
   // Design space vs viewport: the scene is authored in a fixed design space
   // (`scene.width` × `referenceHeight` px). The world Container holds it; the camera
@@ -223,8 +224,11 @@ export async function mountScene(
   const bandFor = (band: SceneBand): Container =>
     band === 'background' ? background : band === 'foreground' ? foreground : interactive
 
-  // Layers whose `when` toggles their visibility as story state changes.
-  const conditional: { display: Container; when: Condition }[] = []
+  // Displays whose visibility tracks story state (a layer's `when`, an NPC's location +
+  // `when`) — re-evaluated on every store change via a `show` predicate.
+  const conditional: { display: Container; show: (s: StoryState) => boolean }[] = []
+  // NPCs with conditional `paths`: re-pick + restart the active route when state changes.
+  const pathSwitchers: ((s: StoryState) => void)[] = []
   // Background / foreground layers that scroll at their own rate (parallax).
   const parallaxLayers: { display: Container; baseX: number; baseY: number; p: number }[] = []
 
@@ -236,8 +240,9 @@ export async function mountScene(
       display.scale.set(depthScaleAt(anchorY, depthScale))
     }
     if (layer.when) {
-      display.visible = checkCondition(store.getState(), layer.when)
-      conditional.push({ display, when: layer.when })
+      const when = layer.when
+      display.visible = checkCondition(store.getState(), when)
+      conditional.push({ display, show: (st) => checkCondition(st, when) })
     }
     const p = layer.parallax ?? 1
     if (p !== 1 && layer.band !== 'mid') {
@@ -248,7 +253,8 @@ export async function mountScene(
 
   const refreshVisibility = () => {
     const state = store.getState()
-    for (const c of conditional) c.display.visible = checkCondition(state, c.when)
+    for (const c of conditional) c.display.visible = c.show(state)
+    for (const sw of pathSwitchers) sw(state)
   }
   // Subscribe unconditionally — NPCs (below) may add conditional entries after this.
   const unsubscribeVisibility = store.subscribe(refreshVisibility)
@@ -279,10 +285,16 @@ export async function mountScene(
     if (def?.speed) npcChar.setSpeedScale(def.speed)
     npcChar.setPosition(placement.spawn.xFrac * design.width, placement.spawn.yFrac * design.height)
     interactive.addChild(npcChar.displayObject)
-    if (placement.when) {
-      npcChar.displayObject.visible = checkCondition(store.getState(), placement.when)
-      conditional.push({ display: npcChar.displayObject, when: placement.when })
-    }
+    // Visibility tracks the NPC's runtime location — it shows here only while its current
+    // scene (moved via `moveNpc`, else its home / this placement) is this one — plus its
+    // placement `when`. So `moveNpc` / `despawnNpc` add or remove it live.
+    const npcId = placement.npc
+    const when = placement.when
+    const show = (st: StoryState): boolean =>
+      (st.npcScene?.[npcId] ?? npcHome[npcId] ?? scene.id) === scene.id &&
+      (!when || checkCondition(st, when))
+    npcChar.displayObject.visible = show(store.getState())
+    conditional.push({ display: npcChar.displayObject, show })
     // The NPC's click behaviour: its dialogue (placement override, else cast default) +
     // the gate + the inspect fallback — resolved against state at click / hover time.
     const dialogId = placement.dialog ?? def?.dialog
@@ -293,7 +305,22 @@ export async function mountScene(
     }
     npcs.push({ id: placement.npc, character: npcChar, interaction })
     actors.set(placement.npc, npcChar)
-    startNpcPath(npcChar, placement.path, design)
+    // Active route: a conditional `paths` **override** whose `when` passes (recomputed
+    // reactively), else the default `path`. A flag switches the NPC onto a new route
+    // (e.g. head for the door) and back to its patrol when cleared.
+    const activePathOf = (st: StoryState): NpcPath | undefined =>
+      placement.paths?.find((p) => p.when && checkCondition(st, p.when)) ?? placement.path
+    let currentPath = activePathOf(store.getState())
+    startNpcPath(npcChar, currentPath, design)
+    if (placement.paths) {
+      pathSwitchers.push((st) => {
+        const next = activePathOf(st)
+        if (next !== currentPath) {
+          currentPath = next
+          startNpcPath(npcChar, next, design)
+        }
+      })
+    }
   }
 
   // Stealth vision: per-NPC watchers with a precomputed range (px) + cone half-angle
@@ -475,7 +502,8 @@ export async function mountScene(
       const movers: { id: string; c: Character }[] = []
       if (by === 'player' || by === 'any') movers.push({ id: 'player', c: character })
       if (by === 'npc' || by === 'any')
-        for (const n of npcs) movers.push({ id: n.id, c: n.character })
+        for (const n of npcs)
+          if (n.character.displayObject.visible) movers.push({ id: n.id, c: n.character })
       for (const m of movers) {
         const inArea = containsPoint(
           { polygon: t.polygon },
@@ -776,6 +804,15 @@ export function createSceneHost(
   let destroyed = false
   let shownId: SceneId | undefined
 
+  // Each NPC's start scene: its `home`, else the first scene it's placed in. The runtime
+  // location (`StoryState.npcScene`) defaults to this; `moveNpc` / `despawnNpc` override it.
+  const npcHome: Record<NpcId, SceneId> = {}
+  for (const [sid, sc] of Object.entries(scenes)) {
+    for (const p of sc.npcs ?? []) {
+      if (!(p.npc in npcHome)) npcHome[p.npc] = cast[p.npc]?.home ?? sid
+    }
+  }
+
   // The overlay swaps cross through: a colour wash (default black) + optional art,
   // animated on the ticker. Starts opaque so the first mount fades in. A huge rect
   // covers any viewport size.
@@ -866,6 +903,7 @@ export function createSceneHost(
       referenceHeight,
       cast,
       dialogs,
+      npcHome,
     )
     clearTimeout(spinTimer)
     spinner.visible = false

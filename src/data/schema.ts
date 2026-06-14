@@ -109,6 +109,10 @@ export type Effect =
   | { kind: 'takeItem'; item: ItemId }
   | { kind: 'goTo'; scene: SceneId }
   | { kind: 'startDialog'; dialog: DialogId }
+  // Move a cast NPC to another scene (its runtime location; needs a placement there)
+  // or remove it from play. Drive cross-scene NPC behaviour from dialogue / triggers.
+  | { kind: 'moveNpc'; npc: NpcId; scene: SceneId }
+  | { kind: 'despawnNpc'; npc: NpcId }
   // Engine effects (touch the scene / characters, not the story state):
   | { kind: 'playSound'; sound: string }
   | { kind: 'playAnim'; action: string; target?: string }
@@ -327,6 +331,9 @@ export interface NpcDef {
   voice?: VoiceConfig
   /** Stealth vision — on seeing the player, run its effects; absent → the NPC doesn't watch. */
   vision?: VisionConfig
+  /** The NPC's **starting** scene when it's placed in more than one (its runtime location
+   *  then moves via `moveNpc`); defaults to the scene of its first placement. */
+  home?: SceneId
 }
 
 /** A patrol route for a placed NPC: waypoints (design-space fractions) walked in
@@ -334,6 +341,9 @@ export interface NpcDef {
 export interface NpcPath {
   points: Polygon
   mode: 'once' | 'loop' | 'pingpong'
+  /** When set, this route is active only while the Condition passes — for **conditional
+   *  routes** (e.g. walk to the exit once a flag is set). Used inside `NpcPlacement.paths`. */
+  when?: Condition
 }
 
 /** Places a cast NPC into a scene at a spawn, optionally gated by `when`, with an
@@ -343,6 +353,10 @@ export interface NpcPlacement {
   spawn: { xFrac: number; yFrac: number }
   when?: Condition
   path?: NpcPath
+  /** Conditional in-scene routes — the **first** whose `when` passes is walked
+   *  (recomputed reactively as state changes), else the single `path`. So a flag can
+   *  switch the NPC onto a new route (e.g. head for the door, then a trigger moves it). */
+  paths?: NpcPath[]
   /** Per-scene dialogue override (id into `GameDoc.dialogs`); falls back to `NpcDef.dialog`. */
   dialog?: DialogId
 }
