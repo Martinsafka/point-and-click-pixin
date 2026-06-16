@@ -104,6 +104,10 @@ export interface Scene {
 
 /** Keeps the displayed scene in sync with the store's current scene. */
 export interface SceneHost {
+  /** Live-rebuild the **currently mounted** scene's weather + lighting (no re-mount) — the
+   *  editor calls this as the author tunes atmosphere. No-op while no scene is mounted (e.g.
+   *  mid-swap). */
+  refreshAtmosphere(scene: SceneData, atmo: PreviewAtmosphere): void
   destroy(): void
 }
 
@@ -1218,7 +1222,7 @@ export function createSceneHost(
   lightingDefaults: { ambientLight?: AmbientLight; playerLight?: PlayerLight } = {},
   options: SceneOptions = {},
 ): SceneHost {
-  let current: Scene | undefined
+  let current: PreviewScene | undefined
   let destroyed = false
   let shownId: SceneId | undefined
 
@@ -1365,6 +1369,9 @@ export function createSceneHost(
   const unsubscribe = store.subscribe(sync)
 
   return {
+    refreshAtmosphere(scene, atmo) {
+      current?.refreshAtmosphere(scene, atmo)
+    },
     destroy() {
       destroyed = true
       unsubscribe()

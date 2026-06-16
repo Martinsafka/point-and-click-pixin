@@ -23,6 +23,13 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-16 — ME.1 (step 2b): createSceneHost exposes refreshAtmosphere (delegates to current scene)
+**What:** `createSceneHost` now returns a `refreshAtmosphere(scene, atmo)` on its `SceneHost` that **delegates to the currently mounted scene** (the `PreviewScene` from step 2a) — a no-op while no scene is mounted (mid-swap). `current` is now typed `PreviewScene | undefined` (was `Scene`; `mountScene` already returns the superset). This is the host-level hook the editor will call as the author tunes atmosphere on the **real** game world.
+**Why:** ME.1 step — bridges step 2a (scene can rebuild atmosphere) to step 2c (`ScenePreview` mounts `createSceneHost` and drives the live refresh). Keeps the live-tuning capability at the host boundary the editor talks to.
+**How:** pure capability add — nothing in the game calls `host.refreshAtmosphere`, so the shipped game is unchanged (the host swaps scenes exactly as before). `SceneHost` gained the method in its interface; the returned object forwards to `current?.refreshAtmosphere`.
+**Verified:** typecheck + lint + build green; dev smoke `/` + `/?edit` 200 (game + current preview identical).
+**Follow-ups:** **2c** — `ScenePreview` mounts `createSceneHost(editorStore.doc.scenes, <story store @ selected scene>, …, { cameraMode:'fit', gameplayInput:false })` instead of `mountPreview`, subscribing to the editor store for the live `host.refreshAtmosphere` (replacing ME.0's `preview.refreshAtmosphere`); suppress audio in the editor.
+
 ### 2026-06-16 — ME.1 (step 2a): mountScene gains refreshAtmosphere (rebuildable lighting/weather)
 **What:** `mountScene` (the game scene) can now **rebuild its weather + lighting live** without a re-mount — `refreshAtmosphere(scene, atmo)` swaps in an edited scene + doc atmosphere defaults and rebuilds only those two systems. Refactored the weather/lighting build to read from mutable refs (`weatherScene` / `weatherPresetsRef` / `lightScene` / `lightDefaults`) + a `buildLighting()` helper; the initial build is byte-for-byte the same. `mountScene` now returns `PreviewScene` (Scene + refreshAtmosphere), like `mountPreview`.
 **Why:** ME.1 step — so the editor can drive the **real** game scene live (next step points `ScenePreview` at `createSceneHost`) **without losing ME.0's live atmosphere tuning** (the host's scene will expose this refresh).
