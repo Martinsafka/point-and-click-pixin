@@ -252,10 +252,24 @@ pause / face) fire from triggers, clicks **and** dialogue.
 
 **Step 6 — NPC routine (cross-scene behaviour)** _(the grand piece; builds on step 3)_
 
+**Scope (locked):** step 6 is a **per-NPC** routine that controls **only that one NPC** —
+its own schedule / reactions, moving it between scenes and along its in-scene paths over
+time + story state. This is a **React Flow node-graph editor scoped to a single NPC**, and
+is **part of M7 — NOT deferred to M12.** (The **global** story graph that orchestrates
+**all** NPCs together is **M12**; see that section.) The 2026-06-14 "M7 6a" dev-log line
+that said the routine editor is deferred to M12 was imprecise — only the optional **time
+scheduler** nuance is deferred; the per-NPC routine graph belongs here.
+
+- [x] **6a (runtime foundation)** — NPC location is runtime state (`StoryState.npcScene`);
+      `moveNpc` / `despawnNpc` effects; `NpcDef.home`; conditional routes (`NpcPath.when`,
+      `NpcPlacement.paths`), all reactive. _(commit 715457c)_
+- [ ] **6a-editor (follow-up)** — relax the editor's one-NPC-per-**game** placement guard to
+      one-per-**scene** + a **home** picker in the NPC modal.
 - [ ] A per-NPC **routine flowchart** — schedules / reactions that move an NPC between
       scenes and along its in-scene paths over time + story state. Runtime NPC location
       lives in story state; `moveNpc` / `despawnNpc` are its primitives.
-- [ ] Editor: a node-graph routine editor (inside the NPC's global definition).
+- [ ] Editor: a **React Flow** node-graph routine editor (inside the NPC's global
+      definition, beside Appearance / Dialogue / Voice). **Drives one NPC only.**
 
 ### M8 — Cutscenes / scripted sequences
 
@@ -297,10 +311,16 @@ pause / face) fire from triggers, clicks **and** dialogue.
 - [ ] **Settings screen** — volume sliders (music / SFX split), maybe fullscreen.
 - [ ] **Localization (i18n)** — UI texts + dialogue in multiple languages.
 
-### M12 — Story / logic graph  (optional)
+### M12 — Story / logic graph  (global orchestration)
+
+**Scope:** the **game-wide** event graph that drives overall game logic and **orchestrates
+all NPCs together** — distinct from M7 step 6, which is the **per-NPC** routine (one NPC
+only). M12 sits above the per-NPC routines and coordinates them via the shared flag /
+condition / effect vocabulary.
 
 - [ ] React Flow (@xyflow/react) view/editor over the flag/condition graph, or an
       auto-generated visualization. Keep primary logic local to objects.
+- [ ] Optional **time scheduler** nuance for routines (the part of step 6 deferred here).
 
 ### M13 — Open-source packaging
 

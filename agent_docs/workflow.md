@@ -22,14 +22,11 @@ Follow this loop for **every** task. Don't skip analysis or the log.
 - Implement the agreed approach.
 - Keep changes focused on the task; don't refactor unrelated code without flagging.
 - Run typecheck + lint before considering it done.
-- **If the task adds or changes anything in `src/editor/`** (a panel, control, or
-  authoring flow), **update `agent_docs/editor_guide.md`** in the same task — the
-  editor is the OSS product surface, so its usage docs must never lag the code.
 
-## 4. Log
+## 4. Log (two records)
 
-- After finishing, append an entry to `agent_docs/dev_log.md`: **what** you did, **why**, and **how** you approached it (key decisions, tradeoffs, anything the next session needs).
-- This is the project's running memory. **Mandatory, not optional.**
+- **Dev log (always).** After finishing, append an entry to `agent_docs/dev_log.md`: **what** you did, **why**, and **how** you approached it (key decisions, tradeoffs, anything the next session needs). This is the project's running engineering memory. **Mandatory, not optional.**
+- **Editor guide (whenever the task adds or changes an editor feature).** After the dev-log entry, also add/update an `agent_docs/editor_guide.md` section that describes **how to work with the just-created feature** — which panel/control, the edit → test → publish steps for it. The dev log records *how it was built*; the editor guide is the author-facing manual for *using* it. The editor is the OSS product surface, so its usage docs must never lag the code. **Both records are part of "done."**
 
 ## 5. Propose a commit message
 
