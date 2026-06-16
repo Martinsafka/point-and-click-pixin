@@ -67,6 +67,17 @@ export interface AudioConfig {
   footstepsOff?: boolean
 }
 
+/** How a mounted scene is presented (M10 ME.1). The game uses the defaults; the editor's
+ *  live view fits the whole scene + suppresses gameplay clicks (it places/draws instead). */
+export interface SceneOptions {
+  /** `follow` (default) — fit height + scroll to follow the player; `fit` — fit the whole
+   *  scene into the viewport (no scroll), for the editor. */
+  cameraMode?: 'follow' | 'fit'
+  /** Whether clicks drive gameplay (walk / interact / talk). Default true; the editor sets
+   *  false so the world is a live view it edits over. */
+  gameplayInput?: boolean
+}
+
 /** The slice of the story store the engine needs: read state + react to it. */
 export interface SceneStore {
   getState(): StoryStore
@@ -234,7 +245,10 @@ export async function mountScene(
   audio: AudioConfig = {},
   weatherPresets: Record<WeatherId, WeatherPreset> = {},
   lightingDefaults: { ambientLight?: AmbientLight; playerLight?: PlayerLight } = {},
+  options: SceneOptions = {},
 ): Promise<Scene> {
+  const cameraMode = options.cameraMode ?? 'follow'
+  const gameplayInput = options.gameplayInput ?? true
   // Design space vs viewport: the scene is authored in a fixed design space
   // (`scene.width` × `referenceHeight` px). The world Container holds it; the camera
   // (below) fits the design *height* to the viewport with one uniform scale, then
@@ -460,6 +474,20 @@ export async function mountScene(
   let camMs = 0
   let camElapsed = 0
   const updateCamera = (dt = 0) => {
+    // Editor `fit` mode: show the whole scene centred (no scroll / follow), so the static
+    // overlays' design→box mapping stays linear.
+    if (cameraMode === 'fit') {
+      const s = Math.min(app.screen.width / design.width, app.screen.height / design.height)
+      world.scale.set(s)
+      const x = (app.screen.width - design.width * s) / 2
+      const y = (app.screen.height - design.height * s) / 2
+      world.position.set(x, y)
+      cameraOffset.x = x
+      cameraOffset.y = y
+      cameraOffset.scale = s
+      for (const pl of parallaxLayers) pl.display.position.set(pl.baseX, pl.baseY)
+      return
+    }
     const base = app.screen.height / design.height
     let fx = character.displayObject.x
     let fy = character.displayObject.y
@@ -686,8 +714,9 @@ export async function mountScene(
 
   // Interact with an NPC: click it → walk beside it → talk or look, resolved against
   // state at click time (dialogue if its gate passes, else inspect). NPCs with neither
-  // aren't interactive; a gated-off click falls through to a walk.
-  for (const n of npcs) {
+  // aren't interactive; a gated-off click falls through to a walk. (Suppressed in the
+  // editor's live view, which authors over the world instead of playing it.)
+  for (const n of gameplayInput ? npcs : []) {
     const { character: npcChar, id, interaction } = n
     if (!interaction.dialog && !interaction.inspect) continue
     npcChar.displayObject.eventMode = 'static'
@@ -864,7 +893,7 @@ export async function mountScene(
       character.setTarget(local.x, local.y)
     }
   }
-  app.stage.on('pointertap', onTap)
+  if (gameplayInput) app.stage.on('pointertap', onTap)
 
   // M9 audio: this scene's ambient bed (its own `ambient` if its `when` passes, else the
   // document default) + footsteps while the player walks. The dynamic import keeps audio
@@ -1162,6 +1191,7 @@ export function createSceneHost(
   audio: AudioConfig = {},
   weatherPresets: Record<WeatherId, WeatherPreset> = {},
   lightingDefaults: { ambientLight?: AmbientLight; playerLight?: PlayerLight } = {},
+  options: SceneOptions = {},
 ): SceneHost {
   let current: Scene | undefined
   let destroyed = false
@@ -1283,6 +1313,7 @@ export function createSceneHost(
       audio,
       weatherPresets,
       lightingDefaults,
+      options,
     )
     clearTimeout(spinTimer)
     spinner.visible = false

@@ -23,6 +23,13 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-16 — ME.1 (step 1): scene camera + input modes (foundation for the live editor)
+**What:** Parameterised `mountScene` (+ `createSceneHost`) with a `SceneOptions` bag — `cameraMode` (`follow` = the game's fit-height + scroll-follow-player; `fit` = fit the whole scene centred, no scroll — for the editor's live view so the static overlays' design→box mapping stays linear) and `gameplayInput` (default true; `false` suppresses the stage walk/interact tap **and** the NPC talk clicks, so the editor authors *over* a live world instead of playing it). Defaults preserve the game exactly.
+**Why:** ME.1 (reframed) — the editor will run the **real** `createSceneHost` from `editorStore.doc` (not the static `mountPreview`), which needs a whole-scene camera + no gameplay clicks. This is the safe foundational slice (no caller passes the options yet, so nothing changes).
+**How:** `cameraMode === 'fit'` → `scale = min(screen/design)`, centred, parallax at rest; `gameplayInput` gates the `pointertap` registration + the NPC click loop. `createSceneHost` threads `options` to `mountScene`.
+**Verified:** typecheck + lint + build green; dev smoke `/` + `/?edit` 200 (defaults → game + the current editor preview unchanged).
+**Follow-ups:** next — point `ScenePreview` at `createSceneHost(editorStore.doc, …, { cameraMode:'fit', gameplayInput:false })` + a dedicated story store (keeping ME.0's live-atmosphere refresh).
+
 ### 2026-06-16 — ME.0: live atmosphere (weather + lighting) in the editor preview
 **What:** First step of the in-game-editor migration — the editor's preview now **shows weather + lighting live** (was a static preview), so the dev sees what they're authoring while tuning sliders (no "Test in game" round-trip). `mountPreview` gained a ticker + `createAtmosphere` + the weather system + `createLighting`, all read from the editor doc, with a `refreshAtmosphere(scene, atmo)` that rebuilds the weather + lightmap. `ScenePreview` passes the doc-level atmosphere (ambientLight / playerLight / weatherPresets) and **subscribes to the editor store**, calling `refreshAtmosphere` when the scene's lighting / weather config (hash-diffed) changes — live, no re-mount. `lighting.ts` `createLighting` gained a **camera** param (the preview passes its own fit transform `{ x:0, y:0, scale }` instead of the game `cameraOffset`).
 **Why:** ME.0 (roadmap) — the immediate, no-risk win that unblocks "I need to see the light while setting it up." Also prototypes the live-rebuild mechanism that ME.3 generalises.
