@@ -29,6 +29,8 @@ import type {
   TransitionConfig,
   UseRule,
   ViewDescriptor,
+  WeatherId,
+  WeatherPreset,
 } from '../data/schema'
 import { gameDoc } from '../data/game'
 import { placeholderView } from '../entities/placeholder-atlas'
@@ -151,6 +153,14 @@ interface EditorStore {
   addSound(src: string): void
   removeSound(id: SoundId): void
   setSoundName(id: SoundId, name: string): void
+  // Weather presets (M10 10a) — the Atmosphere tab library + per-scene conditional weather.
+  addWeatherPreset(): void
+  removeWeatherPreset(id: WeatherId): void
+  setWeatherPreset(id: WeatherId, patch: Partial<WeatherPreset>): void
+  addSceneWeather(id: SceneId): void
+  removeSceneWeather(id: SceneId, index: number): void
+  setSceneWeatherPreset(id: SceneId, index: number, preset: WeatherId): void
+  setSceneWeatherWhen(id: SceneId, index: number, when: Condition | undefined): void
   // Player character (M5) — bumps `revision` so the preview re-mounts the sprite.
   createPlayer(): void
   removePlayer(): void
@@ -647,6 +657,69 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       if (!sounds[id]) return
       patchDoc({ sounds: { ...sounds, [id]: { ...sounds[id], name } } })
     },
+    addWeatherPreset: () => {
+      const presets = get().doc.weatherPresets ?? {}
+      const id = uniqueKey(presets, 'weather')
+      patchDoc({
+        weatherPresets: {
+          ...presets,
+          [id]: {
+            id,
+            name: id,
+            count: 200,
+            color: '#ffffff',
+            alpha: 0.6,
+            size: 6,
+            shape: 'round',
+            angle: 90,
+            speed: 200,
+            sway: 20,
+            swayFreq: 0.3,
+            blend: 'normal',
+          },
+        },
+      })
+    },
+    removeWeatherPreset: (id) => {
+      const presets = { ...(get().doc.weatherPresets ?? {}) }
+      delete presets[id]
+      patchDoc({ weatherPresets: presets })
+    },
+    setWeatherPreset: (id, patch) => {
+      const presets = get().doc.weatherPresets ?? {}
+      if (!presets[id]) return
+      patchDoc({ weatherPresets: { ...presets, [id]: { ...presets[id], ...patch } } })
+    },
+    addSceneWeather: (id) => {
+      const first = Object.keys(get().doc.weatherPresets ?? {})[0] ?? ''
+      patchScene(id, { weather: [...(get().doc.scenes[id].weather ?? []), { preset: first }] }, false)
+    },
+    removeSceneWeather: (id, index) =>
+      patchScene(
+        id,
+        { weather: (get().doc.scenes[id].weather ?? []).filter((_, i) => i !== index) },
+        false,
+      ),
+    setSceneWeatherPreset: (id, index, preset) =>
+      patchScene(
+        id,
+        {
+          weather: (get().doc.scenes[id].weather ?? []).map((w, i) =>
+            i === index ? { ...w, preset } : w,
+          ),
+        },
+        false,
+      ),
+    setSceneWeatherWhen: (id, index, when) =>
+      patchScene(
+        id,
+        {
+          weather: (get().doc.scenes[id].weather ?? []).map((w, i) =>
+            i === index ? { ...w, when } : w,
+          ),
+        },
+        false,
+      ),
     setTransition: (patch) => patchDoc({ transition: { ...get().doc.transition, ...patch } }),
     createPlayer: () => {
       const { doc, revision } = get()

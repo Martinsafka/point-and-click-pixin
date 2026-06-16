@@ -1493,3 +1493,25 @@ body {
   font-size: 11px;
   opacity: 0.85;
 }
+
+/* Weather preset sliders (M10 10a). */
+.weather-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0;
+  font-size: 11px;
+}
+.weather-slider__label {
+  flex: 0 0 70px;
+  opacity: 0.85;
+}
+.weather-slider input[type='range'] {
+  flex: 1;
+}
+.weather-slider__val {
+  flex: 0 0 42px;
+  text-align: right;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}

@@ -23,6 +23,13 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-16 — M10 10a (editor): Atmosphere tab + weather sliders — 10a complete
+**What:** No-code weather authoring. A new top-level **Atmosphere tab** (`WeatherList`) lists presets (rain/snow/dust + custom; + Preset / Edit / ✕); **Edit** opens `WeatherEditor` — a modal of **sliders** for every parameter (count / alpha / size / angle / speed / sway / swayFreq) + **shape** (round/streak) / **blend** (normal/add) pickers + a **colour** swatch + an optional **ambient** `SoundField` (layered over the scene ambient). Per scene: a **Scene → Weather** section (`SceneWeather`) — a conditional `{ preset, when }` list (preset picker + `ConditionEditor`), so a flag triggers/swaps weather. Editor store gained `addWeatherPreset` / `removeWeatherPreset` / `setWeatherPreset` + `addSceneWeather` / `removeSceneWeather` / `setSceneWeatherPreset` / `setSceneWeatherWhen`. **Completes M10 10a.**
+**Why:** M10 10a editor — author the parametric presets + per-scene weather visually, no JSON.
+**How:** mirrors the library + modal pattern (Sounds/Sequences); sliders are range inputs with a live readout (`.weather-slider`). The preset editor commits live via `setWeatherPreset` (merge); the per-scene list is a `patchScene` (no remount). The editor is still lazy-loaded (atmosphere/weather runtime is tiny; the heavy bit is the canvas, already split).
+**Verified:** typecheck + lint + build green; dev smoke `/` + `/?edit` 200. (Authoring is visual — Atmosphere tab → Edit a preset → ▶ Test in game; or Scene → Weather to pick one.)
+**Follow-ups:** a **live weather preview** in the editor (slide → see it) — `mountPreview` is static today. Then **10b lighting**.
+
 ### 2026-06-16 — M10 10a: weather ambient sound (layered over the scene ambient)
 **What:** A weather preset can now carry a **looping ambient sound** that plays *over* the scene's ambient (e.g. rain hiss + the scene drone). `WeatherPreset.ambient?: SoundConfig` (a library reference). Audio: the ambient bed became **channel-based** — `setAmbient(channel, src, volume)` with a `'scene'` channel (the scene/doc ambient) + a `'weather'` channel (the active preset's loop) playing concurrently (mirrors the footstep channels). The scene resolves the active preset's ambient and drives the `'weather'` channel reactively (rebuilt with the weather; cleared on scene teardown / when weather stops). Added a procedural **rain hiss** (`sounds.ts` `hiss()` — low-passed white noise, seam-crossfaded) as a built-in library sound `sfx-rain`, and the built-in **rain** preset references it — so the street's rain is now audible over its ambient.
 **Why:** user request — weather should have its own ambient bed alongside the scene's.

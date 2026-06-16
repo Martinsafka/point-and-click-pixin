@@ -30,10 +30,21 @@ import { SequenceList } from './SequenceList'
 import { SoundField } from './SoundField'
 import { SoundList } from './SoundList'
 import { SoundSelect } from './SoundSelect'
+import { WeatherList } from './WeatherList'
+import { SceneWeather } from './SceneWeather'
 import { ConditionEditor } from './ConditionEditor'
 import { setSoundLibrary } from '../audio/audio'
 
-const TABS = ['scene', 'items', 'characters', 'dialogs', 'sequences', 'sounds', 'project'] as const
+const TABS = [
+  'scene',
+  'items',
+  'characters',
+  'dialogs',
+  'sequences',
+  'sounds',
+  'atmosphere',
+  'project',
+] as const
 type Tab = (typeof TABS)[number]
 const TAB_LABEL: Record<Tab, string> = {
   scene: 'Scene',
@@ -42,6 +53,7 @@ const TAB_LABEL: Record<Tab, string> = {
   dialogs: 'Dialogs',
   sequences: 'Cutscenes',
   sounds: 'Sounds',
+  atmosphere: 'Atmosphere',
   project: 'Project',
 }
 
@@ -531,6 +543,18 @@ export function Editor() {
                 )}
               </Section>
 
+              <Section title="Weather">
+                {scene && (
+                  <SceneWeather
+                    sceneId={selectedId}
+                    weather={scene.weather ?? []}
+                    presets={doc.weatherPresets ?? {}}
+                    items={doc.items}
+                    sceneIds={sceneIds}
+                  />
+                )}
+              </Section>
+
               {draw && (
                 <p className="editor__hint">
                   {draw === 'npc'
@@ -587,6 +611,12 @@ export function Editor() {
           {tab === 'sounds' && (
             <Section title={`Sounds · ${Object.keys(doc.sounds ?? {}).length}`}>
               <SoundList sounds={doc.sounds} />
+            </Section>
+          )}
+
+          {tab === 'atmosphere' && (
+            <Section title={`Weather presets · ${Object.keys(doc.weatherPresets ?? {}).length}`}>
+              <WeatherList presets={doc.weatherPresets} />
             </Section>
           )}
 

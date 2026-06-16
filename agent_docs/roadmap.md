@@ -348,18 +348,19 @@ flag-driven through the existing condition vocabulary.
 
 **10a — Particles / weather** _(a parametric system, not per-weather code)_
 
-- [ ] Runtime: a `ParticleContainer` weather layer driven by a `WeatherPreset` — **sliders**
-      for density / count, colour + alpha, size, **shape** (round dot / streak), direction +
-      gravity (fall speed), wind / sway (noise amount + frequency), spawn area, blend
-      (additive for snow). Procedural particle textures (round / streak), no uploads.
-- [ ] `GameDoc.weatherPresets` (pre-seeded **rain / snow / dust**, editable + custom) +
+- [x] Runtime: a `ParticleContainer` weather layer driven by a `WeatherPreset` — **sliders**
+      for count, colour + alpha, size, **shape** (round dot / streak), angle + speed, sway +
+      freq, blend (add for snow). Procedural textures (round / streak), no uploads. Plus a
+      per-preset **ambient sound** layered over the scene ambient (channel-based audio).
+- [x] `GameDoc.weatherPresets` (pre-seeded **rain / snow / dust**, editable + custom) +
       `SceneData.weather` = a conditional list `{ preset, when }` (first match plays;
       reactive, so a story flag triggers / swaps weather).
+- [x] Editor: a **new top-level `Atmosphere` tab** (preset list + slider editor) + a per-scene
+      **Weather** section (conditional preset picker with `when`). **→ 10a complete.**
 - [ ] **Localized point emitters** — placed in a scene like lights (position + a preset),
       reusing the particle system for **chimney smoke / sparks / torch embers** (vs the
-      full-screen weather); gated by `when`.
-- [ ] Editor: a **new top-level `Atmosphere` tab** (preset list + sliders) + per-scene
-      weather picker (with `when`) + emitter placement.
+      full-screen weather); gated by `when`. _(deferred within 10a)_
+- Follow-up: a **live weather preview** in the editor (slide → see it).
 
 **10b — Lighting** _(one composited lighting layer over the scene)_
 

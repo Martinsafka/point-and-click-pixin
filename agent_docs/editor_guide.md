@@ -220,6 +220,14 @@ fails (or no ambient is set), the **document default** ambient plays (Project ta
 Ambient swaps seamlessly when you move between scenes. _(SFX on interactions are the
 `playSound` effect; footsteps + the default ambient are global, Project tab.)_
 
+### Weather
+
+This scene's weather (M10) — a **conditional list** of presets (defined in the **Atmosphere
+tab**). The **first** entry whose **when** passes plays (so a story flag triggers / swaps
+weather); reactive. **+ Weather** adds an entry (pick a **preset** + an optional `when`);
+**✕** removes it. The weather (particles + its ambient sound) shows in-game — test with
+**▶ Test in game**.
+
 ### Items · _N_ and Recipes · _N_ (global)
 
 These two sections are **document-level** — they apply to the whole game, not the
@@ -349,8 +357,19 @@ by name everywhere — ambient, footstep, the `playSound` effect, NPC voice, ins
 pickup / transition SFX. **+ Sound** uploads; edit the **name**; **Test** plays it; **✕**
 removes it. Anywhere a sound is used you pick from this list (no re-uploading, no
 duplication). The **built-in procedural sounds** (Ambient drone, Pickup blip, Scene
-transition, Footstep) are seeded here too — rename or **✕** them, or upload replacements.
-_(Older documents with inline sounds are migrated into this library automatically.)_
+transition, Footstep, Rain loop) are seeded here too — rename or **✕** them, or upload
+replacements. _(Older documents with inline sounds are migrated into this library
+automatically.)_
+
+### Atmosphere (global) — weather presets
+
+The **weather-preset library** (M10 10a). **+ Preset** adds one; **Edit** opens the slider
+editor; **✕** removes it. Each preset is **parametric** (no per-weather code): **shape**
+(round = snow/dust · streak = rain), **blend** (normal / add-glow), **colour**, and sliders
+for **count, alpha, size, angle, speed, sway, sway freq**; plus an optional **ambient**
+sound (a library reference) that loops **over** the scene's ambient. Built-in **rain / snow
+/ dust** ship ready (editable). Pick a preset per scene in **Scene → Weather** (gated by
+`when`). _(A live preview while sliding is a follow-up — tune with ▶ Test in game.)_
 
 ### Audio (global)
 
