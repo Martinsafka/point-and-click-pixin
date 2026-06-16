@@ -281,9 +281,13 @@ modal, **+ Routine** creates one (a single start node at the NPC's first placeme
     active node wins. **Delete** removes it.
 - Select a node/edge and press **Backspace/Delete** to remove it from the graph.
 
-The NPC's location is runtime state, so a routine **resumes from a save**. The full
+The NPC's location is runtime state, so a routine **resumes from a save**. **Talking to a
+routine NPC pauses its schedule** — while you're mid-dialogue with it, its timers and
+transitions are frozen, so it can't wander off; it resumes when the conversation ends.
+(A mid-path pause + a gesture/idle animation is done with a **trigger** on the scene —
+`by = npc`, a `wait { ms, anim }` or `playAnim` effect — not in this graph.) The full
 time-of-day scheduler (clock-driven schedules) is a later milestone (M12); routines here
-react to story state + simple per-edge timers.
+react to story state + simple per-edge timers + arrival.
 
 ### Display (global)
 

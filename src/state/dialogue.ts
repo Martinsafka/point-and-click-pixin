@@ -18,6 +18,9 @@ export interface DialogueState {
   choices: DialogueChoiceView[] | null
   /** The current speaker's voice (blips played while the line types), or null. */
   voice: VoiceConfig | null
+  /** The conversation partner's actor id (the NPC being talked to), or null. Lets the
+   *  routine runner pause that NPC's schedule while it's mid-dialogue. */
+  partner: string | null
 }
 
 /**
@@ -52,7 +55,14 @@ export interface DialogueStore extends DialogueState {
   end(): void
 }
 
-const IDLE: DialogueState = { active: false, speaker: null, line: '', choices: null, voice: null }
+const IDLE: DialogueState = {
+  active: false,
+  speaker: null,
+  line: '',
+  choices: null,
+  voice: null,
+  partner: null,
+}
 const MAX_HOPS = 50 // guards branch / passthrough redirect loops
 
 export function createDialogueStore() {
@@ -113,6 +123,7 @@ export function createDialogueStore() {
         line: node.text ?? '',
         choices,
         voice: d.voiceOf(node.speaker) ?? null,
+        partner: d.subject,
       })
     }
 

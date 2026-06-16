@@ -71,6 +71,9 @@ const MAX_HOPS = 32
 export function createRoutineRunner(
   cast: Record<NpcId, NpcDef>,
   store: RoutineStore,
+  /** True while `npc` is busy (e.g. mid-dialogue) — its routine is frozen, so a timed /
+   *  conditional transition can't move it away during a conversation. */
+  isBusy: (npc: NpcId) => boolean = () => false,
 ): RoutineRunner {
   // NPCs with a routine, paired with it; ms elapsed in each one's current node; whether
   // the current node's path has finished (set via `routineArrival.notify` from the scene).
@@ -105,6 +108,9 @@ export function createRoutineRunner(
   return {
     tick(deltaMs) {
       for (const npc of driven) {
+        // Frozen while busy (mid-dialogue): don't accrue node time or take transitions,
+        // so talking to an NPC can't be cut short by its own schedule moving it away.
+        if (isBusy(npc.id)) continue
         elapsed.set(npc.id, (elapsed.get(npc.id) ?? 0) + deltaMs)
         // Advance through any chain of eligible transitions this frame (instant edges
         // resolve immediately; capped so a cycle can't hang the loop).

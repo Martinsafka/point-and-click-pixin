@@ -838,7 +838,11 @@ export function createSceneHost(
   // The per-NPC routine engine — runs globally (independent of the mounted scene) so
   // routine NPCs travel between scenes on their own. Created before the first mount so it
   // seeds each routine NPC's start node (→ `npcScene`/`npcNode`) before the scene reads it.
-  const routines = createRoutineRunner(cast, store)
+  // The `isBusy` predicate freezes an NPC's routine while the player is talking to it.
+  const routines = createRoutineRunner(cast, store, (npc) => {
+    const d = dialogueStore.getState()
+    return d.active && d.partner === npc
+  })
   const onRoutineTick = (ticker: Ticker) => routines.tick(ticker.deltaMS)
   app.ticker.add(onRoutineTick)
 
