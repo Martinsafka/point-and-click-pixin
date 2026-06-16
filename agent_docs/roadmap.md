@@ -320,16 +320,77 @@ scheduler** nuance is deferred; the per-NPC routine graph belongs here.
 
 ### M10 — Atmosphere & lighting  (advanced rendering — stylised, not photoreal)
 
-- [ ] **Lighting** — ambient / global light + local lights (lamp glows), light
-      pools, simple character / prop shadows. Stylised chiaroscuro via Pixi blend
-      modes + custom shaders / filters (NOT per-sprite normal maps).
-- [ ] **Fog & clouds** — animated noise-based "rolling" fog + cloud layers with
-      density sliders. A convincing *fake* (scrolling/warped noise), not true
-      volumetrics.
-- [ ] Editor: place lights per scene; atmosphere sliders.
-- Reality check: full dynamic / normal-mapped 2D lighting and true volumetric fog
-  are impractical in a browser and unneeded for flat vector — the stylised look is
-  the target and is what the Röki direction wants anyway.
+Stylised only (no normal-mapped 2D lighting / true volumetrics — impractical in a browser
+and unneeded for flat vector; the Röki look is the target). **Locked decisions:** lighting
+is **overlay + gradient textures + masks** (blend modes; a custom shader only if needed
+later); the player light supports **both a cone and a sphere** (selectable); weather is a
+**per-scene conditional preset** gated by `when` (no new runtime state). Everything is
+flag-driven through the existing condition vocabulary.
+
+**Cross-cutting foundations (apply to all of 10a–10d):**
+
+- [ ] **Compositing order** — a small atmosphere/lighting layer stack with a fixed order:
+      rain/snow in the **foreground** (over characters); fog can **split** (a back layer
+      behind characters + a front layer over them); the **lighting overlay** sits above the
+      scene art (characters lit too); the **player light is topmost**. Establish this stack
+      once; 10a–10d slot into it.
+- [ ] **Performance + quality** — particle **caps**, cull off-screen, cap filter cost; a
+      **quality / reduced-motion** setting (low / med / high → particle budget + which
+      filters run). The runtime hooks live here; the settings **UI lands in M11**
+      (volume + this), and reduced-motion respects accessibility.
+- **Darkness is visual-only** — dark scenes / dark areas never block hotspots or clicks at
+  the render level; they only change what's *seen*. To make a dark room's hotspots
+  unresponsive until the lights are on, gate them with the **existing `when`** vocabulary
+  (`when: flag lights-on`) — the same switch flag that turns on the light. Already works
+  today: `pickInteractable` (used by **both** the click handler and the cursor) skips a
+  `when`-failed interactable, so it neither fires nor changes the cursor. No new "darkness
+  blocks clicks" logic — one shared flag composes the visual + the interaction.
+
+**10a — Particles / weather** _(a parametric system, not per-weather code)_
+
+- [ ] Runtime: a `ParticleContainer` weather layer driven by a `WeatherPreset` — **sliders**
+      for density / count, colour + alpha, size, **shape** (round dot / streak), direction +
+      gravity (fall speed), wind / sway (noise amount + frequency), spawn area, blend
+      (additive for snow). Procedural particle textures (round / streak), no uploads.
+- [ ] `GameDoc.weatherPresets` (pre-seeded **rain / snow / dust**, editable + custom) +
+      `SceneData.weather` = a conditional list `{ preset, when }` (first match plays;
+      reactive, so a story flag triggers / swaps weather).
+- [ ] **Localized point emitters** — placed in a scene like lights (position + a preset),
+      reusing the particle system for **chimney smoke / sparks / torch embers** (vs the
+      full-screen weather); gated by `when`.
+- [ ] Editor: a **new top-level `Atmosphere` tab** (preset list + sliders) + per-scene
+      weather picker (with `when`) + emitter placement.
+
+**10b — Lighting** _(one composited lighting layer over the scene)_
+
+- [ ] **Ambient/global** — `GameDoc.ambientLight` (colour + intensity) as the project
+      default; `SceneData.ambientLight` overrides it per scene (1 = day, 0 = black). A
+      scene-wide tint/darken overlay.
+- [ ] **Local lights** — `SceneData.lights[]` placed in the editor (position, radius,
+      colour, intensity, falloff, optional **flicker** = animated intensity, e.g. candle /
+      broken neon / fire), gated by `when` (a switch flag) — additive glow pools that punch
+      through the darkness.
+- [ ] **Dark scene + player light** — ambient 0 → black; the player carries a light
+      (**cone** following facing / **sphere**), gated by `when: hasItem flashlight`; a mask
+      following the player reveals around them.
+- [ ] **Dark areas** — `SceneData.darkAreas[]`: a polygon of darkness with a feathered
+      **gradient** edge (a local dark zone in an otherwise lit scene). Visual only.
+- [ ] **Per-scene colour grade** — a `ColorMatrixFilter` (contrast / saturation / tint /
+      brightness) for mood, on top of the ambient tint.
+- [ ] Editor: place lights + draw dark-area polygons (preview); ambient + light + grade
+      sliders.
+
+**10c — Fog & clouds**
+
+- [ ] Animated noise-based "rolling" fog + cloud layers, **density sliders** — a convincing
+      *fake* (scrolling / warped noise), not true volumetrics. Authored in the Atmosphere
+      tab; uses the split (behind/front) compositing from the foundations.
+
+**10d — Polish**
+
+- [ ] **Vignette** — darkened edges overlay (cheap, big mood).
+- [ ] **Lightning + thunder** — a timed full-screen flash (with rain), flag/weather-triggered,
+      **+ a thunder sound** (M9 synergy — the flash fires a `playSound`).
 
 ### M11 — UI theming & settings  (+ the title-screen composer)
 
