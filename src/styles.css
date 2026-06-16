@@ -403,10 +403,16 @@ body {
   gap: 2px;
   padding: 8px 8px 0;
   border-bottom: 1px solid #1c2230;
+  /* Scroll sideways when the tabs don't fit the panel, instead of squashing / clipping. */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 .editor__tab {
-  flex: 1;
-  padding: 8px 4px;
+  /* Grow to fill when there's room, but never shrink below the label (then the bar scrolls). */
+  flex: 1 0 auto;
+  white-space: nowrap;
+  padding: 8px 8px;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;

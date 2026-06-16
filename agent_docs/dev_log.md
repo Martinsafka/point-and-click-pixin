@@ -23,6 +23,12 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-16 — Fix: editor tab bar scrolls horizontally (was clipping tabs)
+**What:** The editor's top tab bar (`.editor__tabs`) couldn't scroll, so with 8 tabs (the new Atmosphere tab tipped it over) some were squashed / clipped in a narrow side panel. Now the bar **scrolls sideways** when the tabs don't fit. CSS only: `.editor__tabs` got `overflow-x: auto` + `flex-wrap: nowrap` (+ thin scrollbar); `.editor__tab` changed from `flex: 1` to `flex: 1 0 auto` + `white-space: nowrap` — tabs still grow to fill when there's room, but never shrink below their label, so the bar overflows + scrolls instead of clipping.
+**Why:** user-reported — tabs became unreachable without widening the panel.
+**How:** `flex: 1 0 auto` (grow 1, shrink 0) is the key: fills when N < width, holds natural width + scrolls when N > width.
+**Verified:** build green; dev smoke `/?edit` 200.
+
 ### 2026-06-16 — M10 10a (editor): Atmosphere tab + weather sliders — 10a complete
 **What:** No-code weather authoring. A new top-level **Atmosphere tab** (`WeatherList`) lists presets (rain/snow/dust + custom; + Preset / Edit / ✕); **Edit** opens `WeatherEditor` — a modal of **sliders** for every parameter (count / alpha / size / angle / speed / sway / swayFreq) + **shape** (round/streak) / **blend** (normal/add) pickers + a **colour** swatch + an optional **ambient** `SoundField` (layered over the scene ambient). Per scene: a **Scene → Weather** section (`SceneWeather`) — a conditional `{ preset, when }` list (preset picker + `ConditionEditor`), so a flag triggers/swaps weather. Editor store gained `addWeatherPreset` / `removeWeatherPreset` / `setWeatherPreset` + `addSceneWeather` / `removeSceneWeather` / `setSceneWeatherPreset` / `setSceneWeatherWhen`. **Completes M10 10a.**
 **Why:** M10 10a editor — author the parametric presets + per-scene weather visually, no JSON.
