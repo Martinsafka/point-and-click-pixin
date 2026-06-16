@@ -347,6 +347,10 @@ export interface NpcPath {
   /** When set, this route is active only while the Condition passes — for **conditional
    *  routes** (e.g. walk to the exit once a flag is set). Used inside `NpcPlacement.paths`. */
   when?: Condition
+  /** Stable id so a routine node can **reference** this path (`RoutineNode.pathId`). */
+  id?: string
+  /** Author-facing label for the path picker (defaults to the id). */
+  name?: string
 }
 
 // --- NPC routine (per-NPC cross-scene state machine, M7 step 6) --------------
@@ -359,8 +363,10 @@ export interface NpcPath {
 export interface RoutineNode {
   id: string
   scene: SceneId
-  /** In-scene route walked while in this node (overrides the placement's `path` here). */
-  path?: NpcPath
+  /** **References** one of the NPC's named placement paths in `scene` (by `NpcPath.id`);
+   *  the NPC walks it while this node is active. Absent → the NPC just stands there.
+   *  Paths are drawn on the scene canvas (per placement), never in the routine graph. */
+  pathId?: string
   /** State effects (setFlag / give / take / goTo / moveNpc …) run when the NPC enters
    *  this node. Engine effects (playAnim / playSound) only fire if the scene is mounted. */
   onEnter?: Effect[]
@@ -369,9 +375,10 @@ export interface RoutineNode {
 }
 
 /**
- * A transition between routine nodes: eligible when `when` passes AND `after` ms have
- * elapsed in the source node (each is optional; both absent → taken immediately, an
- * auto-advance). The first eligible edge out of the active node is taken.
+ * A transition between routine nodes: eligible when ALL of its set conditions hold —
+ * `when` passes, `after` ms have elapsed in the source node, and (`onArrive`) the node's
+ * referenced path has finished. With none set it's taken immediately (an auto-advance).
+ * The first eligible edge out of the active node is taken.
  */
 export interface RoutineEdge {
   from: RoutineNodeId
@@ -379,6 +386,9 @@ export interface RoutineEdge {
   when?: Condition
   /** Milliseconds to linger in `from` before this transition is eligible (a timed beat). */
   after?: number
+  /** Fire when the source node's referenced path **completes** (a `once` path reaches its
+   *  end) — i.e. the NPC arrived. Ignored for looping / pathless nodes. */
+  onArrive?: boolean
 }
 
 export type RoutineNodeId = string

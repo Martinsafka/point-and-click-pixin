@@ -19,8 +19,8 @@ export function NpcList({
   onSelect,
   placeMode,
   onTogglePlace,
-  pathMode,
-  onTogglePath,
+  drawPathIndex,
+  onToggleDrawPath,
   items,
   sceneIds,
 }: {
@@ -32,8 +32,8 @@ export function NpcList({
   onSelect: (i: number) => void
   placeMode: boolean
   onTogglePlace: () => void
-  pathMode: boolean
-  onTogglePath: () => void
+  drawPathIndex: number | null
+  onToggleDrawPath: (pathIdx: number) => void
   items: Record<ItemId, ItemDef>
   sceneIds: SceneId[]
 }) {
@@ -142,29 +142,55 @@ export function NpcList({
               spawn {sel.spawn.xFrac.toFixed(2)}, {sel.spawn.yFrac.toFixed(2)}
             </span>
           </div>
-          <div className="editor__toolbar">
-            <button
-              type="button"
-              className={pathMode ? 'editor__btn--active' : undefined}
-              onClick={onTogglePath}
-            >
-              {pathMode ? 'Done' : `Path · ${(sel.path?.points.length ?? 0) / 2} pts`}
-            </button>
-            <button type="button" onClick={() => s().clearNpcPath(sceneId, selectedIndex)}>
-              Clear
-            </button>
-            <select
-              className="logic__sel"
-              value={sel.path?.mode ?? 'loop'}
-              disabled={!sel.path}
-              onChange={(e) =>
-                s().setNpcPathMode(sceneId, selectedIndex, e.target.value as NpcPath['mode'])
-              }
-            >
-              <option value="once">once</option>
-              <option value="loop">loop</option>
-              <option value="pingpong">pingpong</option>
-            </select>
+          <div className="intr-form__field intr-form__field--col">
+            <span>paths (draw on the scene; routine nodes pick one)</span>
+            <div className="editor__toolbar">
+              <button type="button" onClick={() => s().addNpcPath(sceneId, selectedIndex)}>
+                + Path
+              </button>
+            </div>
+            {(sel.paths ?? []).map((pa, j) => (
+              <div key={pa.id ?? j} className="npc-path-row">
+                <input
+                  className="logic__in"
+                  value={pa.name ?? pa.id ?? ''}
+                  placeholder="name"
+                  title={`id: ${pa.id ?? '—'} (referenced by routine nodes)`}
+                  onChange={(e) => s().setNpcPathName(sceneId, selectedIndex, j, e.target.value)}
+                />
+                <select
+                  className="logic__sel"
+                  value={pa.mode}
+                  onChange={(e) =>
+                    s().setNpcPathMode(sceneId, selectedIndex, j, e.target.value as NpcPath['mode'])
+                  }
+                >
+                  <option value="once">once</option>
+                  <option value="loop">loop</option>
+                  <option value="pingpong">pingpong</option>
+                </select>
+                <button
+                  type="button"
+                  className={drawPathIndex === j ? 'editor__btn--active' : undefined}
+                  onClick={() => onToggleDrawPath(j)}
+                >
+                  {drawPathIndex === j ? 'Done' : `Draw · ${pa.points.length / 2}`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => s().clearNpcPathPoints(sceneId, selectedIndex, j)}
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  className="logic__del"
+                  onClick={() => s().removeNpcPath(sceneId, selectedIndex, j)}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       )}

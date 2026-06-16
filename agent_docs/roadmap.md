@@ -276,13 +276,13 @@ scheduler** nuance is deferred; the per-NPC routine graph belongs here.
 - [x] **6d** — a demo routine in `content/game.json` (the **guard** patrols street ⇄ visits
       room on a 6 s timer; stranger's key→room example left intact).
       _(`editor_guide.md` routine section added with 6c.)_
-- [ ] **6e — node paths by reference (not drawn in the graph).** A routine node **selects**
+- [x] **6e — node paths by reference (not drawn in the graph).** A routine node **selects**
       a **named scene path** (drawn per placement on the scene canvas) from a dropdown; the
-      flow graph supplies only the **conditions** (edge `when` / `after`) for when the NPC
-      walks it. Schema: `NpcPath` gains an id/name + a placement holds several named paths;
-      `RoutineNode.path` becomes a **reference**. Keeps geometry on the canvas + logic in the
-      graph — no duplication, no canvas-in-modal. _(User decision; replaces the deferred
-      "draw a per-node path" idea.)_
+      flow graph supplies only the **conditions** for when the NPC walks it — incl. a new
+      **`onArrive`** edge (fires when the node's `once` path finishes). Schema: `NpcPath` got
+      id/name, a placement holds several named paths, `RoutineNode.pathId` is a reference,
+      `RoutineEdge.onArrive`. Demo: the **guard** patrols → (15 s) walks to the door → room →
+      (6 s) → walks back → patrols, looping. **→ M7 step 6 (and M7) complete.**
 
 ### M8 — Cutscenes / scripted sequences
 

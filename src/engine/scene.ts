@@ -17,7 +17,7 @@ import { placeholderView } from '../entities/placeholder-atlas'
 import { resolveDepthScale, designSize, DEFAULT_REFERENCE_HEIGHT } from '../data/scene-config'
 import { depthScaleAt } from '../systems/depth'
 import { buildNavigation } from '../systems/navmesh'
-import { routineNode, createRoutineRunner } from '../systems/routine'
+import { routineNode, createRoutineRunner, routineArrival } from '../systems/routine'
 import { facingToAngle } from '../systems/movement'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
 import { containsPoint } from '../systems/walkable'
@@ -159,8 +159,15 @@ function resolveNpc(
 }
 
 /** Drive a placed NPC along its patrol route (once / loop / pingpong). Each leg is
- *  nav-routed (so it rounds holes), chained via the character's onArrive callback. */
-function startNpcPath(npc: Character, path: NpcPath | undefined, design: Size): void {
+ *  nav-routed (so it rounds holes), chained via the character's onArrive callback.
+ *  `onDone` fires when a `once` path reaches its end (the NPC arrived) — the routine
+ *  runner listens for this to take an `onArrive` edge. */
+function startNpcPath(
+  npc: Character,
+  path: NpcPath | undefined,
+  design: Size,
+  onDone?: () => void,
+): void {
   if (!path || path.points.length < 4) return
   const pts: { x: number; y: number }[] = []
   for (let i = 0; i + 1 < path.points.length; i += 2) {
@@ -170,7 +177,10 @@ function startNpcPath(npc: Character, path: NpcPath | undefined, design: Size): 
   let dir = 1
   const advance = () => {
     if (path.mode === 'once') {
-      if (idx >= pts.length - 1) return
+      if (idx >= pts.length - 1) {
+        onDone?.()
+        return
+      }
       idx += 1
     } else if (path.mode === 'loop') {
       idx = (idx + 1) % pts.length
@@ -306,26 +316,30 @@ export async function mountScene(
     }
     npcs.push({ id: placement.npc, character: npcChar, interaction })
     actors.set(placement.npc, npcChar)
-    // Active route, most-specific first: the NPC's **routine** node path (when its active
-    // node is in this scene), else a conditional `paths` **override** whose `when` passes,
-    // else the default `path` — all recomputed reactively so a flag / routine hop switches
-    // the NPC onto a new route and back.
+    // Active route, most-specific first: when the NPC has a **routine** and its active node
+    // is in this scene, the node's **referenced** placement path (by `pathId`; absent →
+    // stand still); otherwise a conditional `paths` **override** whose `when` passes, else
+    // the default `path`. Recomputed reactively so a flag / routine hop switches the route.
     const routine = def?.routine
     const activePathOf = (st: StoryState): NpcPath | undefined => {
       if (routine) {
         const node = routineNode(routine, st.npcNode?.[npcId])
-        if (node?.scene === scene.id && node.path) return node.path
+        if (node?.scene === scene.id)
+          return node.pathId ? placement.paths?.find((p) => p.id === node.pathId) : undefined
       }
       return placement.paths?.find((p) => p.when && checkCondition(st, p.when)) ?? placement.path
     }
+    // A routine NPC's finished `once` path signals the runner (→ `onArrive` edges).
+    const start = (path: NpcPath | undefined) =>
+      startNpcPath(npcChar, path, design, routine ? () => routineArrival.notify(npcId) : undefined)
     let currentPath = activePathOf(store.getState())
-    startNpcPath(npcChar, currentPath, design)
+    start(currentPath)
     if (placement.paths || routine) {
       pathSwitchers.push((st) => {
         const next = activePathOf(st)
         if (next !== currentPath) {
           currentPath = next
-          startNpcPath(npcChar, next, design)
+          start(next)
         }
       })
     }

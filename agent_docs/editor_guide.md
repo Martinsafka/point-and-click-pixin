@@ -200,14 +200,17 @@ placement.
 - For the selected placement: pick **which npc** (from the cast), its **when** gate
   (present only while the Condition holds), and **Place** it — click the preview for its
   spawn.
-- **Path** — draw a patrol: toggle **Path** on and click the preview to drop waypoints
-  (dashed line + dots), set the **mode** (`once` stop / `loop` / `pingpong`). The NPC
-  walks it via the nav-mesh (rounding holes). **Clear** removes the path. A `trigger`
-  with **by = npc / any** then fires when the NPC walks into it (the chaining) — a
-  `playAnim` on a walking character **pauses it, plays, then resumes**, so an NPC stops
-  to gesture and walks on.
-- NPCs use the placeholder figure for now (appearance / dialogue / routine come later);
-  in the game they render as real characters, Y-sorted + depth-scaled like the player.
+- **Paths** — a placement holds **several named paths**. **+ Path** adds one (an editable
+  **name**; a fixed **id** the routine references — hover the name to see it). Per path:
+  pick the **mode** (`once` stop / `loop` / `pingpong`), toggle **Draw** and click the
+  preview to drop waypoints (dashed line + dots; the count shows on the button), **Clear**
+  the points, or **✕** remove it. The NPC walks a path via the nav-mesh (rounding holes).
+  Without a routine the NPC walks its first/conditional path; **with a routine, each routine
+  node picks one of these paths by name** (see Routine). A `trigger` with **by = npc / any**
+  fires when the NPC walks into it (chaining) — a `playAnim` on a walking character
+  **pauses it, plays, then resumes**, so an NPC stops to gesture and walks on.
+- NPCs render as real characters (or the placeholder), Y-sorted + depth-scaled like the
+  player; appearance / dialogue / voice / vision / routine are in the NPC modal.
 
 ### Items · _N_ and Recipes · _N_ (global)
 
@@ -262,16 +265,19 @@ modal, **+ Routine** creates one (a single start node at the NPC's first placeme
   Drag nodes to arrange the graph. The **start** node (▶, green outline) is where the NPC
   begins. Click a node to edit it below the canvas:
   - **scene** — where the NPC is while in this node (it shows there, hides elsewhere).
+  - **path** — picks one of the NPC's **named paths in that scene** (drawn in that scene's
+    NPCs panel) to walk; `— stand —` = no path. Paths are drawn on the scene canvas, never
+    in this graph — the graph only *selects* and gates them.
   - **On enter** — **state** effects run on entry (setFlag / give / take / `moveNpc` …).
     _(Engine effects like `playAnim` only fire if that scene is currently on screen.)_
-  - **Set start** / **Delete**. _(The in-scene route is the NPC's placement path in that
-    scene for now; a per-node path **picker** — selecting a named path drawn on the scene —
-    is the next step. Paths are drawn on the canvas, never in this graph.)_
+  - **Set start** / **Delete**.
 - **Edges** are **transitions**: drag from a node's handle to another to connect. Click an
-  edge to set when it's taken:
-  - **after (ms)** — linger this long in the source node first (a timed beat), and/or
+  edge to set when it's taken (all set conditions must hold):
+  - **on arrival** — when the source node's path **finishes** (a `once` path reaches its
+    end, i.e. the NPC got there); ignored for looping / standing nodes.
+  - **after (ms)** — linger this long in the source node first (a timed beat).
   - **when** — a Condition gate (the usual editor).
-  - Both empty → taken immediately (an auto-advance). The first eligible edge out of the
+  - None set → taken immediately (an auto-advance). The first eligible edge out of the
     active node wins. **Delete** removes it.
 - Select a node/edge and press **Backspace/Delete** to remove it from the graph.
 

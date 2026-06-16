@@ -1430,3 +1430,15 @@ body {
   border-radius: 6px;
   overflow: hidden;
 }
+
+/* NPC named-path row (placement paths the routine references). */
+.npc-path-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.npc-path-row > .logic__in {
+  flex: 1 1 70px;
+  min-width: 0;
+}

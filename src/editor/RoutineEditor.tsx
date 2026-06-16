@@ -36,6 +36,7 @@ function uniqueNodeId(nodes: RoutineNode[], base: string): string {
 /** Short human label for a transition (its gate / timer), shown on the graph edge. */
 function edgeLabel(e: RoutineEdge): string {
   const bits: string[] = []
+  if (e.onArrive) bits.push('arrive')
   if (e.after !== undefined) bits.push(`${e.after}ms`)
   if (e.when) bits.push('when')
   return bits.join(' + ') || 'auto'
@@ -95,6 +96,12 @@ function RoutineGraph({ npcId, routine, doc }: { npcId: NpcId; routine: Routine;
 
   const node = selNode ? routine.nodes.find((n) => n.id === selNode) : undefined
   const edge = selEdge !== null ? routine.edges[selEdge] : undefined
+  // The named paths this NPC has in the selected node's scene — what its path picker offers.
+  const nodePaths = node
+    ? ((doc.scenes[node.scene]?.npcs ?? []).find((p) => p.npc === npcId)?.paths ?? []).filter(
+        (pa): pa is typeof pa & { id: string } => !!pa.id,
+      )
+    : []
 
   const patchNode = (id: string, p: Partial<RoutineNode>) =>
     patch((r) => ({ ...r, nodes: r.nodes.map((n) => (n.id === id ? { ...n, ...p } : n)) }))
@@ -190,9 +197,30 @@ function RoutineGraph({ npcId, routine, doc }: { npcId: NpcId; routine: Routine;
             <SceneSelect
               value={node.scene}
               sceneIds={sceneIds}
-              onChange={(scene) => patchNode(node.id, { scene })}
+              onChange={(scene) => patchNode(node.id, { scene, pathId: undefined })}
             />
           </div>
+          <div className="intr-form__field">
+            <span>path</span>
+            <select
+              className="logic__sel"
+              value={node.pathId ?? ''}
+              onChange={(e) => patchNode(node.id, { pathId: e.target.value || undefined })}
+            >
+              <option value="">— stand (no path) —</option>
+              {nodePaths.map((pa) => (
+                <option key={pa.id} value={pa.id}>
+                  {pa.name ?? pa.id} ({pa.mode})
+                </option>
+              ))}
+            </select>
+          </div>
+          {nodePaths.length === 0 && (
+            <p className="intr-form__note">
+              No named paths for {npcId} in {node.scene} — draw some in that scene&apos;s NPCs
+              panel first, then pick one here.
+            </p>
+          )}
           <EffectList
             effects={node.onEnter ?? []}
             onChange={(fx) => patchNode(node.id, { onEnter: fx.length ? fx : undefined })}
@@ -202,10 +230,6 @@ function RoutineGraph({ npcId, routine, doc }: { npcId: NpcId; routine: Routine;
             targets={targets}
             label="On enter"
           />
-          <p className="intr-form__note">
-            In-scene route: this node uses the NPC&apos;s placement path in {node.scene}.
-            Per-node path drawing is a follow-up.
-          </p>
         </div>
       )}
 
@@ -219,6 +243,14 @@ function RoutineGraph({ npcId, routine, doc }: { npcId: NpcId; routine: Routine;
               Delete
             </button>
           </div>
+          <label className="logic__chk">
+            <input
+              type="checkbox"
+              checked={edge.onArrive ?? false}
+              onChange={(e) => patchEdge(selEdge, { onArrive: e.target.checked || undefined })}
+            />
+            on arrival (source node&apos;s path finished)
+          </label>
           <div className="intr-form__field">
             <span>after (ms)</span>
             <input

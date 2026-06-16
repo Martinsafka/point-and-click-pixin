@@ -17,18 +17,21 @@ export function routineNode(routine: Routine, id: string | undefined): RoutineNo
 }
 
 /**
- * The first transition out of `from` that is eligible now: its `when` passes (if set)
- * AND `after` ms have elapsed in the node (if set). Dangling edges (unknown `to`) are
- * skipped. Returns the target node id, or null when the NPC stays put.
+ * The first transition out of `from` that is eligible now: its `when` passes (if set),
+ * `after` ms have elapsed in the node (if set), and (`onArrive`) the node's path has
+ * finished (`arrived`). Dangling edges (unknown `to`) are skipped. Returns the target
+ * node id, or null when the NPC stays put.
  */
 export function nextRoutineNode(
   routine: Routine,
   from: string,
   elapsedMs: number,
   state: StoryState,
+  arrived: boolean,
 ): string | null {
   for (const e of routine.edges) {
     if (e.from !== from) continue
+    if (e.onArrive && !arrived) continue
     if (e.after !== undefined && elapsedMs < e.after) continue
     if (e.when && !checkCondition(state, e.when)) continue
     if (!routine.nodes.some((n) => n.id === e.to)) continue
@@ -36,6 +39,14 @@ export function nextRoutineNode(
   }
   return null
 }
+
+/**
+ * The bridge from the mounted scene (which drives NPC movement) to the global routine
+ * runner: the scene calls `notify(npcId)` when a routine NPC finishes a `once` path, and
+ * the active runner records it so an `onArrive` edge can fire. A module singleton (like
+ * `sceneHit` / `cameraOffset`) since the scene and the runner don't reference each other.
+ */
+export const routineArrival: { notify: (npcId: NpcId) => void } = { notify: () => {} }
 
 /** The store surface the runner needs (the full story store, read + the routine actions). */
 export interface RoutineStore {
@@ -61,16 +72,20 @@ export function createRoutineRunner(
   cast: Record<NpcId, NpcDef>,
   store: RoutineStore,
 ): RoutineRunner {
-  // NPCs with a routine, paired with it; ms elapsed in each one's current node.
+  // NPCs with a routine, paired with it; ms elapsed in each one's current node; whether
+  // the current node's path has finished (set via `routineArrival.notify` from the scene).
   const driven = Object.values(cast).filter((n): n is NpcDef & { routine: Routine } => !!n.routine)
   const elapsed = new Map<NpcId, number>()
+  const arrived = new Set<NpcId>()
+  routineArrival.notify = (npc) => arrived.add(npc)
 
   /** Move an NPC into a node: set its active node + synced scene, run `onEnter` (state
-   *  effects), reset the in-node timer. */
+   *  effects), reset the in-node timer + arrival flag. */
   const enter = (npc: NpcId, node: RoutineNode) => {
     store.getState().enterRoutine(npc, node.id, node.scene)
     if (node.onEnter?.length) store.getState().run(node.onEnter)
     elapsed.set(npc, 0)
+    arrived.delete(npc)
   }
 
   // Seed: enter the start node for any routine NPC not already positioned (fresh game);
@@ -97,7 +112,13 @@ export function createRoutineRunner(
           const state = store.getState()
           const current = state.npcNode?.[npc.id]
           if (current === undefined) break
-          const to = nextRoutineNode(npc.routine, current, elapsed.get(npc.id) ?? 0, state)
+          const to = nextRoutineNode(
+            npc.routine,
+            current,
+            elapsed.get(npc.id) ?? 0,
+            state,
+            arrived.has(npc.id),
+          )
           if (to === null) break
           const node = routineNode(npc.routine, to)
           if (!node) break
@@ -107,6 +128,8 @@ export function createRoutineRunner(
     },
     destroy() {
       elapsed.clear()
+      arrived.clear()
+      routineArrival.notify = () => {}
     },
   }
 }

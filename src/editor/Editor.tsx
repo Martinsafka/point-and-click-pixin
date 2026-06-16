@@ -73,6 +73,8 @@ export function Editor() {
   const [selectedInteractable, setSelectedInteractable] = useState<number | null>(null)
   const [selectedHole, setSelectedHole] = useState<number | null>(null)
   const [selectedNpc, setSelectedNpc] = useState<number | null>(null)
+  // Which of the selected placement's named paths is being drawn (index), in `npcpath` mode.
+  const [drawPathIndex, setDrawPathIndex] = useState<number | null>(null)
   const [panelWidth, setPanelWidth] = useState(340)
   // The character-size slider drives a live % during drag, committing (one preview
   // re-mount) on release; null means "read the saved value". Width is the same.
@@ -225,8 +227,20 @@ export function Editor() {
     }
   }
   const addNpcPathPoint = (xFrac: number, yFrac: number) => {
-    if (selectedNpc !== null) {
-      editorStore.getState().addNpcPathPoint(selectedId, selectedNpc, round(xFrac), round(yFrac))
+    if (selectedNpc !== null && drawPathIndex !== null) {
+      editorStore
+        .getState()
+        .addNpcPathPoint(selectedId, selectedNpc, drawPathIndex, round(xFrac), round(yFrac))
+    }
+  }
+  // Toggle drawing waypoints into a specific named path of the selected placement.
+  const toggleDrawPath = (pathIdx: number) => {
+    if (draw === 'npcpath' && drawPathIndex === pathIdx) {
+      setDraw(null)
+      setDrawPathIndex(null)
+    } else {
+      setDraw('npcpath')
+      setDrawPathIndex(pathIdx)
     }
   }
 
@@ -455,8 +469,8 @@ export function Editor() {
                     onSelect={selectNpc}
                     placeMode={draw === 'npc'}
                     onTogglePlace={() => toggle('npc')}
-                    pathMode={draw === 'npcpath'}
-                    onTogglePath={() => toggle('npcpath')}
+                    drawPathIndex={draw === 'npcpath' ? drawPathIndex : null}
+                    onToggleDrawPath={toggleDrawPath}
                     items={doc.items}
                     sceneIds={sceneIds}
                   />

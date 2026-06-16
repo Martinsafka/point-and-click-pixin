@@ -105,9 +105,14 @@ interface EditorStore {
   setNpcPlacementWhen(id: SceneId, index: number, when: Condition | undefined): void
   /** Per-scene dialogue override for a placement (falls back to the cast `NpcDef.dialog`). */
   setNpcPlacementDialog(id: SceneId, index: number, dialog: DialogId | undefined): void
-  addNpcPathPoint(id: SceneId, index: number, xFrac: number, yFrac: number): void
-  clearNpcPath(id: SceneId, index: number): void
-  setNpcPathMode(id: SceneId, index: number, mode: NpcPath['mode']): void
+  // Named paths (M7 6e): a placement holds several named `paths`; routine nodes reference
+  // them by id. `pathIdx` indexes into that array; `index` is the placement.
+  addNpcPath(id: SceneId, index: number): void
+  removeNpcPath(id: SceneId, index: number, pathIdx: number): void
+  setNpcPathName(id: SceneId, index: number, pathIdx: number, name: string): void
+  setNpcPathMode(id: SceneId, index: number, pathIdx: number, mode: NpcPath['mode']): void
+  addNpcPathPoint(id: SceneId, index: number, pathIdx: number, xFrac: number, yFrac: number): void
+  clearNpcPathPoints(id: SceneId, index: number, pathIdx: number): void
   setInteractableWhen(id: SceneId, index: number, when: Condition | undefined): void
   setInteractableEffects(id: SceneId, index: number, effects: Effect[]): void
   setInteractableUses(id: SceneId, index: number, uses: UseRule[]): void
@@ -168,6 +173,15 @@ function uniqueNpcDefId(npcs: Record<NpcId, NpcDef>, base: string): NpcId {
   if (!npcs[base]) return base
   let n = 2
   while (npcs[`${base}-${n}`]) n += 1
+  return `${base}-${n}`
+}
+
+/** A `base` (or `base-2`, …) not already the id of one of `paths` — for named NPC paths. */
+function uniquePathId(paths: readonly NpcPath[], base: string): string {
+  const ids = new Set(paths.map((p) => p.id))
+  if (!ids.has(base)) return base
+  let n = 2
+  while (ids.has(`${base}-${n}`)) n += 1
   return `${base}-${n}`
 }
 
@@ -418,19 +432,60 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, when } : p))),
     setNpcPlacementDialog: (id, index, dialog) =>
       mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, dialog } : p))),
-    addNpcPathPoint: (id, index, xFrac, yFrac) =>
+    addNpcPath: (id, index) =>
       mapNpcs(id, (ps) =>
         ps.map((p, i) => {
           if (i !== index) return p
-          const points = [...(p.path?.points ?? []), xFrac, yFrac]
-          return { ...p, path: p.path ? { ...p.path, points } : { points, mode: 'loop' } }
+          const paths = p.paths ?? []
+          const pid = uniquePathId(paths, 'path')
+          return { ...p, paths: [...paths, { id: pid, name: pid, points: [], mode: 'loop' }] }
         }),
       ),
-    clearNpcPath: (id, index) =>
-      mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, path: undefined } : p))),
-    setNpcPathMode: (id, index, mode) =>
+    removeNpcPath: (id, index, pathIdx) =>
       mapNpcs(id, (ps) =>
-        ps.map((p, i) => (i === index && p.path ? { ...p, path: { ...p.path, mode } } : p)),
+        ps.map((p, i) =>
+          i === index ? { ...p, paths: (p.paths ?? []).filter((_, j) => j !== pathIdx) } : p,
+        ),
+      ),
+    setNpcPathName: (id, index, pathIdx, name) =>
+      mapNpcs(id, (ps) =>
+        ps.map((p, i) =>
+          i === index
+            ? { ...p, paths: (p.paths ?? []).map((pa, j) => (j === pathIdx ? { ...pa, name } : pa)) }
+            : p,
+        ),
+      ),
+    setNpcPathMode: (id, index, pathIdx, mode) =>
+      mapNpcs(id, (ps) =>
+        ps.map((p, i) =>
+          i === index
+            ? { ...p, paths: (p.paths ?? []).map((pa, j) => (j === pathIdx ? { ...pa, mode } : pa)) }
+            : p,
+        ),
+      ),
+    addNpcPathPoint: (id, index, pathIdx, xFrac, yFrac) =>
+      mapNpcs(id, (ps) =>
+        ps.map((p, i) =>
+          i === index
+            ? {
+                ...p,
+                paths: (p.paths ?? []).map((pa, j) =>
+                  j === pathIdx ? { ...pa, points: [...pa.points, xFrac, yFrac] } : pa,
+                ),
+              }
+            : p,
+        ),
+      ),
+    clearNpcPathPoints: (id, index, pathIdx) =>
+      mapNpcs(id, (ps) =>
+        ps.map((p, i) =>
+          i === index
+            ? {
+                ...p,
+                paths: (p.paths ?? []).map((pa, j) => (j === pathIdx ? { ...pa, points: [] } : pa)),
+              }
+            : p,
+        ),
       ),
     setInteractableWhen: (id, index, when) =>
       mapInteractables(id, (its) => its.map((it, i) => (i === index ? { ...it, when } : it))),
