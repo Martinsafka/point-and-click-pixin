@@ -95,10 +95,10 @@ export function Editor() {
   const sceneIds = Object.keys(doc.scenes)
   const scene = doc.scenes[selectedId]
   const holes = scene?.holes ?? []
-  // Every cast NPC already placed somewhere (a character lives in one scene at a time).
-  const placedNpcIds = new Set(
-    Object.values(doc.scenes).flatMap((sc) => (sc.npcs ?? []).map((p) => p.npc)),
-  )
+  // NPCs already placed in THIS scene — one placement per NPC per scene (a character can
+  // be placed in several scenes; its runtime location picks the active one, `moveNpc`
+  // moves it). So the picker only blocks a duplicate placement within the same scene.
+  const placedNpcIds = new Set((scene?.npcs ?? []).map((p) => p.npc))
 
   const changeTab = (t: Tab) => {
     setTab(t)

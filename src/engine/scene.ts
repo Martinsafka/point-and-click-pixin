@@ -17,6 +17,7 @@ import { placeholderView } from '../entities/placeholder-atlas'
 import { resolveDepthScale, designSize, DEFAULT_REFERENCE_HEIGHT } from '../data/scene-config'
 import { depthScaleAt } from '../systems/depth'
 import { buildNavigation } from '../systems/navmesh'
+import { routineNode, createRoutineRunner } from '../systems/routine'
 import { facingToAngle } from '../systems/movement'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
 import { containsPoint } from '../systems/walkable'
@@ -305,14 +306,21 @@ export async function mountScene(
     }
     npcs.push({ id: placement.npc, character: npcChar, interaction })
     actors.set(placement.npc, npcChar)
-    // Active route: a conditional `paths` **override** whose `when` passes (recomputed
-    // reactively), else the default `path`. A flag switches the NPC onto a new route
-    // (e.g. head for the door) and back to its patrol when cleared.
-    const activePathOf = (st: StoryState): NpcPath | undefined =>
-      placement.paths?.find((p) => p.when && checkCondition(st, p.when)) ?? placement.path
+    // Active route, most-specific first: the NPC's **routine** node path (when its active
+    // node is in this scene), else a conditional `paths` **override** whose `when` passes,
+    // else the default `path` — all recomputed reactively so a flag / routine hop switches
+    // the NPC onto a new route and back.
+    const routine = def?.routine
+    const activePathOf = (st: StoryState): NpcPath | undefined => {
+      if (routine) {
+        const node = routineNode(routine, st.npcNode?.[npcId])
+        if (node?.scene === scene.id && node.path) return node.path
+      }
+      return placement.paths?.find((p) => p.when && checkCondition(st, p.when)) ?? placement.path
+    }
     let currentPath = activePathOf(store.getState())
     startNpcPath(npcChar, currentPath, design)
-    if (placement.paths) {
+    if (placement.paths || routine) {
       pathSwitchers.push((st) => {
         const next = activePathOf(st)
         if (next !== currentPath) {
@@ -813,6 +821,13 @@ export function createSceneHost(
     }
   }
 
+  // The per-NPC routine engine — runs globally (independent of the mounted scene) so
+  // routine NPCs travel between scenes on their own. Created before the first mount so it
+  // seeds each routine NPC's start node (→ `npcScene`/`npcNode`) before the scene reads it.
+  const routines = createRoutineRunner(cast, store)
+  const onRoutineTick = (ticker: Ticker) => routines.tick(ticker.deltaMS)
+  app.ticker.add(onRoutineTick)
+
   // The overlay swaps cross through: a colour wash (default black) + optional art,
   // animated on the ticker. Starts opaque so the first mount fades in. A huge rect
   // covers any viewport size.
@@ -934,6 +949,8 @@ export function createSceneHost(
       destroyed = true
       unsubscribe()
       app.ticker.remove(onFadeTick)
+      app.ticker.remove(onRoutineTick)
+      routines.destroy()
       current?.destroy()
       current = undefined
       spinner.destroy()

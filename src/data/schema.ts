@@ -334,6 +334,9 @@ export interface NpcDef {
   /** The NPC's **starting** scene when it's placed in more than one (its runtime location
    *  then moves via `moveNpc`); defaults to the scene of its first placement. */
   home?: SceneId
+  /** A per-NPC routine (cross-scene state machine); absent → the NPC stays where placed
+   *  and only moves via explicit `moveNpc` effects. Drives this one NPC. */
+  routine?: Routine
 }
 
 /** A patrol route for a placed NPC: waypoints (design-space fractions) walked in
@@ -344,6 +347,51 @@ export interface NpcPath {
   /** When set, this route is active only while the Condition passes — for **conditional
    *  routes** (e.g. walk to the exit once a flag is set). Used inside `NpcPlacement.paths`. */
   when?: Condition
+}
+
+// --- NPC routine (per-NPC cross-scene state machine, M7 step 6) --------------
+
+/**
+ * One station in an NPC's routine: while this node is active the NPC is in `scene`,
+ * optionally walking `path` there (overriding the placement's path in that scene);
+ * `onEnter` state effects run on entry. `ui` is the editor's graph position only.
+ */
+export interface RoutineNode {
+  id: string
+  scene: SceneId
+  /** In-scene route walked while in this node (overrides the placement's `path` here). */
+  path?: NpcPath
+  /** State effects (setFlag / give / take / goTo / moveNpc …) run when the NPC enters
+   *  this node. Engine effects (playAnim / playSound) only fire if the scene is mounted. */
+  onEnter?: Effect[]
+  /** Editor-only: node position in the routine graph. */
+  ui?: { x: number; y: number }
+}
+
+/**
+ * A transition between routine nodes: eligible when `when` passes AND `after` ms have
+ * elapsed in the source node (each is optional; both absent → taken immediately, an
+ * auto-advance). The first eligible edge out of the active node is taken.
+ */
+export interface RoutineEdge {
+  from: RoutineNodeId
+  to: RoutineNodeId
+  when?: Condition
+  /** Milliseconds to linger in `from` before this transition is eligible (a timed beat). */
+  after?: number
+}
+
+export type RoutineNodeId = string
+
+/**
+ * A per-NPC routine: a state machine that moves ONE NPC between scenes (and along
+ * in-scene paths) as story state + time advance. Entered at `start`; the runtime tracks
+ * the active node in story state (`npcNode`). The full time-of-day scheduler stays M12.
+ */
+export interface Routine {
+  start: RoutineNodeId
+  nodes: RoutineNode[]
+  edges: RoutineEdge[]
 }
 
 /** Places a cast NPC into a scene at a spawn, optionally gated by `when`, with an

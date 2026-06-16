@@ -188,8 +188,12 @@ inventory item, shows that text as a transient narration line in the game.
 ### NPCs · _N_
 
 **Place** cast characters into this scene (the cast is defined in **Characters → NPCs**).
-Shown in the preview as **orange markers** at their spawns. A character lives in at most
-one scene at a time, so the pickers only offer NPCs not placed elsewhere.
+Shown in the preview as **orange markers** at their spawns. A character can be placed in
+**several scenes** — its runtime location picks the active one and a `moveNpc` effect
+moves it between them — so the pickers only block placing the **same NPC twice in this
+scene**. When an NPC is placed in more than one scene, set its **home** (the scene it
+starts in) in the NPC modal (**Characters → NPCs → Edit**); the default is its first
+placement.
 
 - **+ Place NPC** — adds a placement (the first un-placed cast NPC); **✕** removes it.
   Click a row to **select**.
@@ -242,9 +246,38 @@ placeholder figure.
   - Names + frame lists commit when the field loses focus.
 
 **NPCs (cast):** the global roster of characters. **+ NPC** creates one (a fixed id, an
-editable **name**, and a walk **speed** ×; appearance / dialogue / routine arrive over M7);
-place them into scenes from each scene's **NPCs** section. **✕** removes a character and
-any placements of it.
+editable **name**, and a walk **speed** ×); place them into scenes from each scene's
+**NPCs** section. **✕** removes a character and any placements of it. **Edit** opens the
+NPC modal — dialogue (+ gate), inspect, voice, vision (stealth), appearance, its **routine**
+(below), and (when the NPC is placed in more than one scene) its **home** start scene.
+
+#### Routine (cross-scene schedule)
+
+A per-NPC **state machine** (a node graph) that moves the NPC **between scenes** and along
+its in-scene paths as the story + time advance — it drives **only this NPC**. In the NPC
+modal, **+ Routine** creates one (a single start node at the NPC's first placement scene);
+**Remove routine** deletes it.
+
+- **Nodes** are **stations**: while a node is active the NPC is in that node's **scene**.
+  Drag nodes to arrange the graph. The **start** node (▶, green outline) is where the NPC
+  begins. Click a node to edit it below the canvas:
+  - **scene** — where the NPC is while in this node (it shows there, hides elsewhere).
+  - **On enter** — **state** effects run on entry (setFlag / give / take / `moveNpc` …).
+    _(Engine effects like `playAnim` only fire if that scene is currently on screen.)_
+  - **Set start** / **Delete**. _(The in-scene route is the NPC's placement path in that
+    scene for now; a per-node path **picker** — selecting a named path drawn on the scene —
+    is the next step. Paths are drawn on the canvas, never in this graph.)_
+- **Edges** are **transitions**: drag from a node's handle to another to connect. Click an
+  edge to set when it's taken:
+  - **after (ms)** — linger this long in the source node first (a timed beat), and/or
+  - **when** — a Condition gate (the usual editor).
+  - Both empty → taken immediately (an auto-advance). The first eligible edge out of the
+    active node wins. **Delete** removes it.
+- Select a node/edge and press **Backspace/Delete** to remove it from the graph.
+
+The NPC's location is runtime state, so a routine **resumes from a save**. The full
+time-of-day scheduler (clock-driven schedules) is a later milestone (M12); routines here
+react to story state + simple per-edge timers.
 
 ### Display (global)
 

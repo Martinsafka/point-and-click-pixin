@@ -15,6 +15,9 @@ export interface StoryState {
   /** Each NPC's current scene (runtime location), overriding its placement's home;
    *  `''` = despawned (nowhere). Absent → the NPC is at its home / placement scene. */
   npcScene?: Record<NpcId, SceneId>
+  /** Each routine-driven NPC's active routine node id (M7 step 6). Absent → not yet
+   *  entered (the runner seeds it to the routine's `start`). */
+  npcNode?: Record<NpcId, string>
 }
 
 /**
@@ -36,6 +39,9 @@ export interface StoryStore extends StoryState {
   reset(doc: GameDoc): void
   /** Set or clear (null) the narration line. */
   say(text: string | null): void
+  /** Enter a routine node: set the NPC's active node + sync its scene location (the
+   *  routine runner drives this; `onEnter` effects run separately via `run`). */
+  enterRoutine(npc: NpcId, node: string, scene: SceneId): void
 }
 
 /** Evaluate a Condition against the current story state. */

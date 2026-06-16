@@ -27,7 +27,18 @@
         0.008,
         0.985
       ],
-      "holes": [[0.3, 0.72, 0.4, 0.72, 0.4, 0.9, 0.3, 0.9]],
+      "holes": [
+        [
+          0.3,
+          0.72,
+          0.4,
+          0.72,
+          0.4,
+          0.9,
+          0.3,
+          0.9
+        ]
+      ],
       "interactables": [
         {
           "kind": "pickable",
@@ -48,7 +59,16 @@
           "kind": "exit",
           "id": "to-room",
           "to": "room",
-          "hitArea": [0.6, 0.5, 0.64, 0.5, 0.64, 0.72, 0.6, 0.72],
+          "hitArea": [
+            0.6,
+            0.5,
+            0.64,
+            0.5,
+            0.64,
+            0.72,
+            0.6,
+            0.72
+          ],
           "when": {
             "kind": "hasItem",
             "item": "key"
@@ -58,23 +78,62 @@
           "kind": "trigger",
           "id": "greet",
           "by": "npc",
-          "hitArea": [0.46, 0.74, 0.58, 0.74, 0.58, 0.92, 0.46, 0.92],
-          "effects": [{ "kind": "wait", "ms": 1500, "anim": "interact" }]
+          "hitArea": [
+            0.46,
+            0.74,
+            0.58,
+            0.74,
+            0.58,
+            0.92,
+            0.46,
+            0.92
+          ],
+          "effects": [
+            {
+              "kind": "wait",
+              "ms": 1500,
+              "anim": "interact"
+            }
+          ]
         },
         {
           "kind": "trigger",
           "id": "cover",
           "by": "player",
           "on": "rest",
-          "hitArea": [0.66, 0.8, 0.8, 0.8, 0.8, 0.96, 0.66, 0.96],
+          "hitArea": [
+            0.66,
+            0.8,
+            0.8,
+            0.8,
+            0.8,
+            0.96,
+            0.66,
+            0.96
+          ],
           "effects": [
-            { "kind": "playAnim", "action": "pickup" },
-            { "kind": "setStance", "action": "crouch" },
-            { "kind": "setFlag", "flag": "hidden" }
+            {
+              "kind": "playAnim",
+              "action": "pickup"
+            },
+            {
+              "kind": "setStance",
+              "action": "crouch"
+            },
+            {
+              "kind": "setFlag",
+              "flag": "hidden"
+            }
           ],
           "exitEffects": [
-            { "kind": "setStance" },
-            { "kind": "setFlag", "flag": "hidden", "value": false }
+            {
+              "kind": "setStance"
+            },
+            {
+              "kind": "setFlag",
+              "flag": "hidden",
+              "value": false
+            }
           ]
         },
         {
@@ -83,28 +142,78 @@
           "by": "npc",
           "once": true,
           "on": "rest",
-          "when": { "kind": "flag", "flag": "stranger-leaving" },
-          "hitArea": [0.56, 0.66, 0.68, 0.66, 0.68, 0.78, 0.56, 0.78],
-          "effects": [{ "kind": "moveNpc", "npc": "stranger", "scene": "room" }]
+          "when": {
+            "kind": "flag",
+            "flag": "stranger-leaving"
+          },
+          "hitArea": [
+            0.56,
+            0.66,
+            0.68,
+            0.66,
+            0.68,
+            0.78,
+            0.56,
+            0.78
+          ],
+          "effects": [
+            {
+              "kind": "moveNpc",
+              "npc": "stranger",
+              "scene": "room"
+            }
+          ]
         }
       ],
       "npcs": [
         {
           "npc": "stranger",
-          "spawn": { "xFrac": 0.62, "yFrac": 0.82 },
-          "path": { "points": [0.5, 0.86, 0.72, 0.82, 0.6, 0.93], "mode": "loop" },
+          "spawn": {
+            "xFrac": 0.62,
+            "yFrac": 0.82
+          },
+          "path": {
+            "points": [
+              0.5,
+              0.86,
+              0.72,
+              0.82,
+              0.6,
+              0.93
+            ],
+            "mode": "loop"
+          },
           "paths": [
             {
-              "when": { "kind": "flag", "flag": "stranger-leaving" },
-              "points": [0.55, 0.8, 0.62, 0.7],
+              "when": {
+                "kind": "flag",
+                "flag": "stranger-leaving"
+              },
+              "points": [
+                0.55,
+                0.8,
+                0.62,
+                0.7
+              ],
               "mode": "once"
             }
           ]
         },
         {
           "npc": "guard",
-          "spawn": { "xFrac": 0.88, "yFrac": 0.83 },
-          "path": { "points": [0.8, 0.83, 0.95, 0.83], "mode": "pingpong" }
+          "spawn": {
+            "xFrac": 0.88,
+            "yFrac": 0.83
+          },
+          "path": {
+            "points": [
+              0.8,
+              0.83,
+              0.95,
+              0.83
+            ],
+            "mode": "pingpong"
+          }
         }
       ],
       "layers": [
@@ -318,7 +427,22 @@
           }
         }
       ],
-      "npcs": [{ "npc": "stranger", "spawn": { "xFrac": 0.5, "yFrac": 0.8 } }],
+      "npcs": [
+        {
+          "npc": "stranger",
+          "spawn": {
+            "xFrac": 0.5,
+            "yFrac": 0.8
+          }
+        },
+        {
+          "npc": "guard",
+          "spawn": {
+            "xFrac": 0.35,
+            "yFrac": 0.8
+          }
+        }
+      ],
       "layers": [
         {
           "kind": "builtin",
@@ -390,9 +514,16 @@
       "name": "Stranger",
       "speed": 0.7,
       "dialog": "stranger",
-      "dialogWhen": { "kind": "hasItem", "item": "key" },
-      "inspect": { "text": "A wary stranger, sizing me up. They won't talk to someone empty-handed." },
-      "voice": { "pitch": 0.8 },
+      "dialogWhen": {
+        "kind": "hasItem",
+        "item": "key"
+      },
+      "inspect": {
+        "text": "A wary stranger, sizing me up. They won't talk to someone empty-handed."
+      },
+      "voice": {
+        "pitch": 0.8
+      },
       "home": "street"
     },
     "guard": {
@@ -403,10 +534,53 @@
         "range": 0.42,
         "angle": 70,
         "effects": [
-          { "kind": "playAnim", "action": "interact", "target": "guard" },
-          { "kind": "setFlag", "flag": "spotted" }
+          {
+            "kind": "playAnim",
+            "action": "interact",
+            "target": "guard"
+          },
+          {
+            "kind": "setFlag",
+            "flag": "spotted"
+          }
         ],
-        "unless": { "kind": "flag", "flag": "hidden" }
+        "unless": {
+          "kind": "flag",
+          "flag": "hidden"
+        }
+      },
+      "routine": {
+        "start": "patrol-street",
+        "nodes": [
+          {
+            "id": "patrol-street",
+            "scene": "street",
+            "ui": {
+              "x": 60,
+              "y": 80
+            }
+          },
+          {
+            "id": "visit-room",
+            "scene": "room",
+            "ui": {
+              "x": 340,
+              "y": 80
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "patrol-street",
+            "to": "visit-room",
+            "after": 6000
+          },
+          {
+            "from": "visit-room",
+            "to": "patrol-street",
+            "after": 6000
+          }
+        ]
       }
     }
   },
@@ -415,10 +589,23 @@
       "start": "root",
       "nodes": {
         "root": {
-          "branch": [{ "when": { "kind": "flag", "flag": "met-stranger" }, "to": "again" }],
+          "branch": [
+            {
+              "when": {
+                "kind": "flag",
+                "flag": "met-stranger"
+              },
+              "to": "again"
+            }
+          ],
           "speaker": "stranger",
           "text": "Oh — a new face. Careful out here after dark, stranger.",
-          "effects": [{ "kind": "setFlag", "flag": "met-stranger" }],
+          "effects": [
+            {
+              "kind": "setFlag",
+              "flag": "met-stranger"
+            }
+          ],
           "next": "ask"
         },
         "again": {
@@ -430,16 +617,32 @@
           "speaker": "stranger",
           "text": "What do you want?",
           "choices": [
-            { "text": "Who are you?", "next": "who" },
-            { "text": "Seen anything strange around here?", "next": "strange" },
+            {
+              "text": "Who are you?",
+              "next": "who"
+            },
+            {
+              "text": "Seen anything strange around here?",
+              "next": "strange"
+            },
             {
               "text": "Wait for me inside.",
-              "effects": [{ "kind": "setFlag", "flag": "stranger-leaving" }]
+              "effects": [
+                {
+                  "kind": "setFlag",
+                  "flag": "stranger-leaving"
+                }
+              ]
             },
-            { "text": "Nothing. Goodbye." }
+            {
+              "text": "Nothing. Goodbye."
+            }
           ]
         },
-        "who": { "text": "Just someone passing through. Like you.", "next": "ask" },
+        "who": {
+          "text": "Just someone passing through. Like you.",
+          "next": "ask"
+        },
         "strange": {
           "text": "Strange? This whole street is strange after dark.",
           "next": "ask"

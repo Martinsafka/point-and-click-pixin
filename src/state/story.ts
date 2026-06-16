@@ -27,6 +27,7 @@ function freshState(doc: GameDoc): StoryState {
     visited: [doc.start],
     selectedItem: null,
     npcScene: {},
+    npcNode: {},
   }
 }
 
@@ -52,6 +53,11 @@ export function createStoryStore(doc: GameDoc) {
     load: (state) => set({ ...state, selectedItem: null, narration: null }),
     reset: (nextDoc) => set({ ...freshState(nextDoc), narration: null }),
     say: (text) => set({ narration: text }),
+    enterRoutine: (npc, node, scene) =>
+      set({
+        npcNode: { ...(get().npcNode ?? {}), [npc]: node },
+        npcScene: { ...(get().npcScene ?? {}), [npc]: scene },
+      }),
   }))
 }
 

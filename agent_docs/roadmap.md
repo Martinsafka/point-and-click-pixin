@@ -263,13 +263,26 @@ scheduler** nuance is deferred; the per-NPC routine graph belongs here.
 - [x] **6a (runtime foundation)** — NPC location is runtime state (`StoryState.npcScene`);
       `moveNpc` / `despawnNpc` effects; `NpcDef.home`; conditional routes (`NpcPath.when`,
       `NpcPlacement.paths`), all reactive. _(commit 715457c)_
-- [ ] **6a-editor (follow-up)** — relax the editor's one-NPC-per-**game** placement guard to
+- [x] **6a-editor (follow-up)** — relax the editor's one-NPC-per-**game** placement guard to
       one-per-**scene** + a **home** picker in the NPC modal.
-- [ ] A per-NPC **routine flowchart** — schedules / reactions that move an NPC between
-      scenes and along its in-scene paths over time + story state. Runtime NPC location
-      lives in story state; `moveNpc` / `despawnNpc` are its primitives.
-- [ ] Editor: a **React Flow** node-graph routine editor (inside the NPC's global
-      definition, beside Appearance / Dialogue / Voice). **Drives one NPC only.**
+- [x] **6b (runtime)** — a per-NPC **routine** state machine (`NpcDef.routine`): nodes are
+      cross-scene "stations" (scene + own in-scene path + `onEnter`), edges are transitions
+      gated by `when` and/or `after` ms. A **global** runner (`systems/routine.ts`) seeds +
+      advances it; active node lives in story state (`npcNode`). _(Decision: rich node +
+      simple timed edges are in step 6; the full time-of-day scheduler stays M12.)_
+- [x] **6c (editor)** — a **React Flow** node-graph routine editor (`@xyflow/react`) inside
+      the NPC modal, beside Appearance / Dialogue / Voice. **Drives one NPC only.**
+      _(+ lazy-loaded the editor so React Flow code-splits out of the player bundle.)_
+- [x] **6d** — a demo routine in `content/game.json` (the **guard** patrols street ⇄ visits
+      room on a 6 s timer; stranger's key→room example left intact).
+      _(`editor_guide.md` routine section added with 6c.)_
+- [ ] **6e — node paths by reference (not drawn in the graph).** A routine node **selects**
+      a **named scene path** (drawn per placement on the scene canvas) from a dropdown; the
+      flow graph supplies only the **conditions** (edge `when` / `after`) for when the NPC
+      walks it. Schema: `NpcPath` gains an id/name + a placement holds several named paths;
+      `RoutineNode.path` becomes a **reference**. Keeps geometry on the canvas + logic in the
+      graph — no duplication, no canvas-in-modal. _(User decision; replaces the deferred
+      "draw a per-node path" idea.)_
 
 ### M8 — Cutscenes / scripted sequences
 

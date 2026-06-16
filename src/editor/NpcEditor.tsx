@@ -4,6 +4,7 @@ import { EditorModal } from './EditorModal'
 import { ConditionEditor } from './ConditionEditor'
 import { EffectList } from './EffectList'
 import { CharacterEditor } from './CharacterEditor'
+import { RoutineEditor } from './RoutineEditor'
 import { actionNames, actorIds } from './effect-options'
 import { placeholderView } from '../entities/placeholder-atlas'
 import { previewVoice } from '../audio/voice'
@@ -127,6 +128,11 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
   const sceneIds = Object.keys(doc.scenes)
   const animations = actionNames(doc)
   const targets = actorIds(doc)
+  // Scenes this NPC is placed in — its `home` (start scene) must be one of these, else
+  // it would start nowhere. Only meaningful when placed in more than one scene.
+  const placedScenes = sceneIds.filter((sid) =>
+    (doc.scenes[sid].npcs ?? []).some((p) => p.npc === npcId),
+  )
 
   const onAudio = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -150,6 +156,24 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
 
   return (
     <EditorModal title={`NPC · ${npc.name ?? npc.id}`} onClose={onClose}>
+      {placedScenes.length > 1 && (
+        <div className="intr-form__field">
+          <span>home (start scene)</span>
+          <select
+            className="logic__sel"
+            value={npc.home ?? ''}
+            onChange={(e) => s().patchNpcDef(npcId, { home: e.target.value || undefined })}
+          >
+            <option value="">— first placement ({placedScenes[0]}) —</option>
+            {placedScenes.map((sid) => (
+              <option key={sid} value={sid}>
+                {doc.scenes[sid].name} ({sid})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="intr-form__field">
         <span>dialog</span>
         <select
@@ -276,6 +300,11 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
           }
           onRemove={() => s().patchNpcDef(npcId, { view: undefined })}
         />
+      </div>
+
+      <div className="intr-form__field intr-form__field--col">
+        <span>routine (cross-scene schedule)</span>
+        <RoutineEditor npcId={npcId} />
       </div>
     </EditorModal>
   )

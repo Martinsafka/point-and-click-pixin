@@ -4,9 +4,11 @@ import { ConditionEditor } from './ConditionEditor'
 
 /**
  * Per-scene NPC **placements**: place a cast NPC here (click the preview for its
- * spawn), pick which one, edit its `when` gate. A cast NPC can be placed in at most
- * one scene — the pickers only offer NPCs not placed elsewhere. The global cast is
- * edited in the Characters tab.
+ * spawn), pick which one, edit its `when` gate. A cast NPC can be placed in several
+ * scenes (its runtime location picks the active one; `moveNpc` moves it) — the pickers
+ * only block a duplicate placement within *this* scene. Its **home** (the start scene
+ * when placed in more than one) is set in the NPC modal. The global cast is edited in
+ * the Characters tab.
  */
 export function NpcList({
   sceneId,

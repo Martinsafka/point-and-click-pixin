@@ -17,6 +17,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@xyflow/react": "^12.11.0",
     "earcut": "^3.0.2",
     "howler": "^2.2.4",
     "pixi.js": "^8.19.0",
