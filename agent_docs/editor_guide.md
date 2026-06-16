@@ -289,6 +289,16 @@ transitions are frozen, so it can't wander off; it resumes when the conversation
 time-of-day scheduler (clock-driven schedules) is a later milestone (M12); routines here
 react to story state + simple per-edge timers + arrival.
 
+#### Cutscenes (scripted sequences)
+
+A **cutscene** is an ordered, non-interactive, **skippable** sequence — character moves /
+animations, camera moves (focus + zoom), dialogue lines, waits and effects. It's started
+by the **`startSequence`** effect (available in any effect list — on an interactable, a
+trigger, a dialogue node, or a scene's entry), so the usual gating (`when` / `once`)
+controls when it plays. While it runs the world is input-blocked and a **Skip** button
+(or **Esc**) fast-forwards it. _(The step-by-step **sequence editor** + a Sequences library
+land in the next step (8b); for now `startSequence` takes a sequence id typed in.)_
+
 ### Display (global)
 
 The game's vertical **reference height** in px (default 1080) — the design resolution

@@ -3,6 +3,7 @@ import { GameCanvas } from './GameCanvas'
 import { Inventory } from './Inventory'
 import { Menu } from './Menu'
 import { DialogueBox } from './DialogueBox'
+import { CutsceneOverlay } from './CutsceneOverlay'
 import { GameCursor } from './GameCursor'
 import { TitleScreen } from './TitleScreen'
 import { useStory } from './use-story'
@@ -64,6 +65,7 @@ export function App() {
         {narration && <p className="overlay__narration">{narration}</p>}
         <Inventory />
         <DialogueBox />
+        <CutsceneOverlay />
         <Menu onExit={() => setPlaying(false)} />
       </div>
       <GameCursor />

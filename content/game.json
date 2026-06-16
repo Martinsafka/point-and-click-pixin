@@ -163,6 +163,35 @@
               "scene": "room"
             }
           ]
+        },
+        {
+          "kind": "trigger",
+          "id": "intro-cutscene",
+          "hitArea": [
+            0.3,
+            0.78,
+            0.55,
+            0.78,
+            0.55,
+            0.95,
+            0.3,
+            0.95
+          ],
+          "by": "player",
+          "once": true,
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "saw-intro"
+            }
+          },
+          "effects": [
+            {
+              "kind": "startSequence",
+              "sequence": "intro"
+            }
+          ]
         }
       ],
       "npcs": [
@@ -707,6 +736,15 @@
           "next": "ask"
         }
       }
+    },
+    "intro-line": {
+      "start": "l",
+      "nodes": {
+        "l": {
+          "speaker": "player",
+          "text": "Someone passed through here recently… I should keep my eyes open."
+        }
+      }
     }
   },
   "initialFlags": {},
@@ -716,5 +754,59 @@
       "b": "handle",
       "output": "crank"
     }
-  ]
+  ],
+  "sequences": {
+    "intro": {
+      "steps": [
+        {
+          "kind": "effects",
+          "effects": [
+            {
+              "kind": "setFlag",
+              "flag": "saw-intro"
+            }
+          ]
+        },
+        {
+          "kind": "camera",
+          "actor": "player",
+          "zoom": 1.5,
+          "ms": 700
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
+          "kind": "move",
+          "actor": "player",
+          "to": {
+            "xFrac": 0.55,
+            "yFrac": 0.82
+          }
+        },
+        {
+          "kind": "face",
+          "actor": "player",
+          "to": {
+            "xFrac": 0.62,
+            "yFrac": 0.71
+          }
+        },
+        {
+          "kind": "dialog",
+          "dialog": "intro-line"
+        },
+        {
+          "kind": "anim",
+          "actor": "player",
+          "action": "interact"
+        },
+        {
+          "kind": "wait",
+          "ms": 250
+        }
+      ]
+    }
+  }
 }

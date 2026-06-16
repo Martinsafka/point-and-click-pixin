@@ -170,8 +170,9 @@ export class Character {
 
   /** Play a one-shot animation (a gesture). Freezes the walk (a one-shot is cancelled
    *  by the walk pose), plays it, and resumes on completion — unless a `wait` still
-   *  holds the character, in which case its pose (loop anim / idle) is restored. */
-  playOnce(action: string): void {
+   *  holds the character, in which case its pose (loop anim / idle) is restored.
+   *  `onDone` (a cutscene `anim` step awaits it) fires when the clip completes. */
+  playOnce(action: string, onDone?: () => void): void {
     this.oneShotHold = true
     this.state = 'idle'
     this.positionView() // show idle position so the walk pose doesn't override the gesture
@@ -182,6 +183,7 @@ export class Character {
         if (this.loopAnim) this.view.loopAction(this.loopAnim, this.facing)
         else this.view.setPose('idle', this.facing)
       }
+      onDone?.()
     })
   }
 

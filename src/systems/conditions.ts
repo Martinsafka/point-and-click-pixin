@@ -82,7 +82,8 @@ export function applyEffect(state: StoryState, effect: Effect): StoryState {
           : [...state.visited, effect.scene],
       }
     case 'startDialog':
-      // The scene starts the dialogue (it needs the actor registry); inert here.
+    case 'startSequence':
+      // The scene starts the dialogue / cutscene (it needs the actor registry); inert here.
       return state
     case 'moveNpc':
       return { ...state, npcScene: { ...(state.npcScene ?? {}), [effect.npc]: effect.scene } }

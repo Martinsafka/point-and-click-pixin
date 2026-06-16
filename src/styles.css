@@ -1442,3 +1442,44 @@ body {
   flex: 1 1 70px;
   min-width: 0;
 }
+
+/* Cutscene chrome (M8) — cinematic letterbox bars + a Skip button. */
+.cutscene {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+}
+.cutscene__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 9vh;
+  background: #000;
+}
+.cutscene__bar--top {
+  top: 0;
+}
+.cutscene__bar--bottom {
+  bottom: 0;
+}
+.cutscene__skip {
+  position: absolute;
+  right: 18px;
+  bottom: calc(9vh + 14px);
+  pointer-events: auto;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #e8eef7;
+  background: rgba(12, 16, 22, 0.7);
+  border: 1px solid #2a3650;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cutscene__skip:hover:not(:disabled) {
+  background: rgba(24, 32, 46, 0.85);
+}
+.cutscene__skip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

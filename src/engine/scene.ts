@@ -12,6 +12,7 @@ import { cameraOffset } from './camera'
 import { runEffects } from './effects'
 import { sceneHit } from './hotspots'
 import { dialogueStore } from '../state/dialogue'
+import { sequenceStore } from '../state/sequence'
 import { createSpriteView } from '../entities/sprite-view'
 import { placeholderView } from '../entities/placeholder-atlas'
 import { resolveDepthScale, designSize, DEFAULT_REFERENCE_HEIGHT } from '../data/scene-config'
@@ -35,6 +36,9 @@ import type {
   SceneBand,
   SceneData,
   SceneId,
+  SeqStep,
+  Sequence,
+  SequenceId,
   TransitionConfig,
   ViewDescriptor,
   VisionConfig,
@@ -210,6 +214,7 @@ export async function mountScene(
   cast: Record<NpcId, NpcDef> = {},
   dialogs: Record<DialogId, Dialog> = {},
   npcHome: Record<NpcId, SceneId> = {},
+  sequences: Record<SequenceId, Sequence> = {},
 ): Promise<Scene> {
   // Design space vs viewport: the scene is authored in a fixed design space
   // (`scene.width` × `referenceHeight` px). The world Container holds it; the camera
@@ -379,11 +384,40 @@ export async function mountScene(
     content <= viewport
       ? (viewport - content) / 2
       : Math.max(viewport - content, Math.min(0, viewport / 2 - target))
-  const updateCamera = () => {
-    const s = app.screen.height / design.height
+
+  // Cutscene camera override (M8): when active the camera focuses a tweened point /
+  // zoom (lerped `camFrom`→`camTo` over `camMs`) instead of following the player; a
+  // `camFollow` actor keeps it live once the transition lands. `camCur` is the last
+  // focus used (the start of the next tween). Released back to the player on end.
+  const camCur = { fx: 0, fy: 0, zoom: 1 }
+  let camActive = false
+  let camFollow: Character | null = null
+  let camFrom = { fx: 0, fy: 0, zoom: 1 }
+  let camTo = { fx: 0, fy: 0, zoom: 1 }
+  let camMs = 0
+  let camElapsed = 0
+  const updateCamera = (dt = 0) => {
+    const base = app.screen.height / design.height
+    let fx = character.displayObject.x
+    let fy = character.displayObject.y
+    let zoom = 1
+    if (camActive) {
+      camElapsed = Math.min(camMs, camElapsed + dt)
+      const t = camMs > 0 ? camElapsed / camMs : 1
+      const e = t * t * (3 - 2 * t) // smoothstep
+      const tx = camFollow && t >= 1 ? camFollow.displayObject.x : camTo.fx
+      const ty = camFollow && t >= 1 ? camFollow.displayObject.y : camTo.fy
+      fx = camFrom.fx + (tx - camFrom.fx) * e
+      fy = camFrom.fy + (ty - camFrom.fy) * e
+      zoom = camFrom.zoom + (camTo.zoom - camFrom.zoom) * e
+    }
+    camCur.fx = fx
+    camCur.fy = fy
+    camCur.zoom = zoom
+    const s = base * zoom
     world.scale.set(s)
-    const x = place(design.width * s, app.screen.width, character.displayObject.x * s)
-    const y = place(design.height * s, app.screen.height, character.displayObject.y * s)
+    const x = place(design.width * s, app.screen.width, fx * s)
+    const y = place(design.height * s, app.screen.height, fy * s)
     world.position.set(x, y)
     cameraOffset.x = x
     cameraOffset.y = y
@@ -416,7 +450,11 @@ export async function mountScene(
   // Start a conversation: pause + turn the partner NPC to the player (and the player
   // to it), then drive the dialogue store (which resumes the NPC on end). Node / choice
   // effects run back through `run` (engine + state, addressing the partner as subject).
-  const beginDialogue = (dialog: Dialog, partner?: { id: string; char: Character }) => {
+  const beginDialogue = (
+    dialog: Dialog,
+    partner?: { id: string; char: Character },
+    onEnd?: () => void,
+  ) => {
     if (partner) {
       partner.char.pause()
       partner.char.faceToward(character.displayObject.x, character.displayObject.y)
@@ -429,23 +467,158 @@ export async function mountScene(
       check: (cond) => checkCondition(store.getState(), cond),
       nameOf: (speaker) => nameOf(speaker, partner?.id),
       voiceOf: (speaker) => voiceOf(speaker, partner?.id),
-      onEnd: () => partner?.char.resume(),
+      onEnd: () => {
+        partner?.char.resume()
+        onEnd?.()
+      },
     })
   }
 
   // Effects from a click, a trigger, or a dialogue node, dispatched over the actor
   // registry by the shared runtime. `subject` is the actor the batch is "about" (a
   // trigger's enterer / the dialogue partner) — it receives `wait`; clicks default to
-  // the player. `startDialog` is handled here (it needs the scene's dialogs + actors).
+  // the player. `startDialog` / `startSequence` are handled here (they need the scene's
+  // dialogs / sequences + actors).
   function run(effects: readonly Effect[], subject = 'player'): void {
     runEffects(effects, actors, store, subject)
     for (const e of effects) {
-      if (e.kind !== 'startDialog') continue
-      const dialog = dialogs[e.dialog]
-      if (!dialog) continue
-      const char = subject !== 'player' ? actors.get(subject) : undefined
-      beginDialogue(dialog, char ? { id: subject, char } : undefined)
+      if (e.kind === 'startDialog') {
+        const dialog = dialogs[e.dialog]
+        if (!dialog) continue
+        const char = subject !== 'player' ? actors.get(subject) : undefined
+        beginDialogue(dialog, char ? { id: subject, char } : undefined)
+      } else if (e.kind === 'startSequence') {
+        const seq = sequences[e.sequence]
+        if (seq) void playSequence(seq)
+      }
     }
+  }
+
+  // --- Cutscene runner (M8) -------------------------------------------------
+  // Plays a Sequence's steps in order over the scene's actors + camera; input is blocked
+  // (sequenceStore.active) and the whole thing is skippable. Skipping fast-forwards: the
+  // current await resolves, then remaining steps apply only their instant parts (effects
+  // run, moves/cameras snap, anims/dialog/waits are dropped) so the world lands correctly.
+  const RELEASE_MS = 350
+  let cutsceneRunning = false
+  let skipping = false
+
+  /** A delay that also resolves early once a skip is requested. */
+  const sleep = (ms: number): Promise<void> =>
+    new Promise((resolve) => {
+      if (skipping || ms <= 0) return resolve()
+      let t = 0
+      const tick = (tk: Ticker) => {
+        t += tk.deltaMS
+        if (skipping || t >= ms) {
+          app.ticker.remove(tick)
+          resolve()
+        }
+      }
+      app.ticker.add(tick)
+    })
+
+  const toPx = (p: { xFrac: number; yFrac: number }) => ({
+    x: p.xFrac * design.width,
+    y: p.yFrac * design.height,
+  })
+
+  const runStep = async (step: SeqStep): Promise<void> => {
+    switch (step.kind) {
+      case 'wait':
+        await sleep(step.ms)
+        return
+      case 'effects':
+        run(step.effects)
+        return
+      case 'face': {
+        const t = toPx(step.to)
+        actors.get(step.actor)?.faceToward(t.x, t.y)
+        return
+      }
+      case 'move': {
+        const a = actors.get(step.actor)
+        const t = toPx(step.to)
+        if (!a) return
+        if (skipping) {
+          a.setPosition(t.x, t.y)
+          return
+        }
+        await new Promise<void>((resolve) => {
+          let done = false
+          a.setTarget(t.x, t.y, () => {
+            done = true
+            app.ticker.remove(poll)
+            resolve()
+          })
+          const poll = () => {
+            if (done) return app.ticker.remove(poll)
+            if (skipping) {
+              app.ticker.remove(poll)
+              a.setPosition(t.x, t.y)
+              resolve()
+            }
+          }
+          app.ticker.add(poll)
+        })
+        return
+      }
+      case 'anim': {
+        const a = actors.get(step.actor)
+        if (!a || skipping) return
+        await new Promise<void>((resolve) => a.playOnce(step.action, resolve))
+        return
+      }
+      case 'dialog': {
+        const dialog = dialogs[step.dialog]
+        if (!dialog || skipping) return
+        await new Promise<void>((resolve) => beginDialogue(dialog, undefined, resolve))
+        return
+      }
+      case 'camera': {
+        const focus = step.actor ? (actors.get(step.actor) ?? null) : null
+        const point = focus
+          ? { x: focus.displayObject.x, y: focus.displayObject.y }
+          : step.to
+            ? toPx(step.to)
+            : { x: camCur.fx, y: camCur.fy }
+        camFrom = { ...camCur }
+        camTo = { fx: point.x, fy: point.y, zoom: step.zoom ?? 1 }
+        camFollow = focus
+        camMs = skipping ? 0 : (step.ms ?? 600)
+        camElapsed = 0
+        camActive = true
+        await sleep(camMs)
+        return
+      }
+    }
+  }
+
+  async function playSequence(seq: Sequence): Promise<void> {
+    if (cutsceneRunning) return
+    cutsceneRunning = true
+    skipping = false
+    if (dialogueStore.getState().active) dialogueStore.getState().end()
+    sequenceStore.getState().begin(() => {
+      skipping = true
+      if (dialogueStore.getState().active) dialogueStore.getState().end()
+    })
+    for (const step of seq.steps) {
+      await runStep(step)
+      if (torn) return // a goTo (or teardown) ended the scene mid-cutscene
+    }
+    // Release the camera back to the player.
+    if (camActive) {
+      camFrom = { ...camCur }
+      camTo = { fx: character.displayObject.x, fy: character.displayObject.y, zoom: 1 }
+      camFollow = character
+      camMs = skipping ? 0 : RELEASE_MS
+      camElapsed = 0
+      await sleep(camMs)
+      camActive = false
+    }
+    cutsceneRunning = false
+    if (!torn) sequenceStore.getState().end()
   }
 
   // Interact with an NPC: click it → walk beside it → talk or look, resolved against
@@ -518,6 +691,7 @@ export async function mountScene(
     }))
   const checkTriggers = () => {
     if (triggers.length === 0) return
+    if (sequenceStore.getState().active) return // a cutscene owns the stage
     const state = store.getState()
     for (const t of triggers) {
       const by = t.data.by ?? 'player'
@@ -560,6 +734,7 @@ export async function mountScene(
   // unseen→seen edge (subject = the watcher), once if `once`.
   const checkVision = () => {
     if (visions.length === 0) return
+    if (sequenceStore.getState().active) return // no stealth detection during a cutscene
     const state = store.getState()
     const px = character.displayObject.x
     const py = character.displayObject.y
@@ -590,7 +765,8 @@ export async function mountScene(
   app.stage.hitArea = app.screen
   app.stage.cursor = 'none' // the DOM GameCursor draws the pointer; hide the native one
   const onTap = (event: FederatedPointerEvent) => {
-    if (dialogueStore.getState().active) return // dialogue captures input; don't walk
+    // Dialogue / a running cutscene capture input; the world isn't clickable.
+    if (dialogueStore.getState().active || sequenceStore.getState().active) return
     const local = interactive.toLocal(event.global)
     const state = store.getState()
     const hit = pickInteractable(scene.interactables, local.x, local.y, design, state)
@@ -630,11 +806,16 @@ export async function mountScene(
   const onTick = (ticker: Ticker) => {
     character.update(ticker.deltaMS)
     for (const n of npcs) n.character.update(ticker.deltaMS)
-    updateCamera()
+    updateCamera(ticker.deltaMS)
     checkTriggers()
     checkVision()
   }
   app.ticker.add(onTick)
+
+  // Scene-entry effects (M8): run once on mount — e.g. a scene-entry cutscene
+  // (`startSequence`) or setting a flag. Deferred a microtask so the first frame /
+  // camera is in place before a cutscene grabs the stage.
+  if (scene.onEnter?.length) queueMicrotask(() => run(scene.onEnter ?? []))
 
   let torn = false
   return {
@@ -642,8 +823,9 @@ export async function mountScene(
       if (torn) return
       torn = true
       sceneHit.kindAt = null
-      // Close a conversation tied to this scene (e.g. a dialogue `goTo` swapped scenes).
+      // Close a conversation / cutscene tied to this scene (e.g. a `goTo` swapped scenes).
       if (dialogueStore.getState().active) dialogueStore.getState().end()
+      if (sequenceStore.getState().active) sequenceStore.getState().end()
       unsubscribeVisibility()
       app.ticker.remove(onTick)
       app.stage.off('pointertap', onTap)
@@ -821,6 +1003,7 @@ export function createSceneHost(
   transition?: TransitionConfig,
   cast: Record<NpcId, NpcDef> = {},
   dialogs: Record<DialogId, Dialog> = {},
+  sequences: Record<SequenceId, Sequence> = {},
 ): SceneHost {
   let current: Scene | undefined
   let destroyed = false
@@ -840,6 +1023,7 @@ export function createSceneHost(
   // seeds each routine NPC's start node (→ `npcScene`/`npcNode`) before the scene reads it.
   // The `isBusy` predicate freezes an NPC's routine while the player is talking to it.
   const routines = createRoutineRunner(cast, store, (npc) => {
+    if (sequenceStore.getState().active) return true // a cutscene owns the stage
     const d = dialogueStore.getState()
     return d.active && d.partner === npc
   })
@@ -937,6 +1121,7 @@ export function createSceneHost(
       cast,
       dialogs,
       npcHome,
+      sequences,
     )
     clearTimeout(spinTimer)
     spinner.visible = false

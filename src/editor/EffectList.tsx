@@ -76,6 +76,7 @@ const EFFECT_KINDS: Effect['kind'][] = [
   'takeItem',
   'goTo',
   'startDialog',
+  'startSequence',
   'moveNpc',
   'despawnNpc',
   'playSound',
@@ -96,6 +97,8 @@ function defaultEffect(kind: Effect['kind'], sceneIds: SceneId[], itemIds: ItemI
       return { kind: 'goTo', scene: sceneIds[0] ?? '' }
     case 'startDialog':
       return { kind: 'startDialog', dialog: '' }
+    case 'startSequence':
+      return { kind: 'startSequence', sequence: '' }
     case 'moveNpc':
       return { kind: 'moveNpc', npc: '', scene: sceneIds[0] ?? '' }
     case 'despawnNpc':
@@ -170,6 +173,15 @@ function EffectFields({
           placeholder="dialog"
           value={effect.dialog}
           onChange={(e) => onChange({ ...effect, dialog: e.target.value })}
+        />
+      )
+    case 'startSequence':
+      return (
+        <input
+          className="logic__in"
+          placeholder="sequence"
+          value={effect.sequence}
+          onChange={(e) => onChange({ ...effect, sequence: e.target.value })}
         />
       )
     case 'moveNpc':

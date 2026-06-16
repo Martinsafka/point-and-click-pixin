@@ -48,6 +48,7 @@ export function GameCanvas() {
         gameDoc.transition,
         gameDoc.npcs,
         gameDoc.dialogs,
+        gameDoc.sequences,
       )
     })()
 

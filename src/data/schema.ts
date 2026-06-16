@@ -109,6 +109,8 @@ export type Effect =
   | { kind: 'takeItem'; item: ItemId }
   | { kind: 'goTo'; scene: SceneId }
   | { kind: 'startDialog'; dialog: DialogId }
+  // Play a cutscene (id into `GameDoc.sequences`); blocks input until it ends / is skipped.
+  | { kind: 'startSequence'; sequence: SequenceId }
   // Move a cast NPC to another scene (its runtime location; needs a placement there)
   // or remove it from play. Drive cross-scene NPC behaviour from dialogue / triggers.
   | { kind: 'moveNpc'; npc: NpcId; scene: SceneId }
@@ -172,6 +174,46 @@ export interface DialogNode {
 export interface Dialog {
   start: DialogNodeId
   nodes: Record<DialogNodeId, DialogNode>
+}
+
+// --- Cutscenes / scripted sequences (M8) ------------------------------------
+
+export type SequenceId = string
+
+/**
+ * One step of a cutscene, run in order by the sequence runner. Steps that take time
+ * (`wait`, `move`, `anim`, `dialog`, `camera`) are awaited before the next runs; `face`
+ * and `effects` are instant. `actor` is an actor id (`'player'` or a cast NPC id) in the
+ * current scene. Positions are design-space fractions. A cutscene plays in the mounted
+ * scene (an `effects` step's `goTo` ends it by swapping scenes).
+ */
+export type SeqStep =
+  | { kind: 'wait'; ms: number }
+  // Walk `actor` to a point along the nav-mesh; awaits arrival.
+  | { kind: 'move'; actor: string; to: { xFrac: number; yFrac: number } }
+  // Play a one-shot animation on `actor`; awaits completion.
+  | { kind: 'anim'; actor: string; action: string }
+  // Turn `actor` to face a point (instant).
+  | { kind: 'face'; actor: string; to: { xFrac: number; yFrac: number } }
+  // Play a dialogue tree (reuses the dialogue runtime); awaits its end.
+  | { kind: 'dialog'; dialog: DialogId }
+  // Run state / engine effects instantly (setFlag / giveItem / playSound / moveNpc …).
+  | { kind: 'effects'; effects: Effect[] }
+  // Move the camera: focus a point or follow an `actor`, with optional `zoom` (1 = the
+  // normal height-fill), transitioning over `ms`; awaits the transition. Released (back
+  // to following the player) when the cutscene ends.
+  | {
+      kind: 'camera'
+      actor?: string
+      to?: { xFrac: number; yFrac: number }
+      zoom?: number
+      ms?: number
+    }
+
+/** A reusable cutscene: an ordered list of steps. Lives in `GameDoc.sequences`; started
+ *  by the `startSequence` effect (from a trigger / interaction / dialogue / scene-entry). */
+export interface Sequence {
+  steps: SeqStep[]
 }
 
 // --- Scene content ----------------------------------------------------------
@@ -428,6 +470,9 @@ export interface SceneData {
   /** Obstacles cut out of the walkable area (polygons as design-space fractions). */
   holes?: Polygon[]
   interactables: InteractableData[]
+  /** Effects run once when the scene is entered (mounted), gated by their own logic —
+   *  e.g. a scene-entry cutscene (`startSequence`) or setting a "visited here" flag. */
+  onEnter?: Effect[]
   /** NPC placements (reference the global cast `GameDoc.npcs`). */
   npcs?: NpcPlacement[]
   depth: DepthConfig
@@ -474,6 +519,8 @@ export interface GameDoc {
   npcs?: Record<NpcId, NpcDef>
   /** The reusable dialogue library (id → tree); referenced by NPCs / placements. */
   dialogs?: Record<DialogId, Dialog>
+  /** The reusable cutscene library (id → sequence); started by `startSequence`. */
+  sequences?: Record<SequenceId, Sequence>
   /** The game's vertical design resolution in px (default 1080). Every scene is
    *  this tall; the viewport height maps onto it with one uniform scale, so art and
    *  characters keep a consistent size across devices. Scene `width` is in these px. */

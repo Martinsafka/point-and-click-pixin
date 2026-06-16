@@ -287,12 +287,15 @@ scheduler** nuance is deferred; the per-NPC routine graph belongs here.
 ### M8 — Cutscenes / scripted sequences
 
 - Runtime:
-  - [ ] A sequence runner — an ordered list of timed steps over the Effect
-        vocabulary + character moves/animations + dialogue lines + waits;
-        non-interactive, skippable.
+  - [x] **8a** — a sequence runner — an ordered list of timed steps (`wait` / `move` /
+        `anim` / `face` / `dialog` / `effects` / `camera`) over the actor registry + a
+        camera override; non-interactive, **skippable** (Esc / button). Started by a
+        `startSequence` effect (+ `SceneData.onEnter` for scene-entry). _(Decisions: camera
+        control + dialogue-reuse are in.)_ Demo: an **intro** cutscene on the street.
 - Editor:
-  - [ ] Author sequences (step list); trigger them from interactions / scene-entry
-        / conditions.
+  - [ ] **8b** — author sequences (step list) + a Sequences library; the `startSequence`
+        field becomes a picker; a `SceneData.onEnter` editor. (Trigger from interactions /
+        scene-entry / conditions already works via the effect + trigger + onEnter.)
 
 ### M9 — Audio authoring
 
