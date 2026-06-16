@@ -383,6 +383,70 @@ flag-driven through the existing condition vocabulary.
 - [x] Editor: place lights + draw dark-area polygons (preview); ambient + light
       sliders.
 
+---
+
+### ME — In-game (live) editor  _(PROPOSED — editor architecture; user reviewing, not started)_
+
+Move from the **separated** editor (a static `mountPreview` beside the panel; edits go
+through a draft + "Test in game" reload) to an **in-game** editor: a dev-only toggle shows
+the panel **over the live running world**, so lighting / weather / NPCs / camera / state are
+tuned **in context**, with no reload loop. Dev-only (stripped in prod, like today).
+
+**Why:** the static preview can't show lighting / weather / motion, so visual + atmospheric
+tuning is blind + slow. Live editing gives accurate feedback and a better overview — and
+collapses the two Pixi worlds (game + preview) into **one** (a net simplification).
+
+**UI shape (user intent):** not one fixed side panel — a **floating, multi-window** UI. In
+dev mode a small **launcher bar** sits in the **top-left corner**; each entry is an editor
+section (Scene · Lighting · Sounds · Atmosphere · …). Clicking one opens a **floating modal
+window** for that section that is **draggable anywhere** on screen and **closes via a ✕ in
+its top-right**. **Several windows can be open at once** (arrange them around the live scene;
+close what you don't need). So the current tabs-in-a-panel become independent floating tool
+windows over the running game.
+
+**Hard constraints (must hold):** the **engine never imports the editor** — the editor only
+**mutates the doc** + draws DOM overlays; the engine **reacts to doc changes** (the existing
+store-subscription pattern). The **dev-only gate** (`import.meta.env.DEV` + lazy-load) keeps
+the player build identical. Do it **incrementally behind the existing `?edit`** (coexist;
+the separated path stays a fallback until parity), so every step is small + reversible.
+
+**Risk:** low for the shipped game (additive, dev-gated, boundary-protected); medium-but-
+dev-only for editor functionality during migration (doc/save wiring + camera-mapped
+overlays are the sensitive bits).
+
+- [ ] **ME.0 — Live atmosphere in the *current* preview** _(no risk; unblocks the immediate
+      need; independent of the rest)_ — give `mountPreview` a ticker + `createAtmosphere` /
+      `createLighting` / weather read from the editor doc, rebuilt reactively on slider
+      changes, so the dev **sees lighting / weather** while authoring.
+- [ ] **ME.1 — Unify the document + persistence** _(most sensitive; do first, in isolation)_
+      — one source of truth the editor mutates and the world reads (drop the separate
+      `editorStore` clone bridged by the draft). Preserve Test / Discard, **load-save**,
+      fresh-game, the IndexedDB draft. Verify on its own before anything depends on it.
+- [ ] **ME.2 — In-game floating editor (coexists with `?edit`)** — a dev-only **launcher
+      bar** (top-left) over the **live `createSceneHost` world**; each entry opens a
+      **floating, draggable modal window** (✕ top-right) hosting that section's existing
+      forms. **Multiple windows at once.** Edits mutate the unified doc; the game reacts
+      where it already does. (Reuse / generalise `EditorModal` for the draggable window
+      chrome; the current tabs become the launcher entries.)
+- [ ] **ME.3 — Live-update the tunable systems** — lighting rebuilds on doc change (sliders
+      live), ambient / colour live, weather already reactive; **structural** changes
+      (add/remove layer) re-mount the current scene. Define a live-update-vs-re-mount policy
+      per system (hot params live, avoid re-mount churn + teardown stress).
+- [ ] **ME.4 — Migrate placement/drawing overlays to the live camera** — walkable / holes /
+      hit-areas / NPC spawn+path / lights / dark areas convert screen↔world via
+      `cameraOffset` (already used by the cursor); editor mode suppresses gameplay clicks
+      while placing/drawing. Migrate **one overlay at a time**, validating each.
+- [ ] **ME.5 — Live-context authoring utilities** — jump-to-scene, set/clear flags,
+      give/take items, pause/resume + reset player, so you can drive the live world to the
+      state you want to author against (e.g. light a `hasItem flashlight` scene).
+- [ ] **ME.6 — Retire the static preview + cleanup** — once at parity, remove `mountPreview`
+      + the separated path → **one Pixi world**. Keep the dev-only gate + lazy-load.
+
+Each step: typecheck + lint + build + dev smoke + visual check; the separated `?edit` keeps
+working until ME.6, so the migration is reversible at every point.
+
+---
+
 **10c — Fog & clouds**
 
 - [ ] Animated noise-based "rolling" fog + cloud layers, **density sliders** — a convincing
