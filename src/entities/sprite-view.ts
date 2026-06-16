@@ -116,6 +116,12 @@ export async function createSpriteView(desc: ViewDescriptor): Promise<CharacterV
       sprite.animationSpeed = clip.fps / 60
       sprite.loop = false
       mirror(facing)
+      // Per-animation sound (M9 9c): a one-shot clip can carry its own SFX. Dynamic import
+      // keeps audio out of the editor preview's graph (the preview never plays one-shots).
+      if (clip.sound) {
+        const id = clip.sound
+        void import('../audio/audio').then((m) => m.playSoundById(id))
+      }
       sprite.onComplete = () => {
         sprite.onComplete = undefined
         sprite.loop = true

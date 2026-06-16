@@ -1483,3 +1483,13 @@ body {
   opacity: 0.5;
   cursor: default;
 }
+
+/* Per-clip sound picker (M9 9c) in the character editor. */
+.clip-row__sound {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.85;
+}

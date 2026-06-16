@@ -254,13 +254,16 @@ placeholder figure.
   - **`idle.S` / `walk.E` …** — keyed `state.facing`; the 5 base directions
     (S / SE / E / NE / N) suffice — the W-side mirrors automatically.
   - **`pickup` / `interact`** — one-shots played on a pickup / use (loop off).
+  - **sound** — a library sound auto-played when the clip runs as a **one-shot** (e.g.
+    `interact`), so a gesture's SFX needs no separate `playSound` effect.
   - Names + frame lists commit when the field loses focus.
 
 **NPCs (cast):** the global roster of characters. **+ NPC** creates one (a fixed id, an
 editable **name**, and a walk **speed** ×); place them into scenes from each scene's
 **NPCs** section. **✕** removes a character and any placements of it. **Edit** opens the
-NPC modal — dialogue (+ gate), inspect, voice, vision (stealth), appearance, its **routine**
-(below), and (when the NPC is placed in more than one scene) its **home** start scene.
+NPC modal — dialogue (+ gate), inspect, voice, **footsteps** (a library sound played while
+this NPC walks), vision (stealth), appearance, its **routine** (below), and (when placed in
+more than one scene) its **home** start scene.
 
 #### Routine (cross-scene schedule)
 

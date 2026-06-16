@@ -817,6 +817,8 @@ export async function mountScene(
   // document default) + footsteps while the player walks. The dynamic import keeps audio
   // out of the editor preview's module graph; `audioMod` then drives footsteps per-frame.
   let audioMod: typeof import('../audio/audio') | null = null
+  // NPCs with their own footsteps (M9 9c) — each gets a footstep channel keyed by its id.
+  const footstepNpcs = npcs.filter((n) => cast[n.id]?.footstep)
   void import('../audio/audio').then((m) => {
     if (torn) return
     audioMod = m
@@ -824,6 +826,10 @@ export async function mountScene(
     const ambient =
       a && (!a.when || checkCondition(store.getState(), a.when)) ? a : audio.ambient
     m.applySceneAudio({ ambient, footstep: audio.footstep, footstepsOff: audio.footstepsOff })
+    for (const n of footstepNpcs) {
+      const fs = cast[n.id]?.footstep
+      m.setFootstepSound(n.id, m.resolveSrc(fs?.sound) ?? null, fs?.volume ?? 0.5)
+    }
   })
 
   const onTick = (ticker: Ticker) => {
@@ -832,7 +838,9 @@ export async function mountScene(
     updateCamera(ticker.deltaMS)
     checkTriggers()
     checkVision()
-    audioMod?.setFootstepsMoving(character.isMoving())
+    audioMod?.setFootstepsMoving('player', character.isMoving())
+    for (const n of footstepNpcs)
+      audioMod?.setFootstepsMoving(n.id, n.character.displayObject.visible && n.character.isMoving())
   }
   app.ticker.add(onTick)
 
@@ -847,7 +855,9 @@ export async function mountScene(
       if (torn) return
       torn = true
       sceneHit.kindAt = null
-      audioMod?.setFootstepsMoving(false) // stop footsteps; ambient is swapped by the next mount
+      // Stop footsteps + drop the NPC channels (ambient is swapped by the next mount).
+      audioMod?.setFootstepsMoving('player', false)
+      for (const n of footstepNpcs) audioMod?.setFootstepSound(n.id, null)
       // Close a conversation / cutscene tied to this scene (e.g. a `goTo` swapped scenes).
       if (dialogueStore.getState().active) dialogueStore.getState().end()
       if (sequenceStore.getState().active) sequenceStore.getState().end()

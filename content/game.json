@@ -673,6 +673,10 @@
             "onArrive": true
           }
         ]
+      },
+      "footstep": {
+        "sound": "sfx-footstep",
+        "volume": 0.4
       }
     }
   },

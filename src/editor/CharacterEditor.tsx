@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent } from 'react'
 import type { AnimClip, ViewDescriptor } from '../data/schema'
+import { SoundSelect } from './SoundSelect'
 
 function parseFrames(text: string): number[] {
   return text
@@ -211,6 +212,13 @@ export function CharacterEditor({
               placeholder="frames e.g. 0, 1, 2"
               onBlur={(e) => patchClip(name, { frames: parseFrames(e.target.value) })}
             />
+            <label className="clip-row__sound">
+              sound
+              <SoundSelect
+                value={clip.sound}
+                onChange={(sound) => patchClip(name, { sound })}
+              />
+            </label>
           </div>
         ))}
       </div>

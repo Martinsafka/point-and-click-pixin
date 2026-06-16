@@ -86,44 +86,56 @@ export function setAmbient(src: string | null, volume = 0.4): void {
 }
 
 // --- Footsteps (a cadence while walking, M9) --------------------------------
+// One channel per walker (`'player'` + each NPC id), so several characters can each have
+// their own footstep sound playing as they move (M9 9c).
 const STEP_MS = 330
-let footHowl: Howl | null = null
-let footSrc: string | null = null
-let footMoving = false
-let footTimer: number | null = null
+interface FootChannel {
+  howl: Howl | null
+  src: string | null
+  moving: boolean
+  timer: number | null
+}
+const footChannels = new Map<string, FootChannel>()
 
-function stepOnce(): void {
-  footHowl?.play()
+function footChannel(id: string): FootChannel {
+  let c = footChannels.get(id)
+  if (!c) {
+    c = { howl: null, src: null, moving: false, timer: null }
+    footChannels.set(id, c)
+  }
+  return c
 }
 
-function syncFootstepTimer(): void {
-  const shouldRun = footMoving && unlocked && !!footHowl
-  if (shouldRun && footTimer === null) {
-    stepOnce() // first step lands immediately
-    footTimer = window.setInterval(stepOnce, STEP_MS)
-  } else if (!shouldRun && footTimer !== null) {
-    window.clearInterval(footTimer)
-    footTimer = null
+function syncFootChannel(c: FootChannel): void {
+  const shouldRun = c.moving && unlocked && !!c.howl
+  if (shouldRun && c.timer === null) {
+    c.howl?.play() // first step lands immediately
+    c.timer = window.setInterval(() => c.howl?.play(), STEP_MS)
+  } else if (!shouldRun && c.timer !== null) {
+    window.clearInterval(c.timer)
+    c.timer = null
   }
 }
 
-/** Set (or clear, with `null`) the footstep sound used while walking. */
-export function setFootstepSound(src: string | null, volume = 0.5): void {
-  if (src === footSrc) {
-    footHowl?.volume(volume)
+/** Set (or clear, with `null`) a walker's footstep sound. */
+export function setFootstepSound(id: string, src: string | null, volume = 0.5): void {
+  const c = footChannel(id)
+  if (src === c.src) {
+    c.howl?.volume(volume)
     return
   }
-  footHowl?.unload()
-  footSrc = src
-  footHowl = src ? new Howl({ src: [src], format: formatFor(src), volume }) : null
-  syncFootstepTimer()
+  c.howl?.unload()
+  c.src = src
+  c.howl = src ? new Howl({ src: [src], format: formatFor(src), volume }) : null
+  syncFootChannel(c)
 }
 
-/** Tell the audio whether the player is walking — starts / stops the footstep cadence. */
-export function setFootstepsMoving(moving: boolean): void {
-  if (moving === footMoving) return
-  footMoving = moving
-  syncFootstepTimer()
+/** Tell the audio whether a walker is moving — starts / stops its footstep cadence. */
+export function setFootstepsMoving(id: string, moving: boolean): void {
+  const c = footChannel(id)
+  if (moving === c.moving) return
+  c.moving = moving
+  syncFootChannel(c)
 }
 
 /**
@@ -138,8 +150,13 @@ export function applySceneAudio(opts: {
   footstepsOff?: boolean
 }): void {
   setAmbient(resolveSrc(opts.ambient?.sound) ?? ambientUri, opts.ambient?.volume ?? 0.4)
-  if (opts.footstepsOff) setFootstepSound(null)
-  else setFootstepSound(resolveSrc(opts.footstep?.sound) ?? footstepUri, opts.footstep?.volume ?? 0.5)
+  if (opts.footstepsOff) setFootstepSound('player', null)
+  else
+    setFootstepSound(
+      'player',
+      resolveSrc(opts.footstep?.sound) ?? footstepUri,
+      opts.footstep?.volume ?? 0.5,
+    )
 }
 
 // SFX as a side-effect of discrete state changes — both library sounds (the doc's
@@ -160,7 +177,7 @@ window.addEventListener(
   () => {
     unlocked = true
     if (ambientHowl && !ambientHowl.playing()) ambientHowl.play()
-    syncFootstepTimer()
+    for (const c of footChannels.values()) syncFootChannel(c)
   },
   { once: true },
 )

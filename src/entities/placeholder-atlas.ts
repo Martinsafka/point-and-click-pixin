@@ -169,6 +169,8 @@ clips.interact = {
   frames: [interactBase, interactBase + 1, interactBase + 2, interactBase + 3],
   fps: 8,
   loop: false,
+  // M9 9c demo: the interact gesture carries its own SFX (a built-in library sound).
+  sound: 'sfx-pickup',
 }
 
 export const placeholderView: ViewDescriptor = {

@@ -56,6 +56,9 @@ export interface AnimClip {
   frames: number[]
   fps: number
   loop: boolean
+  /** A library `SoundId` auto-played when this clip runs as a one-shot (e.g. `interact`).
+   *  M9 9c — so a gesture's sound isn't hand-chained with a separate `playSound`. */
+  sound?: SoundId
 }
 
 /**
@@ -388,6 +391,9 @@ export interface NpcDef {
   view?: ViewDescriptor
   /** The NPC's dialogue voice (procedural pitch / an uploaded blip); absent → default. */
   voice?: VoiceConfig
+  /** Footsteps for this NPC while it walks (a library sound + volume); absent → silent.
+   *  M9 9c — per-NPC footsteps (the player's are `GameDoc.footstep`). */
+  footstep?: SoundConfig
   /** Stealth vision — on seeing the player, run its effects; absent → the NPC doesn't watch. */
   vision?: VisionConfig
   /** The NPC's **starting** scene when it's placed in more than one (its runtime location

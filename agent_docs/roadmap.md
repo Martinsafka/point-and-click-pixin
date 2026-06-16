@@ -312,9 +312,11 @@ scheduler** nuance is deferred; the per-NPC routine graph belongs here.
       clip once, name it); every sound field references a `SoundId` (reference-only +
       auto-migration of existing inline data-URLs): `SoundConfig`, `playSound`, voice,
       inspect audio. Editor: a **Sounds tab** + a `SoundSelect` picker everywhere.
-- [ ] **9c — sound bindings the library unlocks:** **per-NPC footsteps**
-      (`NpcDef.footstep?: SoundId`) + **per-animation sound** (`AnimClip.sound?: SoundId`,
-      auto-played when the clip plays, e.g. `interact`). Both trivial once 9b lands.
+- [x] **9c — sound bindings the library unlocks:** **per-NPC footsteps**
+      (`NpcDef.footstep`, a channel per walker) + **per-animation sound** (`AnimClip.sound`,
+      auto-played when a one-shot clip runs, e.g. `interact`). Editor: a footstep picker in
+      the NPC modal + a per-clip sound picker in the character editor. Demo: the guard has
+      footsteps; the placeholder's `interact` clip carries a blip. **→ M9 fully complete.**
 
 ### M10 — Atmosphere & lighting  (advanced rendering — stylised, not photoreal)
 

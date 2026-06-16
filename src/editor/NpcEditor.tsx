@@ -5,6 +5,7 @@ import { EffectList } from './EffectList'
 import { CharacterEditor } from './CharacterEditor'
 import { RoutineEditor } from './RoutineEditor'
 import { SoundSelect } from './SoundSelect'
+import { SoundField } from './SoundField'
 import { actionNames, actorIds } from './effect-options'
 import { placeholderView } from '../entities/placeholder-atlas'
 import { previewVoice } from '../audio/voice'
@@ -252,6 +253,13 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
           </button>
         </div>
       )}
+
+      <SoundField
+        label="footsteps"
+        value={npc.footstep}
+        defaultVolume={0.5}
+        onChange={(footstep) => s().patchNpcDef(npcId, { footstep })}
+      />
 
       <div className="intr-form__field intr-form__field--col">
         <span>appearance</span>
