@@ -55,6 +55,7 @@ export function GameCanvas() {
           footstepsOff: gameDoc.footstepsOff,
         },
         gameDoc.weatherPresets,
+        { ambientLight: gameDoc.ambientLight, playerLight: gameDoc.playerLight },
       )
     })()
 

@@ -273,6 +273,57 @@ export interface WeatherPreset {
   ambient?: SoundConfig
 }
 
+// --- Atmosphere: lighting (M10 10b) -----------------------------------------
+
+/** Global/ambient light level — a scene-wide tint + darken. `intensity` 1 = full daylight,
+ *  0 = black (a dark scene the player lights with a flashlight). `color` tints the dark
+ *  (e.g. cold blue night). `GameDoc.ambientLight` is the project default; `SceneData`
+ *  overrides per scene. */
+export interface AmbientLight {
+  color: string
+  intensity: number
+}
+
+/** A placed local light — an additive glow pool (in the lightmap) that brightens / reveals
+ *  the scene. Positions are design-space fractions. Gated by `when` (a switch flag). */
+export interface LightSource {
+  id: string
+  x: number
+  y: number
+  /** Radius as a fraction of the design height. */
+  radius: number
+  color: string
+  /** Brightness (0..~2). */
+  intensity: number
+  /** Flicker amount 0..1 (candle / fire / broken neon); 0 = steady. */
+  flicker?: number
+  when?: Condition
+}
+
+/** A dark zone cut into an otherwise-lit scene: a polygon (design fractions) pushed toward
+ *  black in the lightmap, with a feathered (`feather`) gradient edge. Visual only. */
+export interface DarkArea {
+  polygon: Polygon
+  /** Edge softness as a fraction of the design height (blur radius); default a small value. */
+  feather?: number
+}
+
+export type PlayerLightShape = 'sphere' | 'cone'
+
+/** The light the player carries (M10 10b) — a radial **sphere** around them, or a **cone**
+ *  following their facing. Reveals the scene in a dark area. Gated by `when` (e.g.
+ *  `hasItem: flashlight`). Global (`GameDoc.playerLight`). */
+export interface PlayerLight {
+  shape: PlayerLightShape
+  /** Reach as a fraction of the design height. */
+  radius: number
+  color: string
+  intensity: number
+  /** Cone width in degrees (cone shape only). */
+  angle?: number
+  when?: Condition
+}
+
 // --- Scene content ----------------------------------------------------------
 
 /**
@@ -537,6 +588,12 @@ export interface SceneData {
    *  `when` passes plays (recomputed reactively, so a story flag triggers / swaps weather).
    *  `preset` is an id into `GameDoc.weatherPresets`. */
   weather?: { preset: WeatherId; when?: Condition }[]
+  /** Ambient light for this scene (M10 10b), overriding `GameDoc.ambientLight`. */
+  ambientLight?: AmbientLight
+  /** Placed local lights (M10 10b). */
+  lights?: LightSource[]
+  /** Dark zones cut into the scene (M10 10b). */
+  darkAreas?: DarkArea[]
   /** Effects run once when the scene is entered (mounted), gated by their own logic —
    *  e.g. a scene-entry cutscene (`startSequence`) or setting a "visited here" flag. */
   onEnter?: Effect[]
@@ -592,6 +649,10 @@ export interface GameDoc {
   sounds?: Record<SoundId, SoundAsset>
   /** The **weather preset** library (id → preset, M10 10a); scenes reference these. */
   weatherPresets?: Record<WeatherId, WeatherPreset>
+  /** Default ambient light (M10 10b); a scene's `ambientLight` overrides it. */
+  ambientLight?: AmbientLight
+  /** The light the player carries (M10 10b), gated by `when` (e.g. holding a flashlight). */
+  playerLight?: PlayerLight
   /** The game's vertical design resolution in px (default 1080). Every scene is
    *  this tall; the viewport height maps onto it with one uniform scale, so art and
    *  characters keep a consistent size across devices. Scene `width` is in these px. */

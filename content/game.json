@@ -551,7 +551,22 @@
       "ambient": {
         "sound": "room-ambient",
         "volume": 0.34
-      }
+      },
+      "ambientLight": {
+        "color": "#26314d",
+        "intensity": 0.15
+      },
+      "lights": [
+        {
+          "id": "lamp",
+          "x": 0.5,
+          "y": 0.4,
+          "radius": 0.34,
+          "color": "#ffcc88",
+          "intensity": 1.3,
+          "flicker": 0.12
+        }
+      ]
     }
   },
   "items": {
@@ -836,5 +851,15 @@
     "sound": "sfx-footstep"
   },
   "pickupSound": "sfx-pickup",
-  "transitionSound": "sfx-transition"
+  "transitionSound": "sfx-transition",
+  "playerLight": {
+    "shape": "sphere",
+    "radius": 0.32,
+    "color": "#dfe8ff",
+    "intensity": 0.9,
+    "when": {
+      "kind": "hasItem",
+      "item": "key"
+    }
+  }
 }

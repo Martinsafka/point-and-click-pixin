@@ -20,12 +20,14 @@ import { depthScaleAt } from '../systems/depth'
 import { buildNavigation } from '../systems/navmesh'
 import { createAtmosphere } from './atmosphere'
 import { createWeatherSystem, type WeatherSystem } from './weather'
+import { createLighting } from './lighting'
 import { routineNode, createRoutineRunner, routineArrival } from '../systems/routine'
 import { facingToAngle } from '../systems/movement'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
 import { containsPoint } from '../systems/walkable'
 import { checkCondition, type StoryState, type StoryStore } from '../systems/conditions'
 import type {
+  AmbientLight,
   Condition,
   Dialog,
   DialogId,
@@ -33,6 +35,7 @@ import type {
   InteractableData,
   LayerData,
   NpcDef,
+  PlayerLight,
   NpcId,
   NpcPath,
   SceneBand,
@@ -230,6 +233,7 @@ export async function mountScene(
   sequences: Record<SequenceId, Sequence> = {},
   audio: AudioConfig = {},
   weatherPresets: Record<WeatherId, WeatherPreset> = {},
+  lightingDefaults: { ambientLight?: AmbientLight; playerLight?: PlayerLight } = {},
 ): Promise<Scene> {
   // Design space vs viewport: the scene is authored in a fixed design space
   // (`scene.width` × `referenceHeight` px). The world Container holds it; the camera
@@ -284,6 +288,16 @@ export async function mountScene(
   }
   syncWeather(store.getState())
   atmosphere.onUpdate((dt) => weatherSystem?.update(dt))
+
+  // M10 10b lighting: a lightmap (ambient + local lights + dark areas + the player light)
+  // multiply-composited over the scene. Inactive (null) when the scene has nothing to light.
+  const lighting = createLighting(atmosphere.layers.lighting, design, app, {
+    ambient: scene.ambientLight ??
+      lightingDefaults.ambientLight ?? { color: '#ffffff', intensity: 1 },
+    lights: scene.lights ?? [],
+    darkAreas: scene.darkAreas ?? [],
+    playerLight: lightingDefaults.playerLight,
+  })
 
   const bandFor = (band: SceneBand): Container =>
     band === 'background' ? background : band === 'foreground' ? foreground : interactive
@@ -876,6 +890,12 @@ export async function mountScene(
     for (const n of npcs) n.character.update(ticker.deltaMS)
     updateCamera(ticker.deltaMS)
     atmosphere.update(ticker.deltaMS)
+    lighting?.update(
+      store.getState(),
+      character.displayObject.x,
+      character.displayObject.y,
+      character.getFacing(),
+    )
     checkTriggers()
     checkVision()
     audioMod?.setFootstepsMoving('player', character.isMoving())
@@ -912,6 +932,7 @@ export async function mountScene(
       app.stage.sortableChildren = false
       character.destroy()
       for (const n of npcs) n.character.destroy()
+      lighting?.destroy() // frees the lightmap render-texture (not a world child)
       atmosphere.destroy() // removes the screen-space `screenFx` (world slots ride world.destroy)
       world.destroy({ children: true })
     },
@@ -1084,6 +1105,7 @@ export function createSceneHost(
   sequences: Record<SequenceId, Sequence> = {},
   audio: AudioConfig = {},
   weatherPresets: Record<WeatherId, WeatherPreset> = {},
+  lightingDefaults: { ambientLight?: AmbientLight; playerLight?: PlayerLight } = {},
 ): SceneHost {
   let current: Scene | undefined
   let destroyed = false
@@ -1204,6 +1226,7 @@ export function createSceneHost(
       sequences,
       audio,
       weatherPresets,
+      lightingDefaults,
     )
     clearTimeout(spinTimer)
     spinner.visible = false

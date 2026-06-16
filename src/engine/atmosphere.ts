@@ -40,7 +40,9 @@ export interface AtmosphereLayers {
   fogBack: Container
   /** Fog in front of characters (world-space). */
   fogFront: Container
-  /** Lighting overlay (world-space): ambient darken + local lights + dark areas + player light. */
+  /** Lighting overlay — **screen-space** (covers the full viewport); a multiply ambient
+   *  darken + dark areas + additive local lights + the player light (positioned via the
+   *  camera so they still track scene coords). */
   lighting: Container
   /** Weather particles (rain / snow / dust) — **screen-space** so they ignore the camera. */
   weather: Container
@@ -67,14 +69,15 @@ export function createAtmosphere(world: Container, stage: Container): Atmosphere
   // foreground 20). The scene's `world.sortableChildren` orders them.
   const fogBack = make(5)
   const fogFront = make(25)
-  const lighting = make(40)
-  world.addChild(fogBack, fogFront, lighting)
+  world.addChild(fogBack, fogFront)
 
-  // Screen-space layers above the world (weather below the vignette/flash), below the
-  // host's fade wash (zIndex 10000).
+  // Screen-space layers above the world (so they cover the full viewport, incl. pillarbox),
+  // below the host's fade wash (zIndex 10000): lighting (multiply darken + additive lights),
+  // then weather (rain over the lit scene), then the vignette / flash.
+  const lighting = make(50)
   const weather = make(90)
   const screenFx = make(100)
-  stage.addChild(weather, screenFx)
+  stage.addChild(lighting, weather, screenFx)
 
   const updaters: ((deltaMS: number) => void)[] = []
 
@@ -87,6 +90,7 @@ export function createAtmosphere(world: Container, stage: Container): Atmosphere
     destroy: () => {
       // The world-space slots ride `world.destroy({ children })`; the screen-space layers
       // (stage children) are removed here.
+      lighting.destroy({ children: true })
       weather.destroy({ children: true })
       screenFx.destroy({ children: true })
     },
