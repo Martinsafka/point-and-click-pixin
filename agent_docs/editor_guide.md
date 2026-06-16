@@ -228,6 +228,24 @@ weather); reactive. **+ Weather** adds an entry (pick a **preset** + an optional
 **✕** removes it. The weather (particles + its ambient sound) shows in-game — test with
 **▶ Test in game**.
 
+### Lighting
+
+This scene's lighting (M10 10b) — a stylised darken + lights composited over the scene
+(shows in-game, not the static preview; light markers + dark-area outlines draw in the
+preview). Three parts:
+
+- **Ambient** — tick **override ambient** to set this scene's **colour** + **intensity**
+  (1 = daylight · 0 = black — a flashlight scene); otherwise the project default (Project
+  tab) applies. Lights reveal the scene under the darken.
+- **Lights** — **+ Light** places one (then **Place** → click the preview for its spot, a
+  ☀ marker). Per light: **colour**, **shape** (sphere / cone), and sliders for **radius,
+  intensity, flicker** (candle / neon), **rotation, width, height** (deform to an
+  ellipse / rotated / a directional cone), **cone°** (cone), and a **when** gate (a switch
+  flag). A light glows even over black; with a `when`, a light switch turns it on.
+- **Dark areas** — **+ Dark area**, then **Draw** → click the preview to outline a polygon
+  pushed toward black, with a **feather** slider for the soft edge. Visual only (hotspots
+  still work — gate them with `when` if you want them dark-locked).
+
 ### Items · _N_ and Recipes · _N_ (global)
 
 These two sections are **document-level** — they apply to the whole game, not the
@@ -383,6 +401,17 @@ Document-wide sound bindings (Project tab → Audio, M9):
   changes. All four default to the built-in procedural sounds (pick another to replace).
 
 _(Per-NPC footsteps + per-animation sounds + reactive ambient `when` are follow-ups.)_
+
+### Lighting (global)
+
+Document-wide lighting defaults (Project tab → Lighting, M10 10b):
+
+- **default ambient light** — colour + intensity used by any scene without its own
+  **ambient** (Scene → Lighting).
+- **player light** — the light the player carries: **shape** (sphere around them / cone
+  following facing), colour, radius, intensity, cone°, and a **when** gate (e.g. `hasItem:
+  flashlight` — the player finds a torch and it lights up). It reveals the scene in dark
+  areas / dark scenes.
 
 ### Transition (global)
 

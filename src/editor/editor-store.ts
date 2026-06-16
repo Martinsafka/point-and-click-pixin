@@ -1,9 +1,12 @@
 import { createStore } from 'zustand/vanilla'
 import { useStore } from 'zustand'
 import type {
+  AmbientLight,
   Condition,
   CursorKind,
   DepthStop,
+  LightSource,
+  PlayerLight,
   DialogId,
   DialogNode,
   DialogNodeId,
@@ -161,6 +164,18 @@ interface EditorStore {
   removeSceneWeather(id: SceneId, index: number): void
   setSceneWeatherPreset(id: SceneId, index: number, preset: WeatherId): void
   setSceneWeatherWhen(id: SceneId, index: number, when: Condition | undefined): void
+  // Lighting (M10 10b) — per-scene ambient / lights / dark areas + doc defaults.
+  setSceneAmbientLight(id: SceneId, ambient: AmbientLight | undefined): void
+  addLight(id: SceneId): void
+  removeLight(id: SceneId, index: number): void
+  setLight(id: SceneId, index: number, patch: Partial<LightSource>): void
+  setLightPos(id: SceneId, index: number, x: number, y: number): void
+  addDarkArea(id: SceneId): void
+  removeDarkArea(id: SceneId, index: number): void
+  setDarkAreaPolygon(id: SceneId, index: number, polygon: number[]): void
+  setDarkAreaFeather(id: SceneId, index: number, feather: number): void
+  setDocAmbientLight(ambient: AmbientLight | undefined): void
+  setPlayerLight(light: PlayerLight | undefined): void
   // Player character (M5) — bumps `revision` so the preview re-mounts the sprite.
   createPlayer(): void
   removePlayer(): void
@@ -720,6 +735,56 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         },
         false,
       ),
+    setSceneAmbientLight: (id, ambient) => patchScene(id, { ambientLight: ambient }, false),
+    addLight: (id) => {
+      const lights = get().doc.scenes[id].lights ?? []
+      const taken = new Set(lights.map((l) => l.id))
+      let lid = 'light'
+      let n = 1
+      while (taken.has(lid)) lid = `light-${(n += 1)}`
+      patchScene(
+        id,
+        {
+          lights: [
+            ...lights,
+            { id: lid, x: 0.5, y: 0.5, radius: 0.3, color: '#ffd9a0', intensity: 1 },
+          ],
+        },
+        false,
+      )
+    },
+    removeLight: (id, index) =>
+      patchScene(id, { lights: (get().doc.scenes[id].lights ?? []).filter((_, i) => i !== index) }, false),
+    setLight: (id, index, patch) =>
+      patchScene(
+        id,
+        { lights: (get().doc.scenes[id].lights ?? []).map((l, i) => (i === index ? { ...l, ...patch } : l)) },
+        false,
+      ),
+    setLightPos: (id, index, x, y) =>
+      patchScene(
+        id,
+        { lights: (get().doc.scenes[id].lights ?? []).map((l, i) => (i === index ? { ...l, x, y } : l)) },
+        false,
+      ),
+    addDarkArea: (id) =>
+      patchScene(id, { darkAreas: [...(get().doc.scenes[id].darkAreas ?? []), { polygon: [] }] }, false),
+    removeDarkArea: (id, index) =>
+      patchScene(id, { darkAreas: (get().doc.scenes[id].darkAreas ?? []).filter((_, i) => i !== index) }, false),
+    setDarkAreaPolygon: (id, index, polygon) =>
+      patchScene(
+        id,
+        { darkAreas: (get().doc.scenes[id].darkAreas ?? []).map((a, i) => (i === index ? { ...a, polygon } : a)) },
+        false,
+      ),
+    setDarkAreaFeather: (id, index, feather) =>
+      patchScene(
+        id,
+        { darkAreas: (get().doc.scenes[id].darkAreas ?? []).map((a, i) => (i === index ? { ...a, feather } : a)) },
+        false,
+      ),
+    setDocAmbientLight: (ambient) => patchDoc({ ambientLight: ambient }),
+    setPlayerLight: (light) => patchDoc({ playerLight: light }),
     setTransition: (patch) => patchDoc({ transition: { ...get().doc.transition, ...patch } }),
     createPlayer: () => {
       const { doc, revision } = get()

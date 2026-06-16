@@ -1,6 +1,12 @@
 import { BlurFilter, Color, Container, Graphics, RenderTexture, Sprite, Texture } from 'pixi.js'
 import type { Application } from 'pixi.js'
-import type { AmbientLight, DarkArea, LightSource, PlayerLight } from '../data/schema'
+import type {
+  AmbientLight,
+  DarkArea,
+  LightSource,
+  PlayerLight,
+  PlayerLightShape,
+} from '../data/schema'
 import type { StoryState } from '../systems/conditions'
 import { checkCondition } from '../systems/conditions'
 import type { Size } from './scene'
@@ -117,37 +123,61 @@ export function createLighting(
     lmWorld.addChild(darks)
   }
 
-  const lightOf = (src: { x: number; y: number; radius: number; color: string }) => {
-    const sprite = new Sprite(radial)
-    sprite.anchor.set(0.5)
-    sprite.position.set(src.x * design.width, src.y * design.height)
-    const r = src.radius * design.height
-    sprite.scale.set((r * 2) / RADIAL_SIZE)
-    sprite.tint = new Color(src.color).toNumber()
+  // A light sprite for any source: shape (sphere / cone) + deform (rotation, width, height).
+  const makeLight = (o: {
+    shape?: PlayerLightShape
+    radiusPx: number
+    color: string
+    angle?: number
+    rotation?: number
+    scaleX?: number
+    scaleY?: number
+  }): Sprite => {
+    const cone = o.shape === 'cone'
+    const sprite = new Sprite(cone ? coneTexture(o.angle ?? 60) : radial)
+    sprite.anchor.set(cone ? 0 : 0.5, 0.5)
+    sprite.tint = new Color(o.color).toNumber()
     sprite.blendMode = 'add'
+    const unit = cone ? o.radiusPx / CONE_SIZE : (o.radiusPx * 2) / RADIAL_SIZE
+    sprite.scale.set(unit * (o.scaleX ?? 1), unit * (o.scaleY ?? 1))
+    sprite.rotation = ((o.rotation ?? 0) * Math.PI) / 180
+    return sprite
+  }
+  const localSprite = (light: LightSource): Sprite => {
+    const sprite = makeLight({
+      shape: light.shape,
+      radiusPx: light.radius * design.height,
+      color: light.color,
+      angle: light.angle,
+      rotation: light.rotation,
+      scaleX: light.scaleX,
+      scaleY: light.scaleY,
+    })
+    sprite.position.set(light.x * design.width, light.y * design.height)
     return sprite
   }
 
   // Local lights: a reveal sprite (in the lightmap) + a faint additive glow (over the scene).
   const glowWorld = new Container()
   const lightSprites = cfg.lights.map((light) => {
-    const reveal = lightOf(light)
+    const reveal = localSprite(light)
     lmWorld.addChild(reveal)
-    const glow = lightOf(light)
+    const glow = localSprite(light)
     glowWorld.addChild(glow)
     return { reveal, glow, light }
   })
 
-  // Player light reveal (sphere / cone), positioned each frame.
+  // Player light reveal (sphere / cone — the cone aims via the player's facing), positioned
+  // each frame.
   let playerReveal: Sprite | null = null
   const pl = cfg.playerLight
   if (pl) {
-    playerReveal = new Sprite(pl.shape === 'cone' ? coneTexture(pl.angle ?? 60) : radial)
-    playerReveal.anchor.set(pl.shape === 'cone' ? 0 : 0.5, 0.5)
-    playerReveal.tint = new Color(pl.color).toNumber()
-    playerReveal.blendMode = 'add'
-    const r = pl.radius * design.height
-    playerReveal.scale.set(pl.shape === 'cone' ? r / CONE_SIZE : (r * 2) / RADIAL_SIZE)
+    playerReveal = makeLight({
+      shape: pl.shape,
+      radiusPx: pl.radius * design.height,
+      color: pl.color,
+      angle: pl.angle,
+    })
     lmWorld.addChild(playerReveal)
   }
 

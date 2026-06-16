@@ -32,6 +32,9 @@ import { SoundList } from './SoundList'
 import { SoundSelect } from './SoundSelect'
 import { WeatherList } from './WeatherList'
 import { SceneWeather } from './SceneWeather'
+import { SceneLighting } from './SceneLighting'
+import { LightingDefaults } from './LightingDefaults'
+import { LightOverlay } from './LightOverlay'
 import { ConditionEditor } from './ConditionEditor'
 import { setSoundLibrary } from '../audio/audio'
 
@@ -58,7 +61,7 @@ const TAB_LABEL: Record<Tab, string> = {
 }
 
 /** Which polygon draw / placement mode is active (overlays share the preview). */
-type Draw = 'walkable' | 'hole' | 'hitarea' | 'npc' | 'npcpath' | null
+type Draw = 'walkable' | 'hole' | 'hitarea' | 'npc' | 'npcpath' | 'light' | 'darkarea' | null
 
 function round(n: number): number {
   return Math.round(n * 1000) / 1000
@@ -93,6 +96,8 @@ export function Editor() {
   const [selectedInteractable, setSelectedInteractable] = useState<number | null>(null)
   const [selectedHole, setSelectedHole] = useState<number | null>(null)
   const [selectedNpc, setSelectedNpc] = useState<number | null>(null)
+  const [selectedLight, setSelectedLight] = useState<number | null>(null)
+  const [selectedDarkArea, setSelectedDarkArea] = useState<number | null>(null)
   // Which of the selected placement's named paths is being drawn (index), in `npcpath` mode.
   const [drawPathIndex, setDrawPathIndex] = useState<number | null>(null)
   const [panelWidth, setPanelWidth] = useState(340)
@@ -259,6 +264,20 @@ export function Editor() {
       editorStore
         .getState()
         .addNpcPathPoint(selectedId, selectedNpc, drawPathIndex, round(xFrac), round(yFrac))
+    }
+  }
+  const placeLight = (xFrac: number, yFrac: number) => {
+    if (selectedLight !== null) {
+      editorStore.getState().setLightPos(selectedId, selectedLight, round(xFrac), round(yFrac))
+    }
+  }
+  const addDarkAreaPoint = (xFrac: number, yFrac: number) => {
+    if (selectedDarkArea !== null) {
+      const area = scene?.darkAreas?.[selectedDarkArea]
+      if (!area) return
+      editorStore
+        .getState()
+        .setDarkAreaPolygon(selectedId, selectedDarkArea, [...area.polygon, round(xFrac), round(yFrac)])
     }
   }
   // Toggle drawing waypoints into a specific named path of the selected placement.
@@ -555,15 +574,43 @@ export function Editor() {
                 )}
               </Section>
 
+              <Section title="Lighting">
+                {scene && (
+                  <SceneLighting
+                    sceneId={selectedId}
+                    ambientLight={scene.ambientLight}
+                    lights={scene.lights ?? []}
+                    darkAreas={scene.darkAreas ?? []}
+                    items={doc.items}
+                    sceneIds={sceneIds}
+                    selectedLight={selectedLight}
+                    onSelectLight={(i) => {
+                      setSelectedLight(i)
+                      setDraw(null)
+                    }}
+                    lightPlaceMode={draw === 'light'}
+                    onToggleLightPlace={() => toggle('light')}
+                    selectedDarkArea={selectedDarkArea}
+                    onSelectDarkArea={setSelectedDarkArea}
+                    darkDrawMode={draw === 'darkarea'}
+                    onToggleDarkDraw={() => toggle('darkarea')}
+                  />
+                )}
+              </Section>
+
               {draw && (
                 <p className="editor__hint">
                   {draw === 'npc'
                     ? "Click in the preview to set the NPC's spawn."
                     : draw === 'npcpath'
                       ? "Click in the preview to add waypoints to the NPC's path."
-                      : `Click in the preview to add ${
-                          draw === 'walkable' ? 'walkable' : draw === 'hole' ? 'hole' : 'hit-area'
-                        } points.`}
+                      : draw === 'light'
+                        ? 'Click in the preview to position the light.'
+                        : draw === 'darkarea'
+                          ? 'Click in the preview to add dark-area points.'
+                          : `Click in the preview to add ${
+                              draw === 'walkable' ? 'walkable' : draw === 'hole' ? 'hole' : 'hit-area'
+                            } points.`}
                 </p>
               )}
             </>
@@ -686,6 +733,9 @@ export function Editor() {
                   Empty → a built-in procedural sound. Upload your own in the Sounds tab.
                 </p>
               </Section>
+              <Section title="Lighting">
+                <LightingDefaults doc={doc} />
+              </Section>
               <Section title="Transition">
                 <TransitionEditor transition={doc.transition} />
               </Section>
@@ -743,6 +793,15 @@ export function Editor() {
               mode={draw === 'npc' ? 'place' : draw === 'npcpath' ? 'path' : null}
               onPlace={placeNpc}
               onAddPathPoint={addNpcPathPoint}
+            />
+            <LightOverlay
+              lights={scene.lights ?? []}
+              darkAreas={scene.darkAreas ?? []}
+              selectedLight={selectedLight}
+              selectedDarkArea={selectedDarkArea}
+              mode={draw === 'light' ? 'light' : draw === 'darkarea' ? 'darkarea' : null}
+              onPlaceLight={placeLight}
+              onAddDarkPoint={addDarkAreaPoint}
             />
           </div>
         )}

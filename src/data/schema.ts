@@ -285,7 +285,8 @@ export interface AmbientLight {
 }
 
 /** A placed local light — an additive glow pool (in the lightmap) that brightens / reveals
- *  the scene. Positions are design-space fractions. Gated by `when` (a switch flag). */
+ *  the scene. Positions are design-space fractions. Gated by `when` (a switch flag). Like the
+ *  player light it has a **shape** (sphere / cone) + **deform** (rotation, width, height). */
 export interface LightSource {
   id: string
   x: number
@@ -297,6 +298,15 @@ export interface LightSource {
   intensity: number
   /** Flicker amount 0..1 (candle / fire / broken neon); 0 = steady. */
   flicker?: number
+  /** `sphere` (radial, default) or `cone` (directional, aimed by `rotation`). */
+  shape?: PlayerLightShape
+  /** Cone width in degrees (cone shape). */
+  angle?: number
+  /** Rotation in degrees (aims a cone; rotates a deformed sphere). */
+  rotation?: number
+  /** Width / height deform (multipliers on the radius; default 1 → a circle). */
+  scaleX?: number
+  scaleY?: number
   when?: Condition
 }
 

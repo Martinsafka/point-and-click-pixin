@@ -1521,3 +1521,25 @@ body {
   opacity: 0.7;
   font-variant-numeric: tabular-nums;
 }
+
+/* Lighting editor overlay (M10 10b). */
+.light-overlay__marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  opacity: 0.85;
+}
+.light-overlay__marker--selected {
+  opacity: 1;
+  font-size: 22px;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+.dark-overlay__poly {
+  fill: rgba(0, 0, 0, 0.45);
+  stroke: #6c7a99;
+  stroke-width: 0.004;
+  stroke-dasharray: 0.01 0.008;
+  vector-effect: non-scaling-stroke;
+}

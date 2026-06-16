@@ -364,21 +364,23 @@ flag-driven through the existing condition vocabulary.
 
 **10b — Lighting** _(one composited lighting layer over the scene)_
 
-- [ ] **Ambient/global** — `GameDoc.ambientLight` (colour + intensity) as the project
+- [x] **Ambient/global** — `GameDoc.ambientLight` (colour + intensity) as the project
       default; `SceneData.ambientLight` overrides it per scene (1 = day, 0 = black). A
       scene-wide tint/darken overlay.
-- [ ] **Local lights** — `SceneData.lights[]` placed in the editor (position, radius,
+- [x] **Local lights** — `SceneData.lights[]` placed in the editor (position, radius,
       colour, intensity, falloff, optional **flicker** = animated intensity, e.g. candle /
       broken neon / fire), gated by `when` (a switch flag) — additive glow pools that punch
-      through the darkness.
-- [ ] **Dark scene + player light** — ambient 0 → black; the player carries a light
+      through the darkness. **Like the player light, a local light has a shape (sphere /
+      cone)** + **deform sliders** (rotation, width, height) so it can be an ellipse / a
+      rotated / a directional cone — not just a circle. _(user request)_
+- [x] **Dark scene + player light** — ambient 0 → black; the player carries a light
       (**cone** following facing / **sphere**), gated by `when: hasItem flashlight`; a mask
       following the player reveals around them.
-- [ ] **Dark areas** — `SceneData.darkAreas[]`: a polygon of darkness with a feathered
+- [x] **Dark areas** — `SceneData.darkAreas[]`: a polygon of darkness with a feathered
       **gradient** edge (a local dark zone in an otherwise lit scene). Visual only.
 - [ ] **Per-scene colour grade** — a `ColorMatrixFilter` (contrast / saturation / tint /
       brightness) for mood, on top of the ambient tint.
-- [ ] Editor: place lights + draw dark-area polygons (preview); ambient + light + grade
+- [x] Editor: place lights + draw dark-area polygons (preview); ambient + light
       sliders.
 
 **10c — Fog & clouds**
