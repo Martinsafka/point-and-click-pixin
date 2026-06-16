@@ -420,10 +420,23 @@ overlays are the sensitive bits).
       the dev **sees lighting / weather** while authoring. Lighting's camera is parameterised
       (the preview passes its fit transform). _(Gated lights need their `when` met — ME.5
       will add flag-setting in the preview.)_
-- [ ] **ME.1 — Unify the document + persistence** _(most sensitive; do first, in isolation)_
-      — one source of truth the editor mutates and the world reads (drop the separate
-      `editorStore` clone bridged by the draft). Preserve Test / Discard, **load-save**,
-      fresh-game, the IndexedDB draft. Verify on its own before anything depends on it.
+- [ ] **ME.1 — The editor preview runs the *real* world** _(reframed — keep two documents)_
+      — instead of merging stores (risky, invisible in isolation), the editor keeps its own
+      working doc and the production `gameDoc` stays separate; the **preview gains an
+      Edit ⇄ Live toggle**. **Live** mounts the real `createSceneHost` from `editorStore.doc`
+      (its own story store parked at the selected scene, whole-scene `fit` camera, no gameplay
+      input, muted) so NPCs/routines/lighting/weather render in context; **Edit** keeps the
+      static `mountPreview` (placeholder + layer drag) for authoring. Sub-steps, each verified
+      + committed in isolation:
+  - [x] **1** — `mountScene` (+ `createSceneHost`) gain `SceneOptions` (`cameraMode` follow/fit,
+        `gameplayInput`); defaults preserve the game.
+  - [x] **2a** — `mountScene` returns a `PreviewScene` with `refreshAtmosphere` (rebuild
+        weather + lighting, no re-mount).
+  - [x] **2b** — `createSceneHost` exposes `refreshAtmosphere`, delegating to the current scene.
+  - [x] **2c** — `ScenePreview` gains the Edit ⇄ Live toggle; Live mounts `createSceneHost`
+        over the working doc (`{ cameraMode:'fit', gameplayInput:false, muteAudio:true }`) and
+        subscribes to the editor store for the live atmosphere refresh. _(Persistence /
+        Test / Discard / draft are untouched — both docs stay as they were.)_
 - [ ] **ME.2 — In-game floating editor (coexists with `?edit`)** — a dev-only **launcher
       bar** (top-left) over the **live `createSceneHost` world**; each entry opens a
       **floating, draggable modal window** (✕ top-right) hosting that section's existing

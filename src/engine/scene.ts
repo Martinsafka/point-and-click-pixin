@@ -76,6 +76,9 @@ export interface SceneOptions {
   /** Whether clicks drive gameplay (walk / interact / talk). Default true; the editor sets
    *  false so the world is a live view it edits over. */
   gameplayInput?: boolean
+  /** Suppress all audio (ambient beds + footsteps). Default false; the editor's live view sets
+   *  true so authoring doesn't play sound and the audio chunk stays out of the preview. */
+  muteAudio?: boolean
 }
 
 /** The slice of the story store the engine needs: read state + react to it. */
@@ -253,6 +256,7 @@ export async function mountScene(
 ): Promise<PreviewScene> {
   const cameraMode = options.cameraMode ?? 'follow'
   const gameplayInput = options.gameplayInput ?? true
+  const muteAudio = options.muteAudio ?? false
   // Design space vs viewport: the scene is authored in a fixed design space
   // (`scene.width` × `referenceHeight` px). The world Container holds it; the camera
   // (below) fits the design *height* to the viewport with one uniform scale, then
@@ -915,19 +919,21 @@ export async function mountScene(
   // out of the editor preview's module graph; `audioMod` then drives footsteps per-frame.
   // NPCs with their own footsteps (M9 9c) — each gets a footstep channel keyed by its id.
   const footstepNpcs = npcs.filter((n) => cast[n.id]?.footstep)
-  void import('../audio/audio').then((m) => {
-    if (torn) return
-    audioMod = m
-    const a = scene.ambient
-    const ambient =
-      a && (!a.when || checkCondition(store.getState(), a.when)) ? a : audio.ambient
-    m.applySceneAudio({ ambient, footstep: audio.footstep, footstepsOff: audio.footstepsOff })
-    applyWeatherAmbient() // the active weather's loop (resolved now the module is ready)
-    for (const n of footstepNpcs) {
-      const fs = cast[n.id]?.footstep
-      m.setFootstepSound(n.id, m.resolveSrc(fs?.sound) ?? null, fs?.volume ?? 0.5)
-    }
-  })
+  if (!muteAudio) {
+    void import('../audio/audio').then((m) => {
+      if (torn) return
+      audioMod = m
+      const a = scene.ambient
+      const ambient =
+        a && (!a.when || checkCondition(store.getState(), a.when)) ? a : audio.ambient
+      m.applySceneAudio({ ambient, footstep: audio.footstep, footstepsOff: audio.footstepsOff })
+      applyWeatherAmbient() // the active weather's loop (resolved now the module is ready)
+      for (const n of footstepNpcs) {
+        const fs = cast[n.id]?.footstep
+        m.setFootstepSound(n.id, m.resolveSrc(fs?.sound) ?? null, fs?.volume ?? 0.5)
+      }
+    })
+  }
 
   const onTick = (ticker: Ticker) => {
     character.update(ticker.deltaMS)
@@ -1381,10 +1387,12 @@ export function createSceneHost(
       current?.destroy()
       current = undefined
       // Stop the ambient beds (no next scene to swap them) when the world tears down.
-      void import('../audio/audio').then((m) => {
-        m.setAmbient('scene', null)
-        m.setAmbient('weather', null)
-      })
+      // Skipped when muted (the editor's live view) — nothing started, so don't load audio.
+      if (!options.muteAudio)
+        void import('../audio/audio').then((m) => {
+          m.setAmbient('scene', null)
+          m.setAmbient('weather', null)
+        })
       spinner.destroy()
       fade.destroy({ children: true })
     },

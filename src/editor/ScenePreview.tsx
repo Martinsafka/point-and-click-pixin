@@ -1,19 +1,37 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Application } from 'pixi.js'
 import type { SceneData } from '../data/schema'
 import { createPixiApp } from '../engine/app'
-import { mountPreview, type PreviewScene } from '../engine/scene'
+import {
+  createSceneHost,
+  mountPreview,
+  type PreviewAtmosphere,
+  type PreviewScene,
+  type SceneHost,
+} from '../engine/scene'
+import { createStoryStore } from '../state/story'
 import { editorStore } from './editor-store'
 
 /**
  * A live Pixi preview of one scene, sized to its container. Mounts once and re-mounts only
- * when its React `key` changes (the editor keys it on scene + revision), so non-structural
- * edits like walkable drawing don't tear the canvas down. **Atmosphere (weather + lighting,
- * M10 ME.0) is shown and rebuilt live** as the author edits — without re-mounting — so
- * lighting / weather are visible while tuning.
+ * when its React `key` changes (the editor keys it on scene + revision) or the **Edit/Live**
+ * toggle flips, so non-structural edits like walkable drawing don't tear the canvas down.
+ *
+ * Two modes (ME.1):
+ * - **Edit** (default) — the static `mountPreview`: a placeholder character at the spawn,
+ *   draggable image layers, and the DOM overlays author over it. **Atmosphere is live** here
+ *   too (M10 ME.0).
+ * - **Live** — the **real** game world via `createSceneHost` over the editor's working doc
+ *   (its own story store at this scene, whole-scene `fit` camera, no gameplay input, muted):
+ *   NPCs walk their routines and the full lighting/weather render in context. The placement
+ *   overlays still sit on top, so you author while the world runs.
+ *
+ * In both modes the scene's atmosphere (weather + lighting) is rebuilt **live** — without a
+ * re-mount — as the author edits, via `refreshAtmosphere`.
  */
 export function ScenePreview({ scene }: { scene: SceneData }) {
   const hostRef = useRef<HTMLDivElement>(null)
+  const [live, setLive] = useState(false)
 
   useEffect(() => {
     const host = hostRef.current
@@ -21,19 +39,25 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
 
     let app: Application | undefined
     let preview: PreviewScene | undefined
+    let sceneHost: SceneHost | undefined
     let unsubscribe: (() => void) | undefined
     let cancelled = false
 
-    const teardown = (target: Application, built?: PreviewScene) => {
-      built?.destroy()
+    const teardown = (target: Application) => {
+      preview?.destroy()
+      sceneHost?.destroy()
       target.destroy(
         { removeView: true, releaseGlobalResources: true },
         { children: true, texture: true, textureSource: true },
       )
     }
-    const atmoOf = () => {
+    const atmoOf = (): PreviewAtmosphere => {
       const d = editorStore.getState().doc
-      return { ambientLight: d.ambientLight, playerLight: d.playerLight, weatherPresets: d.weatherPresets }
+      return {
+        ambientLight: d.ambientLight,
+        playerLight: d.playerLight,
+        weatherPresets: d.weatherPresets,
+      }
     }
 
     void (async () => {
@@ -41,26 +65,58 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
       if (cancelled) return teardown(created)
       app = created
       host.appendChild(created.canvas)
-      preview = await mountPreview(
-        created,
-        scene,
-        {
-          onLayerMove: (index, xFrac, yFrac) =>
-            editorStore.getState().setLayerPos(scene.id, index, xFrac, yFrac),
-        },
-        editorStore.getState().doc.player,
-        editorStore.getState().doc.referenceHeight,
-        atmoOf(),
-      )
-      if (cancelled) return teardown(created, preview)
 
-      // Rebuild the preview's atmosphere when this scene's lighting / weather config (or the
-      // doc-level defaults) change — a hash diff avoids rebuilding on unrelated edits.
+      // The atmosphere refresher differs by mode (preview vs the live host), but both rebuild
+      // the current scene's weather + lighting without a re-mount.
+      let refresh: (sc: SceneData, atmo: PreviewAtmosphere) => void
+
+      if (live) {
+        // Run the REAL world from the editor's working doc — its own story store, parked at
+        // this scene, fit camera, no gameplay clicks, muted (authoring, not playing).
+        const d = editorStore.getState().doc
+        const store = createStoryStore(d)
+        store.setState({ currentScene: scene.id })
+        sceneHost = createSceneHost(
+          created,
+          d.scenes,
+          store,
+          d.player,
+          d.referenceHeight,
+          d.transition,
+          d.npcs,
+          d.dialogs,
+          d.sequences,
+          {},
+          d.weatherPresets,
+          { ambientLight: d.ambientLight, playerLight: d.playerLight },
+          { cameraMode: 'fit', gameplayInput: false, muteAudio: true },
+        )
+        const sceneHostRef = sceneHost
+        refresh = (sc, atmo) => sceneHostRef.refreshAtmosphere(sc, atmo)
+      } else {
+        preview = await mountPreview(
+          created,
+          scene,
+          {
+            onLayerMove: (index, xFrac, yFrac) =>
+              editorStore.getState().setLayerPos(scene.id, index, xFrac, yFrac),
+          },
+          editorStore.getState().doc.player,
+          editorStore.getState().doc.referenceHeight,
+          atmoOf(),
+        )
+        if (cancelled) return teardown(created)
+        const previewRef = preview
+        refresh = (sc, atmo) => previewRef.refreshAtmosphere(sc, atmo)
+      }
+
+      // Rebuild the atmosphere when this scene's lighting / weather config (or the doc-level
+      // defaults) change — a hash diff avoids rebuilding on unrelated edits.
       let lastHash = ''
       const sync = () => {
         const d = editorStore.getState().doc
         const sc = d.scenes[scene.id]
-        if (!sc || !preview) return
+        if (!sc) return
         const hash = JSON.stringify([
           sc.ambientLight,
           sc.lights,
@@ -72,7 +128,7 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
         ])
         if (hash === lastHash) return
         lastHash = hash
-        preview.refreshAtmosphere(sc, atmoOf())
+        refresh(sc, atmoOf())
       }
       sync()
       unsubscribe = editorStore.subscribe(sync)
@@ -82,13 +138,27 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
       cancelled = true
       unsubscribe?.()
       if (app) {
-        teardown(app, preview)
+        teardown(app)
         app = undefined
         preview = undefined
+        sceneHost = undefined
       }
     }
+    // Re-mount on a mode flip or scene change; non-structural edits refresh live (no re-mount).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [live, scene.id])
 
-  return <div ref={hostRef} className="preview" />
+  return (
+    <>
+      <div ref={hostRef} className="preview" />
+      <button
+        type="button"
+        className="preview__mode"
+        onClick={() => setLive((v) => !v)}
+        title={live ? 'Show the static editing preview' : 'Run the real world in context'}
+      >
+        {live ? '● Live' : '▷ Live'}
+      </button>
+    </>
+  )
 }

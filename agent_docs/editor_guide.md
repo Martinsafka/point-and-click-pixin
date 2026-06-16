@@ -54,6 +54,19 @@ panel and the preview to **widen** the panel. The preview is shown at the **scen
 aspect ratio**, so drawn areas keep their exact position however wide you make the
 panel.
 
+**Preview modes — `▷ Live` / `● Live` (top-left of the preview).** The preview has two
+modes you toggle with the button in its corner:
+
+- **Edit** (default) — a calm, static preview: a placeholder character at the spawn, with
+  draggable image layers and all the placement overlays. Best for laying things out.
+- **Live** — runs the **real game world** in place (the actual scene-host over your working
+  document): NPCs walk their routines and the full lighting + weather render, so you can
+  judge atmosphere and motion in context. The world is **view-only** here — clicks don't
+  drive gameplay and sound is muted, so the placement overlays still work on top. Use
+  **▶ Test in game** when you want to actually play.
+
+In both modes the lighting / weather **update live** as you edit (no reload).
+
 ---
 
 ## Panels
