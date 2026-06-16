@@ -34,7 +34,7 @@ export function runEffects(
 ): void {
   for (const e of effects) {
     if (e.kind === 'playSound') {
-      void import('../audio/audio').then((m) => m.playClip(e.sound))
+      void import('../audio/audio').then((m) => m.playSoundById(e.sound))
     } else if (e.kind === 'playAnim') {
       actors.get(e.target ?? 'player')?.playOnce(e.action)
     } else if (e.kind === 'wait') {

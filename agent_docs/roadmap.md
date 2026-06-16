@@ -301,11 +301,20 @@ scheduler** nuance is deferred; the per-NPC routine graph belongs here.
 ### M9 — Audio authoring
 
 - Runtime:
-  - [ ] Bind sounds to entity / scene / interaction state, conditionally —
-        **footsteps while moving**, ambient per scene, SFX on interactions, voice
-        while speaking.
+  - [x] Bind sounds to entity / scene / interaction state, conditionally —
+        **footsteps while moving** (procedural default, per-frame cadence), **ambient per
+        scene** (`SceneData.ambient` + `when`; doc default; seamless swap), SFX on
+        interactions (the `playSound` effect), voice while speaking (M7 4c).
 - Editor:
-  - [ ] Attach sounds + their conditions to objects / characters / scenes.
+  - [x] Attach sounds + conditions: **Scene → Audio** (ambient + `when`) + **Project →
+        Audio** (default ambient / footstep / on-off), via a reusable `SoundField`.
+- [x] **9b — global Sounds library (reference, not inline).** `GameDoc.sounds` (upload a
+      clip once, name it); every sound field references a `SoundId` (reference-only +
+      auto-migration of existing inline data-URLs): `SoundConfig`, `playSound`, voice,
+      inspect audio. Editor: a **Sounds tab** + a `SoundSelect` picker everywhere.
+- [ ] **9c — sound bindings the library unlocks:** **per-NPC footsteps**
+      (`NpcDef.footstep?: SoundId`) + **per-animation sound** (`AnimClip.sound?: SoundId`,
+      auto-played when the clip plays, e.g. `interact`). Both trivial once 9b lands.
 
 ### M10 — Atmosphere & lighting  (advanced rendering — stylised, not photoreal)
 

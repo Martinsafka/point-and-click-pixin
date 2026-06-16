@@ -58,6 +58,19 @@ function drone(seconds: number, freqs: number[], volume: number): string {
   return wavDataUri(s)
 }
 
+/** A short soft footstep — a low thump with a quick decay (no sustained tone). */
+function thump(freq: number, seconds: number, volume: number): string {
+  const n = Math.floor(RATE * seconds)
+  const s = new Float32Array(n)
+  for (let i = 0; i < n; i += 1) {
+    const t = i / RATE
+    const env = Math.min(1, t * 120) * Math.exp(-t * 28) // fast attack, quick decay
+    s[i] = Math.sin(2 * Math.PI * freq * t) * volume * env
+  }
+  return wavDataUri(s)
+}
+
 export const ambientUri = drone(1, [110, 165], 0.5)
 export const pickupUri = blip(784, 0.12, 0.4)
 export const transitionUri = blip(523, 0.22, 0.32)
+export const footstepUri = thump(120, 0.11, 0.5)

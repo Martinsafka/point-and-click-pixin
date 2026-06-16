@@ -212,6 +212,14 @@ placement.
 - NPCs render as real characters (or the placeholder), Y-sorted + depth-scaled like the
   player; appearance / dialogue / voice / vision / routine are in the NPC modal.
 
+### Audio
+
+The scene's looping **ambient** bed (M9). Pick a sound from the **library** (Sounds tab —
+upload there first) + set its **vol**; an optional **when** gates it — while the Condition
+fails (or no ambient is set), the **document default** ambient plays (Project tab → Audio).
+Ambient swaps seamlessly when you move between scenes. _(SFX on interactions are the
+`playSound` effect; footsteps + the default ambient are global, Project tab.)_
+
 ### Items · _N_ and Recipes · _N_ (global)
 
 These two sections are **document-level** — they apply to the whole game, not the
@@ -330,6 +338,29 @@ The in-game pointer changes by what it's over: **walk** (over the walkable area)
 sky, walls, outside any area). Upload an icon per context (SVG/PNG), or leave it
 for the emoji fallback (👣 / ✋ / ⚙️ / 🚪 / 👁 / ↖️). The game has **no native
 cursor**; over the game UI the normal pointer returns.
+
+### Sounds (global library)
+
+Upload audio clips **once** here (stored as data-URLs in the document) and reference them
+by name everywhere — ambient, footstep, the `playSound` effect, NPC voice, inspect audio,
+pickup / transition SFX. **+ Sound** uploads; edit the **name**; **Test** plays it; **✕**
+removes it. Anywhere a sound is used you pick from this list (no re-uploading, no
+duplication). The **built-in procedural sounds** (Ambient drone, Pickup blip, Scene
+transition, Footstep) are seeded here too — rename or **✕** them, or upload replacements.
+_(Older documents with inline sounds are migrated into this library automatically.)_
+
+### Audio (global)
+
+Document-wide sound bindings (Project tab → Audio, M9):
+
+- **default ambient** — the looping bed played in any scene without its own **ambient**
+  (Scene tab). Pick from the library + volume.
+- **footstep** — played in a cadence while the **player walks**; uncheck **footsteps while
+  walking** to silence them.
+- **pickup SFX** / **transition SFX** — played when an item is picked up / the scene
+  changes. All four default to the built-in procedural sounds (pick another to replace).
+
+_(Per-NPC footsteps + per-animation sounds + reactive ambient `when` are follow-ups.)_
 
 ### Transition (global)
 

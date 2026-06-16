@@ -39,6 +39,7 @@ import type {
   SeqStep,
   Sequence,
   SequenceId,
+  SoundConfig,
   TransitionConfig,
   ViewDescriptor,
   VisionConfig,
@@ -49,6 +50,14 @@ import type {
 export interface Size {
   width: number
   height: number
+}
+
+/** Document-level audio defaults threaded to each scene (M9): the default ambient bed +
+ *  the footstep sound / off switch. A scene's own `ambient` overrides the bed. */
+export interface AudioConfig {
+  ambient?: SoundConfig
+  footstep?: SoundConfig
+  footstepsOff?: boolean
 }
 
 /** The slice of the story store the engine needs: read state + react to it. */
@@ -215,6 +224,7 @@ export async function mountScene(
   dialogs: Record<DialogId, Dialog> = {},
   npcHome: Record<NpcId, SceneId> = {},
   sequences: Record<SequenceId, Sequence> = {},
+  audio: AudioConfig = {},
 ): Promise<Scene> {
   // Design space vs viewport: the scene is authored in a fixed design space
   // (`scene.width` × `referenceHeight` px). The world Container holds it; the camera
@@ -645,7 +655,7 @@ export async function mountScene(
           if (r.text) store.getState().say(r.text)
           if (r.audio) {
             const audio = r.audio
-            void import('../audio/audio').then((m) => m.playClip(audio))
+            void import('../audio/audio').then((m) => m.playSoundById(audio))
           }
         }
       })
@@ -792,7 +802,7 @@ export async function mountScene(
       character.setTarget(local.x, local.y, () => {
         if (text) store.getState().say(text)
         // Dynamic import keeps audio out of the editor preview's module graph.
-        if (audio) void import('../audio/audio').then((m) => m.playClip(audio))
+        if (audio) void import('../audio/audio').then((m) => m.playSoundById(audio))
       })
     } else if (hit) {
       const effects = effectsFor(hit)
@@ -803,12 +813,26 @@ export async function mountScene(
   }
   app.stage.on('pointertap', onTap)
 
+  // M9 audio: this scene's ambient bed (its own `ambient` if its `when` passes, else the
+  // document default) + footsteps while the player walks. The dynamic import keeps audio
+  // out of the editor preview's module graph; `audioMod` then drives footsteps per-frame.
+  let audioMod: typeof import('../audio/audio') | null = null
+  void import('../audio/audio').then((m) => {
+    if (torn) return
+    audioMod = m
+    const a = scene.ambient
+    const ambient =
+      a && (!a.when || checkCondition(store.getState(), a.when)) ? a : audio.ambient
+    m.applySceneAudio({ ambient, footstep: audio.footstep, footstepsOff: audio.footstepsOff })
+  })
+
   const onTick = (ticker: Ticker) => {
     character.update(ticker.deltaMS)
     for (const n of npcs) n.character.update(ticker.deltaMS)
     updateCamera(ticker.deltaMS)
     checkTriggers()
     checkVision()
+    audioMod?.setFootstepsMoving(character.isMoving())
   }
   app.ticker.add(onTick)
 
@@ -823,6 +847,7 @@ export async function mountScene(
       if (torn) return
       torn = true
       sceneHit.kindAt = null
+      audioMod?.setFootstepsMoving(false) // stop footsteps; ambient is swapped by the next mount
       // Close a conversation / cutscene tied to this scene (e.g. a `goTo` swapped scenes).
       if (dialogueStore.getState().active) dialogueStore.getState().end()
       if (sequenceStore.getState().active) sequenceStore.getState().end()
@@ -1004,6 +1029,7 @@ export function createSceneHost(
   cast: Record<NpcId, NpcDef> = {},
   dialogs: Record<DialogId, Dialog> = {},
   sequences: Record<SequenceId, Sequence> = {},
+  audio: AudioConfig = {},
 ): SceneHost {
   let current: Scene | undefined
   let destroyed = false
@@ -1122,6 +1148,7 @@ export function createSceneHost(
       dialogs,
       npcHome,
       sequences,
+      audio,
     )
     clearTimeout(spinTimer)
     spinner.visible = false
@@ -1156,6 +1183,8 @@ export function createSceneHost(
       routines.destroy()
       current?.destroy()
       current = undefined
+      // Stop the ambient bed (no next scene to swap it) when the world tears down.
+      void import('../audio/audio').then((m) => m.setAmbient(null))
       spinner.destroy()
       fade.destroy({ children: true })
     },

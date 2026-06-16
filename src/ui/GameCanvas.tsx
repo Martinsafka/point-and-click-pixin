@@ -49,6 +49,11 @@ export function GameCanvas() {
         gameDoc.npcs,
         gameDoc.dialogs,
         gameDoc.sequences,
+        {
+          ambient: gameDoc.ambient,
+          footstep: gameDoc.footstep,
+          footstepsOff: gameDoc.footstepsOff,
+        },
       )
     })()
 

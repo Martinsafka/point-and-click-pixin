@@ -1,9 +1,9 @@
-import { type ChangeEvent } from 'react'
 import { editorStore } from './editor-store'
 import type { InteractableData, ItemDef, ItemId, SceneId } from '../data/schema'
 import { EffectList } from './EffectList'
 import { ConditionEditor } from './ConditionEditor'
 import { UsesList } from './UsesList'
+import { SoundSelect } from './SoundSelect'
 import { actionNames, actorIds } from './effect-options'
 
 interface Props {
@@ -38,15 +38,6 @@ export function InteractableForm({
   const points = interactable.hitArea.length / 2
   const isInspect = interactable.kind === 'inspect'
   const isTrigger = interactable.kind === 'trigger'
-
-  const onAudio = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => s().setInteractableAudio(sceneId, index, String(reader.result))
-    reader.readAsDataURL(file)
-  }
 
   return (
     <div className="intr-form">
@@ -103,19 +94,10 @@ export function InteractableForm({
           </label>
           <div className="intr-form__field">
             <span>audio</span>
-            <label className="editor__import">
-              {interactable.audio ? 'Change' : '+ Audio'}
-              <input type="file" accept="audio/*" hidden onChange={onAudio} />
-            </label>
-            {interactable.audio && (
-              <button
-                type="button"
-                className="logic__del"
-                onClick={() => s().setInteractableAudio(sceneId, index, undefined)}
-              >
-                ✕
-              </button>
-            )}
+            <SoundSelect
+              value={interactable.audio}
+              onChange={(audio) => s().setInteractableAudio(sceneId, index, audio)}
+            />
           </div>
         </>
       )}

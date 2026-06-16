@@ -24,6 +24,8 @@ import type {
   SceneId,
   SeqStep,
   SequenceId,
+  SoundConfig,
+  SoundId,
   TransitionConfig,
   UseRule,
   ViewDescriptor,
@@ -138,6 +140,17 @@ interface EditorStore {
   setItemExamine(id: ItemId, examine: string): void
   setItemIcon(id: ItemId, icon: string | undefined): void
   setCursorIcon(kind: CursorKind, icon: string | undefined): void
+  // Audio (M9) — document defaults + per-scene ambient. No `revision` bump (not visual).
+  setSceneAmbient(id: SceneId, ambient: (SoundConfig & { when?: Condition }) | undefined): void
+  setDocAmbient(ambient: SoundConfig | undefined): void
+  setDocFootstep(footstep: SoundConfig | undefined): void
+  setFootstepsOff(off: boolean): void
+  setPickupSound(id: SoundId | undefined): void
+  setTransitionSound(id: SoundId | undefined): void
+  // Sound library (M9 9b) — upload once, reference by id everywhere.
+  addSound(src: string): void
+  removeSound(id: SoundId): void
+  setSoundName(id: SoundId, name: string): void
   // Player character (M5) — bumps `revision` so the preview re-mounts the sprite.
   createPlayer(): void
   removePlayer(): void
@@ -613,6 +626,27 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       patchDoc({ items: { ...items, [id]: { ...items[id], icon } } })
     },
     setCursorIcon: (kind, icon) => patchDoc({ cursors: { ...get().doc.cursors, [kind]: icon } }),
+    setSceneAmbient: (id, ambient) => patchScene(id, { ambient }, false),
+    setDocAmbient: (ambient) => patchDoc({ ambient }),
+    setDocFootstep: (footstep) => patchDoc({ footstep }),
+    setFootstepsOff: (off) => patchDoc({ footstepsOff: off || undefined }),
+    setPickupSound: (id) => patchDoc({ pickupSound: id }),
+    setTransitionSound: (id) => patchDoc({ transitionSound: id }),
+    addSound: (src) => {
+      const sounds = get().doc.sounds ?? {}
+      const id = uniqueKey(sounds, 'sound')
+      patchDoc({ sounds: { ...sounds, [id]: { id, name: id, src } } })
+    },
+    removeSound: (id) => {
+      const sounds = { ...(get().doc.sounds ?? {}) }
+      delete sounds[id]
+      patchDoc({ sounds })
+    },
+    setSoundName: (id, name) => {
+      const sounds = get().doc.sounds ?? {}
+      if (!sounds[id]) return
+      patchDoc({ sounds: { ...sounds, [id]: { ...sounds[id], name } } })
+    },
     setTransition: (patch) => patchDoc({ transition: { ...get().doc.transition, ...patch } }),
     createPlayer: () => {
       const { doc, revision } = get()

@@ -77,6 +77,23 @@ export interface ViewDescriptor {
   clips: Record<string, AnimClip>
 }
 
+export type SoundId = string
+
+/** One clip in the global sound library (`GameDoc.sounds`): uploaded once, referenced by
+ *  id everywhere (ambient, footstep, `playSound`, voice, inspect). `src` is a URL / data-URL. */
+export interface SoundAsset {
+  id: SoundId
+  name: string
+  src: string
+}
+
+/** A sound **reference** + an optional volume (0..1). `sound` is a `SoundId` into the
+ *  library — never an inline clip; upload it in the Sounds tab first. */
+export interface SoundConfig {
+  sound: SoundId
+  volume?: number
+}
+
 export interface ItemDef {
   id: ItemId
   name: string
@@ -470,6 +487,9 @@ export interface SceneData {
   /** Obstacles cut out of the walkable area (polygons as design-space fractions). */
   holes?: Polygon[]
   interactables: InteractableData[]
+  /** A looping **ambient** sound while this scene is shown (gated by `when`); overrides
+   *  the document default (`GameDoc.ambient`). M9 audio. */
+  ambient?: SoundConfig & { when?: Condition }
   /** Effects run once when the scene is entered (mounted), gated by their own logic —
    *  e.g. a scene-entry cutscene (`startSequence`) or setting a "visited here" flag. */
   onEnter?: Effect[]
@@ -521,10 +541,24 @@ export interface GameDoc {
   dialogs?: Record<DialogId, Dialog>
   /** The reusable cutscene library (id → sequence); started by `startSequence`. */
   sequences?: Record<SequenceId, Sequence>
+  /** The global **sound library** (id → clip); every sound field references one by id. */
+  sounds?: Record<SoundId, SoundAsset>
   /** The game's vertical design resolution in px (default 1080). Every scene is
    *  this tall; the viewport height maps onto it with one uniform scale, so art and
    *  characters keep a consistent size across devices. Scene `width` is in these px. */
   referenceHeight?: number
   /** Scene-swap transition (wash colour / art / minimum hold; default black). */
   transition?: TransitionConfig
+  /** Default looping **ambient** sound (a scene's own `ambient` overrides it); absent →
+   *  a built-in procedural drone. M9 audio. */
+  ambient?: SoundConfig
+  /** The **footstep** sound played in a cadence while the player walks; absent → a
+   *  built-in procedural step. M9 audio. */
+  footstep?: SoundConfig
+  /** Disable footsteps entirely (else they default on, procedural or `footstep`). */
+  footstepsOff?: boolean
+  /** SFX (library `SoundId`) played when an item is picked up; absent → the built-in. */
+  pickupSound?: SoundId
+  /** SFX (library `SoundId`) played on a scene change; absent → the built-in. */
+  transitionSound?: SoundId
 }

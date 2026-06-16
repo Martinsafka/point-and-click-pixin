@@ -1,5 +1,6 @@
 import type { Effect, ItemDef, ItemId, SceneId } from '../data/schema'
 import { editorStore } from './editor-store'
+import { SoundSelect } from './SoundSelect'
 
 /** Item picker reused across the logic editors (effects, conditions, uses). */
 export function ItemSelect({
@@ -212,22 +213,10 @@ function EffectFields({
       )
     case 'playSound':
       return (
-        <label className="editor__import">
-          {effect.sound ? 'sound ✓' : '+ Sound'}
-          <input
-            type="file"
-            accept="audio/*"
-            hidden
-            onChange={(ev) => {
-              const file = ev.target.files?.[0]
-              ev.target.value = ''
-              if (!file) return
-              const reader = new FileReader()
-              reader.onload = () => onChange({ ...effect, sound: String(reader.result) })
-              reader.readAsDataURL(file)
-            }}
-          />
-        </label>
+        <SoundSelect
+          value={effect.sound}
+          onChange={(sound) => onChange({ ...effect, sound: sound ?? '' })}
+        />
       )
     case 'playAnim':
       return (

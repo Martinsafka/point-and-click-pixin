@@ -1,10 +1,10 @@
-import { type ChangeEvent } from 'react'
 import { editorStore } from './editor-store'
 import { EditorModal } from './EditorModal'
 import { ConditionEditor } from './ConditionEditor'
 import { EffectList } from './EffectList'
 import { CharacterEditor } from './CharacterEditor'
 import { RoutineEditor } from './RoutineEditor'
+import { SoundSelect } from './SoundSelect'
 import { actionNames, actorIds } from './effect-options'
 import { placeholderView } from '../entities/placeholder-atlas'
 import { previewVoice } from '../audio/voice'
@@ -134,26 +134,6 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
     (doc.scenes[sid].npcs ?? []).some((p) => p.npc === npcId),
   )
 
-  const onAudio = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () =>
-      s().patchNpcDef(npcId, { inspect: { ...npc.inspect, audio: String(reader.result) } })
-    reader.readAsDataURL(file)
-  }
-
-  const onVoiceSound = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () =>
-      s().patchNpcDef(npcId, { voice: trimVoice({ ...npc.voice, sound: String(reader.result) }) })
-    reader.readAsDataURL(file)
-  }
-
   return (
     <EditorModal title={`NPC · ${npc.name ?? npc.id}`} onClose={onClose}>
       {placedScenes.length > 1 && (
@@ -215,21 +195,12 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
       </div>
       <div className="intr-form__field">
         <span>inspect audio</span>
-        <label className="editor__import">
-          {npc.inspect?.audio ? 'Change' : '+ Audio'}
-          <input type="file" accept="audio/*" hidden onChange={onAudio} />
-        </label>
-        {npc.inspect?.audio && (
-          <button
-            type="button"
-            className="logic__del"
-            onClick={() =>
-              s().patchNpcDef(npcId, { inspect: trimInspect({ ...npc.inspect, audio: undefined }) })
-            }
-          >
-            ✕
-          </button>
-        )}
+        <SoundSelect
+          value={npc.inspect?.audio}
+          onChange={(audio) =>
+            s().patchNpcDef(npcId, { inspect: trimInspect({ ...npc.inspect, audio }) })
+          }
+        />
       </div>
 
       <div className="intr-form__field">
@@ -247,21 +218,13 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
             })
           }
         />
-        <label className="editor__import">
-          {npc.voice?.sound ? 'blip ✓' : '+ Blip'}
-          <input type="file" accept="audio/*" hidden onChange={onVoiceSound} />
-        </label>
-        {npc.voice?.sound && (
-          <button
-            type="button"
-            className="logic__del"
-            onClick={() =>
-              s().patchNpcDef(npcId, { voice: trimVoice({ ...npc.voice, sound: undefined }) })
-            }
-          >
-            ✕
-          </button>
-        )}
+        <span>blip</span>
+        <SoundSelect
+          value={npc.voice?.sound}
+          onChange={(sound) =>
+            s().patchNpcDef(npcId, { voice: trimVoice({ ...npc.voice, sound }) })
+          }
+        />
         <button type="button" onClick={() => previewVoice(npc.voice ?? undefined)}>
           Test
         </button>

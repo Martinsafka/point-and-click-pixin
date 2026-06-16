@@ -1,5 +1,5 @@
 import type { VoiceConfig } from '../data/schema'
-import { isMuted, playClip } from './audio'
+import { isMuted, playSoundById } from './audio'
 
 /**
  * Dialogue "voice": short blips played as a line types out (Undertale-style). The
@@ -16,7 +16,7 @@ let lastBlip = 0
 function emit(voice?: VoiceConfig): void {
   if (isMuted()) return
   if (voice?.sound) {
-    playClip(voice.sound)
+    playSoundById(voice.sound)
     return
   }
   try {

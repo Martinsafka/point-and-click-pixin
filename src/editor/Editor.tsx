@@ -27,8 +27,13 @@ import { NpcOverlay } from './NpcOverlay'
 import { NpcCast } from './NpcCast'
 import { DialogList } from './DialogList'
 import { SequenceList } from './SequenceList'
+import { SoundField } from './SoundField'
+import { SoundList } from './SoundList'
+import { SoundSelect } from './SoundSelect'
+import { ConditionEditor } from './ConditionEditor'
+import { setSoundLibrary } from '../audio/audio'
 
-const TABS = ['scene', 'items', 'characters', 'dialogs', 'sequences', 'project'] as const
+const TABS = ['scene', 'items', 'characters', 'dialogs', 'sequences', 'sounds', 'project'] as const
 type Tab = (typeof TABS)[number]
 const TAB_LABEL: Record<Tab, string> = {
   scene: 'Scene',
@@ -36,6 +41,7 @@ const TAB_LABEL: Record<Tab, string> = {
   characters: 'Characters',
   dialogs: 'Dialogs',
   sequences: 'Cutscenes',
+  sounds: 'Sounds',
   project: 'Project',
 }
 
@@ -145,6 +151,14 @@ export function Editor() {
   }
 
   // The preview "stage" is a box of the scene's aspect, fit inside the preview pane
+  // Keep the audio resolver pointed at the *working* document's sound library, so the
+  // editor's Test buttons (voice preview) resolve sounds added but not yet in the game.
+  useEffect(() => {
+    const sync = () => setSoundLibrary(editorStore.getState().doc.sounds)
+    sync()
+    return editorStore.subscribe(sync)
+  }, [])
+
   // and centred — so the canvas and the DOM overlays always share one coordinate
   // box (areas can't drift when the panel is resized).
   useEffect(() => {
@@ -480,6 +494,43 @@ export function Editor() {
                 )}
               </Section>
 
+              <Section title="Audio">
+                {scene && (
+                  <>
+                    <SoundField
+                      label="ambient"
+                      value={scene.ambient}
+                      onChange={(v) =>
+                        editorStore
+                          .getState()
+                          .setSceneAmbient(
+                            selectedId,
+                            v ? { ...v, when: scene.ambient?.when } : undefined,
+                          )
+                      }
+                    />
+                    {scene.ambient && (
+                      <div className="intr-form__field intr-form__field--col">
+                        <span>ambient when (else the document default plays)</span>
+                        <ConditionEditor
+                          condition={scene.ambient.when}
+                          onChange={(when) =>
+                            editorStore
+                              .getState()
+                              .setSceneAmbient(selectedId, { ...scene.ambient!, when })
+                          }
+                          items={doc.items}
+                          sceneIds={sceneIds}
+                        />
+                      </div>
+                    )}
+                    <p className="intr-form__note">
+                      No ambient → the document default (Project tab) plays.
+                    </p>
+                  </>
+                )}
+              </Section>
+
               {draw && (
                 <p className="editor__hint">
                   {draw === 'npc'
@@ -533,6 +584,12 @@ export function Editor() {
             </Section>
           )}
 
+          {tab === 'sounds' && (
+            <Section title={`Sounds · ${Object.keys(doc.sounds ?? {}).length}`}>
+              <SoundList sounds={doc.sounds} />
+            </Section>
+          )}
+
           {tab === 'project' && (
             <>
               <Section title="Display">
@@ -560,6 +617,44 @@ export function Editor() {
               </Section>
               <Section title="Cursors">
                 <CursorEditor cursors={doc.cursors} />
+              </Section>
+              <Section title="Audio">
+                <SoundField
+                  label="default ambient"
+                  value={doc.ambient}
+                  onChange={(v) => editorStore.getState().setDocAmbient(v)}
+                />
+                <SoundField
+                  label="footstep"
+                  value={doc.footstep}
+                  defaultVolume={0.5}
+                  onChange={(v) => editorStore.getState().setDocFootstep(v)}
+                />
+                <label className="logic__chk">
+                  <input
+                    type="checkbox"
+                    checked={!doc.footstepsOff}
+                    onChange={(e) => editorStore.getState().setFootstepsOff(!e.target.checked)}
+                  />
+                  footsteps while walking
+                </label>
+                <div className="intr-form__field">
+                  <span>pickup SFX</span>
+                  <SoundSelect
+                    value={doc.pickupSound}
+                    onChange={(id) => editorStore.getState().setPickupSound(id)}
+                  />
+                </div>
+                <div className="intr-form__field">
+                  <span>transition SFX</span>
+                  <SoundSelect
+                    value={doc.transitionSound}
+                    onChange={(id) => editorStore.getState().setTransitionSound(id)}
+                  />
+                </div>
+                <p className="intr-form__note">
+                  Empty → a built-in procedural sound. Upload your own in the Sounds tab.
+                </p>
               </Section>
               <Section title="Transition">
                 <TransitionEditor transition={doc.transition} />

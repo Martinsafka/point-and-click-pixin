@@ -2,6 +2,9 @@ import type { GameDoc } from './schema'
 import { streetScene } from '../scenes/street'
 import { roomScene } from '../scenes/room'
 import { loadDocDraft } from './doc-draft'
+import { migrateSounds } from './migrate-sounds'
+import { seedBuiltinSounds } from './seed-sounds'
+import { BUILTIN_SOUND_IDS } from '../audio/builtin-sounds'
 
 /**
  * The built-in demo (street + room), assembled in code. Importing the scene
@@ -23,6 +26,11 @@ const demoGameDoc: GameDoc = {
   },
   initialFlags: {},
   recipes: [{ a: 'gear', b: 'handle', output: 'crank' }],
+  // Reference the built-in procedural sounds (seeded into the library at load).
+  ambient: { sound: BUILTIN_SOUND_IDS.ambient },
+  footstep: { sound: BUILTIN_SOUND_IDS.footstep },
+  pickupSound: BUILTIN_SOUND_IDS.pickup,
+  transitionSound: BUILTIN_SOUND_IDS.transition,
 }
 
 /**
@@ -44,4 +52,4 @@ export const bakedGameDoc: GameDoc = publishedDoc ?? demoGameDoc
  * (IndexedDB), so this module top-level `await`s it; importers (stores, App) resolve
  * once the draft is read. Top-level await is supported by the `esnext` build target.
  */
-export const gameDoc: GameDoc = (await loadDocDraft()) ?? bakedGameDoc
+export const gameDoc: GameDoc = seedBuiltinSounds(migrateSounds((await loadDocDraft()) ?? bakedGameDoc))
