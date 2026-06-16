@@ -20,7 +20,7 @@ import { depthScaleAt } from '../systems/depth'
 import { buildNavigation } from '../systems/navmesh'
 import { createAtmosphere } from './atmosphere'
 import { createWeatherSystem, type WeatherSystem } from './weather'
-import { createLighting } from './lighting'
+import { createLighting, type Lighting } from './lighting'
 import { routineNode, createRoutineRunner, routineArrival } from '../systems/routine'
 import { facingToAngle } from '../systems/movement'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
@@ -945,6 +945,19 @@ export interface PreviewOptions {
   onLayerMove?: (index: number, xFrac: number, yFrac: number) => void
 }
 
+/** Document-level atmosphere config the editor preview needs (M10 ME.0). */
+export interface PreviewAtmosphere {
+  ambientLight?: AmbientLight
+  playerLight?: PlayerLight
+  weatherPresets?: Record<WeatherId, WeatherPreset>
+}
+
+/** A mounted editor preview — like a Scene, but its **atmosphere** (weather + lighting) can
+ *  be rebuilt live as the author edits, without re-mounting the whole scene. */
+export interface PreviewScene extends Scene {
+  refreshAtmosphere(scene: SceneData, atmo: PreviewAtmosphere): void
+}
+
 /**
  * Make an image layer draggable in the editor preview: drag to move it, then
  * commit the new fractional position on release. Only the dragged sprite moves
@@ -1001,7 +1014,8 @@ export async function mountPreview(
   opts: PreviewOptions = {},
   playerView: ViewDescriptor = placeholderView,
   referenceHeight: number = DEFAULT_REFERENCE_HEIGHT,
-): Promise<Scene> {
+  atmo: PreviewAtmosphere = {},
+): Promise<PreviewScene> {
   const design: Size = designSize(scene, referenceHeight)
   const depthScale = resolveDepthScale(scene.depth, design.height)
   const state: StoryState = {
@@ -1067,16 +1081,58 @@ export async function mountPreview(
   const ro = new ResizeObserver(refit)
   ro.observe(app.canvas)
 
+  // M10 ME.0 — live atmosphere in the preview: the same weather + lighting the game renders,
+  // read from the editor doc, so the author *sees* it while tuning (rebuilt on edits, no
+  // re-mount). The preview's "camera" is the `root` fit transform (no scroll/pillarbox).
+  const atmosphere = createAtmosphere(root, app.stage)
+  const previewState: StoryState = state
+  const previewCamera = { x: 0, y: 0, scale: root.scale.x }
+  let weatherSystem: WeatherSystem | null = null
+  let lighting: Lighting | null = null
+  const buildAtmo = (sc: SceneData, a: PreviewAtmosphere) => {
+    weatherSystem?.destroy()
+    weatherSystem = null
+    const wid = sc.weather?.find((w) => !w.when || checkCondition(previewState, w.when))?.preset
+    const preset = wid ? a.weatherPresets?.[wid] : undefined
+    if (preset) weatherSystem = createWeatherSystem(atmosphere.layers.weather, preset, app)
+    lighting?.destroy()
+    lighting = createLighting(
+      atmosphere.layers.lighting,
+      design,
+      app,
+      {
+        ambient: sc.ambientLight ?? a.ambientLight ?? { color: '#ffffff', intensity: 1 },
+        lights: sc.lights ?? [],
+        darkAreas: sc.darkAreas ?? [],
+        playerLight: a.playerLight,
+      },
+      previewCamera,
+    )
+  }
+  buildAtmo(scene, atmo)
+  const onTick = (ticker: Ticker) => {
+    previewCamera.scale = root.scale.x
+    atmosphere.update(ticker.deltaMS)
+    weatherSystem?.update(ticker.deltaMS)
+    lighting?.update(previewState, feetX, feetY, 'S')
+  }
+  app.ticker.add(onTick)
+
   let torn = false
   return {
     destroy() {
       if (torn) return
       torn = true
       ro.disconnect()
+      app.ticker.remove(onTick)
+      weatherSystem?.destroy()
+      lighting?.destroy()
+      atmosphere.destroy()
       app.stage.sortableChildren = false
       view.destroy()
       root.destroy({ children: true })
     },
+    refreshAtmosphere: buildAtmo,
   }
 }
 

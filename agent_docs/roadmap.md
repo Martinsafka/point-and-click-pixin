@@ -414,10 +414,12 @@ the separated path stays a fallback until parity), so every step is small + reve
 dev-only for editor functionality during migration (doc/save wiring + camera-mapped
 overlays are the sensitive bits).
 
-- [ ] **ME.0 — Live atmosphere in the *current* preview** _(no risk; unblocks the immediate
-      need; independent of the rest)_ — give `mountPreview` a ticker + `createAtmosphere` /
-      `createLighting` / weather read from the editor doc, rebuilt reactively on slider
-      changes, so the dev **sees lighting / weather** while authoring.
+- [x] **ME.0 — Live atmosphere in the *current* preview** — `mountPreview` got a ticker +
+      `createAtmosphere` / `createLighting` / weather read from the editor doc; `ScenePreview`
+      subscribes to the store and **rebuilds the atmosphere live** (hash-diffed) on edits, so
+      the dev **sees lighting / weather** while authoring. Lighting's camera is parameterised
+      (the preview passes its fit transform). _(Gated lights need their `when` met — ME.5
+      will add flag-setting in the preview.)_
 - [ ] **ME.1 — Unify the document + persistence** _(most sensitive; do first, in isolation)_
       — one source of truth the editor mutates and the world reads (drop the separate
       `editorStore` clone bridged by the draft). Preserve Test / Discard, **load-save**,

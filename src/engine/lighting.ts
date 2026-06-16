@@ -85,6 +85,9 @@ export function createLighting(
     darkAreas: DarkArea[]
     playerLight?: PlayerLight
   },
+  /** World→screen transform the scene-positioned lights track. Defaults to the game camera;
+   *  the editor preview passes its own fit transform (M10 ME.0). */
+  camera: { x: number; y: number; scale: number } = cameraOffset,
 ): Lighting | null {
   const active =
     cfg.ambient.intensity < 0.999 || cfg.lights.length > 0 || cfg.darkAreas.length > 0
@@ -191,8 +194,8 @@ export function createLighting(
   layer.addChild(glowWorld)
 
   const syncCam = (g: Container) => {
-    g.position.set(cameraOffset.x, cameraOffset.y)
-    g.scale.set(cameraOffset.scale)
+    g.position.set(camera.x, camera.y)
+    g.scale.set(camera.scale)
   }
 
   return {
