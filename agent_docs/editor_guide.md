@@ -67,6 +67,16 @@ modes you toggle with the button in its corner:
 
 In both modes the lighting / weather **update live** as you edit (no reload).
 
+**Floating windows — the launcher bar (top-left of the preview).** Alongside the fixed
+panel you can pop the **global / document** sections out as **floating, draggable windows**
+over the preview: click a launcher entry (Items, Characters, Dialogs, Cutscenes, Sounds,
+Weather, Lighting, Document) to open its window, drag it by the title bar, ✕ to close, and
+keep **several open at once** (click one to bring it to the front). They host the **same
+forms** as the matching panel tabs — it's the same editor, just arranged around the live
+scene. (The scene-specific tools — Walkable / Holes / Hit-areas / Layers / NPCs / light
+placement — stay in the left panel for now; they move into windows as their on-scene
+drawing migrates to the live view.)
+
 ---
 
 ## Panels

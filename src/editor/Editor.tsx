@@ -36,6 +36,7 @@ import { SceneLighting } from './SceneLighting'
 import { LightingDefaults } from './LightingDefaults'
 import { LightOverlay } from './LightOverlay'
 import { ConditionEditor } from './ConditionEditor'
+import { FloatingEditor, type FloatPanel } from './FloatingEditor'
 import { setSoundLibrary } from '../audio/audio'
 
 const TABS = [
@@ -305,6 +306,108 @@ export function Editor() {
   const pointCount = scene ? scene.walkable.length / 2 : 0
   const selInteractable =
     selectedInteractable !== null ? scene?.interactables[selectedInteractable] : undefined
+
+  // ME.2 — the global / document sections also available as floating windows over the live
+  // world (launcher top-left of the preview). They reuse the same standalone forms the fixed
+  // panel tabs render, so the two coexist during the migration. (Scene-coupled overlays stay
+  // in the panel until ME.4 moves them onto the live camera.)
+  const floatPanels: FloatPanel[] = [
+    {
+      id: 'items',
+      label: 'Items',
+      render: () => (
+        <>
+          <Section title={`Items · ${Object.keys(doc.items).length}`}>
+            <ItemCatalogue items={doc.items} />
+          </Section>
+          <Section title={`Recipes · ${(doc.recipes ?? []).length}`}>
+            <RecipeTable recipes={doc.recipes ?? []} items={doc.items} />
+          </Section>
+        </>
+      ),
+    },
+    {
+      id: 'characters',
+      label: 'Characters',
+      render: () => (
+        <>
+          <Section title="Player">
+            <CharacterEditor
+              view={doc.player}
+              onCreate={() => editorStore.getState().createPlayer()}
+              onChange={(patch) => editorStore.getState().updatePlayer(patch)}
+              onRemove={() => editorStore.getState().removePlayer()}
+            />
+          </Section>
+          <Section title={`NPCs · ${Object.keys(doc.npcs ?? {}).length}`}>
+            <NpcCast npcs={doc.npcs} />
+          </Section>
+        </>
+      ),
+    },
+    {
+      id: 'dialogs',
+      label: 'Dialogs',
+      render: () => (
+        <Section title={`Dialogs · ${Object.keys(doc.dialogs ?? {}).length}`}>
+          <DialogList dialogs={doc.dialogs} />
+        </Section>
+      ),
+    },
+    {
+      id: 'sequences',
+      label: 'Cutscenes',
+      render: () => (
+        <Section title={`Cutscenes · ${Object.keys(doc.sequences ?? {}).length}`}>
+          <SequenceList sequences={doc.sequences} />
+        </Section>
+      ),
+    },
+    {
+      id: 'sounds',
+      label: 'Sounds',
+      render: () => (
+        <Section title={`Sounds · ${Object.keys(doc.sounds ?? {}).length}`}>
+          <SoundList sounds={doc.sounds} />
+        </Section>
+      ),
+    },
+    {
+      id: 'weather',
+      label: 'Weather',
+      render: () => (
+        <Section title={`Weather presets · ${Object.keys(doc.weatherPresets ?? {}).length}`}>
+          <WeatherList presets={doc.weatherPresets} />
+        </Section>
+      ),
+    },
+    {
+      id: 'lighting',
+      label: 'Lighting',
+      render: () => (
+        <Section title="Lighting">
+          <LightingDefaults doc={doc} />
+        </Section>
+      ),
+    },
+    {
+      id: 'document',
+      label: 'Document',
+      render: () => (
+        <Section title="Document">
+          <div className="editor__toolbar">
+            <button type="button" onClick={exportDoc}>
+              Export
+            </button>
+            <label className="editor__import">
+              Import
+              <input type="file" accept="application/json" hidden onChange={onImport} />
+            </label>
+          </div>
+        </Section>
+      ),
+    },
+  ]
 
   return (
     <div className="editor">
@@ -805,6 +908,7 @@ export function Editor() {
             />
           </div>
         )}
+        <FloatingEditor panels={floatPanels} />
       </main>
     </div>
   )

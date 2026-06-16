@@ -441,8 +441,16 @@ overlays are the sensitive bits).
       bar** (top-left) over the **live `createSceneHost` world**; each entry opens a
       **floating, draggable modal window** (✕ top-right) hosting that section's existing
       forms. **Multiple windows at once.** Edits mutate the unified doc; the game reacts
-      where it already does. (Reuse / generalise `EditorModal` for the draggable window
-      chrome; the current tabs become the launcher entries.)
+      where it already does.
+  - [x] **a** — floating-window chrome + launcher (`FloatingWindow` / `FloatingEditor`):
+        draggable windows (title-bar drag, ✕, click-to-raise, several open) and a launcher
+        bar over the preview, hosting the **standalone global sections** (Items / Characters /
+        Dialogs / Cutscenes / Sounds / Weather / Lighting / Document) — reusing the same forms
+        the fixed panel renders, so the two **coexist**.
+  - [ ] **b** — bring the **scene-coupled** sections (Walkable / Holes / Hit-areas / Layers /
+        NPCs / Lighting placement) into windows as their overlays move to the live camera (with
+        ME.4).
+  - [ ] **c** — once the launcher reaches parity, retire the fixed `editor__panel` (→ ME.6).
 - [ ] **ME.3 — Live-update the tunable systems** — lighting rebuilds on doc change (sliders
       live), ambient / colour live, weather already reactive; **structural** changes
       (add/remove layer) re-mount the current scene. Define a live-update-vs-re-mount policy
