@@ -67,22 +67,37 @@ export function playClip(src: string): void {
   howl.play()
 }
 
-// --- Ambient loop (per-scene, M9) -------------------------------------------
-let ambientHowl: Howl | null = null
-let ambientSrc: string | null = null
+// --- Ambient loops (channels, M9 + M10) -------------------------------------
+// One channel per concurrent looping bed: `'scene'` (the scene/doc ambient) + `'weather'`
+// (a weather preset's rain/wind loop), so they play together.
+interface AmbientChannel {
+  howl: Howl | null
+  src: string | null
+}
+const ambientChannels = new Map<string, AmbientChannel>()
 
-/** Switch the looping ambient bed. `null` stops it; the same src is a no-op (seamless
- *  across a scene swap). Starts only once audio is `unlocked` (a user gesture). */
-export function setAmbient(src: string | null, volume = 0.4): void {
-  if (src === ambientSrc) {
-    if (ambientHowl) ambientHowl.volume(volume)
+function ambientChannel(id: string): AmbientChannel {
+  let c = ambientChannels.get(id)
+  if (!c) {
+    c = { howl: null, src: null }
+    ambientChannels.set(id, c)
+  }
+  return c
+}
+
+/** Switch a looping ambient bed on its channel. `null` stops it; the same src is a no-op
+ *  (seamless across a scene swap). Starts only once audio is `unlocked` (a user gesture). */
+export function setAmbient(channel: string, src: string | null, volume = 0.4): void {
+  const c = ambientChannel(channel)
+  if (src === c.src) {
+    c.howl?.volume(volume)
     return
   }
-  ambientHowl?.stop()
-  ambientHowl?.unload()
-  ambientSrc = src
-  ambientHowl = src ? new Howl({ src: [src], format: formatFor(src), loop: true, volume }) : null
-  if (ambientHowl && unlocked) ambientHowl.play()
+  c.howl?.stop()
+  c.howl?.unload()
+  c.src = src
+  c.howl = src ? new Howl({ src: [src], format: formatFor(src), loop: true, volume }) : null
+  if (c.howl && unlocked) c.howl.play()
 }
 
 // --- Footsteps (a cadence while walking, M9) --------------------------------
@@ -149,7 +164,7 @@ export function applySceneAudio(opts: {
   footstep?: SoundConfig
   footstepsOff?: boolean
 }): void {
-  setAmbient(resolveSrc(opts.ambient?.sound) ?? ambientUri, opts.ambient?.volume ?? 0.4)
+  setAmbient('scene', resolveSrc(opts.ambient?.sound) ?? ambientUri, opts.ambient?.volume ?? 0.4)
   if (opts.footstepsOff) setFootstepSound('player', null)
   else
     setFootstepSound(
@@ -176,7 +191,7 @@ window.addEventListener(
   'pointerdown',
   () => {
     unlocked = true
-    if (ambientHowl && !ambientHowl.playing()) ambientHowl.play()
+    for (const c of ambientChannels.values()) if (c.howl && !c.howl.playing()) c.howl.play()
     for (const c of footChannels.values()) syncFootChannel(c)
   },
   { once: true },

@@ -70,7 +70,26 @@ function thump(freq: number, seconds: number, volume: number): string {
   return wavDataUri(s)
 }
 
+/** A soft hiss loop (low-passed white noise) — a procedural rain / wind bed. A short
+ *  crossfade across the seam keeps the loop click-free. */
+function hiss(seconds: number, volume: number): string {
+  const n = Math.floor(RATE * seconds)
+  const s = new Float32Array(n)
+  let last = 0
+  for (let i = 0; i < n; i += 1) {
+    last = last * 0.72 + (Math.random() * 2 - 1) * 0.28 // one-pole low-pass → softer hiss
+    s[i] = last * volume
+  }
+  const fade = Math.floor(RATE * 0.03)
+  for (let i = 0; i < fade; i += 1) {
+    const k = i / fade
+    s[i] = s[i] * k + s[n - fade + i] * (1 - k) // blend the tail into the head
+  }
+  return wavDataUri(s)
+}
+
 export const ambientUri = drone(1, [110, 165], 0.5)
 export const pickupUri = blip(784, 0.12, 0.4)
 export const transitionUri = blip(523, 0.22, 0.32)
 export const footstepUri = thump(120, 0.11, 0.5)
+export const rainUri = hiss(1.5, 0.5)

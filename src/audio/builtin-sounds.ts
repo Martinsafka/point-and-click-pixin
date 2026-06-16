@@ -1,5 +1,5 @@
 import type { SoundAsset, SoundId } from '../data/schema'
-import { ambientUri, footstepUri, pickupUri, transitionUri } from './sounds'
+import { ambientUri, footstepUri, pickupUri, rainUri, transitionUri } from './sounds'
 
 /**
  * The built-in **procedural** sounds, exposed as real library entries (M9 9b) so they
@@ -12,6 +12,7 @@ export const BUILTIN_SOUND_IDS = {
   pickup: 'sfx-pickup',
   transition: 'sfx-transition',
   footstep: 'sfx-footstep',
+  rain: 'sfx-rain',
 } as const
 
 export const BUILTIN_SOUNDS: Record<SoundId, SoundAsset> = {
@@ -31,4 +32,5 @@ export const BUILTIN_SOUNDS: Record<SoundId, SoundAsset> = {
     name: 'Footstep',
     src: footstepUri,
   },
+  [BUILTIN_SOUND_IDS.rain]: { id: BUILTIN_SOUND_IDS.rain, name: 'Rain loop', src: rainUri },
 }

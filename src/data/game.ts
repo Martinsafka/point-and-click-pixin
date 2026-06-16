@@ -4,6 +4,7 @@ import { roomScene } from '../scenes/room'
 import { loadDocDraft } from './doc-draft'
 import { migrateSounds } from './migrate-sounds'
 import { seedBuiltinSounds } from './seed-sounds'
+import { seedWeatherPresets } from './weather-presets'
 import { BUILTIN_SOUND_IDS } from '../audio/builtin-sounds'
 
 /**
@@ -52,4 +53,6 @@ export const bakedGameDoc: GameDoc = publishedDoc ?? demoGameDoc
  * (IndexedDB), so this module top-level `await`s it; importers (stores, App) resolve
  * once the draft is read. Top-level await is supported by the `esnext` build target.
  */
-export const gameDoc: GameDoc = seedBuiltinSounds(migrateSounds((await loadDocDraft()) ?? bakedGameDoc))
+export const gameDoc: GameDoc = seedWeatherPresets(
+  seedBuiltinSounds(migrateSounds((await loadDocDraft()) ?? bakedGameDoc)),
+)

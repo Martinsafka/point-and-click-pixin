@@ -236,6 +236,43 @@ export interface Sequence {
   steps: SeqStep[]
 }
 
+// --- Atmosphere: weather / particles (M10 10a) ------------------------------
+
+export type WeatherId = string
+
+/** Particle shape: a soft round dot (snow / dust) or a thin streak (rain). */
+export type WeatherShape = 'round' | 'streak'
+
+/**
+ * A **parametric** weather/particle preset (not per-weather code): all sliders. Lives in
+ * `GameDoc.weatherPresets`; a scene references it via `SceneData.weather` (gated by `when`).
+ * Pre-seeded rain / snow / dust are editable like any preset.
+ */
+export interface WeatherPreset {
+  id: WeatherId
+  name: string
+  /** Target particle count (capped by the quality budget). */
+  count: number
+  /** Particle colour (hex) + opacity. */
+  color: string
+  alpha: number
+  /** Particle size in px. */
+  size: number
+  shape: WeatherShape
+  /** Fall direction in degrees (90 = straight down; <90 leans right = wind). */
+  angle: number
+  /** Fall speed in px/sec. */
+  speed: number
+  /** Horizontal sway amplitude (px) + frequency (cycles/sec) — drift for snow / dust. */
+  sway: number
+  swayFreq: number
+  /** Blend: `add` makes snow / dust glow; `normal` for rain. */
+  blend: 'normal' | 'add'
+  /** A looping **ambient sound** (a library reference) played while this weather is active,
+   *  layered *over* the scene's ambient (e.g. a rain / wind loop). M10 10a. */
+  ambient?: SoundConfig
+}
+
 // --- Scene content ----------------------------------------------------------
 
 /**
@@ -496,6 +533,10 @@ export interface SceneData {
   /** A looping **ambient** sound while this scene is shown (gated by `when`); overrides
    *  the document default (`GameDoc.ambient`). M9 audio. */
   ambient?: SoundConfig & { when?: Condition }
+  /** Weather in this scene (M10 10a): a conditional list of presets — the **first** whose
+   *  `when` passes plays (recomputed reactively, so a story flag triggers / swaps weather).
+   *  `preset` is an id into `GameDoc.weatherPresets`. */
+  weather?: { preset: WeatherId; when?: Condition }[]
   /** Effects run once when the scene is entered (mounted), gated by their own logic —
    *  e.g. a scene-entry cutscene (`startSequence`) or setting a "visited here" flag. */
   onEnter?: Effect[]
@@ -549,6 +590,8 @@ export interface GameDoc {
   sequences?: Record<SequenceId, Sequence>
   /** The global **sound library** (id → clip); every sound field references one by id. */
   sounds?: Record<SoundId, SoundAsset>
+  /** The **weather preset** library (id → preset, M10 10a); scenes reference these. */
+  weatherPresets?: Record<WeatherId, WeatherPreset>
   /** The game's vertical design resolution in px (default 1080). Every scene is
    *  this tall; the viewport height maps onto it with one uniform scale, so art and
    *  characters keep a consistent size across devices. Scene `width` is in these px. */

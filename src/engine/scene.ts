@@ -18,6 +18,8 @@ import { placeholderView } from '../entities/placeholder-atlas'
 import { resolveDepthScale, designSize, DEFAULT_REFERENCE_HEIGHT } from '../data/scene-config'
 import { depthScaleAt } from '../systems/depth'
 import { buildNavigation } from '../systems/navmesh'
+import { createAtmosphere } from './atmosphere'
+import { createWeatherSystem, type WeatherSystem } from './weather'
 import { routineNode, createRoutineRunner, routineArrival } from '../systems/routine'
 import { facingToAngle } from '../systems/movement'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
@@ -44,6 +46,8 @@ import type {
   ViewDescriptor,
   VisionConfig,
   VoiceConfig,
+  WeatherId,
+  WeatherPreset,
 } from '../data/schema'
 
 /** Viewport size in CSS pixels. */
@@ -225,6 +229,7 @@ export async function mountScene(
   npcHome: Record<NpcId, SceneId> = {},
   sequences: Record<SequenceId, Sequence> = {},
   audio: AudioConfig = {},
+  weatherPresets: Record<WeatherId, WeatherPreset> = {},
 ): Promise<Scene> {
   // Design space vs viewport: the scene is authored in a fixed design space
   // (`scene.width` × `referenceHeight` px). The world Container holds it; the camera
@@ -246,6 +251,39 @@ export async function mountScene(
   const foreground = new Container()
   foreground.zIndex = 20
   world.addChild(background, interactive, foreground)
+
+  // M10 atmosphere/lighting compositing stack (weather / lighting / fog / polish render
+  // into its slots; subsystems register per-frame updaters, ticked below).
+  const atmosphere = createAtmosphere(world, app.stage)
+
+  // Audio module, dynamic-imported below (kept out of the editor preview's graph); declared
+  // here so the weather block can drive its `'weather'` ambient channel once loaded.
+  let audioMod: typeof import('../audio/audio') | null = null
+
+  // M10 10a weather: the active preset is the first `scene.weather` entry whose `when`
+  // passes — rebuilt reactively (a story flag triggers / swaps weather), ticked via the
+  // atmosphere update hook. A preset's `ambient` loops on the `'weather'` audio channel,
+  // layered over the scene's own ambient.
+  let weatherSystem: WeatherSystem | null = null
+  let weatherId: string | null = null
+  const activeWeatherId = (st: StoryState): string | null =>
+    scene.weather?.find((w) => !w.when || checkCondition(st, w.when))?.preset ?? null
+  const applyWeatherAmbient = (): void => {
+    const amb = (weatherId ? weatherPresets[weatherId] : undefined)?.ambient
+    audioMod?.setAmbient('weather', amb ? (audioMod.resolveSrc(amb.sound) ?? null) : null, amb?.volume ?? 0.4)
+  }
+  const syncWeather = (st: StoryState): void => {
+    const id = activeWeatherId(st)
+    if (id === weatherId) return
+    weatherId = id
+    weatherSystem?.destroy()
+    weatherSystem = null
+    const preset = id ? weatherPresets[id] : undefined
+    if (preset) weatherSystem = createWeatherSystem(atmosphere.layers.weather, preset, app)
+    applyWeatherAmbient()
+  }
+  syncWeather(store.getState())
+  atmosphere.onUpdate((dt) => weatherSystem?.update(dt))
 
   const bandFor = (band: SceneBand): Container =>
     band === 'background' ? background : band === 'foreground' ? foreground : interactive
@@ -281,6 +319,7 @@ export async function mountScene(
     const state = store.getState()
     for (const c of conditional) c.display.visible = c.show(state)
     for (const sw of pathSwitchers) sw(state)
+    syncWeather(state)
   }
   // Subscribe unconditionally — NPCs (below) may add conditional entries after this.
   const unsubscribeVisibility = store.subscribe(refreshVisibility)
@@ -816,7 +855,6 @@ export async function mountScene(
   // M9 audio: this scene's ambient bed (its own `ambient` if its `when` passes, else the
   // document default) + footsteps while the player walks. The dynamic import keeps audio
   // out of the editor preview's module graph; `audioMod` then drives footsteps per-frame.
-  let audioMod: typeof import('../audio/audio') | null = null
   // NPCs with their own footsteps (M9 9c) — each gets a footstep channel keyed by its id.
   const footstepNpcs = npcs.filter((n) => cast[n.id]?.footstep)
   void import('../audio/audio').then((m) => {
@@ -826,6 +864,7 @@ export async function mountScene(
     const ambient =
       a && (!a.when || checkCondition(store.getState(), a.when)) ? a : audio.ambient
     m.applySceneAudio({ ambient, footstep: audio.footstep, footstepsOff: audio.footstepsOff })
+    applyWeatherAmbient() // the active weather's loop (resolved now the module is ready)
     for (const n of footstepNpcs) {
       const fs = cast[n.id]?.footstep
       m.setFootstepSound(n.id, m.resolveSrc(fs?.sound) ?? null, fs?.volume ?? 0.5)
@@ -836,6 +875,7 @@ export async function mountScene(
     character.update(ticker.deltaMS)
     for (const n of npcs) n.character.update(ticker.deltaMS)
     updateCamera(ticker.deltaMS)
+    atmosphere.update(ticker.deltaMS)
     checkTriggers()
     checkVision()
     audioMod?.setFootstepsMoving('player', character.isMoving())
@@ -855,9 +895,11 @@ export async function mountScene(
       if (torn) return
       torn = true
       sceneHit.kindAt = null
-      // Stop footsteps + drop the NPC channels (ambient is swapped by the next mount).
+      // Stop footsteps + drop the NPC channels (the scene ambient is swapped by the next
+      // mount; the per-scene weather ambient is stopped here).
       audioMod?.setFootstepsMoving('player', false)
       for (const n of footstepNpcs) audioMod?.setFootstepSound(n.id, null)
+      audioMod?.setAmbient('weather', null)
       // Close a conversation / cutscene tied to this scene (e.g. a `goTo` swapped scenes).
       if (dialogueStore.getState().active) dialogueStore.getState().end()
       if (sequenceStore.getState().active) sequenceStore.getState().end()
@@ -870,6 +912,7 @@ export async function mountScene(
       app.stage.sortableChildren = false
       character.destroy()
       for (const n of npcs) n.character.destroy()
+      atmosphere.destroy() // removes the screen-space `screenFx` (world slots ride world.destroy)
       world.destroy({ children: true })
     },
   }
@@ -1040,6 +1083,7 @@ export function createSceneHost(
   dialogs: Record<DialogId, Dialog> = {},
   sequences: Record<SequenceId, Sequence> = {},
   audio: AudioConfig = {},
+  weatherPresets: Record<WeatherId, WeatherPreset> = {},
 ): SceneHost {
   let current: Scene | undefined
   let destroyed = false
@@ -1159,6 +1203,7 @@ export function createSceneHost(
       npcHome,
       sequences,
       audio,
+      weatherPresets,
     )
     clearTimeout(spinTimer)
     spinner.visible = false
@@ -1193,8 +1238,11 @@ export function createSceneHost(
       routines.destroy()
       current?.destroy()
       current = undefined
-      // Stop the ambient bed (no next scene to swap it) when the world tears down.
-      void import('../audio/audio').then((m) => m.setAmbient(null))
+      // Stop the ambient beds (no next scene to swap them) when the world tears down.
+      void import('../audio/audio').then((m) => {
+        m.setAmbient('scene', null)
+        m.setAmbient('weather', null)
+      })
       spinner.destroy()
       fade.destroy({ children: true })
     },

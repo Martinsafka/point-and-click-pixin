@@ -375,6 +375,11 @@
             "scale": 1.5
           }
         }
+      ],
+      "weather": [
+        {
+          "preset": "rain"
+        }
       ]
     },
     "room": {
