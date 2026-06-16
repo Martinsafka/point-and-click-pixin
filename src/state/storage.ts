@@ -1,4 +1,5 @@
 import type { StoryState } from '../systems/conditions'
+import { SAVES_STORE, idbGet, idbPut } from './idb'
 
 /**
  * One save slot in IndexedDB. The save is just the serialisable story state; the
@@ -10,19 +11,8 @@ interface SaveBlob {
   state: StoryState
 }
 
-const DB_NAME = 'point-and-click-pixin'
-const STORE = 'saves'
 const SLOT = 'slot0'
 const VERSION = 1
-
-function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1)
-    request.onupgradeneeded = () => request.result.createObjectStore(STORE)
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
-  })
-}
 
 export async function saveGame(state: StoryState): Promise<void> {
   // Only the plain story fields: a store's getState() also carries action
@@ -33,33 +23,15 @@ export async function saveGame(state: StoryState): Promise<void> {
     inventory: state.inventory,
     visited: state.visited,
     selectedItem: state.selectedItem,
+    npcScene: state.npcScene,
+    npcNode: state.npcNode,
   }
-  const db = await openDb()
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readwrite')
-      tx.objectStore(STORE).put({ version: VERSION, state: snapshot } satisfies SaveBlob, SLOT)
-      tx.oncomplete = () => resolve()
-      tx.onerror = () => reject(tx.error)
-    })
-  } finally {
-    db.close()
-  }
+  await idbPut(SAVES_STORE, SLOT, { version: VERSION, state: snapshot } satisfies SaveBlob)
 }
 
 export async function loadGame(): Promise<StoryState | null> {
-  const db = await openDb()
-  try {
-    const blob = await new Promise<SaveBlob | undefined>((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readonly')
-      const request = tx.objectStore(STORE).get(SLOT)
-      request.onsuccess = () => resolve(request.result as SaveBlob | undefined)
-      request.onerror = () => reject(request.error)
-    })
-    return blob && blob.version === VERSION ? blob.state : null
-  } finally {
-    db.close()
-  }
+  const blob = await idbGet<SaveBlob>(SAVES_STORE, SLOT)
+  return blob && blob.version === VERSION ? blob.state : null
 }
 
 export async function hasSave(): Promise<boolean> {

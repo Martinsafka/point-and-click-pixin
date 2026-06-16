@@ -246,13 +246,14 @@ export function Editor() {
     }
   }
 
-  // Save the working doc as a dev draft and open the game (drops `?edit`).
-  const testInGame = () => {
-    saveDocDraft(editorStore.getState().doc)
+  // Save the working doc as a dev draft (IndexedDB) and open the game (drops `?edit`).
+  // Await the write so the draft is committed before the reload re-reads it.
+  const testInGame = async () => {
+    await saveDocDraft(editorStore.getState().doc)
     window.location.assign(window.location.pathname)
   }
-  const discardDraft = () => {
-    clearDocDraft()
+  const discardDraft = async () => {
+    await clearDocDraft()
     window.location.reload()
   }
 
@@ -579,10 +580,10 @@ export function Editor() {
         </div>
 
         <div className="editor__footer">
-          <button type="button" className="editor__test" onClick={testInGame}>
+          <button type="button" className="editor__test" onClick={() => void testInGame()}>
             ▶ Test in game
           </button>
-          <button type="button" onClick={discardDraft} disabled={!hasDocDraft()}>
+          <button type="button" onClick={() => void discardDraft()} disabled={!hasDocDraft()}>
             Discard
           </button>
         </div>

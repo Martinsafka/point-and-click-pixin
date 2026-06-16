@@ -39,7 +39,9 @@ const publishedDoc = Object.entries(published).find(([path]) => path.endsWith('/
 export const bakedGameDoc: GameDoc = publishedDoc ?? demoGameDoc
 
 /**
- * The active game document. In dev, an editor draft (localStorage) overrides the
- * baked one — the editor → game test loop (`src/data/doc-draft.ts`).
+ * The active game document. In dev, an editor draft (IndexedDB) overrides the baked
+ * one — the editor → game test loop (`src/data/doc-draft.ts`). The draft load is async
+ * (IndexedDB), so this module top-level `await`s it; importers (stores, App) resolve
+ * once the draft is read. Top-level await is supported by the `esnext` build target.
  */
-export const gameDoc: GameDoc = loadDocDraft() ?? bakedGameDoc
+export const gameDoc: GameDoc = (await loadDocDraft()) ?? bakedGameDoc
