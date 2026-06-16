@@ -246,7 +246,7 @@ export async function mountScene(
   weatherPresets: Record<WeatherId, WeatherPreset> = {},
   lightingDefaults: { ambientLight?: AmbientLight; playerLight?: PlayerLight } = {},
   options: SceneOptions = {},
-): Promise<Scene> {
+): Promise<PreviewScene> {
   const cameraMode = options.cameraMode ?? 'follow'
   const gameplayInput = options.gameplayInput ?? true
   // Design space vs viewport: the scene is authored in a fixed design space
@@ -282,12 +282,18 @@ export async function mountScene(
   // passes — rebuilt reactively (a story flag triggers / swaps weather), ticked via the
   // atmosphere update hook. A preset's `ambient` loops on the `'weather'` audio channel,
   // layered over the scene's own ambient.
+  // Mutable atmosphere config — `refreshAtmosphere` (the editor's live tuning) swaps in the
+  // edited scene + doc defaults and rebuilds weather + lighting, no re-mount.
+  let weatherScene = scene
+  let weatherPresetsRef = weatherPresets
+  let lightScene = scene
+  let lightDefaults: { ambientLight?: AmbientLight; playerLight?: PlayerLight } = lightingDefaults
   let weatherSystem: WeatherSystem | null = null
   let weatherId: string | null = null
   const activeWeatherId = (st: StoryState): string | null =>
-    scene.weather?.find((w) => !w.when || checkCondition(st, w.when))?.preset ?? null
+    weatherScene.weather?.find((w) => !w.when || checkCondition(st, w.when))?.preset ?? null
   const applyWeatherAmbient = (): void => {
-    const amb = (weatherId ? weatherPresets[weatherId] : undefined)?.ambient
+    const amb = (weatherId ? weatherPresetsRef[weatherId] : undefined)?.ambient
     audioMod?.setAmbient('weather', amb ? (audioMod.resolveSrc(amb.sound) ?? null) : null, amb?.volume ?? 0.4)
   }
   const syncWeather = (st: StoryState): void => {
@@ -296,7 +302,7 @@ export async function mountScene(
     weatherId = id
     weatherSystem?.destroy()
     weatherSystem = null
-    const preset = id ? weatherPresets[id] : undefined
+    const preset = id ? weatherPresetsRef[id] : undefined
     if (preset) weatherSystem = createWeatherSystem(atmosphere.layers.weather, preset, app)
     applyWeatherAmbient()
   }
@@ -305,13 +311,18 @@ export async function mountScene(
 
   // M10 10b lighting: a lightmap (ambient + local lights + dark areas + the player light)
   // multiply-composited over the scene. Inactive (null) when the scene has nothing to light.
-  const lighting = createLighting(atmosphere.layers.lighting, design, app, {
-    ambient: scene.ambientLight ??
-      lightingDefaults.ambientLight ?? { color: '#ffffff', intensity: 1 },
-    lights: scene.lights ?? [],
-    darkAreas: scene.darkAreas ?? [],
-    playerLight: lightingDefaults.playerLight,
-  })
+  let lighting: Lighting | null = null
+  const buildLighting = (): void => {
+    lighting?.destroy()
+    lighting = createLighting(atmosphere.layers.lighting, design, app, {
+      ambient: lightScene.ambientLight ??
+        lightDefaults.ambientLight ?? { color: '#ffffff', intensity: 1 },
+      lights: lightScene.lights ?? [],
+      darkAreas: lightScene.darkAreas ?? [],
+      playerLight: lightDefaults.playerLight,
+    })
+  }
+  buildLighting()
 
   const bandFor = (band: SceneBand): Container =>
     band === 'background' ? background : band === 'foreground' ? foreground : interactive
@@ -964,6 +975,20 @@ export async function mountScene(
       lighting?.destroy() // frees the lightmap render-texture (not a world child)
       atmosphere.destroy() // removes the screen-space `screenFx` (world slots ride world.destroy)
       world.destroy({ children: true })
+    },
+    // Live atmosphere re-tune (the editor): swap in the edited scene + doc defaults and
+    // rebuild weather + lighting only — no re-mount. Game doesn't call this.
+    refreshAtmosphere(sc, a) {
+      if (torn) return
+      weatherScene = sc
+      weatherPresetsRef = a.weatherPresets ?? {}
+      lightScene = sc
+      lightDefaults = { ambientLight: a.ambientLight, playerLight: a.playerLight }
+      weatherSystem?.destroy()
+      weatherSystem = null
+      weatherId = null
+      syncWeather(store.getState())
+      buildLighting()
     },
   }
 }

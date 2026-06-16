@@ -23,6 +23,13 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-16 — ME.1 (step 2a): mountScene gains refreshAtmosphere (rebuildable lighting/weather)
+**What:** `mountScene` (the game scene) can now **rebuild its weather + lighting live** without a re-mount — `refreshAtmosphere(scene, atmo)` swaps in an edited scene + doc atmosphere defaults and rebuilds only those two systems. Refactored the weather/lighting build to read from mutable refs (`weatherScene` / `weatherPresetsRef` / `lightScene` / `lightDefaults`) + a `buildLighting()` helper; the initial build is byte-for-byte the same. `mountScene` now returns `PreviewScene` (Scene + refreshAtmosphere), like `mountPreview`.
+**Why:** ME.1 step — so the editor can drive the **real** game scene live (next step points `ScenePreview` at `createSceneHost`) **without losing ME.0's live atmosphere tuning** (the host's scene will expose this refresh).
+**How:** nothing calls `refreshAtmosphere` yet → the game + current editor preview are unchanged; it's a pure capability add. `PreviewScene` is a superset of `Scene`, so `createSceneHost`'s `current: Scene` handling is unaffected.
+**Verified:** typecheck + lint + build green; dev smoke `/` + `/?edit` 200 (game + preview identical).
+**Follow-ups:** **2b** — `createSceneHost` exposes the current scene's `refreshAtmosphere`; **2c** — `ScenePreview` mounts `createSceneHost(editorStore.doc, …, { cameraMode:'fit', gameplayInput:false })` + a story store, subscribing for the live refresh.
+
 ### 2026-06-16 — ME.1 (step 1): scene camera + input modes (foundation for the live editor)
 **What:** Parameterised `mountScene` (+ `createSceneHost`) with a `SceneOptions` bag — `cameraMode` (`follow` = the game's fit-height + scroll-follow-player; `fit` = fit the whole scene centred, no scroll — for the editor's live view so the static overlays' design→box mapping stays linear) and `gameplayInput` (default true; `false` suppresses the stage walk/interact tap **and** the NPC talk clicks, so the editor authors *over* a live world instead of playing it). Defaults preserve the game exactly.
 **Why:** ME.1 (reframed) — the editor will run the **real** `createSceneHost` from `editorStore.doc` (not the static `mountPreview`), which needs a whole-scene camera + no gameplay clicks. This is the safe foundational slice (no caller passes the options yet, so nothing changes).
