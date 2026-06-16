@@ -296,8 +296,24 @@ animations, camera moves (focus + zoom), dialogue lines, waits and effects. It's
 by the **`startSequence`** effect (available in any effect list — on an interactable, a
 trigger, a dialogue node, or a scene's entry), so the usual gating (`when` / `once`)
 controls when it plays. While it runs the world is input-blocked and a **Skip** button
-(or **Esc**) fast-forwards it. _(The step-by-step **sequence editor** + a Sequences library
-land in the next step (8b); for now `startSequence` takes a sequence id typed in.)_
+(or **Esc**) fast-forwards it (remaining effects still apply; moves / camera snap).
+
+Author them in the **Cutscenes tab**: **+ Cutscene** adds one (a fixed id the
+`startSequence` effect references); **Edit** opens the **step-list editor**. Add a step by
+kind (**+ Step**), reorder with **↑/↓**, remove with **✕**. Step kinds:
+
+- **wait** — pause `ms`.
+- **move** — walk an **actor** (player / a cast NPC) to a point (x/y, design-space
+  fractions 0..1); awaits arrival.
+- **anim** — play a one-shot **animation** on an actor; awaits it.
+- **face** — turn an actor toward a point.
+- **dialog** — play a **dialogue** (from the Dialogs library); awaits its end.
+- **effects** — run a batch of effects (the usual editor) instantly.
+- **camera** — focus an **actor** (live-follows it) or a **point**, with a **zoom** (1 =
+  normal) over **ms**; the camera returns to the player when the cutscene ends.
+
+Then add a `startSequence` effect somewhere (its picker lists your cutscenes) to fire it.
+_(Points are typed as fractions for now; picking them on the preview is a follow-up.)_
 
 ### Display (global)
 

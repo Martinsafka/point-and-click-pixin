@@ -22,6 +22,8 @@ import type {
   SceneBand,
   SceneData,
   SceneId,
+  SeqStep,
+  SequenceId,
   TransitionConfig,
   UseRule,
   ViewDescriptor,
@@ -98,6 +100,13 @@ interface EditorStore {
   addDialogNode(dialogId: DialogId): void
   removeDialogNode(dialogId: DialogId, nodeId: DialogNodeId): void
   setDialogNode(dialogId: DialogId, nodeId: DialogNodeId, node: DialogNode): void
+  // Sequences library (GameDoc.sequences) — cutscene step lists (M8 8b).
+  addSequence(): void
+  removeSequence(id: SequenceId): void
+  addSeqStep(seqId: SequenceId, kind: SeqStep['kind']): void
+  removeSeqStep(seqId: SequenceId, index: number): void
+  moveSeqStep(seqId: SequenceId, index: number, dir: -1 | 1): void
+  setSeqStep(seqId: SequenceId, index: number, step: SeqStep): void
   addNpcPlacement(id: SceneId, npc: NpcId): void
   removeNpcPlacement(id: SceneId, index: number): void
   setNpcPlacementNpc(id: SceneId, index: number, npc: NpcId): void
@@ -183,6 +192,26 @@ function uniquePathId(paths: readonly NpcPath[], base: string): string {
   let n = 2
   while (ids.has(`${base}-${n}`)) n += 1
   return `${base}-${n}`
+}
+
+/** A blank cutscene step of the given kind (sensible defaults; the editor fills them in). */
+function defaultStep(kind: SeqStep['kind']): SeqStep {
+  switch (kind) {
+    case 'wait':
+      return { kind: 'wait', ms: 1000 }
+    case 'move':
+      return { kind: 'move', actor: 'player', to: { xFrac: 0.5, yFrac: 0.85 } }
+    case 'anim':
+      return { kind: 'anim', actor: 'player', action: 'interact' }
+    case 'face':
+      return { kind: 'face', actor: 'player', to: { xFrac: 0.5, yFrac: 0.85 } }
+    case 'dialog':
+      return { kind: 'dialog', dialog: '' }
+    case 'effects':
+      return { kind: 'effects', effects: [] }
+    case 'camera':
+      return { kind: 'camera', actor: 'player', zoom: 1.5, ms: 700 }
+  }
 }
 
 /** A `base` (or `base-2`, `base-3`, …) not already a key of `obj` — for dialog / node ids. */
@@ -418,6 +447,53 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         dialogs: {
           ...dialogs,
           [dialogId]: { ...dialog, nodes: { ...dialog.nodes, [nodeId]: node } },
+        },
+      })
+    },
+    addSequence: () => {
+      const sequences = get().doc.sequences ?? {}
+      const id = uniqueKey(sequences, 'seq')
+      patchDoc({ sequences: { ...sequences, [id]: { steps: [] } } })
+    },
+    removeSequence: (id) => {
+      const sequences = { ...(get().doc.sequences ?? {}) }
+      delete sequences[id]
+      patchDoc({ sequences })
+    },
+    addSeqStep: (seqId, kind) => {
+      const sequences = get().doc.sequences ?? {}
+      const seq = sequences[seqId]
+      if (!seq) return
+      patchDoc({
+        sequences: { ...sequences, [seqId]: { steps: [...seq.steps, defaultStep(kind)] } },
+      })
+    },
+    removeSeqStep: (seqId, index) => {
+      const sequences = get().doc.sequences ?? {}
+      const seq = sequences[seqId]
+      if (!seq) return
+      patchDoc({
+        sequences: { ...sequences, [seqId]: { steps: seq.steps.filter((_, i) => i !== index) } },
+      })
+    },
+    moveSeqStep: (seqId, index, dir) => {
+      const sequences = get().doc.sequences ?? {}
+      const seq = sequences[seqId]
+      if (!seq) return
+      const j = index + dir
+      if (j < 0 || j >= seq.steps.length) return
+      const steps = [...seq.steps]
+      ;[steps[index], steps[j]] = [steps[j], steps[index]]
+      patchDoc({ sequences: { ...sequences, [seqId]: { steps } } })
+    },
+    setSeqStep: (seqId, index, step) => {
+      const sequences = get().doc.sequences ?? {}
+      const seq = sequences[seqId]
+      if (!seq) return
+      patchDoc({
+        sequences: {
+          ...sequences,
+          [seqId]: { steps: seq.steps.map((s, i) => (i === index ? step : s)) },
         },
       })
     },

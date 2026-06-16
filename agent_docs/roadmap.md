@@ -293,9 +293,10 @@ scheduler** nuance is deferred; the per-NPC routine graph belongs here.
         `startSequence` effect (+ `SceneData.onEnter` for scene-entry). _(Decisions: camera
         control + dialogue-reuse are in.)_ Demo: an **intro** cutscene on the street.
 - Editor:
-  - [ ] **8b** — author sequences (step list) + a Sequences library; the `startSequence`
-        field becomes a picker; a `SceneData.onEnter` editor. (Trigger from interactions /
-        scene-entry / conditions already works via the effect + trigger + onEnter.)
+  - [x] **8b** — a **Cutscenes tab** + a step-list editor (add by kind / reorder / remove;
+        per-kind fields incl. camera focus+zoom); the `startSequence` field is a **picker**.
+        **→ M8 complete.** _(Follow-ups: pick points on the preview; a `SceneData.onEnter`
+        editor — scene-entry cutscenes today use a spawn trigger.)_
 
 ### M9 — Audio authoring
 

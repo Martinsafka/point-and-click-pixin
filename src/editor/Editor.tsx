@@ -26,14 +26,16 @@ import { NpcList } from './NpcList'
 import { NpcOverlay } from './NpcOverlay'
 import { NpcCast } from './NpcCast'
 import { DialogList } from './DialogList'
+import { SequenceList } from './SequenceList'
 
-const TABS = ['scene', 'items', 'characters', 'dialogs', 'project'] as const
+const TABS = ['scene', 'items', 'characters', 'dialogs', 'sequences', 'project'] as const
 type Tab = (typeof TABS)[number]
 const TAB_LABEL: Record<Tab, string> = {
   scene: 'Scene',
   items: 'Items',
   characters: 'Characters',
   dialogs: 'Dialogs',
+  sequences: 'Cutscenes',
   project: 'Project',
 }
 
@@ -521,6 +523,12 @@ export function Editor() {
           {tab === 'dialogs' && (
             <Section title={`Dialogs · ${Object.keys(doc.dialogs ?? {}).length}`}>
               <DialogList dialogs={doc.dialogs} />
+            </Section>
+          )}
+
+          {tab === 'sequences' && (
+            <Section title={`Cutscenes · ${Object.keys(doc.sequences ?? {}).length}`}>
+              <SequenceList sequences={doc.sequences} />
             </Section>
           )}
 

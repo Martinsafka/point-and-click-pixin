@@ -1,4 +1,5 @@
 import type { Effect, ItemDef, ItemId, SceneId } from '../data/schema'
+import { editorStore } from './editor-store'
 
 /** Item picker reused across the logic editors (effects, conditions, uses). */
 export function ItemSelect({
@@ -175,15 +176,17 @@ function EffectFields({
           onChange={(e) => onChange({ ...effect, dialog: e.target.value })}
         />
       )
-    case 'startSequence':
+    case 'startSequence': {
+      const seqIds = Object.keys(editorStore.getState().doc.sequences ?? {})
       return (
-        <input
-          className="logic__in"
-          placeholder="sequence"
+        <OptionSelect
           value={effect.sequence}
-          onChange={(e) => onChange({ ...effect, sequence: e.target.value })}
+          options={seqIds}
+          onChange={(sequence) => onChange({ ...effect, sequence })}
+          empty
         />
       )
+    }
     case 'moveNpc':
       return (
         <>
