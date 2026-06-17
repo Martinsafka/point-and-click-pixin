@@ -11,6 +11,7 @@ import { gameDoc } from '../data/game'
 import { hasDocDraft } from '../data/doc-draft'
 import { storyStore } from '../state/story'
 import { loadGame } from '../state/storage'
+import { applySettings } from '../state/settings'
 
 /**
  * App shell with two phases: the title screen, and the running game. New game /
@@ -23,6 +24,12 @@ export function App() {
   const sceneId = useStory((s) => s.currentScene)
   const visited = useStory((s) => s.visited.length)
   const narration = useStory((s) => s.narration)
+
+  // Apply player settings (font size + volume) + the doc's UI font once on boot.
+  useEffect(() => {
+    applySettings()
+    if (gameDoc.font) document.documentElement.style.setProperty('--game-font', gameDoc.font)
+  }, [])
 
   // The narration line ("look at" text) auto-clears after a few seconds.
   useEffect(() => {

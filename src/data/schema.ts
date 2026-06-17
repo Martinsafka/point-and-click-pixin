@@ -762,6 +762,8 @@ export interface GameDoc {
   recipes?: Recipe[]
   /** Optional per-context cursor icons (image URLs); missing → emoji fallback. */
   cursors?: Partial<Record<CursorKind, string>>
+  /** UI font-family for the game (M11) — a CSS font stack; absent → the system default. */
+  font?: string
   /** The protagonist's view (atlas + clips); absent → the built-in placeholder. */
   player?: ViewDescriptor
   /** The global NPC cast (id → definition); placed into scenes via `SceneData.npcs`. */

@@ -26,6 +26,11 @@ export function isMuted(): boolean {
   return muted
 }
 
+/** Master volume 0..1 (M11 settings) — Howler's global gain over every sound. */
+export function setMasterVolume(value: number): void {
+  Howler.volume(Math.min(1, Math.max(0, value)))
+}
+
 // --- Sound library (M9 9b): every sound field references a SoundId ----------
 let soundLib: Record<string, SoundAsset> = gameDoc.sounds ?? {}
 

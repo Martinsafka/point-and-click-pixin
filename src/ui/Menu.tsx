@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { storyStore } from '../state/story'
 import { isMuted, setMuted } from '../audio/audio'
 import { saveGame } from '../state/storage'
+import { getSettings, setFontScale, setVolume } from '../state/settings'
 
 interface Props {
   /** Leave the game and return to the title screen. */
@@ -18,6 +19,8 @@ export function Menu({ onExit }: Props) {
   const [muted, setMutedState] = useState(isMuted())
   const [justSaved, setJustSaved] = useState(false)
   const [confirmExit, setConfirmExit] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [settings, setSettingsState] = useState(getSettings())
 
   // ESC toggles the menu (and always drops a pending exit confirmation).
   useEffect(() => {
@@ -34,6 +37,7 @@ export function Menu({ onExit }: Props) {
   const close = () => {
     setOpen(false)
     setConfirmExit(false)
+    setShowSettings(false)
   }
 
   const save = async () => {
@@ -71,6 +75,47 @@ export function Menu({ onExit }: Props) {
                   Cancel
                 </button>
               </>
+            ) : showSettings ? (
+              <>
+                <h2 className="menu-panel__title">Settings</h2>
+                <label className="menu-panel__setting">
+                  <span>Text size · {Math.round(settings.fontScale * 100)}%</span>
+                  <input
+                    type="range"
+                    min="0.7"
+                    max="1.6"
+                    step="0.05"
+                    value={settings.fontScale}
+                    onChange={(e) => {
+                      const v = Number(e.target.value)
+                      setFontScale(v)
+                      setSettingsState((s) => ({ ...s, fontScale: v }))
+                    }}
+                  />
+                </label>
+                <label className="menu-panel__setting">
+                  <span>Volume · {Math.round(settings.volume * 100)}%</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={settings.volume}
+                    onChange={(e) => {
+                      const v = Number(e.target.value)
+                      setVolume(v)
+                      setSettingsState((s) => ({ ...s, volume: v }))
+                    }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="menu-panel__item"
+                  onClick={() => setShowSettings(false)}
+                >
+                  Back
+                </button>
+              </>
             ) : (
               <>
                 <h2 className="menu-panel__title">Menu</h2>
@@ -79,6 +124,13 @@ export function Menu({ onExit }: Props) {
                 </button>
                 <button type="button" className="menu-panel__item" onClick={() => void save()}>
                   {justSaved ? 'Saved ✓' : 'Save game'}
+                </button>
+                <button
+                  type="button"
+                  className="menu-panel__item"
+                  onClick={() => setShowSettings(true)}
+                >
+                  Settings
                 </button>
                 <button
                   type="button"

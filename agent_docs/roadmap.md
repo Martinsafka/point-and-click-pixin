@@ -535,13 +535,26 @@ working until ME.6, so the migration is reversible at every point.
       **Grade & FX** section. _(→ 10d complete; M10 done bar the optional perf/quality UI, which
       lands with the M11 settings screen.)_
 
-### M11 — UI theming & settings  (+ the title-screen composer)
+### M11 — UI theming, settings & game screens
 
-- [ ] Editable UI texts (menu / dialogue labels); system-font picker.
-- [ ] SVG skins / frames for UI elements; logo on the title screen; title-screen
-      visual composer (reuses the scene editor, visual-only).
-- [ ] **Settings screen** — volume sliders (music / SFX split), maybe fullscreen.
-- [ ] **Localization (i18n)** — UI texts + dialogue in multiple languages.
+- [x] **Settings (simplified)** — an in-game **Settings** menu view: **text size** (a
+      `--ui-scale` CSS var the game text multiplies by, incl. dialogue) + **master volume**
+      (Howler global gain). Per-device, localStorage (`state/settings.ts`), applied on boot.
+      _(Richer settings → V2: music/SFX split, reduced-motion / quality, fullscreen.)_
+- [x] **Font picker** — `GameDoc.font` (a CSS font stack) chosen in the **Project** tab; applied
+      to the game shell + title via a `--game-font` var. _(No general UI-text editing: the
+      inventory uses item names, dialogue uses NPC names — nothing else needs it.)_
+- [ ] **Game screens** — a set of editable full-screen screens (the bigger piece):
+  - **Loading** — shown before anything (incl. the title): logo + background.
+  - **Title** — logo + background (over the New game / Continue buttons).
+  - **Game over** / **End** — a text screen (editable size / colour / alignment), reached by
+    an effect; offers retry / title.
+  - **Credits** — scrolling-text screen listing contributors (formatted text: size / align /
+    colour + scroll animation).
+  - **Final** — a fixed, **non-editable** "made with this editor" logo (a hardcoded image
+    dropped in at release), then returns to the title.
+  - Editor: a **Screens** project section to author them (images + text blocks).
+- [ ] **Localization (i18n)** → **V2** (see below).
 
 ### M12 — Story / logic graph  (global orchestration)
 
@@ -563,6 +576,12 @@ condition / effect vocabulary.
 - [ ] CI + versioning + npm publish.
 
 ### V2 — post-1.0 nice-to-haves
+
+- [ ] **Localization (i18n)** — UI texts + dialogue in multiple languages (deferred from M11;
+      do once there's demand — needs a string/locale layer over dialogue + any UI text).
+- [ ] **Richer settings** — music / SFX volume split (categorise sound channels), a
+      reduced-motion / quality toggle (drives `atmosphereQuality` + the particle budget), and
+      a fullscreen toggle. (M11 shipped just text-size + master volume.)
 
 - [ ] **Full persistent world simulation** (NPC routines + movement). _Shipped now: **B-lite**
       — routine progression is persistent off-scene (an `onArrive` edge completes by the path's

@@ -60,6 +60,18 @@ const TAB_LABEL: Record<Tab, string> = {
   project: 'Project',
 }
 
+/** A curated set of web-safe UI font stacks for the Project font picker (M11). */
+const FONT_CHOICES: { label: string; value: string }[] = [
+  { label: 'System sans', value: 'system-ui, sans-serif' },
+  { label: 'Arial', value: 'Arial, Helvetica, sans-serif' },
+  { label: 'Verdana', value: 'Verdana, Geneva, sans-serif' },
+  { label: 'Trebuchet', value: "'Trebuchet MS', sans-serif" },
+  { label: 'Georgia (serif)', value: 'Georgia, serif' },
+  { label: 'Times (serif)', value: "'Times New Roman', Times, serif" },
+  { label: 'Palatino (serif)', value: "'Palatino Linotype', Palatino, serif" },
+  { label: 'Courier (mono)', value: "'Courier New', monospace" },
+]
+
 /** Which polygon draw / placement mode is active (overlays share the preview). */
 type Draw =
   | 'walkable'
@@ -689,6 +701,22 @@ export function Editor() {
                 }
               />
               <span className="intr-form__note">px · the game's vertical resolution</span>
+            </div>
+            <div className="intr-form__field">
+              <span>font</span>
+              <select
+                className="logic__in"
+                value={doc.font ?? ''}
+                onChange={(e) => editorStore.getState().setFont(e.target.value || undefined)}
+              >
+                <option value="">system default</option>
+                {FONT_CHOICES.map((f) => (
+                  <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>
+                    {f.label}
+                  </option>
+                ))}
+              </select>
+              <span className="intr-form__note">the game's UI font (shows in ▶ Test in game)</span>
             </div>
           </Section>
           <Section title="Cursors">

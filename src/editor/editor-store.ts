@@ -156,6 +156,8 @@ interface EditorStore {
   setDocFootstep(footstep: SoundConfig | undefined): void
   setFootstepsOff(off: boolean): void
   setPickupSound(id: SoundId | undefined): void
+  /** UI font-family (M11); undefined → system default. */
+  setFont(font: string | undefined): void
   setTransitionSound(id: SoundId | undefined): void
   // Sound library (M9 9b) — upload once, reference by id everywhere.
   addSound(src: string): void
@@ -685,6 +687,7 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setFootstepsOff: (off) => patchDoc({ footstepsOff: off || undefined }),
     setPickupSound: (id) => patchDoc({ pickupSound: id }),
     setTransitionSound: (id) => patchDoc({ transitionSound: id }),
+    setFont: (font) => patchDoc({ font }),
     addSound: (src) => {
       const sounds = get().doc.sounds ?? {}
       const id = uniqueKey(sounds, 'sound')

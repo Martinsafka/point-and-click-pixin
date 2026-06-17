@@ -424,6 +424,11 @@ uniform scale, so characters and art keep a consistent size on any device (phone
 4k). Each scene's **width** (Scene tab) is in these px; widening a scene past the
 screen's aspect is what makes the camera scroll.
 
+**Font** (M11) — the game's UI **font** (a web-safe stack) for dialogue, inventory, menus,
+the title. Shows in **▶ Test in game** (the editor's own chrome keeps its font). _(Players
+set **text size** + **volume** themselves in the in-game ☰ Menu → Settings; those are
+per-device, not part of the game.)_
+
 ### Cursors (global)
 
 The in-game pointer changes by what it's over: **walk** (over the walkable area),
