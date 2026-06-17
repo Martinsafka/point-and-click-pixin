@@ -79,6 +79,9 @@ export interface SceneOptions {
   /** Suppress all audio (ambient beds + footsteps). Default false; the editor's live view sets
    *  true so authoring doesn't play sound and the audio chunk stays out of the preview. */
   muteAudio?: boolean
+  /** Editor only: make free-positioned (`fit: none` / `width`) image layers draggable to place
+   *  them, committing the new fractional position on release. Omitted in the game. */
+  onLayerMove?: (index: number, xFrac: number, yFrac: number) => void
 }
 
 /** The slice of the story store the engine needs: read state + react to it. */
@@ -259,6 +262,7 @@ export async function mountScene(
   const cameraMode = options.cameraMode ?? 'follow'
   const gameplayInput = options.gameplayInput ?? true
   const muteAudio = options.muteAudio ?? false
+  const onLayerMove = options.onLayerMove
   // Design space vs viewport: the scene is authored in a fixed design space
   // (`scene.width` × `referenceHeight` px). The world Container holds it; the camera
   // (below) fits the design *height* to the viewport with one uniform scale, then
@@ -345,7 +349,8 @@ export async function mountScene(
   // Background / foreground layers that scroll at their own rate (parallax).
   const parallaxLayers: { display: Container; baseX: number; baseY: number; p: number }[] = []
 
-  for (const layer of scene.layers) {
+  for (let i = 0; i < scene.layers.length; i += 1) {
+    const layer = scene.layers[i]
     const display = await buildLayer(layer, design)
     if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
       const anchorY = layer.anchorYFrac * design.height
@@ -358,8 +363,25 @@ export async function mountScene(
       conditional.push({ display, show: (st) => checkCondition(st, when) })
     }
     const p = layer.parallax ?? 1
+    let parallaxEntry: { display: Container; baseX: number; baseY: number; p: number } | undefined
     if (p !== 1 && layer.band !== 'mid') {
-      parallaxLayers.push({ display, baseX: display.position.x, baseY: display.position.y, p })
+      parallaxEntry = { display, baseX: display.position.x, baseY: display.position.y, p }
+      parallaxLayers.push(parallaxEntry)
+    }
+    // Editor: drag free image layers to place them. In `fit` the camera pins parallax layers
+    // to their base each frame, so keep that base in sync with the drag (else it snaps back).
+    if (onLayerMove && layer.kind === 'image') {
+      const fit = layer.fit ?? 'none'
+      const axis = fit === 'none' ? 'xy' : fit === 'width' ? 'y' : null
+      if (axis) {
+        const pe = parallaxEntry
+        makeLayerDraggable(display, i, design, onLayerMove, axis, (x, y) => {
+          if (pe) {
+            pe.baseX = x
+            pe.baseY = y
+          }
+        })
+      }
     }
     bandFor(layer.band).addChild(display)
   }
@@ -876,7 +898,9 @@ export async function mountScene(
 
   app.stage.eventMode = 'static'
   app.stage.hitArea = app.screen
-  app.stage.cursor = 'none' // the DOM GameCursor draws the pointer; hide the native one
+  // The game hides the native cursor (the DOM GameCursor draws the pointer). The editor's live
+  // view has no GameCursor, so keep the native cursor there (else it vanishes over the canvas).
+  app.stage.cursor = gameplayInput ? 'none' : 'default'
   const onTap = (event: FederatedPointerEvent) => {
     // Dialogue / a running cutscene capture input; the world isn't clickable.
     if (dialogueStore.getState().active || sequenceStore.getState().active) return
@@ -1043,6 +1067,9 @@ function makeLayerDraggable(
   screen: Size,
   onMove: (index: number, xFrac: number, yFrac: number) => void,
   axis: 'xy' | 'y' = 'xy',
+  /** Called each move with the new (px) position — the live world keeps a parallax layer's
+   *  rest base in sync so the camera's per-frame pin doesn't snap the drag back. */
+  onMoveLive?: (x: number, y: number) => void,
 ): void {
   const clamp = (v: number, hi: number) => Math.max(0, Math.min(hi, v))
   display.eventMode = 'static'
@@ -1065,7 +1092,9 @@ function makeLayerDraggable(
     if (!dragging || !display.parent) return
     const p = display.parent.toLocal(e.global)
     const x = axis === 'y' ? display.position.x : clamp(p.x + grabX, screen.width)
-    display.position.set(x, clamp(p.y + grabY, screen.height))
+    const y = clamp(p.y + grabY, screen.height)
+    display.position.set(x, y)
+    onMoveLive?.(x, y)
   })
   const drop = () => {
     if (!dragging) return
@@ -1148,9 +1177,14 @@ export async function mountPreview(
   view.setPose('idle', 'S')
   interactive.addChild(view.container)
 
-  // Fit the design height into the preview box; re-fit when the canvas resizes
-  // (panel drag / window) so the content keeps tracking the DOM overlays.
-  const refit = () => root.scale.set(app.screen.height / design.height)
+  // Fit the whole design into the preview (letterbox: one scale + centring, like the game's
+  // `fit` camera), re-fitting on canvas resize (panel toggle / window) so the content keeps
+  // tracking the DOM overlays (which use the same fit via `SceneViewport`).
+  const refit = () => {
+    const s = Math.min(app.screen.width / design.width, app.screen.height / design.height)
+    root.scale.set(s)
+    root.position.set((app.screen.width - design.width * s) / 2, (app.screen.height - design.height * s) / 2)
+  }
   refit()
   const ro = new ResizeObserver(refit)
   ro.observe(app.canvas)
@@ -1160,7 +1194,7 @@ export async function mountPreview(
   // re-mount). The preview's "camera" is the `root` fit transform (no scroll/pillarbox).
   const atmosphere = createAtmosphere(root, app.stage)
   const previewState: StoryState = state
-  const previewCamera = { x: 0, y: 0, scale: root.scale.x }
+  const previewCamera = { x: root.position.x, y: root.position.y, scale: root.scale.x }
   let weatherSystem: WeatherSystem | null = null
   let lighting: Lighting | null = null
   const buildAtmo = (sc: SceneData, a: PreviewAtmosphere) => {
@@ -1185,6 +1219,8 @@ export async function mountPreview(
   }
   buildAtmo(scene, atmo)
   const onTick = (ticker: Ticker) => {
+    previewCamera.x = root.position.x
+    previewCamera.y = root.position.y
     previewCamera.scale = root.scale.x
     atmosphere.update(ticker.deltaMS)
     weatherSystem?.update(ticker.deltaMS)

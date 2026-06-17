@@ -48,24 +48,24 @@ preview immediately. The panel is split into top-level **tabs**:
 - **Characters** — the player's animation set + the global **NPC cast**.
 - **Project** — Display, Cursors, Transition, Document (export / import).
 
-Each section within a tab **collapses** when you click its title (accordion); a
-persistent footer has **▶ Test in game** / **Discard**. Drag the divider between the
-panel and the preview to **widen** the panel. The preview is shown at the **scene's
-aspect ratio**, so drawn areas keep their exact position however wide you make the
-panel.
+Each section within a tab **collapses** when you click its title (accordion). The preview
+**fills the pane** (the scene letterboxes inside; drawn areas stay aligned), and a top-right
+toolbar has **▤ Hide panel** (toggle the side panel — the floating launcher can be the sole
+UI), **▶ Test in game**, and **Discard**. With the panel shown, drag the divider to widen it.
 
-**Preview modes — `▷ Live` / `● Live` (top-left of the preview).** The preview has two
-modes you toggle with the button in its corner:
+**Preview modes — `● Live` / `▷ Live` (top-left of the preview).** Toggle with the button in
+the preview's corner:
 
-- **Edit** (default) — a calm, static preview: a placeholder character at the spawn, with
-  draggable image layers and all the placement overlays. Best for laying things out.
-- **Live** — runs the **real game world** in place (the actual scene-host over your working
-  document): NPCs walk their routines and the full lighting + weather render, so you can
-  judge atmosphere and motion in context. The world is **view-only** here — clicks don't
-  drive gameplay and sound is muted, so the placement overlays still work on top. Use
-  **▶ Test in game** when you want to actually play.
+- **Live** (default) — runs the **real game world** in place (the actual scene-host over your
+  working document): NPCs walk their routines, full lighting + weather render, gated content
+  appears, and you can **drag image layers** to place them. The world is **view-only** —
+  clicks don't drive gameplay and sound is muted, so the placement overlays work on top. Use
+  **▶ Test in game** to actually play, and the **World** window (below) to set flags / items /
+  jump scenes.
+- **Edit** — a calm, static preview (a placeholder character at the spawn) for laying things
+  out without the world running.
 
-In both modes the lighting / weather **update live** as you edit (no reload).
+In both modes the lighting / weather + character size **update live** as you edit (no reload).
 
 **Floating windows — the launcher bar (top-left of the preview).** Alongside the fixed
 panel you can pop **any tab** out as a **floating, draggable window** over the preview: the

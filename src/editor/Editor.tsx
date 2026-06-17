@@ -109,7 +109,11 @@ export function Editor() {
   // character-size slider is a hot tunable (ME.3) — it commits live, no re-mount.
   const [widthDraft, setWidthDraft] = useState<number | null>(null)
   const mainRef = useRef<HTMLElement>(null)
-  const [stage, setStage] = useState({ w: 0, h: 0 })
+  // ME.6 — the preview fills the pane (the world letterboxes; overlays ride the ME.4
+  // `SceneViewport`). The fixed panel is hideable so the floating launcher can be the sole UI.
+  const [panelHidden, setPanelHidden] = useState(false)
+  // The preview runs the real (Live) world by default; Edit (static placeholder) is a fallback.
+  const [live, setLive] = useState(true)
 
   const startResize = (e: ReactMouseEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -173,25 +177,15 @@ export function Editor() {
     return editorStore.subscribe(sync)
   }, [])
 
-  // and centred — so the canvas and the DOM overlays always share one coordinate
-  // box (areas can't drift when the panel is resized).
+  // Nudge Pixi (resizeTo: host listens to window 'resize') whenever the preview pane changes
+  // size — window resize, panel show/hide, or panel drag — so the canvas re-fits to the pane.
   useEffect(() => {
     const el = mainRef.current
     if (!el) return
-    const measure = () => {
-      const w = Math.min(el.clientWidth, el.clientHeight * aspect)
-      setStage({ w, h: w / aspect })
-    }
-    measure()
-    const obs = new ResizeObserver(measure)
+    const obs = new ResizeObserver(() => window.dispatchEvent(new Event('resize')))
     obs.observe(el)
     return () => obs.disconnect()
-  }, [aspect])
-
-  // When the stage box changes, nudge Pixi (resizeTo: host) to re-fit the canvas.
-  useEffect(() => {
-    window.dispatchEvent(new Event('resize'))
-  }, [stage.w, stage.h])
+  }, [])
 
   const addPoint = (xFrac: number, yFrac: number) => {
     const current = editorStore.getState().doc.scenes[selectedId].walkable
@@ -739,38 +733,29 @@ export function Editor() {
 
   return (
     <div className="editor">
-      <aside className="editor__panel" style={{ width: panelWidth }}>
-        <div className="editor__tabs">
-          {TABS.map((t) => (
-            <button
-              key={t}
-              type="button"
-              className={`editor__tab${t === tab ? ' editor__tab--active' : ''}`}
-              onClick={() => changeTab(t)}
-            >
-              {TAB_LABEL[t]}
-            </button>
-          ))}
-        </div>
+      {!panelHidden && (
+        <aside className="editor__panel" style={{ width: panelWidth }}>
+          <div className="editor__tabs">
+            {TABS.map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={`editor__tab${t === tab ? ' editor__tab--active' : ''}`}
+                onClick={() => changeTab(t)}
+              >
+                {TAB_LABEL[t]}
+              </button>
+            ))}
+          </div>
 
-        <div className="editor__tab-content">
-          {renderTab(tab)}
-        </div>
-
-        <div className="editor__footer">
-          <button type="button" className="editor__test" onClick={() => void testInGame()}>
-            ▶ Test in game
-          </button>
-          <button type="button" onClick={() => void discardDraft()} disabled={!hasDocDraft()}>
-            Discard
-          </button>
-        </div>
-      </aside>
-      <div className="editor__resizer" onMouseDown={startResize} />
+          <div className="editor__tab-content">{renderTab(tab)}</div>
+        </aside>
+      )}
+      {!panelHidden && <div className="editor__resizer" onMouseDown={startResize} />}
       <main className="editor__preview" ref={mainRef}>
-        {scene && stage.w > 0 && (
-          <div className="editor__stage" style={{ width: stage.w, height: stage.h }}>
-            <ScenePreview key={`${selectedId}-${revision}`} scene={scene} />
+        {scene && (
+          <div className="editor__stage editor__stage--fill">
+            <ScenePreview key={`${selectedId}-${revision}`} scene={scene} live={live} />
             <SceneViewport design={{ width: savedWidth, height: refH }}>
               <WalkableOverlay
                 walkable={scene.walkable}
@@ -811,6 +796,28 @@ export function Editor() {
           </div>
         )}
         <FloatingEditor panels={floatPanels} />
+        <div className="preview-tools">
+          <button
+            type="button"
+            onClick={() => setLive((v) => !v)}
+            title={live ? 'Show the static editing preview' : 'Run the real world in context'}
+          >
+            {live ? '● Live' : '▷ Live'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setPanelHidden((v) => !v)}
+            title={panelHidden ? 'Show the side panel' : 'Hide the side panel (use the launcher)'}
+          >
+            {panelHidden ? '▤ Panel' : '▤ Hide panel'}
+          </button>
+          <button type="button" className="editor__test" onClick={() => void testInGame()}>
+            ▶ Test in game
+          </button>
+          <button type="button" onClick={() => void discardDraft()} disabled={!hasDocDraft()}>
+            Discard
+          </button>
+        </div>
       </main>
     </div>
   )

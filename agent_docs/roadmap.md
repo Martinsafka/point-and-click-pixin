@@ -485,8 +485,20 @@ overlays are the sensitive bits).
       `hasItem flashlight` light shows by giving the item. Inert (with a hint) in static Edit
       mode. _(Follow-up: pause/resume the ticker + reset the player's on-screen position — reset
       currently re-seeds the store state, not per-frame motion.)_
-- [ ] **ME.6 — Retire the static preview + cleanup** — once at parity, remove `mountPreview`
-      + the separated path → **one Pixi world**. Keep the dev-only gate + lazy-load.
+- [ ] **ME.6 — One Pixi world (retire the static preview)** — done incrementally (user chose
+      reversible-first); the irreversible deletion waits on a visual validation pass.
+  - [x] **1 — parity: layer-drag in the live world** — `mountScene` gained `onLayerMove`
+        (image layers draggable, `none` = xy / `width` = y), with the drag kept in sync with a
+        parallax layer's rest base so the `fit` camera's per-frame pin doesn't snap it back.
+        Live mode now does everything the static Edit preview did.
+  - [x] **2 — fullscreen + Live default + reversible panel** — the preview **fills the pane**
+        (the world letterboxes; overlays ride `SceneViewport`); `mountPreview` now letterboxes
+        too (min + centre). The preview **defaults to Live**. The fixed panel is **hideable**
+        via a toolbar toggle (top-right), and **Test / Discard** moved to that toolbar so
+        they're reachable panel-less. Nothing removed yet → fully reversible.
+  - [ ] **3 — delete** `mountPreview` + the Edit/static path + the fixed `editor__panel` once
+        the live-only fullscreen flow is validated → one Pixi world. Keep the dev-only gate +
+        lazy-load.
 
 Each step: typecheck + lint + build + dev smoke + visual check; the separated `?edit` keeps
 working until ME.6, so the migration is reversible at every point.

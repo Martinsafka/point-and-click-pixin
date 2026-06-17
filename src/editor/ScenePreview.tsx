@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import type { Application } from 'pixi.js'
 import type { SceneData } from '../data/schema'
 import { createPixiApp } from '../engine/app'
@@ -30,9 +30,8 @@ import { setPreviewStore } from './preview-bridge'
  * In both modes the scene's atmosphere (weather + lighting) is rebuilt **live** — without a
  * re-mount — as the author edits, via `refreshAtmosphere`.
  */
-export function ScenePreview({ scene }: { scene: SceneData }) {
+export function ScenePreview({ scene, live }: { scene: SceneData; live: boolean }) {
   const hostRef = useRef<HTMLDivElement>(null)
-  const [live, setLive] = useState(false)
 
   useEffect(() => {
     const host = hostRef.current
@@ -91,7 +90,13 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
           {},
           d.weatherPresets,
           { ambientLight: d.ambientLight, playerLight: d.playerLight },
-          { cameraMode: 'fit', gameplayInput: false, muteAudio: true },
+          {
+            cameraMode: 'fit',
+            gameplayInput: false,
+            muteAudio: true,
+            onLayerMove: (index, xFrac, yFrac) =>
+              editorStore.getState().setLayerPos(scene.id, index, xFrac, yFrac),
+          },
         )
         const sceneHostRef = sceneHost
         refresh = (sc, atmo) => sceneHostRef.refreshAtmosphere(sc, atmo)
@@ -164,17 +169,5 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live, scene.id])
 
-  return (
-    <>
-      <div ref={hostRef} className="preview" />
-      <button
-        type="button"
-        className="preview__mode"
-        onClick={() => setLive((v) => !v)}
-        title={live ? 'Show the static editing preview' : 'Run the real world in context'}
-      >
-        {live ? '● Live' : '▷ Live'}
-      </button>
-    </>
-  )
+  return <div ref={hostRef} className="preview" />
 }
