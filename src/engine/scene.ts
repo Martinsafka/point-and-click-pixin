@@ -37,6 +37,7 @@ import {
 } from '../systems/routine'
 import { createRulesRunner } from '../systems/rules'
 import { itemAction } from './item-action'
+import { createBubbleSystem } from './bubble'
 import { facingToAngle, WALK_SPEED } from '../systems/movement'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
 import { containsPoint } from '../systems/walkable'
@@ -53,6 +54,7 @@ import type {
   InteractableData,
   LayerData,
   LayerFit,
+  Monologue,
   NpcDef,
   PlayerLight,
   NpcId,
@@ -366,6 +368,9 @@ export async function mountScene(
   const foreground = new Container()
   foreground.zIndex = 20
   world.addChild(background, interactive, foreground)
+  // World-space speech bubbles (M12.5 #6 / #18) — the engine runs the typewriter + tracks each
+  // character's feet; the DOM overlay (ui/SpeechBubbles) renders them (Pixi Text clipped lines).
+  const bubbles = createBubbleSystem()
 
   // M10 atmosphere/lighting compositing stack (weather / lighting / fog / polish render
   // into its slots; subsystems register per-frame updaters, ticked below).
@@ -627,6 +632,10 @@ export async function mountScene(
   // live character by id (`'player'` + cast ids) so engine effects resolve targets.
   const npcs: { id: string; character: Character; interaction: NpcInteraction }[] = []
   const actors = new Map<string, Character>([['player', character]])
+  // Re-issue a routine NPC's active path (re-arming its `onArrive` notify) — used after a
+  // vision `approach` diverts the NPC to the player, so its routine doesn't stall on the
+  // interrupted path. Keyed by npc id; set per routine NPC below.
+  const routineReplay = new Map<string, () => void>()
   for (const placement of scene.npcs ?? []) {
     // Per-NPC appearance (`NpcDef.view`) when set, else the shared placeholder. The
     // placement's `npc` is the runtime id (playAnim target / NPC triggers resolve to it).
@@ -694,6 +703,14 @@ export async function mountScene(
     // Initial: resume a routine NPC mid-walk at its global path progress (B-lite); a later
     // path switch (a new path) always starts at the beginning.
     start(currentPath, routine ? (npcPathProgress?.(npcId) ?? 0) : 0)
+    if (routine) {
+      // Resume the routine walk after an interruption (vision approach): re-walk the active
+      // path from the NPC's current spot so its `onArrive` fires again and the routine advances.
+      routineReplay.set(npcId, () => {
+        currentPath = activePathOf(store.getState())
+        start(currentPath)
+      })
+    }
     if (placement.paths || routine) {
       pathSwitchers.push((st) => {
         const next = activePathOf(st)
@@ -732,6 +749,63 @@ export async function mountScene(
       seen: false,
       fired: false,
     })
+  }
+
+  // Ambient monologues (M12.5 #6): each NPC with a `monologues` list gets a timed driver. The
+  // first monologue whose `when` passes is active; it shows after `after` ms, then repeats every
+  // `every` ms (a flag thus swaps the line). Visual only — ticks in both the game + the editor.
+  const MONO_GAP = 6000 // default seconds between cycled lines when none set their own `every`
+  const monoDrivers: {
+    id: string
+    char: Character
+    list: Monologue[]
+    elapsed: number
+    nextAt: number
+    idx: number
+    lastKey: string | null
+  }[] = []
+  for (const n of npcs) {
+    const list = cast[n.id]?.monologues
+    if (list?.length)
+      monoDrivers.push({
+        id: n.id,
+        char: n.character,
+        list,
+        elapsed: 0,
+        nextAt: 0,
+        idx: 0,
+        lastKey: null,
+      })
+  }
+  const updateMonologues = (deltaMs: number): void => {
+    if (monoDrivers.length === 0 || dialogueStore.getState().active) return
+    const state = store.getState()
+    for (const m of monoDrivers) {
+      if (!m.char.displayObject.visible) continue // the NPC isn't present in this scene now
+      // Every monologue whose `when` passes is eligible; the driver **cycles** through them
+      // (a flag thus adds / removes lines). When the eligible set changes, restart the cycle.
+      const eligible = m.list.filter((x) => !x.when || checkCondition(state, x.when))
+      const key = eligible.map((e) => e.text).join('')
+      if (key !== m.lastKey) {
+        m.lastKey = key
+        m.idx = 0
+        m.elapsed = 0
+        m.nextAt = eligible[0]?.after ?? 2000
+      }
+      if (eligible.length === 0) continue
+      m.elapsed += deltaMs
+      if (m.elapsed >= m.nextAt) {
+        const line = eligible[m.idx % eligible.length]
+        bubbles.show(m.id, line.text, 2600, () => ({
+          x: m.char.displayObject.x,
+          y: m.char.displayObject.y,
+        }))
+        m.idx += 1
+        // Gap to the next line: this line's `every`, else a default while cycling, else stop
+        // (a single line with no `every` shows once until the eligible set changes).
+        m.nextAt = m.elapsed + (line.every ?? (eligible.length > 1 ? MONO_GAP : Infinity))
+      }
+    }
   }
 
   // Camera: height-anchored + resize-safe. Each frame we read the *current*
@@ -863,6 +937,15 @@ export async function mountScene(
       } else if (e.kind === 'startSequence') {
         const seq = sequences[e.sequence]
         if (seq) void playSequence(seq)
+      } else if (e.kind === 'say') {
+        // World-space speech bubble over the target actor (default the subject).
+        const id = e.target ?? subject
+        const ch = actors.get(id)
+        if (ch)
+          bubbles.show(id, e.text, e.ms ?? 2600, () => ({
+            x: ch.displayObject.x,
+            y: ch.displayObject.y,
+          }))
       }
     }
   }
@@ -1132,7 +1215,15 @@ export async function mountScene(
         if (sees && !nav.los(disp.x, disp.y, px, py)) sees = false
       }
       if (sees && !v.seen && !(v.cfg.once && v.fired)) {
-        run(v.cfg.effects, v.id) // the stealth beat — the watcher is the subject
+        // The detection beat — the watcher is the subject. With `approach` (M12.5 #18) the NPC
+        // walks to the player first, then runs the effects (e.g. spot → come over → speak), then
+        // resumes its routine path (so an interrupted `onArrive` node isn't left stalled).
+        if (v.cfg.approach)
+          v.char.setTarget(px, py, () => {
+            run(v.cfg.effects, v.id)
+            routineReplay.get(v.id)?.()
+          })
+        else run(v.cfg.effects, v.id)
         v.fired = true
       }
       v.seen = sees
@@ -1208,6 +1299,8 @@ export async function mountScene(
     character.update(ticker.deltaMS)
     for (const n of npcs) n.character.update(ticker.deltaMS)
     updateCamera(ticker.deltaMS)
+    bubbles.update(ticker.deltaMS)
+    updateMonologues(ticker.deltaMS)
     atmosphere.update(ticker.deltaMS)
     lighting?.update(
       store.getState(),
@@ -1278,6 +1371,7 @@ export async function mountScene(
       if (dialogueStore.getState().active) dialogueStore.getState().end()
       if (sequenceStore.getState().active) sequenceStore.getState().end()
       itemAction.run = () => {}
+      bubbles.destroy()
       unsubscribeVisibility()
       app.ticker.remove(onTick)
       app.stage.off('pointertap', onTap)

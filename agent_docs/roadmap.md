@@ -614,14 +614,14 @@ V2.) Each still follows schema-first → runtime → editor.
       `startDialog` + engine effects fire from the DOM inventory. Editor: per-item on-click actions.
 - [x] **14 — Skip dialogue** — a Skip ⏭ button on the dialogue box → `dialogueStore.end()` (beyond
       the per-line typewriter complete-on-click).
-- [ ] **18 — Player-approach detection** — extend NPC `vision`: on detection the NPC can **walk to
-      the player** (a new `approach` step) before running its effects (`startDialog` / `setFlag` /
-      `playAnim`, multiple events — already supported). Builds on the existing vision→effects edge;
-      the walk-to-player is the new part. _(#18.)_
-- [ ] **6 — NPC monologues (speech bubbles)** — a world-space bubble over an NPC that follows it,
-      with the dialogue typewriter. `NpcDef.monologues[]` — each `{ text, after?, when? }`: an NPC
-      can have several, shown after a delay, and a flag swaps which is active. Reuses the
-      typewriter; new is the NPC-tracking world-space bubble. _(#6.)_
+- [x] **18 — Player-approach detection** — `VisionConfig.approach?`: on detection the NPC **walks to
+      the player** before running its `effects` (which now include `say`), so it spots you, comes
+      over, and speaks. Editor: an **approach** checkbox in the NPC vision. Demo: the street guard.
+- [x] **6 — NPC monologues (speech bubbles)** — `engine/bubble.ts` world-space typewriter bubbles
+      that follow a character + a reusable **`say` effect**; `NpcDef.monologues[]`
+      (`{ text, after?, every?, when? }`) drives ambient lines (a flag swaps which is active).
+      Editor: a **Monologues** list in the NPC modal + `say` in the effect picker. Demo: the
+      stranger mutters (line changes after you meet him). **→ M12.5 complete.**
 - [x] **7 — Spawn points** — `SceneData.spawnPoints[]` (`{ at, target }`, target = `player` / a
       cast NPC id / `all`); the runtime seeds each character at its point (specific id wins over
       `all`), overriding the scene / placement spawn. Editor: a Scene-tab **Spawn points** section

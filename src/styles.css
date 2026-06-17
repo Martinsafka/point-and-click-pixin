@@ -207,6 +207,41 @@ body {
 }
 
 /* In-game pointer cursor (icon / emoji following the mouse over the scene). */
+/* World-space speech bubbles (M12.5 #6 / #18) — DOM overlay positioned via the camera. */
+.speech-bubbles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 90;
+}
+.speech-bubble {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  max-width: 240px;
+  padding: 6px 11px;
+  background: rgba(10, 14, 22, 0.92);
+  border: 1px solid #2a3650;
+  border-radius: 9px;
+  color: #e6ebf2;
+  font-size: calc(15px * var(--ui-scale, 1));
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: break-word;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+/* little tail pointing down to the character */
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 8px solid rgba(10, 14, 22, 0.92);
+}
+
 .game-cursor {
   position: fixed;
   /* Offset up-left so the icon sits off the actual pointer (lower-right). */

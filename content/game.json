@@ -704,7 +704,27 @@
       "voice": {
         "pitch": 0.8
       },
-      "home": "street"
+      "home": "street",
+      "monologues": [
+        {
+          "text": "Rough part of town, this.",
+          "after": 2500,
+          "every": 7000
+        },
+        {
+          "text": "I wouldn't wander down that alley after dark if I were you, friend."
+        },
+        {
+          "text": "Mind the puddles."
+        },
+        {
+          "text": "You're still here?",
+          "when": {
+            "kind": "flag",
+            "flag": "met-stranger"
+          }
+        }
+      ]
     },
     "guard": {
       "id": "guard",
@@ -720,6 +740,11 @@
             "target": "guard"
           },
           {
+            "kind": "say",
+            "text": "Hey! You there — stop!",
+            "target": "guard"
+          },
+          {
             "kind": "setFlag",
             "flag": "spotted"
           }
@@ -727,7 +752,8 @@
         "unless": {
           "kind": "flag",
           "flag": "hidden"
-        }
+        },
+        "approach": true
       },
       "routine": {
         "start": "patrol",

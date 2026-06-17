@@ -170,6 +170,9 @@ export type Effect =
   // Engine effects (touch the scene / characters, not the story state):
   | { kind: 'playSound'; sound: string }
   | { kind: 'playAnim'; action: string; target?: string }
+  // Show a world-space **speech bubble** over an actor (M12.5 #6) — `target` actor (default the
+  // subject / player), held for `ms` (default ~2.6 s) after it types out.
+  | { kind: 'say'; text: string; target?: string; ms?: number }
   // Lingers the *entering* actor (an NPC / dialogue partner) for `ms`, optionally
   // looping `anim` meanwhile. Never pauses the player. Composes with `playAnim`
   // ("longest wins" — the actor resumes once the longest pause has elapsed).
@@ -681,6 +684,23 @@ export interface VisionConfig {
   unless?: Condition
   /** Fire once per scene visit (else re-fires on each fresh detection edge). */
   once?: boolean
+  /** On detection, the NPC first **walks to the player** and then runs `effects` (M12.5 #18) —
+   *  e.g. it spots you, approaches, and speaks (a `say` effect). */
+  approach?: boolean
+}
+
+/**
+ * An NPC's ambient **monologue** (M12.5 #6) — a world-space speech bubble that types out over the
+ * NPC and follows it. The first monologue whose `when` passes is the active one; it shows after
+ * `after` ms, then repeats every `every` ms (if set). A flag thus switches which line plays.
+ */
+export interface Monologue {
+  text: string
+  /** Delay (ms) before it first shows, default ~2000. */
+  after?: number
+  /** Repeat interval (ms); omit → show once (until the active monologue changes). */
+  every?: number
+  when?: Condition
 }
 
 /**
@@ -727,6 +747,9 @@ export interface NpcDef {
   footstep?: SoundConfig
   /** Stealth vision — on seeing the player, run its effects; absent → the NPC doesn't watch. */
   vision?: VisionConfig
+  /** Ambient speech bubbles (M12.5 #6) — timed monologues shown over the NPC; a flag can swap
+   *  which is active. */
+  monologues?: Monologue[]
   /** The NPC's **starting** scene when it's placed in more than one (its runtime location
    *  then moves via `moveNpc`); defaults to the scene of its first placement. */
   home?: SceneId

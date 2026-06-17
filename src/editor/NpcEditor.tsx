@@ -4,6 +4,7 @@ import { ConditionEditor } from './ConditionEditor'
 import { EffectList } from './EffectList'
 import { CharacterEditor } from './CharacterEditor'
 import { AppearanceList } from './AppearanceList'
+import { MonologueList } from './MonologueList'
 import { RoutineEditor } from './RoutineEditor'
 import { SoundSelect } from './SoundSelect'
 import { SoundField } from './SoundField'
@@ -90,6 +91,14 @@ function VisionEditor({
             onChange={(e) => patch({ once: e.target.checked || undefined })}
           />
           once
+        </label>
+        <label className="logic__chk" title="on detection, walk to the player before the effects">
+          <input
+            type="checkbox"
+            checked={vision.approach ?? false}
+            onChange={(e) => patch({ approach: e.target.checked || undefined })}
+          />
+          approach
         </label>
       </div>
       <div className="intr-form__field intr-form__field--col">
@@ -254,6 +263,16 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
           </button>
         </div>
       )}
+
+      <div className="intr-form__field intr-form__field--col">
+        <span>monologues (ambient speech)</span>
+        <MonologueList
+          monologues={npc.monologues ?? []}
+          onChange={(m) => s().patchNpcDef(npcId, { monologues: m.length ? m : undefined })}
+          items={doc.items}
+          sceneIds={sceneIds}
+        />
+      </div>
 
       <SoundField
         label="footsteps"

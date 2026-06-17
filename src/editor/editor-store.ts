@@ -524,7 +524,11 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       // overlay or don't show in the editor, so they don't churn the preview. Speed is hot
       // (`setNpcDefSpeed` → applyLive).
       const structural =
-        'view' in patch || 'views' in patch || 'routine' in patch || 'home' in patch
+        'view' in patch ||
+        'views' in patch ||
+        'routine' in patch ||
+        'home' in patch ||
+        'monologues' in patch
       set({
         doc: { ...doc, npcs: { ...npcs, [npcId]: { ...npcs[npcId], ...patch } } },
         ...(structural ? { revision: revision + 1 } : {}),

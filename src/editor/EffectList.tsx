@@ -85,6 +85,7 @@ const EFFECT_KINDS: Effect['kind'][] = [
   'despawnNpc',
   'playSound',
   'playAnim',
+  'say',
   'wait',
   'setStance',
 ]
@@ -115,6 +116,8 @@ function defaultEffect(kind: Effect['kind'], sceneIds: SceneId[], itemIds: ItemI
       return { kind: 'playSound', sound: '' }
     case 'playAnim':
       return { kind: 'playAnim', action: 'interact' }
+    case 'say':
+      return { kind: 'say', text: '' }
     case 'wait':
       return { kind: 'wait', ms: 1000 }
     case 'setStance':
@@ -231,6 +234,22 @@ function EffectFields({
             value={effect.action}
             options={animations}
             onChange={(action) => onChange({ ...effect, action })}
+          />
+          <OptionSelect
+            value={effect.target ?? 'player'}
+            options={targets}
+            onChange={(t) => onChange({ ...effect, target: t === 'player' ? undefined : t })}
+          />
+        </>
+      )
+    case 'say':
+      return (
+        <>
+          <input
+            className="logic__in"
+            placeholder="speech…"
+            value={effect.text}
+            onChange={(e) => onChange({ ...effect, text: e.target.value })}
           />
           <OptionSelect
             value={effect.target ?? 'player'}

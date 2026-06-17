@@ -370,8 +370,11 @@ steps into darkness → a different atlas / clips). Each variant is a `when` + a
 editable **name**, and a walk **speed** ×); place them into scenes from each scene's
 **NPCs** section. **✕** removes a character and any placements of it. **Edit** opens the
 NPC modal — dialogue (+ gate), inspect, voice, **footsteps** (a library sound played while
-this NPC walks), vision (stealth), appearance, its **routine** (below), and (when placed in
-more than one scene) its **home** start scene.
+this NPC walks), vision (stealth — incl. **approach**: walk to the player on detection, then
+run the effects), appearance (+ variants), **monologues** (M12.5 — timed world-space speech
+bubbles; eligible lines **cycle** in order, the first shows after `after` ms and each waits its
+`every` ms before the next — a flag adds / removes lines), its **routine** (below), and (when placed in more than one scene) its **home**
+start scene.
 
 #### Routine (cross-scene schedule)
 
@@ -630,6 +633,7 @@ screen is covered — the game never reveals a half-loaded scene.
 | `startDialog` | marker only — the dialogue runtime arrives in M7.|
 | `playSound`   | play an uploaded sound clip.                     |
 | `playAnim`    | play a one-shot animation (`action`) on a character (default the player). |
+| `say`         | show a world-space **speech bubble** (`text`) over a character (M12.5). |
 
 ---
 

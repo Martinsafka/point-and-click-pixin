@@ -5,6 +5,7 @@ import { Menu } from './Menu'
 import { DialogueBox } from './DialogueBox'
 import { CutsceneOverlay } from './CutsceneOverlay'
 import { GameCursor } from './GameCursor'
+import { SpeechBubbles } from './SpeechBubbles'
 import { TitleScreen } from './TitleScreen'
 import { LoadingScreen, TextScreen, CreditsScreen, FinalScreen } from './GameScreens'
 import { useStory } from './use-story'
@@ -165,6 +166,7 @@ export function App() {
         <CutsceneOverlay />
         <Menu onExit={() => setPhase('title')} />
       </div>
+      <SpeechBubbles />
       <GameCursor />
     </div>
   )
