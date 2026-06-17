@@ -730,6 +730,11 @@ export interface RoutineEdge {
   /** Fire when the source node's referenced path **completes** (a `once` path reaches its
    *  end) — i.e. the NPC arrived. Ignored for looping / pathless nodes. */
   onArrive?: boolean
+  /** Time-of-day window (minutes past midnight, 0..1439) this transition is eligible in
+   *  (M12c). Either bound may be omitted; wraps past midnight when `fromTime` > `toTime`
+   *  (e.g. 1320..360 = 22:00–06:00). Ignored when no `GameDoc.clock` is configured. */
+  fromTime?: number
+  toTime?: number
 }
 
 export type RoutineNodeId = string
@@ -847,6 +852,19 @@ export interface GameRule {
   once?: boolean
 }
 
+/**
+ * The game clock (M12c time scheduler). Time-of-day advances over real time; routine
+ * transitions can gate on a time window (`RoutineEdge.fromTime` / `toTime`). The runtime tracks
+ * the current time-of-day in story state (`clockMinutes`), so it persists in saves and a future
+ * time-of-day condition can read it.
+ */
+export interface ClockConfig {
+  /** Real seconds for one full in-game day (24h). e.g. 120 → a day every two minutes. */
+  dayLengthSec: number
+  /** Starting time-of-day in minutes past midnight (0..1439); default 0 (00:00). */
+  startMinutes?: number
+}
+
 /** The whole authored game. */
 export interface GameDoc {
   start: SceneId
@@ -857,6 +875,9 @@ export interface GameDoc {
   /** Game-wide reactive **rules** (M12a) — the global event graph, evaluated on every
    *  story-state change. Orchestrates logic / NPCs without attaching it to a single object. */
   rules?: GameRule[]
+  /** The game **clock** (M12c) — time-of-day advancing over real time; routine transitions can
+   *  gate on a time window. Absent → no clock (time gates ignored). */
+  clock?: ClockConfig
   /** Optional per-context cursor icons (image URLs); missing → emoji fallback. */
   cursors?: Partial<Record<CursorKind, string>>
   /** UI font-family for the game (M11) — a CSS font stack; absent → the system default. */

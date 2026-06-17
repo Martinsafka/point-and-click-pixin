@@ -29,6 +29,7 @@ function freshState(doc: GameDoc): StoryState {
     npcScene: {},
     npcNode: {},
     screen: null,
+    clockMinutes: doc.clock ? (doc.clock.startMinutes ?? 0) : undefined,
   }
 }
 
@@ -55,6 +56,7 @@ export function createStoryStore(doc: GameDoc) {
     reset: (nextDoc) => set({ ...freshState(nextDoc), narration: null, screen: null }),
     say: (text) => set({ narration: text }),
     setScreen: (screen) => set({ screen }),
+    setClock: (minutes) => set({ clockMinutes: minutes }),
     enterRoutine: (npc, node, scene) =>
       set({
         npcNode: { ...(get().npcNode ?? {}), [npc]: node },

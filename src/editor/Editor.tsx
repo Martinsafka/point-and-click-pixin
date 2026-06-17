@@ -33,6 +33,7 @@ import { SceneGrade } from './SceneGrade'
 import { ScreensEditor } from './ScreensEditor'
 import { RulesEditor } from './RulesEditor'
 import { LogicGraph } from './LogicGraph'
+import { ClockEditor } from './ClockEditor'
 import { LightingDefaults } from './LightingDefaults'
 import { LightOverlay } from './LightOverlay'
 import { EmitterOverlay } from './EmitterOverlay'
@@ -688,6 +689,9 @@ export function Editor() {
 
       {t === 'logic' && (
         <>
+          <Section title="Clock">
+            <ClockEditor clock={doc.clock} />
+          </Section>
           <Section title="Rules">
             <RulesEditor doc={doc} />
           </Section>

@@ -377,6 +377,9 @@ modal, **+ Routine** creates one (a single start node at the NPC's first placeme
   - **on arrival** — when the source node's path **finishes** (a `once` path reaches its
     end, i.e. the NPC got there); ignored for looping / standing nodes.
   - **after (ms)** — linger this long in the source node first (a timed beat).
+  - **time** — a **time-of-day window** (from/to, HH:MM) the transition is eligible in;
+    needs a **game clock** (Game logic tab → Clock). Wraps past midnight (e.g. 22:00–06:00);
+    ignored when no clock is set.
   - **when** — a Condition gate (the usual editor).
   - None set → taken immediately (an auto-advance). The first eligible edge out of the
     active node wins. **Delete** removes it.
@@ -447,8 +450,22 @@ in **Project → Screens**; see them in **▶ Test in game**.
 
 ### Game logic (tab) — Rules + Logic graph
 
-A dedicated top-level tab (its own launcher window) for the **game-wide logic**, with two
+A dedicated top-level tab (its own launcher window) for the **game-wide logic**, with three
 sections:
+
+#### Clock
+
+A **game clock** (M12c) — a time-of-day that advances over real time. Tick it on, then set:
+
+- **day length (s)** — real seconds for one full in-game day (24 h). e.g. 120 → a day every two
+  minutes.
+- **start time** — the time-of-day a fresh game begins at (HH:MM).
+
+With a clock on, a **routine transition** can gate on a **time window** (open the NPC's routine,
+select an edge, set its **from/to time**) — so a guard patrols by day and rests at night. Scrub
+the live time-of-day in the **World** window (a slider appears when a clock exists) to test it.
+The current time persists in saves (`clockMinutes`). _(A general time-of-day **condition** for
+rules/gates and an in-game HUD clock are follow-ups.)_
 
 #### Rules
 

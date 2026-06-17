@@ -4,6 +4,7 @@ import type { GameDoc } from '../data/schema'
 import type { StoryStoreApi } from '../state/story'
 import { useEditor } from './editor-store'
 import { previewBridge } from './preview-bridge'
+import { minutesToHHMM } from './time-format'
 
 /** Every flag id referenced anywhere in the doc (conditions `flag` + effects `setFlag`). */
 function collectFlags(doc: GameDoc): string[] {
@@ -37,6 +38,7 @@ function WorldStateControls({ store }: { store: StoryStoreApi }) {
   const currentScene = useStore(store, (s) => s.currentScene)
   const flags = useStore(store, (s) => s.flags)
   const inventory = useStore(store, (s) => s.inventory)
+  const clockMinutes = useStore(store, (s) => s.clockMinutes)
   const [newFlag, setNewFlag] = useState('')
 
   const run = store.getState().run
@@ -59,6 +61,20 @@ function WorldStateControls({ store }: { store: StoryStoreApi }) {
           ))}
         </select>
       </div>
+
+      {doc.clock && (
+        <div className="intr-form__field intr-form__field--col">
+          <span>time · {minutesToHHMM(clockMinutes ?? 0)}</span>
+          <input
+            type="range"
+            min={0}
+            max={1439}
+            step={1}
+            value={clockMinutes ?? 0}
+            onChange={(e) => store.getState().setClock(Number(e.target.value))}
+          />
+        </div>
+      )}
 
       <div className="intr-form__field intr-form__field--col">
         <span>flags</span>

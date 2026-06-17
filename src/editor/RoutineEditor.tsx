@@ -17,6 +17,7 @@ import { ConditionEditor } from './ConditionEditor'
 import { EffectList } from './EffectList'
 import { SceneSelect } from './EffectList'
 import { actionNames, actorIds } from './effect-options'
+import { minutesToHHMM, hhmmToMinutes } from './time-format'
 import type { GameDoc, NpcId, Routine, RoutineEdge, RoutineNode, SceneId } from '../data/schema'
 
 /** A starter routine: one node at the NPC's first placement scene. */
@@ -266,6 +267,24 @@ function RoutineGraph({ npcId, routine, doc }: { npcId: NpcId; routine: Routine;
                   after: e.target.value === '' ? undefined : Number(e.target.value),
                 })
               }
+            />
+          </div>
+          <div className="intr-form__field">
+            <span>time</span>
+            <input
+              type="time"
+              className="logic__in"
+              title="from (time-of-day; needs a game clock)"
+              value={minutesToHHMM(edge.fromTime)}
+              onChange={(e) => patchEdge(selEdge, { fromTime: hhmmToMinutes(e.target.value) })}
+            />
+            <span>–</span>
+            <input
+              type="time"
+              className="logic__in"
+              title="to (time-of-day)"
+              value={minutesToHHMM(edge.toTime)}
+              onChange={(e) => patchEdge(selEdge, { toTime: hhmmToMinutes(e.target.value) })}
             />
           </div>
           <div className="intr-form__field intr-form__field--col">

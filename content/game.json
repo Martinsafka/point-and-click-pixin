@@ -730,7 +730,9 @@
           {
             "from": "patrol",
             "to": "go-door",
-            "after": 15000
+            "after": 15000,
+            "fromTime": 480,
+            "toTime": 1080
           },
           {
             "from": "go-door",
@@ -856,6 +858,10 @@
       "once": true
     }
   ],
+  "clock": {
+    "dayLengthSec": 120,
+    "startMinutes": 480
+  },
   "recipes": [
     {
       "a": "gear",

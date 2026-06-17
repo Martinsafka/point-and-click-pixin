@@ -21,6 +21,9 @@ export interface StoryState {
   /** A requested full-screen end screen (M11) — set by the `gameOver` / `endGame` effects;
    *  the App reads it, switches screens, and clears it. Absent → none. */
   screen?: 'gameOver' | 'endGame' | null
+  /** Current time-of-day in minutes past midnight (0..1439), advanced by the game clock
+   *  (M12c). Absent → no clock running. */
+  clockMinutes?: number
 }
 
 /**
@@ -44,6 +47,8 @@ export interface StoryStore extends StoryState {
   say(text: string | null): void
   /** Clear the requested end screen (M11) once the App has switched to it. */
   setScreen(screen: 'gameOver' | 'endGame' | null): void
+  /** Set the current time-of-day (minutes past midnight) — driven by the game clock (M12c). */
+  setClock(minutes: number): void
   /** Enter a routine node: set the NPC's active node + sync its scene location (the
    *  routine runner drives this; `onEnter` effects run separately via `run`). */
   enterRoutine(npc: NpcId, node: string, scene: SceneId): void

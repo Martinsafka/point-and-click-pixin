@@ -586,8 +586,13 @@ Broken into (chosen with the user; **start with M12a**):
       exits / dialogues / cutscenes / NPC vision+routine / scene gates. Derived by scanning the
       doc (`editor/logic-scan.ts` → `editor/LogicGraph.tsx`). Lives with **Rules** in the new
       **Game logic** tab. _(Flags-only today; item/scene nodes + auto-layout are follow-ups.)_
-- [ ] **M12c — Time scheduler** _(optional; the part of M7 step 6 deferred here)_ — a game
-      clock; routine transitions can advance by **time-of-day** (not only `after` ms).
+- [x] **M12c — Time scheduler** — `GameDoc.clock` (`ClockConfig`: day length + start time) drives
+      a **time-of-day** (`StoryState.clockMinutes`, persisted) advancing over real time; routine
+      edges gate on a **time window** (`RoutineEdge.fromTime`/`toTime`, wrapping past midnight). The
+      runtime clock writes the store only on a minute boundary (not per-frame). Editor: a **Clock**
+      section in the Game logic tab (above Rules) + from/to time on a routine edge + a live **time
+      scrubber** in the World window. Demo: the guard only visits the room 08:00–18:00.
+      _(Follow-ups: a general `timeOfDay` condition + an in-game HUD clock.)_ **→ M12 complete.**
 
 ### M13 — Open-source packaging
 

@@ -39,6 +39,7 @@ import { containsPoint } from '../systems/walkable'
 import { checkCondition, type StoryState, type StoryStore } from '../systems/conditions'
 import type {
   AmbientLight,
+  ClockConfig,
   Condition,
   Dialog,
   DialogId,
@@ -1332,6 +1333,7 @@ export function createSceneHost(
   weatherPresets: Record<WeatherId, WeatherPreset> = {},
   lightingDefaults: { ambientLight?: AmbientLight; playerLight?: PlayerLight } = {},
   rules: readonly GameRule[] = [],
+  clock: ClockConfig | undefined = undefined,
   options: SceneOptions = {},
 ): SceneHost {
   let current: PreviewScene | undefined
@@ -1384,6 +1386,33 @@ export function createSceneHost(
   // independent of the mounted scene. Created after the routine runner so any start-node
   // `onEnter` seeding is in place before the initial rules pass. State effects only.
   const ruleEngine = createRulesRunner(rules, store)
+
+  // The game clock (M12c) — advances time-of-day (`clockMinutes`) over real time. Writes to
+  // the store only when the integer minute changes (coarse, not per-frame), so routine time
+  // windows + (future) conditions react without flooding subscribers. Resyncs to an external
+  // change (the editor's World scrubber, or a reset) so scrubbing/teardown isn't fought.
+  let onClockTick: ((ticker: Ticker) => void) | undefined
+  if (clock && clock.dayLengthSec > 0) {
+    if (store.getState().clockMinutes === undefined)
+      store.getState().setClock(clock.startMinutes ?? 0)
+    const minutesPerMs = 1440 / (clock.dayLengthSec * 1000)
+    let lastWritten = store.getState().clockMinutes ?? 0
+    let clockFloat = lastWritten
+    onClockTick = (ticker: Ticker) => {
+      const ext = store.getState().clockMinutes
+      if (ext !== undefined && Math.floor(ext) !== lastWritten) {
+        clockFloat = ext
+        lastWritten = Math.floor(ext)
+      }
+      clockFloat = (clockFloat + minutesPerMs * ticker.deltaMS) % 1440
+      const m = Math.floor(clockFloat)
+      if (m !== lastWritten) {
+        lastWritten = m
+        store.getState().setClock(m)
+      }
+    }
+    app.ticker.add(onClockTick)
+  }
 
   // The overlay swaps cross through: a colour wash (default black) + optional art,
   // animated on the ticker. Starts opaque so the first mount fades in. A huge rect
@@ -1516,6 +1545,7 @@ export function createSceneHost(
       unsubscribe()
       app.ticker.remove(onFadeTick)
       app.ticker.remove(onRoutineTick)
+      if (onClockTick) app.ticker.remove(onClockTick)
       routines.destroy()
       ruleEngine.destroy()
       current?.destroy()

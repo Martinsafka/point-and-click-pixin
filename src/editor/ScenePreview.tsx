@@ -86,6 +86,7 @@ export function ScenePreview({ scene, paused }: { scene: SceneData; paused: bool
         d.weatherPresets,
         { ambientLight: d.ambientLight, playerLight: d.playerLight },
         d.rules,
+        d.clock,
         {
           cameraMode: 'fit',
           gameplayInput: false,

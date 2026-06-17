@@ -4,6 +4,7 @@ import type {
   AmbientLight,
   Condition,
   CursorKind,
+  ClockConfig,
   DepthStop,
   ColorGrade,
   FogConfig,
@@ -164,6 +165,8 @@ interface EditorStore {
   setScreens(screens: ScreensConfig | undefined): void
   /** Game-wide reactive rules (M12a) — the global event graph. */
   setRules(rules: GameRule[] | undefined): void
+  /** The game clock config (M12c); undefined → no clock. */
+  setClock(clock: ClockConfig | undefined): void
   setTransitionSound(id: SoundId | undefined): void
   // Sound library (M9 9b) — upload once, reference by id everywhere.
   addSound(src: string): void
@@ -696,6 +699,7 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setFont: (font) => patchDoc({ font }),
     setScreens: (screens) => patchDoc({ screens }),
     setRules: (rules) => patchDoc({ rules: rules?.length ? rules : undefined }),
+    setClock: (clock) => patchDoc({ clock }),
     addSound: (src) => {
       const sounds = get().doc.sounds ?? {}
       const id = uniqueKey(sounds, 'sound')

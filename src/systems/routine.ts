@@ -17,10 +17,27 @@ export function routineNode(routine: Routine, id: string | undefined): RoutineNo
 }
 
 /**
+ * Is the time-of-day `now` (minutes past midnight) inside the window `[from, to)`? Either
+ * bound may be omitted (open); wraps past midnight when `from` > `to`. When no clock is
+ * running (`now` undefined) or no window is set, it's always in (the gate is inert). (M12c)
+ */
+export function inTimeWindow(
+  now: number | undefined,
+  from: number | undefined,
+  to: number | undefined,
+): boolean {
+  if (from === undefined && to === undefined) return true
+  if (now === undefined) return true
+  const f = from ?? 0
+  const t = to ?? 1440
+  return f <= t ? now >= f && now < t : now >= f || now < t
+}
+
+/**
  * The first transition out of `from` that is eligible now: its `when` passes (if set),
- * `after` ms have elapsed in the node (if set), and (`onArrive`) the node's path has
- * finished (`arrived`). Dangling edges (unknown `to`) are skipped. Returns the target
- * node id, or null when the NPC stays put.
+ * `after` ms have elapsed in the node (if set), (`onArrive`) the node's path has finished
+ * (`arrived`), and its time-of-day window contains `state.clockMinutes` (if set). Dangling
+ * edges (unknown `to`) are skipped. Returns the target node id, or null when the NPC stays put.
  */
 export function nextRoutineNode(
   routine: Routine,
@@ -33,6 +50,7 @@ export function nextRoutineNode(
     if (e.from !== from) continue
     if (e.onArrive && !arrived) continue
     if (e.after !== undefined && elapsedMs < e.after) continue
+    if (!inTimeWindow(state.clockMinutes, e.fromTime, e.toTime)) continue
     if (e.when && !checkCondition(state, e.when)) continue
     if (!routine.nodes.some((n) => n.id === e.to)) continue
     return e.to
