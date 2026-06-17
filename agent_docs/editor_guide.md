@@ -68,14 +68,21 @@ modes you toggle with the button in its corner:
 In both modes the lighting / weather **update live** as you edit (no reload).
 
 **Floating windows — the launcher bar (top-left of the preview).** Alongside the fixed
-panel you can pop the **global / document** sections out as **floating, draggable windows**
-over the preview: click a launcher entry (Items, Characters, Dialogs, Cutscenes, Sounds,
-Weather, Lighting, Document) to open its window, drag it by the title bar, ✕ to close, and
-keep **several open at once** (click one to bring it to the front). They host the **same
-forms** as the matching panel tabs — it's the same editor, just arranged around the live
-scene. (The scene-specific tools — Walkable / Holes / Hit-areas / Layers / NPCs / light
-placement — stay in the left panel for now; they move into windows as their on-scene
-drawing migrates to the live view.)
+panel you can pop **any tab** out as a **floating, draggable window** over the preview: the
+launcher mirrors the panel's tabs one-to-one — **Scene, Items, Characters, Dialogs,
+Cutscenes, Sounds, Atmosphere, Project**. Click an entry to open its window, drag it by the
+title bar, ✕ to close, and keep **several open at once** (click one to bring it to the
+front). Each window hosts the **same forms** as the matching tab — it's the same editor,
+just arranged around the live scene, so even the **Scene** window's drawing tools (Walkable
+/ Holes / Hit-areas / NPC / light placement) place points on the preview.
+
+**World window — drive the live world (launcher-only).** A `World` launcher entry opens
+controls that drive the **running** preview to a state you want to author against: **jump
+scene**, **set / clear flags** (it lists the flags used anywhere in the doc, plus an input
+to add a new one), **give / take items**, and **Reset world**. It only does something when
+the preview is in **● Live** mode (the real world reacts) — in Edit mode it shows a hint to
+switch. Use it to reveal gated content while authoring: e.g. to see a light that's gated on
+`hasItem flashlight`, switch to Live and **Give** the flashlight.
 
 ---
 

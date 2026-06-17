@@ -11,6 +11,7 @@ import {
 } from '../engine/scene'
 import { createStoryStore } from '../state/story'
 import { editorStore } from './editor-store'
+import { setPreviewStore } from './preview-bridge'
 
 /**
  * A live Pixi preview of one scene, sized to its container. Mounts once and re-mounts only
@@ -95,6 +96,8 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
         const sceneHostRef = sceneHost
         refresh = (sc, atmo) => sceneHostRef.refreshAtmosphere(sc, atmo)
         setCharScale = (s) => sceneHostRef.setCharacterScale(s)
+        // Publish the live world's story store so the World window (ME.5) can drive it.
+        setPreviewStore(store)
       } else {
         preview = await mountPreview(
           created,
@@ -149,6 +152,7 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
     return () => {
       cancelled = true
       unsubscribe?.()
+      setPreviewStore(null) // World window (ME.5) goes inert until the next Live mount
       if (app) {
         teardown(app)
         app = undefined

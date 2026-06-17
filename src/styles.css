@@ -693,6 +693,15 @@ body {
   flex: none;
 }
 
+/* ME.4 — the scene's world rect within the pane; placement/drawing overlays live inside it
+   so their fractional coords stay aligned even when the canvas isn't the scene's aspect.
+   Pass-through (children — catchers / handles — re-enable pointer events) so canvas
+   interactions (e.g. Edit-mode layer drag) still reach the world beneath. */
+.scene-viewport {
+  position: absolute;
+  pointer-events: none;
+}
+
 .preview {
   position: absolute;
   inset: 0;

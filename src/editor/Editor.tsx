@@ -11,6 +11,7 @@ import { clearDocDraft, hasDocDraft, saveDocDraft } from '../data/doc-draft'
 import type { InteractableData } from '../data/schema'
 import { DEFAULT_REFERENCE_HEIGHT } from '../data/scene-config'
 import { ScenePreview } from './ScenePreview'
+import { SceneViewport } from './SceneViewport'
 import { WalkableOverlay } from './WalkableOverlay'
 import { HoleOverlay } from './HoleOverlay'
 import { HitAreaOverlay } from './HitAreaOverlay'
@@ -37,6 +38,7 @@ import { LightingDefaults } from './LightingDefaults'
 import { LightOverlay } from './LightOverlay'
 import { ConditionEditor } from './ConditionEditor'
 import { FloatingEditor, type FloatPanel } from './FloatingEditor'
+import { WorldState } from './WorldState'
 import { setSoundLibrary } from '../audio/audio'
 
 const TABS = [
@@ -301,15 +303,295 @@ export function Editor() {
   const selInteractable =
     selectedInteractable !== null ? scene?.interactables[selectedInteractable] : undefined
 
-  // ME.2 — the global / document sections also available as floating windows over the live
-  // world (launcher top-left of the preview). They reuse the same standalone forms the fixed
-  // panel tabs render, so the two coexist during the migration. (Scene-coupled overlays stay
-  // in the panel until ME.4 moves them onto the live camera.)
-  const floatPanels: FloatPanel[] = [
-    {
-      id: 'items',
-      label: 'Items',
-      render: () => (
+  // The content of one top-level tab. Defined once and rendered in BOTH the fixed left panel
+  // and the floating launcher windows (ME.2), so there's a single source per tab.
+  const renderTab = (t: Tab): ReactNode => (
+    <>
+      {t === 'scene' && (
+        <>
+          <Section title="Scenes">
+            <div className="editor__toolbar">
+              <button type="button" onClick={() => editorStore.getState().addScene()}>
+                + Scene
+              </button>
+              <button
+                type="button"
+                onClick={() => editorStore.getState().deleteScene(selectedId)}
+                disabled={sceneIds.length <= 1}
+              >
+                Delete
+              </button>
+            </div>
+            <ul className="editor__scenes">
+              {sceneIds.map((id) => (
+                <li key={id}>
+                  <button
+                    type="button"
+                    className={`editor__scene${id === selectedId ? ' editor__scene--active' : ''}`}
+                    onClick={() => select(id)}
+                  >
+                    {doc.scenes[id].name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="intr-form__field">
+              <span>width</span>
+              <input
+                className="logic__in"
+                type="number"
+                step="20"
+                min={refH}
+                value={sceneWidth}
+                onChange={(e) => setWidthDraft(Number(e.target.value))}
+                onBlur={commitWidth}
+                onKeyDown={(e) => e.key === 'Enter' && commitWidth()}
+              />
+              <span className="intr-form__note">
+                px · {(sceneWidth / refH).toFixed(2)}:1
+                {sceneWidth > defaultWidth ? ' · scrolls' : ''}
+              </span>
+            </div>
+            <div className="intr-form__field">
+              <span>characters</span>
+              <input
+                type="range"
+                min="0.2"
+                max="4"
+                step="0.05"
+                value={charScale}
+                onChange={(e) =>
+                  editorStore.getState().setCharacterScale(selectedId, Number(e.target.value))
+                }
+              />
+              <span className="intr-form__note">{Math.round(charScale * 100)}%</span>
+            </div>
+          </Section>
+
+          <Section title={`Walkable · ${pointCount} pts`}>
+            <div className="editor__toolbar">
+              <button
+                type="button"
+                className={draw === 'walkable' ? 'editor__btn--active' : undefined}
+                onClick={() => toggle('walkable')}
+              >
+                {draw === 'walkable' ? 'Done' : 'Draw'}
+              </button>
+              <button type="button" onClick={clearWalkable}>
+                Clear
+              </button>
+            </div>
+          </Section>
+
+          <Section title="Depth">
+            {scene && <DepthEditor sceneId={selectedId} depth={scene.depth} />}
+          </Section>
+
+          <Section title={`Holes · ${holes.length}`}>
+            <div className="editor__toolbar">
+              <button type="button" onClick={addHole}>
+                + Hole
+              </button>
+            </div>
+            {holes.length > 0 && (
+              <ul className="editor__interactables">
+                {holes.map((h, i) => (
+                  <li key={i} className="intr-row">
+                    <button
+                      type="button"
+                      className={`intr-row__select${i === selectedHole ? ' intr-row__select--active' : ''}`}
+                      onClick={() => selectHole(i)}
+                    >
+                      Hole {i + 1} · {h.length / 2} pts
+                    </button>
+                    <button type="button" className="intr-row__del" onClick={() => removeHole(i)}>
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {selectedHole !== null && (
+              <div className="editor__toolbar">
+                <button
+                  type="button"
+                  className={draw === 'hole' ? 'editor__btn--active' : undefined}
+                  onClick={() => toggle('hole')}
+                >
+                  {draw === 'hole' ? 'Done' : 'Draw'}
+                </button>
+                <button type="button" onClick={clearHole}>
+                  Clear
+                </button>
+              </div>
+            )}
+          </Section>
+
+          <Section title={`Layers · ${scene ? scene.layers.length : 0}`}>
+            {scene && <LayerList sceneId={selectedId} layers={scene.layers} />}
+          </Section>
+
+          <Section title={`Interactables · ${scene ? scene.interactables.length : 0}`}>
+            <div className="editor__toolbar">
+              <button type="button" onClick={() => addInteractable('pickable')}>
+                + Pick
+              </button>
+              <button type="button" onClick={() => addInteractable('interact')}>
+                + Use
+              </button>
+              <button type="button" onClick={() => addInteractable('exit')}>
+                + Exit
+              </button>
+              <button type="button" onClick={() => addInteractable('inspect')}>
+                + Look
+              </button>
+              <button type="button" onClick={() => addInteractable('trigger')}>
+                + Trigger
+              </button>
+            </div>
+            {scene && scene.interactables.length > 0 && (
+              <ul className="editor__interactables">
+                {scene.interactables.map((it, i) => (
+                  <li key={i} className="intr-row">
+                    <button
+                      type="button"
+                      className={`intr-row__select intr-row__select--${it.kind}${
+                        i === selectedInteractable ? ' intr-row__select--active' : ''
+                      }`}
+                      onClick={() => selectInteractable(i)}
+                    >
+                      <span className="intr-row__kind">{it.kind}</span> {it.id}
+                    </button>
+                    <button
+                      type="button"
+                      className="intr-row__del"
+                      onClick={() => removeInteractable(i)}
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {scene && selectedInteractable !== null && selInteractable && (
+              <InteractableForm
+                sceneId={selectedId}
+                index={selectedInteractable}
+                interactable={selInteractable}
+                items={doc.items}
+                sceneIds={sceneIds}
+                drawMode={draw === 'hitarea'}
+                onToggleDraw={() => toggle('hitarea')}
+              />
+            )}
+          </Section>
+
+          <Section title={`NPCs · ${scene ? (scene.npcs?.length ?? 0) : 0}`}>
+            {scene && (
+              <NpcList
+                sceneId={selectedId}
+                placements={scene.npcs ?? []}
+                cast={doc.npcs ?? {}}
+                placedNpcIds={placedNpcIds}
+                selectedIndex={selectedNpc}
+                onSelect={selectNpc}
+                placeMode={draw === 'npc'}
+                onTogglePlace={() => toggle('npc')}
+                drawPathIndex={draw === 'npcpath' ? drawPathIndex : null}
+                onToggleDrawPath={toggleDrawPath}
+                items={doc.items}
+                sceneIds={sceneIds}
+              />
+            )}
+          </Section>
+
+          <Section title="Audio">
+            {scene && (
+              <>
+                <SoundField
+                  label="ambient"
+                  value={scene.ambient}
+                  onChange={(v) =>
+                    editorStore
+                      .getState()
+                      .setSceneAmbient(selectedId, v ? { ...v, when: scene.ambient?.when } : undefined)
+                  }
+                />
+                {scene.ambient && (
+                  <div className="intr-form__field intr-form__field--col">
+                    <span>ambient when (else the document default plays)</span>
+                    <ConditionEditor
+                      condition={scene.ambient.when}
+                      onChange={(when) =>
+                        editorStore.getState().setSceneAmbient(selectedId, { ...scene.ambient!, when })
+                      }
+                      items={doc.items}
+                      sceneIds={sceneIds}
+                    />
+                  </div>
+                )}
+                <p className="intr-form__note">
+                  No ambient → the document default (Project tab) plays.
+                </p>
+              </>
+            )}
+          </Section>
+
+          <Section title="Weather">
+            {scene && (
+              <SceneWeather
+                sceneId={selectedId}
+                weather={scene.weather ?? []}
+                presets={doc.weatherPresets ?? {}}
+                items={doc.items}
+                sceneIds={sceneIds}
+              />
+            )}
+          </Section>
+
+          <Section title="Lighting">
+            {scene && (
+              <SceneLighting
+                sceneId={selectedId}
+                ambientLight={scene.ambientLight}
+                lights={scene.lights ?? []}
+                darkAreas={scene.darkAreas ?? []}
+                items={doc.items}
+                sceneIds={sceneIds}
+                selectedLight={selectedLight}
+                onSelectLight={(i) => {
+                  setSelectedLight(i)
+                  setDraw(null)
+                }}
+                lightPlaceMode={draw === 'light'}
+                onToggleLightPlace={() => toggle('light')}
+                selectedDarkArea={selectedDarkArea}
+                onSelectDarkArea={setSelectedDarkArea}
+                darkDrawMode={draw === 'darkarea'}
+                onToggleDarkDraw={() => toggle('darkarea')}
+              />
+            )}
+          </Section>
+
+          {draw && (
+            <p className="editor__hint">
+              {draw === 'npc'
+                ? "Click in the preview to set the NPC's spawn."
+                : draw === 'npcpath'
+                  ? "Click in the preview to add waypoints to the NPC's path."
+                  : draw === 'light'
+                    ? 'Click in the preview to position the light.'
+                    : draw === 'darkarea'
+                      ? 'Click in the preview to add dark-area points.'
+                      : `Click in the preview to add ${
+                          draw === 'walkable' ? 'walkable' : draw === 'hole' ? 'hole' : 'hit-area'
+                        } points.`}
+            </p>
+          )}
+        </>
+      )}
+
+      {t === 'items' && (
         <>
           <Section title={`Items · ${Object.keys(doc.items).length}`}>
             <ItemCatalogue items={doc.items} />
@@ -318,12 +600,9 @@ export function Editor() {
             <RecipeTable recipes={doc.recipes ?? []} items={doc.items} />
           </Section>
         </>
-      ),
-    },
-    {
-      id: 'characters',
-      label: 'Characters',
-      render: () => (
+      )}
+
+      {t === 'characters' && (
         <>
           <Section title="Player">
             <CharacterEditor
@@ -337,70 +616,125 @@ export function Editor() {
             <NpcCast npcs={doc.npcs} />
           </Section>
         </>
-      ),
-    },
-    {
-      id: 'dialogs',
-      label: 'Dialogs',
-      render: () => (
+      )}
+
+      {t === 'dialogs' && (
         <Section title={`Dialogs · ${Object.keys(doc.dialogs ?? {}).length}`}>
           <DialogList dialogs={doc.dialogs} />
         </Section>
-      ),
-    },
-    {
-      id: 'sequences',
-      label: 'Cutscenes',
-      render: () => (
+      )}
+
+      {t === 'sequences' && (
         <Section title={`Cutscenes · ${Object.keys(doc.sequences ?? {}).length}`}>
           <SequenceList sequences={doc.sequences} />
         </Section>
-      ),
-    },
-    {
-      id: 'sounds',
-      label: 'Sounds',
-      render: () => (
+      )}
+
+      {t === 'sounds' && (
         <Section title={`Sounds · ${Object.keys(doc.sounds ?? {}).length}`}>
           <SoundList sounds={doc.sounds} />
         </Section>
-      ),
-    },
-    {
-      id: 'weather',
-      label: 'Weather',
-      render: () => (
+      )}
+
+      {t === 'atmosphere' && (
         <Section title={`Weather presets · ${Object.keys(doc.weatherPresets ?? {}).length}`}>
           <WeatherList presets={doc.weatherPresets} />
         </Section>
-      ),
-    },
-    {
-      id: 'lighting',
-      label: 'Lighting',
-      render: () => (
-        <Section title="Lighting">
-          <LightingDefaults doc={doc} />
-        </Section>
-      ),
-    },
-    {
-      id: 'document',
-      label: 'Document',
-      render: () => (
-        <Section title="Document">
-          <div className="editor__toolbar">
-            <button type="button" onClick={exportDoc}>
-              Export
-            </button>
-            <label className="editor__import">
-              Import
-              <input type="file" accept="application/json" hidden onChange={onImport} />
+      )}
+
+      {t === 'project' && (
+        <>
+          <Section title="Display">
+            <div className="intr-form__field">
+              <span>height</span>
+              <input
+                className="logic__in"
+                type="number"
+                step="10"
+                min="240"
+                value={doc.referenceHeight ?? DEFAULT_REFERENCE_HEIGHT}
+                onChange={(e) =>
+                  editorStore
+                    .getState()
+                    .setReferenceHeight(
+                      Math.max(240, Math.round(Number(e.target.value)) || DEFAULT_REFERENCE_HEIGHT),
+                    )
+                }
+              />
+              <span className="intr-form__note">px · the game's vertical resolution</span>
+            </div>
+          </Section>
+          <Section title="Cursors">
+            <CursorEditor cursors={doc.cursors} />
+          </Section>
+          <Section title="Audio">
+            <SoundField
+              label="default ambient"
+              value={doc.ambient}
+              onChange={(v) => editorStore.getState().setDocAmbient(v)}
+            />
+            <SoundField
+              label="footstep"
+              value={doc.footstep}
+              defaultVolume={0.5}
+              onChange={(v) => editorStore.getState().setDocFootstep(v)}
+            />
+            <label className="logic__chk">
+              <input
+                type="checkbox"
+                checked={!doc.footstepsOff}
+                onChange={(e) => editorStore.getState().setFootstepsOff(!e.target.checked)}
+              />
+              footsteps while walking
             </label>
-          </div>
-        </Section>
-      ),
-    },
+            <div className="intr-form__field">
+              <span>pickup SFX</span>
+              <SoundSelect
+                value={doc.pickupSound}
+                onChange={(id) => editorStore.getState().setPickupSound(id)}
+              />
+            </div>
+            <div className="intr-form__field">
+              <span>transition SFX</span>
+              <SoundSelect
+                value={doc.transitionSound}
+                onChange={(id) => editorStore.getState().setTransitionSound(id)}
+              />
+            </div>
+            <p className="intr-form__note">
+              Empty → a built-in procedural sound. Upload your own in the Sounds tab.
+            </p>
+          </Section>
+          <Section title="Lighting">
+            <LightingDefaults doc={doc} />
+          </Section>
+          <Section title="Transition">
+            <TransitionEditor transition={doc.transition} />
+          </Section>
+          <Section title="Document">
+            <div className="editor__toolbar">
+              <button type="button" onClick={exportDoc}>
+                Export
+              </button>
+              <label className="editor__import">
+                Import
+                <input type="file" accept="application/json" hidden onChange={onImport} />
+              </label>
+            </div>
+          </Section>
+        </>
+      )}
+    </>
+  )
+
+  // ME.2 — the same tabs, available as floating windows over the live world (launcher top-left
+  // of the preview). The launcher mirrors the fixed panel's tabs one-to-one; both render
+  // `renderTab`, so they coexist on one source during the migration (the panel goes in ME.6).
+  // Plus the ME.5 **World** window (launcher-only): drive the live world's state to author
+  // against (flags / items / scene), reacting where the game already does.
+  const floatPanels: FloatPanel[] = [
+    ...TABS.map((t) => ({ id: t, label: TAB_LABEL[t], render: () => renderTab(t) })),
+    { id: 'world', label: 'World', render: () => <WorldState /> },
   ]
 
   return (
@@ -420,435 +754,7 @@ export function Editor() {
         </div>
 
         <div className="editor__tab-content">
-          {tab === 'scene' && (
-            <>
-              <Section title="Scenes">
-                <div className="editor__toolbar">
-                  <button type="button" onClick={() => editorStore.getState().addScene()}>
-                    + Scene
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => editorStore.getState().deleteScene(selectedId)}
-                    disabled={sceneIds.length <= 1}
-                  >
-                    Delete
-                  </button>
-                </div>
-                <ul className="editor__scenes">
-                  {sceneIds.map((id) => (
-                    <li key={id}>
-                      <button
-                        type="button"
-                        className={`editor__scene${id === selectedId ? ' editor__scene--active' : ''}`}
-                        onClick={() => select(id)}
-                      >
-                        {doc.scenes[id].name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <div className="intr-form__field">
-                  <span>width</span>
-                  <input
-                    className="logic__in"
-                    type="number"
-                    step="20"
-                    min={refH}
-                    value={sceneWidth}
-                    onChange={(e) => setWidthDraft(Number(e.target.value))}
-                    onBlur={commitWidth}
-                    onKeyDown={(e) => e.key === 'Enter' && commitWidth()}
-                  />
-                  <span className="intr-form__note">
-                    px · {(sceneWidth / refH).toFixed(2)}:1
-                    {sceneWidth > defaultWidth ? ' · scrolls' : ''}
-                  </span>
-                </div>
-                <div className="intr-form__field">
-                  <span>characters</span>
-                  <input
-                    type="range"
-                    min="0.2"
-                    max="4"
-                    step="0.05"
-                    value={charScale}
-                    onChange={(e) =>
-                      editorStore.getState().setCharacterScale(selectedId, Number(e.target.value))
-                    }
-                  />
-                  <span className="intr-form__note">{Math.round(charScale * 100)}%</span>
-                </div>
-              </Section>
-
-              <Section title={`Walkable · ${pointCount} pts`}>
-                <div className="editor__toolbar">
-                  <button
-                    type="button"
-                    className={draw === 'walkable' ? 'editor__btn--active' : undefined}
-                    onClick={() => toggle('walkable')}
-                  >
-                    {draw === 'walkable' ? 'Done' : 'Draw'}
-                  </button>
-                  <button type="button" onClick={clearWalkable}>
-                    Clear
-                  </button>
-                </div>
-              </Section>
-
-              <Section title="Depth">
-                {scene && <DepthEditor sceneId={selectedId} depth={scene.depth} />}
-              </Section>
-
-              <Section title={`Holes · ${holes.length}`}>
-                <div className="editor__toolbar">
-                  <button type="button" onClick={addHole}>
-                    + Hole
-                  </button>
-                </div>
-                {holes.length > 0 && (
-                  <ul className="editor__interactables">
-                    {holes.map((h, i) => (
-                      <li key={i} className="intr-row">
-                        <button
-                          type="button"
-                          className={`intr-row__select${i === selectedHole ? ' intr-row__select--active' : ''}`}
-                          onClick={() => selectHole(i)}
-                        >
-                          Hole {i + 1} · {h.length / 2} pts
-                        </button>
-                        <button
-                          type="button"
-                          className="intr-row__del"
-                          onClick={() => removeHole(i)}
-                        >
-                          ✕
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {selectedHole !== null && (
-                  <div className="editor__toolbar">
-                    <button
-                      type="button"
-                      className={draw === 'hole' ? 'editor__btn--active' : undefined}
-                      onClick={() => toggle('hole')}
-                    >
-                      {draw === 'hole' ? 'Done' : 'Draw'}
-                    </button>
-                    <button type="button" onClick={clearHole}>
-                      Clear
-                    </button>
-                  </div>
-                )}
-              </Section>
-
-              <Section title={`Layers · ${scene ? scene.layers.length : 0}`}>
-                {scene && <LayerList sceneId={selectedId} layers={scene.layers} />}
-              </Section>
-
-              <Section title={`Interactables · ${scene ? scene.interactables.length : 0}`}>
-                <div className="editor__toolbar">
-                  <button type="button" onClick={() => addInteractable('pickable')}>
-                    + Pick
-                  </button>
-                  <button type="button" onClick={() => addInteractable('interact')}>
-                    + Use
-                  </button>
-                  <button type="button" onClick={() => addInteractable('exit')}>
-                    + Exit
-                  </button>
-                  <button type="button" onClick={() => addInteractable('inspect')}>
-                    + Look
-                  </button>
-                  <button type="button" onClick={() => addInteractable('trigger')}>
-                    + Trigger
-                  </button>
-                </div>
-                {scene && scene.interactables.length > 0 && (
-                  <ul className="editor__interactables">
-                    {scene.interactables.map((it, i) => (
-                      <li key={i} className="intr-row">
-                        <button
-                          type="button"
-                          className={`intr-row__select intr-row__select--${it.kind}${
-                            i === selectedInteractable ? ' intr-row__select--active' : ''
-                          }`}
-                          onClick={() => selectInteractable(i)}
-                        >
-                          <span className="intr-row__kind">{it.kind}</span> {it.id}
-                        </button>
-                        <button
-                          type="button"
-                          className="intr-row__del"
-                          onClick={() => removeInteractable(i)}
-                        >
-                          ✕
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {scene && selectedInteractable !== null && selInteractable && (
-                  <InteractableForm
-                    sceneId={selectedId}
-                    index={selectedInteractable}
-                    interactable={selInteractable}
-                    items={doc.items}
-                    sceneIds={sceneIds}
-                    drawMode={draw === 'hitarea'}
-                    onToggleDraw={() => toggle('hitarea')}
-                  />
-                )}
-              </Section>
-
-              <Section title={`NPCs · ${scene ? (scene.npcs?.length ?? 0) : 0}`}>
-                {scene && (
-                  <NpcList
-                    sceneId={selectedId}
-                    placements={scene.npcs ?? []}
-                    cast={doc.npcs ?? {}}
-                    placedNpcIds={placedNpcIds}
-                    selectedIndex={selectedNpc}
-                    onSelect={selectNpc}
-                    placeMode={draw === 'npc'}
-                    onTogglePlace={() => toggle('npc')}
-                    drawPathIndex={draw === 'npcpath' ? drawPathIndex : null}
-                    onToggleDrawPath={toggleDrawPath}
-                    items={doc.items}
-                    sceneIds={sceneIds}
-                  />
-                )}
-              </Section>
-
-              <Section title="Audio">
-                {scene && (
-                  <>
-                    <SoundField
-                      label="ambient"
-                      value={scene.ambient}
-                      onChange={(v) =>
-                        editorStore
-                          .getState()
-                          .setSceneAmbient(
-                            selectedId,
-                            v ? { ...v, when: scene.ambient?.when } : undefined,
-                          )
-                      }
-                    />
-                    {scene.ambient && (
-                      <div className="intr-form__field intr-form__field--col">
-                        <span>ambient when (else the document default plays)</span>
-                        <ConditionEditor
-                          condition={scene.ambient.when}
-                          onChange={(when) =>
-                            editorStore
-                              .getState()
-                              .setSceneAmbient(selectedId, { ...scene.ambient!, when })
-                          }
-                          items={doc.items}
-                          sceneIds={sceneIds}
-                        />
-                      </div>
-                    )}
-                    <p className="intr-form__note">
-                      No ambient → the document default (Project tab) plays.
-                    </p>
-                  </>
-                )}
-              </Section>
-
-              <Section title="Weather">
-                {scene && (
-                  <SceneWeather
-                    sceneId={selectedId}
-                    weather={scene.weather ?? []}
-                    presets={doc.weatherPresets ?? {}}
-                    items={doc.items}
-                    sceneIds={sceneIds}
-                  />
-                )}
-              </Section>
-
-              <Section title="Lighting">
-                {scene && (
-                  <SceneLighting
-                    sceneId={selectedId}
-                    ambientLight={scene.ambientLight}
-                    lights={scene.lights ?? []}
-                    darkAreas={scene.darkAreas ?? []}
-                    items={doc.items}
-                    sceneIds={sceneIds}
-                    selectedLight={selectedLight}
-                    onSelectLight={(i) => {
-                      setSelectedLight(i)
-                      setDraw(null)
-                    }}
-                    lightPlaceMode={draw === 'light'}
-                    onToggleLightPlace={() => toggle('light')}
-                    selectedDarkArea={selectedDarkArea}
-                    onSelectDarkArea={setSelectedDarkArea}
-                    darkDrawMode={draw === 'darkarea'}
-                    onToggleDarkDraw={() => toggle('darkarea')}
-                  />
-                )}
-              </Section>
-
-              {draw && (
-                <p className="editor__hint">
-                  {draw === 'npc'
-                    ? "Click in the preview to set the NPC's spawn."
-                    : draw === 'npcpath'
-                      ? "Click in the preview to add waypoints to the NPC's path."
-                      : draw === 'light'
-                        ? 'Click in the preview to position the light.'
-                        : draw === 'darkarea'
-                          ? 'Click in the preview to add dark-area points.'
-                          : `Click in the preview to add ${
-                              draw === 'walkable' ? 'walkable' : draw === 'hole' ? 'hole' : 'hit-area'
-                            } points.`}
-                </p>
-              )}
-            </>
-          )}
-
-          {tab === 'items' && (
-            <>
-              <Section title={`Items · ${Object.keys(doc.items).length}`}>
-                <ItemCatalogue items={doc.items} />
-              </Section>
-              <Section title={`Recipes · ${(doc.recipes ?? []).length}`}>
-                <RecipeTable recipes={doc.recipes ?? []} items={doc.items} />
-              </Section>
-            </>
-          )}
-
-          {tab === 'characters' && (
-            <>
-              <Section title="Player">
-                <CharacterEditor
-                  view={doc.player}
-                  onCreate={() => editorStore.getState().createPlayer()}
-                  onChange={(patch) => editorStore.getState().updatePlayer(patch)}
-                  onRemove={() => editorStore.getState().removePlayer()}
-                />
-              </Section>
-              <Section title={`NPCs · ${Object.keys(doc.npcs ?? {}).length}`}>
-                <NpcCast npcs={doc.npcs} />
-              </Section>
-            </>
-          )}
-
-          {tab === 'dialogs' && (
-            <Section title={`Dialogs · ${Object.keys(doc.dialogs ?? {}).length}`}>
-              <DialogList dialogs={doc.dialogs} />
-            </Section>
-          )}
-
-          {tab === 'sequences' && (
-            <Section title={`Cutscenes · ${Object.keys(doc.sequences ?? {}).length}`}>
-              <SequenceList sequences={doc.sequences} />
-            </Section>
-          )}
-
-          {tab === 'sounds' && (
-            <Section title={`Sounds · ${Object.keys(doc.sounds ?? {}).length}`}>
-              <SoundList sounds={doc.sounds} />
-            </Section>
-          )}
-
-          {tab === 'atmosphere' && (
-            <Section title={`Weather presets · ${Object.keys(doc.weatherPresets ?? {}).length}`}>
-              <WeatherList presets={doc.weatherPresets} />
-            </Section>
-          )}
-
-          {tab === 'project' && (
-            <>
-              <Section title="Display">
-                <div className="intr-form__field">
-                  <span>height</span>
-                  <input
-                    className="logic__in"
-                    type="number"
-                    step="10"
-                    min="240"
-                    value={doc.referenceHeight ?? DEFAULT_REFERENCE_HEIGHT}
-                    onChange={(e) =>
-                      editorStore
-                        .getState()
-                        .setReferenceHeight(
-                          Math.max(
-                            240,
-                            Math.round(Number(e.target.value)) || DEFAULT_REFERENCE_HEIGHT,
-                          ),
-                        )
-                    }
-                  />
-                  <span className="intr-form__note">px · the game's vertical resolution</span>
-                </div>
-              </Section>
-              <Section title="Cursors">
-                <CursorEditor cursors={doc.cursors} />
-              </Section>
-              <Section title="Audio">
-                <SoundField
-                  label="default ambient"
-                  value={doc.ambient}
-                  onChange={(v) => editorStore.getState().setDocAmbient(v)}
-                />
-                <SoundField
-                  label="footstep"
-                  value={doc.footstep}
-                  defaultVolume={0.5}
-                  onChange={(v) => editorStore.getState().setDocFootstep(v)}
-                />
-                <label className="logic__chk">
-                  <input
-                    type="checkbox"
-                    checked={!doc.footstepsOff}
-                    onChange={(e) => editorStore.getState().setFootstepsOff(!e.target.checked)}
-                  />
-                  footsteps while walking
-                </label>
-                <div className="intr-form__field">
-                  <span>pickup SFX</span>
-                  <SoundSelect
-                    value={doc.pickupSound}
-                    onChange={(id) => editorStore.getState().setPickupSound(id)}
-                  />
-                </div>
-                <div className="intr-form__field">
-                  <span>transition SFX</span>
-                  <SoundSelect
-                    value={doc.transitionSound}
-                    onChange={(id) => editorStore.getState().setTransitionSound(id)}
-                  />
-                </div>
-                <p className="intr-form__note">
-                  Empty → a built-in procedural sound. Upload your own in the Sounds tab.
-                </p>
-              </Section>
-              <Section title="Lighting">
-                <LightingDefaults doc={doc} />
-              </Section>
-              <Section title="Transition">
-                <TransitionEditor transition={doc.transition} />
-              </Section>
-              <Section title="Document">
-                <div className="editor__toolbar">
-                  <button type="button" onClick={exportDoc}>
-                    Export
-                  </button>
-                  <label className="editor__import">
-                    Import
-                    <input type="file" accept="application/json" hidden onChange={onImport} />
-                  </label>
-                </div>
-              </Section>
-            </>
-          )}
+          {renderTab(tab)}
         </div>
 
         <div className="editor__footer">
@@ -865,41 +771,43 @@ export function Editor() {
         {scene && stage.w > 0 && (
           <div className="editor__stage" style={{ width: stage.w, height: stage.h }}>
             <ScenePreview key={`${selectedId}-${revision}`} scene={scene} />
-            <WalkableOverlay
-              walkable={scene.walkable}
-              drawMode={draw === 'walkable'}
-              onAddPoint={addPoint}
-            />
-            <HoleOverlay
-              holes={holes}
-              selectedIndex={selectedHole}
-              drawMode={draw === 'hole'}
-              onAddPoint={addHolePoint}
-            />
-            <HitAreaOverlay
-              interactables={scene.interactables}
-              selectedIndex={selectedInteractable}
-              drawMode={draw === 'hitarea'}
-              onAddPoint={addHitAreaPoint}
-            />
-            <NpcOverlay
-              placements={scene.npcs ?? []}
-              cast={doc.npcs ?? {}}
-              aspect={aspect}
-              selectedIndex={selectedNpc}
-              mode={draw === 'npc' ? 'place' : draw === 'npcpath' ? 'path' : null}
-              onPlace={placeNpc}
-              onAddPathPoint={addNpcPathPoint}
-            />
-            <LightOverlay
-              lights={scene.lights ?? []}
-              darkAreas={scene.darkAreas ?? []}
-              selectedLight={selectedLight}
-              selectedDarkArea={selectedDarkArea}
-              mode={draw === 'light' ? 'light' : draw === 'darkarea' ? 'darkarea' : null}
-              onPlaceLight={placeLight}
-              onAddDarkPoint={addDarkAreaPoint}
-            />
+            <SceneViewport design={{ width: savedWidth, height: refH }}>
+              <WalkableOverlay
+                walkable={scene.walkable}
+                drawMode={draw === 'walkable'}
+                onAddPoint={addPoint}
+              />
+              <HoleOverlay
+                holes={holes}
+                selectedIndex={selectedHole}
+                drawMode={draw === 'hole'}
+                onAddPoint={addHolePoint}
+              />
+              <HitAreaOverlay
+                interactables={scene.interactables}
+                selectedIndex={selectedInteractable}
+                drawMode={draw === 'hitarea'}
+                onAddPoint={addHitAreaPoint}
+              />
+              <NpcOverlay
+                placements={scene.npcs ?? []}
+                cast={doc.npcs ?? {}}
+                aspect={aspect}
+                selectedIndex={selectedNpc}
+                mode={draw === 'npc' ? 'place' : draw === 'npcpath' ? 'path' : null}
+                onPlace={placeNpc}
+                onAddPathPoint={addNpcPathPoint}
+              />
+              <LightOverlay
+                lights={scene.lights ?? []}
+                darkAreas={scene.darkAreas ?? []}
+                selectedLight={selectedLight}
+                selectedDarkArea={selectedDarkArea}
+                mode={draw === 'light' ? 'light' : draw === 'darkarea' ? 'darkarea' : null}
+                onPlaceLight={placeLight}
+                onAddDarkPoint={addDarkAreaPoint}
+              />
+            </SceneViewport>
           </div>
         )}
         <FloatingEditor panels={floatPanels} />

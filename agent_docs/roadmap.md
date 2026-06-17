@@ -444,12 +444,13 @@ overlays are the sensitive bits).
       where it already does.
   - [x] **a** — floating-window chrome + launcher (`FloatingWindow` / `FloatingEditor`):
         draggable windows (title-bar drag, ✕, click-to-raise, several open) and a launcher
-        bar over the preview, hosting the **standalone global sections** (Items / Characters /
-        Dialogs / Cutscenes / Sounds / Weather / Lighting / Document) — reusing the same forms
-        the fixed panel renders, so the two **coexist**.
-  - [ ] **b** — bring the **scene-coupled** sections (Walkable / Holes / Hit-areas / Layers /
-        NPCs / Lighting placement) into windows as their overlays move to the live camera (with
-        ME.4).
+        bar over the preview.
+  - [x] **b** — **parity:** the launcher now mirrors **all 8 tabs** one-to-one (Scene / Items /
+        Characters / Dialogs / Cutscenes / Sounds / Atmosphere / Project). Each tab's content
+        is extracted into one `renderTab(tab)` used by **both** the fixed panel and the windows
+        (single source — removed the earlier per-section duplication). The **Scene** window
+        drives the same `draw` modes, so its tools place/draw on the (ME.4) overlays from a
+        floating window too.
   - [ ] **c** — once the launcher reaches parity, retire the fixed `editor__panel` (→ ME.6).
 - [x] **ME.3 — Live-update the tunable systems** — the preview applies **hot** params in place
       and **re-mounts** only on structural change. Policy: **hot (live, no re-mount)** =
@@ -463,13 +464,27 @@ overlays are the sensitive bits).
       cheap edit doesn't rebuild the lightmap).
       _(Follow-up: **depth** edits currently neither re-mount nor live-update — they apply on the
       next re-mount; make depth live or bump revision when that bites.)_
-- [ ] **ME.4 — Migrate placement/drawing overlays to the live camera** — walkable / holes /
-      hit-areas / NPC spawn+path / lights / dark areas convert screen↔world via
-      `cameraOffset` (already used by the cursor); editor mode suppresses gameplay clicks
-      while placing/drawing. Migrate **one overlay at a time**, validating each.
-- [ ] **ME.5 — Live-context authoring utilities** — jump-to-scene, set/clear flags,
-      give/take items, pause/resume + reset player, so you can drive the live world to the
-      state you want to author against (e.g. light a `hasItem flashlight` scene).
+- [x] **ME.4 — Placement/drawing overlays mapped via the world rect** — all overlays
+      (walkable / holes / hit-areas / NPC spawn+path / lights / dark areas) now live inside a
+      `SceneViewport` wrapper sized to the scene's on-screen **world rect** (the same `fit`
+      transform the camera publishes as `cameraOffset`: one scale + centring), so their
+      fractional coords stay aligned when the canvas isn't the scene's aspect (letterbox →
+      ME.6). The editor preview is always a whole-scene `fit` view, so the rect is computed
+      deterministically from the pane size + design (decoupled from engine frame timing; the
+      in-game cursor still reads the live `cameraOffset`). Gameplay clicks are already
+      suppressed in the live view (ME.1 `gameplayInput:false`). _Today the box is kept at the
+      scene's aspect, so the rect equals the box and nothing moves — the mapping is now just
+      explicit + camera-driven, which de-risks the ME.6 fullscreen switch (no overlay rewrite
+      then). Single wrapper = lower risk than per-overlay coordinate rewrites._
+- [x] **ME.5 — Live-context authoring utilities** — a launcher-only **World** window drives the
+      live preview's world to the state you want to author against: **jump scene** (`goTo`),
+      **set/clear flags** (known flags scanned from the doc + add an arbitrary one),
+      **give/take items**, and **reset**. It writes to the live scene-host's story store
+      (published via `preview-bridge` when the preview is in **Live** mode) and the world reacts
+      where it already does — gated layers / NPCs / lights appear, scene swaps run — so e.g. a
+      `hasItem flashlight` light shows by giving the item. Inert (with a hint) in static Edit
+      mode. _(Follow-up: pause/resume the ticker + reset the player's on-screen position — reset
+      currently re-seeds the store state, not per-frame motion.)_
 - [ ] **ME.6 — Retire the static preview + cleanup** — once at parity, remove `mountPreview`
       + the separated path → **one Pixi world**. Keep the dev-only gate + lazy-load.
 
