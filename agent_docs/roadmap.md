@@ -569,22 +569,23 @@ condition / effect vocabulary.
 
 Broken into (chosen with the user; **start with M12a**):
 
-- [ ] **M12a — Global rules engine** ⭐ _(start here)_ — `GameDoc.rules`: game-wide reactive
+- [x] **M12a — Global rules engine** ⭐ — `GameDoc.rules`: game-wide reactive
       rules `{ id?, when: Condition, then: Effect[], once? }`, evaluated **globally on every
       story-state change** (a store subscription, fixpoint with a hop cap vs loops — like the
       routine runner). The cross-cutting "game-wide event graph" — orchestrate logic / NPCs
       without attaching it to a single object (e.g. `hasItem k1 & k2 & k3` → `setFlag gate-open`
-      → `moveNpc guard away`). Runtime runner lives globally (alongside the routine runner in
-      `createSceneHost`, subscribed to the story store). Editor: a Project **Rules** section
-      reusing `ConditionEditor` + `EffectList`. **Scope:** `then` = **state** effects
-      (setFlag / give / take / goTo / moveNpc / despawn / gameOver / endGame, via `store.run`);
-      engine effects (startSequence / playSound / playAnim) need the mounted scene's dispatch →
-      **follow-up**.
-- [ ] **M12b — Logic overview graph** — a React Flow (`@xyflow/react`, already used by the
-      routine editor), **auto-generated, read-only** view of the flag web: a node per flag with
-      edges from what **sets** it (interactables / triggers / dialogues / rules) and to what
-      **reads** it (gated objects, conditions). Derived by scanning the doc. Builds on M12a
-      (rules become graph nodes too).
+      → `moveNpc guard away`). Runtime runner (`systems/rules.ts`) lives globally (alongside the
+      routine runner in `createSceneHost`, subscribed to the story store). Editor: a Project
+      **Rules** section (`RulesEditor.tsx`) reusing `ConditionEditor` + `EffectList`. **Scope:**
+      `then` = **state** effects (setFlag / give / take / goTo / moveNpc / despawn / gameOver /
+      endGame, via `store.run`); engine effects (startSequence / playSound / playAnim) inert in
+      the evaluator → **follow-up**. Demo: have `crank` + `gem` → `setFlag machine-ready`.
+- [x] **M12b — Logic overview graph** — a React Flow (`@xyflow/react`), **auto-generated,
+      read-only** view of the flag web: flag nodes wired to the logic **elements** that set
+      them (green arrow) and read them (amber dashed) — rules / interactables / triggers /
+      exits / dialogues / cutscenes / NPC vision+routine / scene gates. Derived by scanning the
+      doc (`editor/logic-scan.ts` → `editor/LogicGraph.tsx`). Lives with **Rules** in the new
+      **Game logic** tab. _(Flags-only today; item/scene nodes + auto-layout are follow-ups.)_
 - [ ] **M12c — Time scheduler** _(optional; the part of M7 step 6 deferred here)_ — a game
       clock; routine transitions can advance by **time-of-day** (not only `after` ms).
 

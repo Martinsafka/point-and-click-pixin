@@ -56,6 +56,7 @@ export function GameCanvas() {
         },
         gameDoc.weatherPresets,
         { ambientLight: gameDoc.ambientLight, playerLight: gameDoc.playerLight },
+        gameDoc.rules,
       )
     })()
 

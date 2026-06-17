@@ -826,6 +826,27 @@ export interface TransitionConfig {
   minMs?: number
 }
 
+/**
+ * A game-wide reactive rule (M12a global rules engine). When `when` holds, `then` runs.
+ * Unlike interactables / triggers, a rule is **not attached to any object** — it is evaluated
+ * **globally on every story-state change** (to a fixpoint), so it orchestrates logic across the
+ * whole game (e.g. `hasItem k1 & k2 & k3` → `setFlag gate-open` → `moveNpc guard away`).
+ *
+ * Scope: `then` are **state** effects (setFlag / giveItem / takeItem / goTo / moveNpc /
+ * despawnNpc / gameOver / endGame), run through the story store. Engine effects
+ * (startSequence / playSound / playAnim) are inert here — they need a mounted scene (follow-up).
+ */
+export interface GameRule {
+  /** Optional id (editor list key / future logic-graph node). */
+  id?: string
+  /** Fires `then` while this Condition passes. */
+  when: Condition
+  /** State effects run when `when` holds. */
+  then: Effect[]
+  /** Fire at most once per playthrough; else it re-fires whenever `when` becomes true again. */
+  once?: boolean
+}
+
 /** The whole authored game. */
 export interface GameDoc {
   start: SceneId
@@ -833,6 +854,9 @@ export interface GameDoc {
   items: Record<ItemId, ItemDef>
   initialFlags: Record<FlagId, boolean>
   recipes?: Recipe[]
+  /** Game-wide reactive **rules** (M12a) — the global event graph, evaluated on every
+   *  story-state change. Orchestrates logic / NPCs without attaching it to a single object. */
+  rules?: GameRule[]
   /** Optional per-context cursor icons (image URLs); missing → emoji fallback. */
   cursors?: Partial<Record<CursorKind, string>>
   /** UI font-family for the game (M11) — a CSS font stack; absent → the system default. */

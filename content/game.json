@@ -831,6 +831,31 @@
     }
   },
   "initialFlags": {},
+  "rules": [
+    {
+      "id": "machine-ready",
+      "when": {
+        "kind": "all",
+        "of": [
+          {
+            "kind": "hasItem",
+            "item": "crank"
+          },
+          {
+            "kind": "hasItem",
+            "item": "gem"
+          }
+        ]
+      },
+      "then": [
+        {
+          "kind": "setFlag",
+          "flag": "machine-ready"
+        }
+      ],
+      "once": true
+    }
+  ],
   "recipes": [
     {
       "a": "gear",

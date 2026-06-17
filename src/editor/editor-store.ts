@@ -7,6 +7,7 @@ import type {
   DepthStop,
   ColorGrade,
   FogConfig,
+  GameRule,
   LightningConfig,
   LightSource,
   PlayerLight,
@@ -161,6 +162,8 @@ interface EditorStore {
   setFont(font: string | undefined): void
   /** Full-screen game screens config (M11) — loading / title / game-over / end / credits. */
   setScreens(screens: ScreensConfig | undefined): void
+  /** Game-wide reactive rules (M12a) — the global event graph. */
+  setRules(rules: GameRule[] | undefined): void
   setTransitionSound(id: SoundId | undefined): void
   // Sound library (M9 9b) — upload once, reference by id everywhere.
   addSound(src: string): void
@@ -692,6 +695,7 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setTransitionSound: (id) => patchDoc({ transitionSound: id }),
     setFont: (font) => patchDoc({ font }),
     setScreens: (screens) => patchDoc({ screens }),
+    setRules: (rules) => patchDoc({ rules: rules?.length ? rules : undefined }),
     addSound: (src) => {
       const sounds = get().doc.sounds ?? {}
       const id = uniqueKey(sounds, 'sound')

@@ -32,6 +32,7 @@ import {
   routineArrival,
   type RoutinePathInfo,
 } from '../systems/routine'
+import { createRulesRunner } from '../systems/rules'
 import { facingToAngle, WALK_SPEED } from '../systems/movement'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
 import { containsPoint } from '../systems/walkable'
@@ -42,6 +43,7 @@ import type {
   Dialog,
   DialogId,
   Effect,
+  GameRule,
   InteractableData,
   LayerData,
   NpcDef,
@@ -1329,6 +1331,7 @@ export function createSceneHost(
   audio: AudioConfig = {},
   weatherPresets: Record<WeatherId, WeatherPreset> = {},
   lightingDefaults: { ambientLight?: AmbientLight; playerLight?: PlayerLight } = {},
+  rules: readonly GameRule[] = [],
   options: SceneOptions = {},
 ): SceneHost {
   let current: PreviewScene | undefined
@@ -1376,6 +1379,11 @@ export function createSceneHost(
   )
   const onRoutineTick = (ticker: Ticker) => routines.tick(ticker.deltaMS)
   app.ticker.add(onRoutineTick)
+
+  // The game-wide rules engine (M12a) — reacts to every story-state change, globally and
+  // independent of the mounted scene. Created after the routine runner so any start-node
+  // `onEnter` seeding is in place before the initial rules pass. State effects only.
+  const ruleEngine = createRulesRunner(rules, store)
 
   // The overlay swaps cross through: a colour wash (default black) + optional art,
   // animated on the ticker. Starts opaque so the first mount fades in. A huge rect
@@ -1509,6 +1517,7 @@ export function createSceneHost(
       app.ticker.remove(onFadeTick)
       app.ticker.remove(onRoutineTick)
       routines.destroy()
+      ruleEngine.destroy()
       current?.destroy()
       current = undefined
       // Stop the ambient beds (no next scene to swap them) when the world tears down.

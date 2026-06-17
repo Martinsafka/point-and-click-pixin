@@ -445,6 +445,50 @@ Trigger **Game over** / **End** from a dialogue or trigger with the **gameOver**
 effect. The very last "made with" logo is fixed (dropped in at release, not editable). Author
 in **Project → Screens**; see them in **▶ Test in game**.
 
+### Game logic (tab) — Rules + Logic graph
+
+A dedicated top-level tab (its own launcher window) for the **game-wide logic**, with two
+sections:
+
+#### Rules
+
+Game-wide **reactive rules** (M12a) — the **global event graph**. A rule is a `when → then`
+that is **not attached to any object**: it's evaluated everywhere, on every change to the
+story state, so it orchestrates logic across scenes / NPCs. Use it for "derived" state and
+cross-cutting reactions that don't belong to one hotspot.
+
+Each rule has:
+
+- **when** — a `Condition` (same vocabulary as everywhere; reuses the recursive condition
+  editor — `hasItem` / `flag` / `visited` / `all` / `any` / `not`).
+- **then** — `Effect`s that run while `when` holds (the same effect list). Use **state**
+  effects: `setFlag` / `giveItem` / `takeItem` / `goTo` / `moveNpc` / `despawnNpc` / `gameOver`
+  / `endGame`. _(Engine effects — startSequence / playSound / playAnim — are inert in a rule
+  for now; trigger those from an interactable / trigger / dialogue instead.)_
+- **once** — fire at most once per playthrough (else it re-fires each time `when` becomes true
+  again). Optional **id** is just a label.
+
+Example: `when` = `all[ hasItem k1, hasItem k2, hasItem k3 ]`, `then` = `setFlag gate-open` +
+`moveNpc guard away`. Rules resolve to a **fixpoint** (one rule's effect can satisfy another),
+so a chain fires in one go. They run in the live preview too — set flags / give items from the
+**World** window and watch the rules react.
+
+#### Logic graph
+
+A **read-only**, auto-generated map of the **flag web** (M12b) — no authoring, just an
+overview. It scans the whole document and draws:
+
+- **Flag nodes** (⚑, on the right) — every flag used anywhere.
+- **Element nodes** (on the left, border-coloured by kind) — anything that touches a flag:
+  rules, interactables / triggers / exits, dialogues, cutscenes, NPC vision + routine, and
+  per-scene gates (a scene's `onEnter` + gated weather / lights / emitters / layers).
+- **Green arrow** element → flag = it **sets** the flag (`setFlag`); **amber dashed** flag →
+  element = the element is **gated on** the flag (a `flag` condition).
+
+So you can trace "what turns this flag on, and what reacts to it" at a glance — e.g. the guard's
+vision sets `spotted`, the cover trigger sets `hidden`, the guard reads `hidden`. It refreshes
+live as you edit; drag nodes to untangle (positions aren't saved).
+
 The in-game pointer changes by what it's over: **walk** (over the walkable area),
 **pickable**, **interact**, **exit**, **inspect**, or **default** (anywhere else —
 sky, walls, outside any area). Upload an icon per context (SVG/PNG), or leave it

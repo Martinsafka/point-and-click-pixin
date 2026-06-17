@@ -31,6 +31,8 @@ import { SceneEmitters } from './SceneEmitters'
 import { SceneFog } from './SceneFog'
 import { SceneGrade } from './SceneGrade'
 import { ScreensEditor } from './ScreensEditor'
+import { RulesEditor } from './RulesEditor'
+import { LogicGraph } from './LogicGraph'
 import { LightingDefaults } from './LightingDefaults'
 import { LightOverlay } from './LightOverlay'
 import { EmitterOverlay } from './EmitterOverlay'
@@ -47,6 +49,7 @@ const TABS = [
   'sequences',
   'sounds',
   'atmosphere',
+  'logic',
   'project',
 ] as const
 type Tab = (typeof TABS)[number]
@@ -58,6 +61,7 @@ const TAB_LABEL: Record<Tab, string> = {
   sequences: 'Cutscenes',
   sounds: 'Sounds',
   atmosphere: 'Atmosphere',
+  logic: 'Game logic',
   project: 'Project',
 }
 
@@ -680,6 +684,17 @@ export function Editor() {
         <Section title={`Weather presets · ${Object.keys(doc.weatherPresets ?? {}).length}`}>
           <WeatherList presets={doc.weatherPresets} />
         </Section>
+      )}
+
+      {t === 'logic' && (
+        <>
+          <Section title="Rules">
+            <RulesEditor doc={doc} />
+          </Section>
+          <Section title="Logic graph">
+            <LogicGraph doc={doc} />
+          </Section>
+        </>
       )}
 
       {t === 'project' && (
