@@ -597,6 +597,48 @@ Broken into (chosen with the user; **start with M12a**):
       scrubber** in the World window. Demo: the guard only visits the room 08:00–18:00.
       _(Follow-ups: a general `timeOfDay` condition + an in-game HUD clock.)_ **→ M12 complete.**
 
+### M12.5 — V1 polish (pre-1.0 quick wins + a few character/scene features)
+
+A focused, user-requested batch slotted **before M13 packaging**: the cheap "mechanic already
+exists, just wire it" wins first, then a few new-but-contained character/scene features. (The
+heavier ideas — global animation library, full UI theming, map/journal/checkpoints — went to
+V2.) Each still follows schema-first → runtime → editor.
+
+- [ ] **1b — Conditional examine** — an item's / object's "look at" text can vary by state: the
+      `examine` text gains a conditional form (`{ when?, text }[]`, first match wins), so a flag
+      changes what the player learns on inspect. Reuses `ConditionEditor`. _(Base examine already
+      ships — this adds the modifier.)_
+- [ ] **5 — Inventory item dialogs / effects** — clicking (or using) an inventory item can run
+      Effects / `startDialog` (today only interactables can). `ItemDef` gains optional `effects?`
+      / `dialog?` (gated by `when`); the click routes through the shared runEffects + dialogue
+      runtime (both already exist). Enables item-driven conversations, flag-setting, conditional
+      reveals. _(#5.)_
+- [ ] **14 — Skip dialogue** — a skip control that ends the current conversation (beyond the
+      per-line typewriter fast-forward, which already works). Mirrors the cutscene skip. _(#14.)_
+- [ ] **18 — Player-approach detection** — extend NPC `vision`: on detection the NPC can **walk to
+      the player** (a new `approach` step) before running its effects (`startDialog` / `setFlag` /
+      `playAnim`, multiple events — already supported). Builds on the existing vision→effects edge;
+      the walk-to-player is the new part. _(#18.)_
+- [ ] **6 — NPC monologues (speech bubbles)** — a world-space bubble over an NPC that follows it,
+      with the dialogue typewriter. `NpcDef.monologues[]` — each `{ text, after?, when? }`: an NPC
+      can have several, shown after a delay, and a flag swaps which is active. Reuses the
+      typewriter; new is the NPC-tracking world-space bubble. _(#6.)_
+- [ ] **7 — Spawn points** — a new fixed-shape **spawn-point** area (a small circle, repositionable
+      like a light, not drawable/reshapable). Each is assigned a target — a specific NPC, the
+      player, or `all`. `SceneData.spawnPoints[]`; the runtime seeds a character at its spawn
+      point. Generalises today's single `SceneData.spawn` + per-placement spawns. _(#7.)_
+- [ ] **8 — Animated scene layers (+ conditional swap)** — a new **animated** layer kind (a looping
+      atlas as a scene layer — animated backgrounds / props), reusing the `AnimatedSprite` view.
+      With the layers' existing `when`, a flag swaps a **static or animated** asset (covers the
+      "swap asset by flag, incl. animated" idea). _(#8 / #9 / #11.)_
+- [ ] **3 — Conditional character appearance** — a character's view (player **and** NPC) can have
+      **variants gated by `when`**, swapped at runtime (e.g. the player steps into darkness → a
+      different atlas / clips). Today a character's view is **fixed at mount** (`createSpriteView`
+      runs once), so this is a new capability: add `views?: { when?, view }[]` on `GameDoc.player`
+      / `NpcDef`, re-resolved reactively. Makes "different assets after a flag" real for characters.
+      _(#3 — the "just eyes in the dark" **ambiance** for NPCs/scene is separately a content
+      technique today: a dark area + an eyes sprite/light, no engine work.)_
+
 ### M13 — Open-source packaging
 
 - [ ] Split into pnpm-workspace packages: `@scope/engine`, `@scope/editor`,
@@ -612,6 +654,18 @@ Broken into (chosen with the user; **start with M12a**):
 - [ ] **Richer settings** — music / SFX volume split (categorise sound channels), a
       reduced-motion / quality toggle (drives `atmosphereQuality` + the particle budget), and
       a fullscreen toggle. (M11 shipped just text-size + master volume.)
+- [ ] **Global animation library** — a shared library of views / clips with **character / NPC /
+      asset** sections (today views are per-entity). Refactors the per-entity `view` toward
+      reusable named animations; pairs with M12.5's animated layers. _(#10.)_
+- [ ] **UI theming** — let the author design the UI **chrome**: inventory / dialogue / loading bar
+      + icon — border + background colour, opacity, border width, the dialogue **skip** icon — or
+      upload an SVG/PNG per UI element. (M11 shipped only font + the full-screen screens.) _(#19.)_
+- [ ] **Checkpoints** — auto / explicit save points. _(#13.)_
+- [ ] **Highlight usable objects** — an optional outline / pulse on pickable / interactable
+      hotspots (discoverability; the context cursor already hints them). _(#15.)_
+- [ ] **Map + fast travel** — a scene-map UI with travel between visited / known scenes. _(#16.)_
+- [ ] **Journal / notes** — an in-game notes screen the story can append to. _(#17.)_
+- [ ] **Cutscene preview** — play / scrub a sequence in the editor without running the game. _(#20.)_
 
 - [ ] **Full persistent world simulation** (NPC routines + movement). _Shipped now: **B-lite**
       — routine progression is persistent off-scene (an `onArrive` edge completes by the path's
