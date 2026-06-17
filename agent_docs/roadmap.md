@@ -482,11 +482,11 @@ overlays are the sensitive bits).
       **give/take items**, and **reset**. It writes to the live scene-host's story store
       (published via `preview-bridge` when the preview is in **Live** mode) and the world reacts
       where it already does — gated layers / NPCs / lights appear, scene swaps run — so e.g. a
-      `hasItem flashlight` light shows by giving the item. Inert (with a hint) in static Edit
-      mode. _(Follow-up: pause/resume the ticker + reset the player's on-screen position — reset
-      currently re-seeds the store state, not per-frame motion.)_
-- [ ] **ME.6 — One Pixi world (retire the static preview)** — done incrementally (user chose
-      reversible-first); the irreversible deletion waits on a visual validation pass.
+      `hasItem flashlight` light shows by giving the item. _(Pause/resume the ticker landed as
+      the editor's **⏸ Freeze** toggle; remaining follow-up: reset the player's on-screen
+      position — World **Reset** re-seeds store state, not per-frame motion.)_
+- [x] **ME.6 — One Pixi world (retire the static preview)** — done incrementally (user chose
+      reversible-first).
   - [x] **1 — parity: layer-drag in the live world** — `mountScene` gained `onLayerMove`
         (image layers draggable, `none` = xy / `width` = y), with the drag kept in sync with a
         parallax layer's rest base so the `fit` camera's per-frame pin doesn't snap it back.
@@ -496,9 +496,11 @@ overlays are the sensitive bits).
         too (min + centre). The preview **defaults to Live**. The fixed panel is **hideable**
         via a toolbar toggle (top-right), and **Test / Discard** moved to that toolbar so
         they're reachable panel-less. Nothing removed yet → fully reversible.
-  - [ ] **3 — delete** `mountPreview` + the Edit/static path + the fixed `editor__panel` once
-        the live-only fullscreen flow is validated → one Pixi world. Keep the dev-only gate +
-        lazy-load.
+  - [x] **3 — delete** `mountPreview` + the Edit/static path + the fixed `editor__panel`
+        (validated) → **one Pixi world**. `ScenePreview` always mounts the live
+        `createSceneHost`; `Editor` is the fullscreen world + launcher + a top-right Test /
+        Discard toolbar; removed the panel/tabs/footer/resizer + their CSS. Dev-only gate +
+        lazy-load kept (the player build still never loads the editor).
 
 Each step: typecheck + lint + build + dev smoke + visual check; the separated `?edit` keeps
 working until ME.6, so the migration is reversible at every point.

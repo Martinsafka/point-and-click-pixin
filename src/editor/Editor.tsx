@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type MouseEvent as ReactMouseEvent,
-  type ReactNode,
-} from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { editorStore, exportDoc, importDocFromFile, useEditor } from './editor-store'
 import { clearDocDraft, hasDocDraft, saveDocDraft } from '../data/doc-draft'
 import type { InteractableData } from '../data/schema'
@@ -86,15 +79,15 @@ function Section({ title, children }: { title: ReactNode; children: ReactNode })
 }
 
 /**
- * The dev-only editor shell (`?edit`). Edits a working `GameDoc`, grouped into
- * top-level tabs (Scene / Items / Characters / Project) with collapsible sections;
- * the panel is drag-resizable and a persistent footer plays the draft in the game.
+ * The dev-only editor shell (`?edit`, ME.6: one Pixi world). Edits a working `GameDoc` over
+ * the **live** game running fullscreen: a top-left **launcher** opens floating windows for
+ * each section (`renderTab` + the World window), the placement / drawing overlays ride the
+ * world rect (`SceneViewport`), and a top-right toolbar plays / discards the draft.
  */
 export function Editor() {
   const doc = useEditor((s) => s.doc)
   const selectedId = useEditor((s) => s.selectedSceneId)
   const revision = useEditor((s) => s.revision)
-  const [tab, setTab] = useState<Tab>('scene')
   const [draw, setDraw] = useState<Draw>(null)
   const [selectedInteractable, setSelectedInteractable] = useState<number | null>(null)
   const [selectedHole, setSelectedHole] = useState<number | null>(null)
@@ -103,28 +96,14 @@ export function Editor() {
   const [selectedDarkArea, setSelectedDarkArea] = useState<number | null>(null)
   // Which of the selected placement's named paths is being drawn (index), in `npcpath` mode.
   const [drawPathIndex, setDrawPathIndex] = useState<number | null>(null)
-  const [panelWidth, setPanelWidth] = useState(340)
   // The width slider drives a live % during drag, committing (one preview re-mount, since
   // width changes the design aspect) on release; null means "read the saved value". The
   // character-size slider is a hot tunable (ME.3) — it commits live, no re-mount.
   const [widthDraft, setWidthDraft] = useState<number | null>(null)
+  // Freeze the live world (NPC motion + routines) while authoring, so wandering NPCs don't
+  // get in the way; edits still apply (the ticker is stopped, not the React tree).
+  const [paused, setPaused] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
-  // ME.6 — the preview fills the pane (the world letterboxes; overlays ride the ME.4
-  // `SceneViewport`). The fixed panel is hideable so the floating launcher can be the sole UI.
-  const [panelHidden, setPanelHidden] = useState(false)
-  // The preview runs the real (Live) world by default; Edit (static placeholder) is a fallback.
-  const [live, setLive] = useState(true)
-
-  const startResize = (e: ReactMouseEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    const onMove = (ev: MouseEvent) => setPanelWidth(Math.max(260, Math.min(720, ev.clientX)))
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-  }
 
   const sceneIds = Object.keys(doc.scenes)
   const scene = doc.scenes[selectedId]
@@ -133,11 +112,6 @@ export function Editor() {
   // be placed in several scenes; its runtime location picks the active one, `moveNpc`
   // moves it). So the picker only blocks a duplicate placement within the same scene.
   const placedNpcIds = new Set((scene?.npcs ?? []).map((p) => p.npc))
-
-  const changeTab = (t: Tab) => {
-    setTab(t)
-    setDraw(null)
-  }
 
   const select = (id: string) => {
     editorStore.getState().selectScene(id)
@@ -733,29 +707,10 @@ export function Editor() {
 
   return (
     <div className="editor">
-      {!panelHidden && (
-        <aside className="editor__panel" style={{ width: panelWidth }}>
-          <div className="editor__tabs">
-            {TABS.map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`editor__tab${t === tab ? ' editor__tab--active' : ''}`}
-                onClick={() => changeTab(t)}
-              >
-                {TAB_LABEL[t]}
-              </button>
-            ))}
-          </div>
-
-          <div className="editor__tab-content">{renderTab(tab)}</div>
-        </aside>
-      )}
-      {!panelHidden && <div className="editor__resizer" onMouseDown={startResize} />}
       <main className="editor__preview" ref={mainRef}>
         {scene && (
           <div className="editor__stage editor__stage--fill">
-            <ScenePreview key={`${selectedId}-${revision}`} scene={scene} live={live} />
+            <ScenePreview key={`${selectedId}-${revision}`} scene={scene} paused={paused} />
             <SceneViewport design={{ width: savedWidth, height: refH }}>
               <WalkableOverlay
                 walkable={scene.walkable}
@@ -799,17 +754,10 @@ export function Editor() {
         <div className="preview-tools">
           <button
             type="button"
-            onClick={() => setLive((v) => !v)}
-            title={live ? 'Show the static editing preview' : 'Run the real world in context'}
+            onClick={() => setPaused((v) => !v)}
+            title={paused ? 'Resume the live world' : 'Freeze the live world (NPCs stop moving)'}
           >
-            {live ? '● Live' : '▷ Live'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setPanelHidden((v) => !v)}
-            title={panelHidden ? 'Show the side panel' : 'Hide the side panel (use the launcher)'}
-          >
-            {panelHidden ? '▤ Panel' : '▤ Hide panel'}
+            {paused ? '⏵ Resume' : '⏸ Freeze'}
           </button>
           <button type="button" className="editor__test" onClick={() => void testInGame()}>
             ▶ Test in game

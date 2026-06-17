@@ -40,49 +40,40 @@ So your edits live in a draft until you publish them (Export → `content/game.j
 
 ## Layout
 
-A **left panel** beside a **live preview** of the selected scene. Edits show in the
-preview immediately. The panel is split into top-level **tabs**:
+The editor is **one Pixi world**: the **real game runs fullscreen** and you author over it
+through **floating windows** opened from a **launcher bar** (top-left). There's no separate
+side panel — the launcher is the whole UI. A top-right toolbar has **⏸ Freeze** (stop the
+world — NPCs stop moving — so wandering NPCs don't get in the way; edits still apply),
+**▶ Test in game** (play the draft for real), and **Discard**. Edits show immediately.
+
+The world runs **view-only** — clicks don't drive gameplay, sound is muted, and gameplay
+reactions (enter **triggers**, scene-entry **cutscenes**, stealth vision) don't fire — so you
+see the **base** world and author over it rather than playing it. NPCs still walk their
+**routines**, full lighting + weather render, and you can **drag image layers** to place them.
+Use the **World** window to set flags / give items / jump scenes (that's how you reveal gated
+content here). Lighting / weather + character size **update live** as you edit (no reload).
+
+**The launcher (top-left).** Each entry opens a **floating, draggable window**; sections
+mirror what used to be the tabs, one-to-one:
 
 - **Scene** — Scenes, Walkable, Depth, Holes, Layers, Interactables, NPCs.
 - **Items** — Items, Recipes.
 - **Characters** — the player's animation set + the global **NPC cast**.
-- **Project** — Display, Cursors, Transition, Document (export / import).
+- **Dialogs**, **Cutscenes**, **Sounds**, **Atmosphere** (weather presets), **Project**
+  (Display, Cursors, Audio, Lighting, Transition, Document export / import).
+- **World** — drive the running world's state (flags / items / scene); see below.
 
-Each section within a tab **collapses** when you click its title (accordion). The preview
-**fills the pane** (the scene letterboxes inside; drawn areas stay aligned), and a top-right
-toolbar has **▤ Hide panel** (toggle the side panel — the floating launcher can be the sole
-UI), **▶ Test in game**, and **Discard**. With the panel shown, drag the divider to widen it.
+Drag a window by its title bar, ✕ to close, keep **several open at once** (click one to bring
+it to the front). The **Scene** window's drawing tools (Walkable / Holes / Hit-areas / NPC /
+light placement) place points directly on the world; the overlays stay aligned because they
+ride the scene's on-screen rect (so the letterbox around a non-matching-aspect window is
+fine).
 
-**Preview modes — `● Live` / `▷ Live` (top-left of the preview).** Toggle with the button in
-the preview's corner:
-
-- **Live** (default) — runs the **real game world** in place (the actual scene-host over your
-  working document): NPCs walk their routines, full lighting + weather render, gated content
-  appears, and you can **drag image layers** to place them. The world is **view-only** —
-  clicks don't drive gameplay and sound is muted, so the placement overlays work on top. Use
-  **▶ Test in game** to actually play, and the **World** window (below) to set flags / items /
-  jump scenes.
-- **Edit** — a calm, static preview (a placeholder character at the spawn) for laying things
-  out without the world running.
-
-In both modes the lighting / weather + character size **update live** as you edit (no reload).
-
-**Floating windows — the launcher bar (top-left of the preview).** Alongside the fixed
-panel you can pop **any tab** out as a **floating, draggable window** over the preview: the
-launcher mirrors the panel's tabs one-to-one — **Scene, Items, Characters, Dialogs,
-Cutscenes, Sounds, Atmosphere, Project**. Click an entry to open its window, drag it by the
-title bar, ✕ to close, and keep **several open at once** (click one to bring it to the
-front). Each window hosts the **same forms** as the matching tab — it's the same editor,
-just arranged around the live scene, so even the **Scene** window's drawing tools (Walkable
-/ Holes / Hit-areas / NPC / light placement) place points on the preview.
-
-**World window — drive the live world (launcher-only).** A `World` launcher entry opens
-controls that drive the **running** preview to a state you want to author against: **jump
-scene**, **set / clear flags** (it lists the flags used anywhere in the doc, plus an input
-to add a new one), **give / take items**, and **Reset world**. It only does something when
-the preview is in **● Live** mode (the real world reacts) — in Edit mode it shows a hint to
-switch. Use it to reveal gated content while authoring: e.g. to see a light that's gated on
-`hasItem flashlight`, switch to Live and **Give** the flashlight.
+**World window.** A `World` launcher entry opens controls that drive the **running** world to
+a state you want to author against: **jump scene**, **set / clear flags** (it lists the flags
+used anywhere in the doc, plus an input to add a new one), **give / take items**, and **Reset
+world**. Use it to reveal gated content while authoring: e.g. to see a light that's gated on
+`hasItem flashlight`, **Give** the flashlight and it appears.
 
 ---
 

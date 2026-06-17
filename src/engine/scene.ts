@@ -972,8 +972,14 @@ export async function mountScene(
       character.displayObject.y,
       character.getFacing(),
     )
-    checkTriggers()
-    checkVision()
+    // Gameplay reactions (enter triggers, stealth vision) only in the game. The editor's live
+    // view authors over the world — firing a `startSequence` trigger there would grab the
+    // stage with a cutscene that can't be advanced (no input), freezing NPC routines. Drive
+    // state from the World window instead.
+    if (gameplayInput) {
+      checkTriggers()
+      checkVision()
+    }
     audioMod?.setFootstepsMoving('player', character.isMoving())
     for (const n of footstepNpcs)
       audioMod?.setFootstepsMoving(n.id, n.character.displayObject.visible && n.character.isMoving())
@@ -982,8 +988,9 @@ export async function mountScene(
 
   // Scene-entry effects (M8): run once on mount — e.g. a scene-entry cutscene
   // (`startSequence`) or setting a flag. Deferred a microtask so the first frame /
-  // camera is in place before a cutscene grabs the stage.
-  if (scene.onEnter?.length) queueMicrotask(() => run(scene.onEnter ?? []))
+  // camera is in place before a cutscene grabs the stage. Skipped in the editor's live view
+  // (same reason as triggers — it shows the base world; drive state from the World window).
+  if (gameplayInput && scene.onEnter?.length) queueMicrotask(() => run(scene.onEnter ?? []))
 
   let torn = false
   return {
@@ -1035,12 +1042,6 @@ export async function mountScene(
   }
 }
 
-/** Editor preview hooks. */
-export interface PreviewOptions {
-  /** Called when a free-positioned image layer is dragged, with new fractions. */
-  onLayerMove?: (index: number, xFrac: number, yFrac: number) => void
-}
-
 /** Document-level atmosphere config the editor preview needs (M10 ME.0). */
 export interface PreviewAtmosphere {
   ambientLight?: AmbientLight
@@ -1057,9 +1058,9 @@ export interface PreviewScene extends Scene {
 }
 
 /**
- * Make an image layer draggable in the editor preview: drag to move it, then
- * commit the new fractional position on release. Only the dragged sprite moves
- * (no re-mount), so it's smooth; the store just records where it landed.
+ * Make an image layer draggable in the editor's live world: drag to move it, then
+ * commit the new fractional position on release. Only the dragged sprite moves, so
+ * it's smooth; the store just records where it landed.
  */
 function makeLayerDraggable(
   display: Container,
@@ -1103,152 +1104,6 @@ function makeLayerDraggable(
   }
   display.on('pointerup', drop)
   display.on('pointerupoutside', drop)
-}
-
-/**
- * Renders a scene's layers for the editor preview — visuals at the initial story
- * state, plus a static character placeholder at the spawn point. No gameplay
- * ticker; optionally lets the editor drag free-positioned (`fit: none`) image
- * layers to place them.
- */
-export async function mountPreview(
-  app: Application,
-  scene: SceneData,
-  opts: PreviewOptions = {},
-  playerView: ViewDescriptor = placeholderView,
-  referenceHeight: number = DEFAULT_REFERENCE_HEIGHT,
-  atmo: PreviewAtmosphere = {},
-): Promise<PreviewScene> {
-  const design: Size = designSize(scene, referenceHeight)
-  const depthScale = resolveDepthScale(scene.depth, design.height)
-  const state: StoryState = {
-    currentScene: scene.id,
-    flags: {},
-    inventory: [],
-    visited: [],
-    selectedItem: null,
-  }
-
-  // Build in design px inside a `root` we scale to fit the (design-aspect) preview
-  // box. So the canvas stays aligned with the DOM overlays at any panel size and
-  // re-fits on resize without a re-mount — mirroring the in-game camera, sans scroll.
-  app.stage.sortableChildren = true
-  const root = new Container()
-  root.sortableChildren = true
-  app.stage.addChild(root)
-  const background = new Container()
-  background.zIndex = 0
-  const interactive = new Container()
-  interactive.zIndex = 10
-  interactive.sortableChildren = true
-  const foreground = new Container()
-  foreground.zIndex = 20
-  root.addChild(background, interactive, foreground)
-
-  const bandFor = (band: SceneBand): Container =>
-    band === 'background' ? background : band === 'foreground' ? foreground : interactive
-
-  for (let i = 0; i < scene.layers.length; i += 1) {
-    const layer = scene.layers[i]
-    const display = await buildLayer(layer, design)
-    if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
-      const anchorY = layer.anchorYFrac * design.height
-      display.zIndex = anchorY
-      display.scale.set(depthScaleAt(anchorY, depthScale))
-    }
-    if (layer.when) display.visible = checkCondition(state, layer.when)
-    // Editor: drag image layers to place them — `none` freely, `width` on Y only.
-    if (opts.onLayerMove && layer.kind === 'image') {
-      const fit = layer.fit ?? 'none'
-      if (fit === 'none') makeLayerDraggable(display, i, design, opts.onLayerMove, 'xy')
-      else if (fit === 'width') makeLayerDraggable(display, i, design, opts.onLayerMove, 'y')
-    }
-    bandFor(layer.band).addChild(display)
-  }
-
-  // Static character placeholder at the spawn point (shows scale + position); the
-  // `root` fit below gives it the same on-screen size fraction as the game.
-  const view = await createSpriteView(playerView)
-  const feetX = scene.spawn.xFrac * design.width
-  const feetY = scene.spawn.yFrac * design.height
-  view.container.position.set(feetX, feetY)
-  view.container.scale.set(depthScaleAt(feetY, depthScale) * (scene.characterScale ?? 1))
-  view.container.zIndex = feetY
-  view.setPose('idle', 'S')
-  interactive.addChild(view.container)
-
-  // Fit the whole design into the preview (letterbox: one scale + centring, like the game's
-  // `fit` camera), re-fitting on canvas resize (panel toggle / window) so the content keeps
-  // tracking the DOM overlays (which use the same fit via `SceneViewport`).
-  const refit = () => {
-    const s = Math.min(app.screen.width / design.width, app.screen.height / design.height)
-    root.scale.set(s)
-    root.position.set((app.screen.width - design.width * s) / 2, (app.screen.height - design.height * s) / 2)
-  }
-  refit()
-  const ro = new ResizeObserver(refit)
-  ro.observe(app.canvas)
-
-  // M10 ME.0 — live atmosphere in the preview: the same weather + lighting the game renders,
-  // read from the editor doc, so the author *sees* it while tuning (rebuilt on edits, no
-  // re-mount). The preview's "camera" is the `root` fit transform (no scroll/pillarbox).
-  const atmosphere = createAtmosphere(root, app.stage)
-  const previewState: StoryState = state
-  const previewCamera = { x: root.position.x, y: root.position.y, scale: root.scale.x }
-  let weatherSystem: WeatherSystem | null = null
-  let lighting: Lighting | null = null
-  const buildAtmo = (sc: SceneData, a: PreviewAtmosphere) => {
-    weatherSystem?.destroy()
-    weatherSystem = null
-    const wid = sc.weather?.find((w) => !w.when || checkCondition(previewState, w.when))?.preset
-    const preset = wid ? a.weatherPresets?.[wid] : undefined
-    if (preset) weatherSystem = createWeatherSystem(atmosphere.layers.weather, preset, app)
-    lighting?.destroy()
-    lighting = createLighting(
-      atmosphere.layers.lighting,
-      design,
-      app,
-      {
-        ambient: sc.ambientLight ?? a.ambientLight ?? { color: '#ffffff', intensity: 1 },
-        lights: sc.lights ?? [],
-        darkAreas: sc.darkAreas ?? [],
-        playerLight: a.playerLight,
-      },
-      previewCamera,
-    )
-  }
-  buildAtmo(scene, atmo)
-  const onTick = (ticker: Ticker) => {
-    previewCamera.x = root.position.x
-    previewCamera.y = root.position.y
-    previewCamera.scale = root.scale.x
-    atmosphere.update(ticker.deltaMS)
-    weatherSystem?.update(ticker.deltaMS)
-    lighting?.update(previewState, feetX, feetY, 'S')
-  }
-  app.ticker.add(onTick)
-
-  let torn = false
-  return {
-    destroy() {
-      if (torn) return
-      torn = true
-      ro.disconnect()
-      app.ticker.remove(onTick)
-      weatherSystem?.destroy()
-      lighting?.destroy()
-      atmosphere.destroy()
-      app.stage.sortableChildren = false
-      view.destroy()
-      root.destroy({ children: true })
-    },
-    refreshAtmosphere: buildAtmo,
-    // Live character-size tuning: rescale the static placeholder in place (no re-mount).
-    setCharacterScale(scale) {
-      if (torn) return
-      view.container.scale.set(depthScaleAt(feetY, depthScale) * scale)
-    },
-  }
 }
 
 /** Fade duration each way, in ms; and how long a mount may run before the loading
