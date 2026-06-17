@@ -437,7 +437,16 @@
         "intensity": 0.3,
         "size": 0.45,
         "color": "#070a12"
-      }
+      },
+      "spawnPoints": [
+        {
+          "at": {
+            "xFrac": 0.72,
+            "yFrac": 0.82
+          },
+          "target": "player"
+        }
+      ]
     },
     "room": {
       "id": "room",

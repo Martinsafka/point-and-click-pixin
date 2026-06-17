@@ -1822,6 +1822,38 @@ body {
   font-size: 22px;
   filter: drop-shadow(0 0 6px currentColor);
 }
+
+/* Spawn-point markers (M12.5 #7): a fixed dot + the target label. */
+.spawn-overlay__marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+  opacity: 0.85;
+}
+.spawn-overlay__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #56d364;
+  border: 2px solid #0b0d12;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.9);
+}
+.spawn-overlay__label {
+  font-size: 9px;
+  color: #cdeacd;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.95);
+}
+.spawn-overlay__marker--selected {
+  opacity: 1;
+}
+.spawn-overlay__marker--selected .spawn-overlay__dot {
+  background: #fff;
+  box-shadow: 0 0 8px #56d364;
+}
 .dark-overlay__poly {
   fill: rgba(0, 0, 0, 0.45);
   stroke: #6c7a99;

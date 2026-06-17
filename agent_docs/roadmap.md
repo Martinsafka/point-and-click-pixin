@@ -622,10 +622,11 @@ V2.) Each still follows schema-first → runtime → editor.
       with the dialogue typewriter. `NpcDef.monologues[]` — each `{ text, after?, when? }`: an NPC
       can have several, shown after a delay, and a flag swaps which is active. Reuses the
       typewriter; new is the NPC-tracking world-space bubble. _(#6.)_
-- [ ] **7 — Spawn points** — a new fixed-shape **spawn-point** area (a small circle, repositionable
-      like a light, not drawable/reshapable). Each is assigned a target — a specific NPC, the
-      player, or `all`. `SceneData.spawnPoints[]`; the runtime seeds a character at its spawn
-      point. Generalises today's single `SceneData.spawn` + per-placement spawns. _(#7.)_
+- [x] **7 — Spawn points** — `SceneData.spawnPoints[]` (`{ at, target }`, target = `player` / a
+      cast NPC id / `all`); the runtime seeds each character at its point (specific id wins over
+      `all`), overriding the scene / placement spawn. Editor: a Scene-tab **Spawn points** section
+      (place like a light — fixed ◎ marker, **who** picker). Demo: the player starts on the right of
+      the street. _(#7. Follow-up: drag-to-move; override only applies to the initial position.)_
 - [x] **8 — Animated scene layers (+ conditional swap)** — a new `animated` `LayerData` kind (atlas
       grid → a looping `AnimatedSprite`), placed / `when`-gated / draggable like an image, so a flag
       swaps a **static or animated** asset. Editor: **+ Animated** upload + frame-grid inputs in the

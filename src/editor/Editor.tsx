@@ -37,6 +37,8 @@ import { LogicGraph } from './LogicGraph'
 import { ClockEditor } from './ClockEditor'
 import { LightingDefaults } from './LightingDefaults'
 import { LightOverlay } from './LightOverlay'
+import { SceneSpawns } from './SceneSpawns'
+import { SpawnOverlay } from './SpawnOverlay'
 import { EmitterOverlay } from './EmitterOverlay'
 import { ConditionEditor } from './ConditionEditor'
 import { FloatingEditor, type FloatPanel } from './FloatingEditor'
@@ -89,6 +91,7 @@ type Draw =
   | 'light'
   | 'darkarea'
   | 'emitter'
+  | 'spawn'
   | null
 
 function round(n: number): number {
@@ -127,6 +130,7 @@ export function Editor() {
   const [selectedLight, setSelectedLight] = useState<number | null>(null)
   const [selectedDarkArea, setSelectedDarkArea] = useState<number | null>(null)
   const [selectedEmitter, setSelectedEmitter] = useState<number | null>(null)
+  const [selectedSpawn, setSelectedSpawn] = useState<number | null>(null)
   // Which of the selected placement's named paths is being drawn (index), in `npcpath` mode.
   const [drawPathIndex, setDrawPathIndex] = useState<number | null>(null)
   // The width slider drives a live % during drag, committing (one preview re-mount, since
@@ -275,6 +279,11 @@ export function Editor() {
   const placeEmitter = (xFrac: number, yFrac: number) => {
     if (selectedEmitter !== null) {
       editorStore.getState().setEmitterPos(selectedId, selectedEmitter, round(xFrac), round(yFrac))
+    }
+  }
+  const placeSpawn = (xFrac: number, yFrac: number) => {
+    if (selectedSpawn !== null) {
+      editorStore.getState().setSpawnPointPos(selectedId, selectedSpawn, round(xFrac), round(yFrac))
     }
   }
   const addDarkAreaPoint = (xFrac: number, yFrac: number) => {
@@ -514,6 +523,23 @@ export function Editor() {
             )}
           </Section>
 
+          <Section title={`Spawn points · ${scene ? (scene.spawnPoints?.length ?? 0) : 0}`}>
+            {scene && (
+              <SceneSpawns
+                sceneId={selectedId}
+                spawnPoints={scene.spawnPoints ?? []}
+                cast={doc.npcs ?? {}}
+                selected={selectedSpawn}
+                onSelect={(i) => {
+                  setSelectedSpawn(i)
+                  setDraw(null)
+                }}
+                placeMode={draw === 'spawn'}
+                onTogglePlace={() => toggle('spawn')}
+              />
+            )}
+          </Section>
+
           <Section title="Audio">
             {scene && (
               <>
@@ -627,7 +653,9 @@ export function Editor() {
                     ? 'Click in the preview to position the light.'
                     : draw === 'emitter'
                       ? 'Click in the preview to position the emitter.'
-                      : draw === 'darkarea'
+                      : draw === 'spawn'
+                        ? 'Click in the preview to position the spawn point.'
+                        : draw === 'darkarea'
                         ? 'Click in the preview to add dark-area points.'
                         : `Click in the preview to add ${
                             draw === 'walkable' ? 'walkable' : draw === 'hole' ? 'hole' : 'hit-area'
@@ -869,6 +897,12 @@ export function Editor() {
                 selected={selectedEmitter}
                 placeMode={draw === 'emitter'}
                 onPlace={placeEmitter}
+              />
+              <SpawnOverlay
+                spawnPoints={scene.spawnPoints ?? []}
+                selected={selectedSpawn}
+                placeMode={draw === 'spawn'}
+                onPlace={placeSpawn}
               />
             </SceneViewport>
           </div>

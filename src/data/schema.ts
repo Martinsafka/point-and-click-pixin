@@ -820,6 +820,17 @@ export interface NpcPlacement {
   dialog?: DialogId
 }
 
+/**
+ * A fixed-shape spawn marker (M12.5 #7): a character starts here instead of the scene's
+ * default `spawn` (player) / a placement's `spawn` (NPC). `target` is `'player'`, a cast NPC
+ * id, or `'all'` (any character without its own point). Repositionable in the editor (like a
+ * light); the shape isn't authored. A specific-id point wins over an `'all'` point.
+ */
+export interface SpawnPoint {
+  at: { xFrac: number; yFrac: number }
+  target: string
+}
+
 export interface SceneData {
   id: SceneId
   name: string
@@ -857,6 +868,8 @@ export interface SceneData {
   onEnter?: Effect[]
   /** NPC placements (reference the global cast `GameDoc.npcs`). */
   npcs?: NpcPlacement[]
+  /** Spawn-point markers (M12.5 #7) — override where the player / NPCs start in this scene. */
+  spawnPoints?: SpawnPoint[]
   depth: DepthConfig
   /** Character spawn (feet), as design-space fractions. */
   spawn: { xFrac: number; yFrac: number }

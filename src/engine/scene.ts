@@ -609,9 +609,16 @@ export async function mountScene(
   const holesPx = (scene.holes ?? []).map((h) => resolvePolygon(h, design))
   const nav = buildNavigation(walkablePx, holesPx) // shared by the player + every NPC
   const charScale = scene.characterScale ?? 1
+  // Spawn-point override (M12.5 #7): a character starts at its assigned point (specific id wins
+  // over `all`), else the scene / placement default.
+  const spawnAt = (id: string): { xFrac: number; yFrac: number } | undefined => {
+    const pts = scene.spawnPoints ?? []
+    return pts.find((p) => p.target === id)?.at ?? pts.find((p) => p.target === 'all')?.at
+  }
   const character = new Character(await createSpriteView(playerView), depthScale, nav, charScale)
   interactive.addChild(character.displayObject)
-  character.setPosition(scene.spawn.xFrac * design.width, scene.spawn.yFrac * design.height)
+  const playerSpawn = spawnAt('player') ?? scene.spawn
+  character.setPosition(playerSpawn.xFrac * design.width, playerSpawn.yFrac * design.height)
   appearances.push({ id: 'player', char: character, base: playerView, variants: options.playerViews })
   appearanceIdx.set('player', -1)
 
@@ -631,7 +638,8 @@ export async function mountScene(
       charScale,
     )
     if (def?.speed) npcChar.setSpeedScale(def.speed)
-    npcChar.setPosition(placement.spawn.xFrac * design.width, placement.spawn.yFrac * design.height)
+    const npcSpawn = spawnAt(placement.npc) ?? placement.spawn
+    npcChar.setPosition(npcSpawn.xFrac * design.width, npcSpawn.yFrac * design.height)
     interactive.addChild(npcChar.displayObject)
     // Visibility tracks the NPC's runtime location — it shows here only while its current
     // scene (moved via `moveNpc`, else its home / this placement) is this one — plus its

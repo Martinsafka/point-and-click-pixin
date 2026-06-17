@@ -238,6 +238,14 @@ placement.
 - NPCs render as real characters (or the placeholder), Y-sorted + depth-scaled like the
   player; appearance / dialogue / voice / vision / routine are in the NPC modal.
 
+### Spawn points · _N_
+
+Fixed-shape markers (M12.5 #7) that say **where a character starts** in this scene, overriding
+the default spawn. **+ Spawn point** adds one (a ◎ dot); select it, hit **Place** and click the
+preview to position it, and set **who** spawns there — the **player**, a specific **NPC**, or
+**all**. A point assigned to a specific character wins over an **all** point. (Only affects the
+*initial* position when the scene is entered.)
+
 ### Audio
 
 The scene's looping **ambient** bed (M9). Pick a sound from the **library** (Sounds tab —

@@ -35,6 +35,7 @@ import type {
   Recipe,
   SceneBand,
   SceneData,
+  SpawnPoint,
   SceneId,
   SeqStep,
   SequenceId,
@@ -207,6 +208,11 @@ interface EditorStore {
   removeLight(id: SceneId, index: number): void
   setLight(id: SceneId, index: number, patch: Partial<LightSource>): void
   setLightPos(id: SceneId, index: number, x: number, y: number): void
+  // Spawn points (M12.5 #7) — where the player / NPCs start in a scene.
+  addSpawnPoint(id: SceneId): void
+  removeSpawnPoint(id: SceneId, index: number): void
+  setSpawnPoint(id: SceneId, index: number, patch: Partial<SpawnPoint>): void
+  setSpawnPointPos(id: SceneId, index: number, xFrac: number, yFrac: number): void
   addDarkArea(id: SceneId): void
   removeDarkArea(id: SceneId, index: number): void
   setDarkAreaPolygon(id: SceneId, index: number, polygon: number[]): void
@@ -863,6 +869,43 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         id,
         { lights: (get().doc.scenes[id].lights ?? []).map((l, i) => (i === index ? { ...l, x, y } : l)) },
         false,
+      ),
+    addSpawnPoint: (id) =>
+      patchScene(
+        id,
+        {
+          spawnPoints: [
+            ...(get().doc.scenes[id].spawnPoints ?? []),
+            { at: { xFrac: 0.5, yFrac: 0.72 }, target: 'player' },
+          ],
+        },
+        true,
+      ),
+    removeSpawnPoint: (id, index) =>
+      patchScene(
+        id,
+        { spawnPoints: (get().doc.scenes[id].spawnPoints ?? []).filter((_, i) => i !== index) },
+        true,
+      ),
+    setSpawnPoint: (id, index, patch) =>
+      patchScene(
+        id,
+        {
+          spawnPoints: (get().doc.scenes[id].spawnPoints ?? []).map((p, i) =>
+            i === index ? { ...p, ...patch } : p,
+          ),
+        },
+        true,
+      ),
+    setSpawnPointPos: (id, index, xFrac, yFrac) =>
+      patchScene(
+        id,
+        {
+          spawnPoints: (get().doc.scenes[id].spawnPoints ?? []).map((p, i) =>
+            i === index ? { ...p, at: { xFrac, yFrac } } : p,
+          ),
+        },
+        true,
       ),
     addEmitter: (id) => {
       const emitters = get().doc.scenes[id].emitters ?? []
