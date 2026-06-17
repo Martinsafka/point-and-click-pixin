@@ -453,17 +453,17 @@ overlays are the sensitive bits).
         floating window too.
   - [ ] **c** — once the launcher reaches parity, retire the fixed `editor__panel` (→ ME.6).
 - [x] **ME.3 — Live-update the tunable systems** — the preview applies **hot** params in place
-      and **re-mounts** only on structural change. Policy: **hot (live, no re-mount)** =
-      atmosphere (ambient / lights / dark areas / weather / player light, via
-      `refreshAtmosphere`) + **character size** (`setCharacterScale` → `Character.setCharScale`,
-      now committing live as you drag); **re-mount (revision bump)** = geometry / structure
-      (scene width, reference height, depth, add/remove/move layer, player sprite,
-      add/remove scene); **overlay-only** (walkable / holes / hit-areas / interactables) updates
-      via the React DOM overlay. Both preview modes (Edit `mountPreview`, Live `createSceneHost`)
-      route the hot updates through the same `ScenePreview` subscription (separate diffs so a
-      cheap edit doesn't rebuild the lightmap).
-      _(Follow-up: **depth** edits currently neither re-mount nor live-update — they apply on the
-      next re-mount; make depth live or bump revision when that bites.)_
+      and **re-mounts** only on structural change; **nothing stays silently stale**. One host
+      hook **`applyLive({ scene, atmo, cast })`** (replacing `refreshAtmosphere` +
+      `setCharacterScale`): the editor's single `ScenePreview` subscription hands it the latest
+      doc pieces and the host **diffs + re-applies only what changed**, so adding a hot param is
+      one place. **Hot (live):** atmosphere (ambient / lights / dark areas / weather / player
+      light) + **character size** + **NPC walk speed**. **Re-mount (revision bump):** geometry /
+      structure — scene width, reference height, **depth**, add/remove/move layer, player
+      sprite, add/remove scene, and **NPC `view` / `routine` / `home`** (selective
+      `patchNpcDef` bump). **Overlay-only** (walkable / holes / hit-areas / interactables /
+      vision cone) updates via the React DOM overlay. _(Optional: depth → commit-on-blur if the
+      re-mount churn annoys.)_
 - [x] **ME.4 — Placement/drawing overlays mapped via the world rect** — all overlays
       (walkable / holes / hit-areas / NPC spawn+path / lights / dark areas) now live inside a
       `SceneViewport` wrapper sized to the scene's on-screen **world rect** (the same `fit`

@@ -326,8 +326,10 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setCharacterScale: (id, scale) => patchScene(id, { characterScale: scale }, false),
     setReferenceHeight: (height) =>
       set({ doc: { ...get().doc, referenceHeight: height }, revision: get().revision + 1 }),
+    // Depth drives the actors' + mid-layers' size-by-Y; re-mount so the change shows (ME.6
+    // policy: structural → re-mount, never silently stale).
     setDepthStops: (id, stops) =>
-      patchScene(id, { depth: { ...get().doc.scenes[id].depth, stops } }, false),
+      patchScene(id, { depth: { ...get().doc.scenes[id].depth, stops } }, true),
     addImageLayer: (id, src) =>
       mapLayers(id, (ls) => [...ls, { kind: 'image', band: 'background', src, fit: 'cover' }]),
     removeLayer: (id, index) => mapLayers(id, (ls) => ls.filter((_, i) => i !== index)),
@@ -438,8 +440,17 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       patchDoc({ npcs: { ...npcs, [npcId]: { ...npcs[npcId], speed } } })
     },
     patchNpcDef: (npcId, patch) => {
-      const npcs = get().doc.npcs ?? {}
-      patchDoc({ npcs: { ...npcs, [npcId]: { ...npcs[npcId], ...patch } } })
+      const { doc, revision } = get()
+      const npcs = doc.npcs ?? {}
+      // `view` (sprite), `routine` (behavior) and `home` (start scene) need a rebuild →
+      // re-mount; the rest (vision / dialog / footstep / voice / inspect) are live via the
+      // overlay or don't show in the editor, so they don't churn the preview. Speed is hot
+      // (`setNpcDefSpeed` → applyLive).
+      const structural = 'view' in patch || 'routine' in patch || 'home' in patch
+      set({
+        doc: { ...doc, npcs: { ...npcs, [npcId]: { ...npcs[npcId], ...patch } } },
+        ...(structural ? { revision: revision + 1 } : {}),
+      })
     },
     addDialog: () => {
       const dialogs = get().doc.dialogs ?? {}

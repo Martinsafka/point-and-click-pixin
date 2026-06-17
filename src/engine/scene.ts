@@ -110,12 +110,10 @@ export interface Scene {
 
 /** Keeps the displayed scene in sync with the store's current scene. */
 export interface SceneHost {
-  /** Live-rebuild the **currently mounted** scene's weather + lighting (no re-mount) — the
-   *  editor calls this as the author tunes atmosphere. No-op while no scene is mounted (e.g.
-   *  mid-swap). */
-  refreshAtmosphere(scene: SceneData, atmo: PreviewAtmosphere): void
-  /** Live-update the current scene's character size multiplier (hot tunable, no re-mount). */
-  setCharacterScale(scale: number): void
+  /** Re-apply the **hot** params (atmosphere / character size / NPC speed) to the currently
+   *  mounted scene in place — the editor calls this on every doc edit; the scene diffs and
+   *  applies only what changed. No-op while no scene is mounted (e.g. mid-swap). */
+  applyLive(patch: LivePatch): void
   destroy(): void
 }
 
@@ -296,8 +294,8 @@ export async function mountScene(
   // passes — rebuilt reactively (a story flag triggers / swaps weather), ticked via the
   // atmosphere update hook. A preset's `ambient` loops on the `'weather'` audio channel,
   // layered over the scene's own ambient.
-  // Mutable atmosphere config — `refreshAtmosphere` (the editor's live tuning) swaps in the
-  // edited scene + doc defaults and rebuilds weather + lighting, no re-mount.
+  // Mutable atmosphere config — `applyLive` (the editor's live tuning) swaps in the edited
+  // scene + doc defaults and rebuilds weather + lighting, no re-mount.
   let weatherScene = scene
   let weatherPresetsRef = weatherPresets
   let lightScene = scene
@@ -992,6 +990,29 @@ export async function mountScene(
   // (same reason as triggers — it shows the base world; drive state from the World window).
   if (gameplayInput && scene.onEnter?.length) queueMicrotask(() => run(scene.onEnter ?? []))
 
+  // ME.6 hot-param live apply: the editor calls `applyLive` on every doc edit; each hot system
+  // is diffed against the mount's values so only what changed is re-applied (atmosphere is the
+  // expensive one — a full lightmap rebuild — hence the tight hash).
+  const atmoHash = (sc: SceneData, a: PreviewAtmosphere): string =>
+    JSON.stringify([
+      sc.ambientLight,
+      sc.lights,
+      sc.darkAreas,
+      sc.weather,
+      a.ambientLight,
+      a.playerLight,
+      a.weatherPresets,
+    ])
+  const castHash = (c: Record<NpcId, NpcDef>): string =>
+    JSON.stringify(npcs.map((n) => [n.id, c[n.id]?.speed ?? 1]))
+  let lastAtmoHash = atmoHash(scene, {
+    ambientLight: lightingDefaults.ambientLight,
+    playerLight: lightingDefaults.playerLight,
+    weatherPresets,
+  })
+  let lastCharScale = scene.characterScale ?? 1
+  let lastCastHash = castHash(cast)
+
   let torn = false
   return {
     destroy() {
@@ -1019,25 +1040,36 @@ export async function mountScene(
       atmosphere.destroy() // removes the screen-space `screenFx` (world slots ride world.destroy)
       world.destroy({ children: true })
     },
-    // Live atmosphere re-tune (the editor): swap in the edited scene + doc defaults and
-    // rebuild weather + lighting only — no re-mount. Game doesn't call this.
-    refreshAtmosphere(sc, a) {
+    // Re-apply the hot params in place (the editor; the game never calls this). Each is diffed
+    // so a cheap edit (e.g. NPC speed) doesn't rebuild the expensive lightmap.
+    applyLive({ scene: sc, atmo, cast: castNow }) {
       if (torn) return
-      weatherScene = sc
-      weatherPresetsRef = a.weatherPresets ?? {}
-      lightScene = sc
-      lightDefaults = { ambientLight: a.ambientLight, playerLight: a.playerLight }
-      weatherSystem?.destroy()
-      weatherSystem = null
-      weatherId = null
-      syncWeather(store.getState())
-      buildLighting()
-    },
-    // Live character-size tuning (the editor): rescale the player + all NPCs in place. The
-    // per-scene multiplier sits on top of each actor's depth scale.
-    setCharacterScale(scale) {
-      if (torn) return
-      for (const a of actors.values()) a.setCharScale(scale)
+      // Atmosphere (weather + lighting) — swap in the edited scene + doc defaults, rebuild.
+      const ah = atmoHash(sc, atmo)
+      if (ah !== lastAtmoHash) {
+        lastAtmoHash = ah
+        weatherScene = sc
+        weatherPresetsRef = atmo.weatherPresets ?? {}
+        lightScene = sc
+        lightDefaults = { ambientLight: atmo.ambientLight, playerLight: atmo.playerLight }
+        weatherSystem?.destroy()
+        weatherSystem = null
+        weatherId = null
+        syncWeather(store.getState())
+        buildLighting()
+      }
+      // Character size — the per-scene multiplier on top of each actor's depth scale.
+      const cs = sc.characterScale ?? 1
+      if (cs !== lastCharScale) {
+        lastCharScale = cs
+        for (const a of actors.values()) a.setCharScale(cs)
+      }
+      // NPC walk speed (per cast def).
+      const ch = castHash(castNow)
+      if (ch !== lastCastHash) {
+        lastCastHash = ch
+        for (const n of npcs) n.character.setSpeedScale(castNow[n.id]?.speed ?? 1)
+      }
     },
   }
 }
@@ -1049,12 +1081,23 @@ export interface PreviewAtmosphere {
   weatherPresets?: Record<WeatherId, WeatherPreset>
 }
 
-/** A mounted editor preview — like a Scene, but its **atmosphere** (weather + lighting) can
- *  be rebuilt live as the author edits, without re-mounting the whole scene. */
+/** The latest doc pieces the editor's live preview re-applies as it edits — the **hot**
+ *  params that update in place (no re-mount). The host diffs each internally and applies only
+ *  what changed, so this is the single place hot params are wired (ME.6 policy). */
+export interface LivePatch {
+  /** The edited scene — its atmosphere (ambient / lights / dark areas / weather) + character
+   *  size multiplier. */
+  scene: SceneData
+  /** Document-level atmosphere defaults (ambient / player light / weather presets). */
+  atmo: PreviewAtmosphere
+  /** The cast — for hot per-NPC params (currently walk speed). */
+  cast: Record<NpcId, NpcDef>
+}
+
+/** A mounted editor preview — like a Scene, but its **hot** params (atmosphere, character
+ *  size, NPC speed) can be re-applied live as the author edits, without re-mounting. */
 export interface PreviewScene extends Scene {
-  refreshAtmosphere(scene: SceneData, atmo: PreviewAtmosphere): void
-  /** Live-update the scene's character size multiplier (a hot tunable — no re-mount). */
-  setCharacterScale(scale: number): void
+  applyLive(patch: LivePatch): void
 }
 
 /**
@@ -1281,11 +1324,8 @@ export function createSceneHost(
   const unsubscribe = store.subscribe(sync)
 
   return {
-    refreshAtmosphere(scene, atmo) {
-      current?.refreshAtmosphere(scene, atmo)
-    },
-    setCharacterScale(scale) {
-      current?.setCharacterScale(scale)
+    applyLive(patch) {
+      current?.applyLive(patch)
     },
     destroy() {
       destroyed = true

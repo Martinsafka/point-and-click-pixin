@@ -15,10 +15,10 @@ import { setPreviewStore } from './preview-bridge'
  * weather render, gated content shows) rather than playing it. Image layers stay draggable.
  *
  * Re-mounts only when its React `key` changes (the editor keys it on scene + revision), so
- * non-structural edits don't tear the canvas down; atmosphere (weather + lighting) and the
- * character size are rebuilt **live** in place via the host's `refreshAtmosphere` /
- * `setCharacterScale`. The live story store is published to `preview-bridge` for the World
- * window (ME.5).
+ * structural edits rebuild while **hot** params (atmosphere, character size, NPC speed) apply
+ * **live** in place: one store subscription hands the host the latest doc pieces and its
+ * `applyLive` diffs + re-applies only what changed. The live story store is published to
+ * `preview-bridge` for the World window (ME.5).
  */
 export function ScenePreview({ scene, paused }: { scene: SceneData; paused: boolean }) {
   const hostRef = useRef<HTMLDivElement>(null)
@@ -97,34 +97,14 @@ export function ScenePreview({ scene, paused }: { scene: SceneData; paused: bool
       // Publish the live world's story store so the World window (ME.5) can drive it.
       setPreviewStore(store)
 
-      // Apply hot-tunable edits live (no re-mount): rebuild atmosphere on a lighting / weather
-      // change (hash-diffed to skip unrelated edits), and rescale the character on a
-      // characterScale change. Each is diffed separately so a cheap edit doesn't rebuild the
-      // (expensive) lightmap.
-      let lastHash = ''
-      let lastCharScale = scene.characterScale ?? 1
+      // One subscription: on any doc edit, hand the host the latest hot params and let it
+      // diff + re-apply only what changed (atmosphere / character size / NPC speed) — no
+      // re-mount. Structural edits re-mount via the React key (editor `revision`).
       const sync = () => {
         const doc = editorStore.getState().doc
         const sc = doc.scenes[scene.id]
         if (!sc) return
-        const hash = JSON.stringify([
-          sc.ambientLight,
-          sc.lights,
-          sc.darkAreas,
-          sc.weather,
-          doc.ambientLight,
-          doc.playerLight,
-          doc.weatherPresets,
-        ])
-        if (hash !== lastHash) {
-          lastHash = hash
-          sceneHostRef.refreshAtmosphere(sc, atmoOf())
-        }
-        const cs = sc.characterScale ?? 1
-        if (cs !== lastCharScale) {
-          lastCharScale = cs
-          sceneHostRef.setCharacterScale(cs)
-        }
+        sceneHostRef.applyLive({ scene: sc, atmo: atmoOf(), cast: doc.npcs ?? {} })
       }
       sync()
       unsubscribe = editorStore.subscribe(sync)
@@ -141,8 +121,7 @@ export function ScenePreview({ scene, paused }: { scene: SceneData; paused: bool
         sceneHost = undefined
       }
     }
-    // Re-mount on scene change; non-structural edits refresh live (no re-mount).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Re-mount on scene change; hot edits apply live via `applyLive` (no re-mount).
   }, [scene.id])
 
   return <div ref={hostRef} className="preview" />
