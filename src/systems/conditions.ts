@@ -18,6 +18,9 @@ export interface StoryState {
   /** Each routine-driven NPC's active routine node id (M7 step 6). Absent → not yet
    *  entered (the runner seeds it to the routine's `start`). */
   npcNode?: Record<NpcId, string>
+  /** A requested full-screen end screen (M11) — set by the `gameOver` / `endGame` effects;
+   *  the App reads it, switches screens, and clears it. Absent → none. */
+  screen?: 'gameOver' | 'endGame' | null
 }
 
 /**
@@ -39,6 +42,8 @@ export interface StoryStore extends StoryState {
   reset(doc: GameDoc): void
   /** Set or clear (null) the narration line. */
   say(text: string | null): void
+  /** Clear the requested end screen (M11) once the App has switched to it. */
+  setScreen(screen: 'gameOver' | 'endGame' | null): void
   /** Enter a routine node: set the NPC's active node + sync its scene location (the
    *  routine runner drives this; `onEnter` effects run separately via `run`). */
   enterRoutine(npc: NpcId, node: string, scene: SceneId): void
@@ -85,6 +90,10 @@ export function applyEffect(state: StoryState, effect: Effect): StoryState {
     case 'startSequence':
       // The scene starts the dialogue / cutscene (it needs the actor registry); inert here.
       return state
+    case 'gameOver':
+      return { ...state, screen: 'gameOver' }
+    case 'endGame':
+      return { ...state, screen: 'endGame' }
     case 'moveNpc':
       return { ...state, npcScene: { ...(state.npcScene ?? {}), [effect.npc]: effect.scene } }
     case 'despawnNpc':

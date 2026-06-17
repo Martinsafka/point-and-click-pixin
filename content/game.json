@@ -916,5 +916,42 @@
       "kind": "hasItem",
       "item": "key"
     }
+  },
+  "screens": {
+    "loading": {
+      "minMs": 2500,
+      "bg": {
+        "color": "#0b0d12"
+      }
+    },
+    "title": {
+      "heading": "A Tiny Night",
+      "headingColor": "#e8b552",
+      "headingSize": 40,
+      "tagline": "A geometric placeholder adventure.",
+      "buttonColor": "#cdd6f4"
+    },
+    "gameOver": {
+      "text": "You were caught.",
+      "size": 34,
+      "color": "#e06b6b",
+      "align": "center",
+      "bg": {
+        "color": "#0b0d12"
+      }
+    },
+    "end": {
+      "text": "You slipped away into the night.",
+      "size": 30,
+      "color": "#cdd6f4",
+      "align": "center"
+    },
+    "credits": {
+      "text": "A Tiny Night\n\nDesign & code\n— you\n\nMade with the pixin editor\n\nThanks for playing!",
+      "size": 24,
+      "color": "#e6ebf2",
+      "align": "center",
+      "scrollSpeed": 50
+    }
   }
 }

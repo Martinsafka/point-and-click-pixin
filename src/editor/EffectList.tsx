@@ -77,6 +77,8 @@ const EFFECT_KINDS: Effect['kind'][] = [
   'giveItem',
   'takeItem',
   'goTo',
+  'gameOver',
+  'endGame',
   'startDialog',
   'startSequence',
   'moveNpc',
@@ -97,6 +99,10 @@ function defaultEffect(kind: Effect['kind'], sceneIds: SceneId[], itemIds: ItemI
       return { kind: 'takeItem', item: itemIds[0] ?? '' }
     case 'goTo':
       return { kind: 'goTo', scene: sceneIds[0] ?? '' }
+    case 'gameOver':
+      return { kind: 'gameOver' }
+    case 'endGame':
+      return { kind: 'endGame' }
     case 'startDialog':
       return { kind: 'startDialog', dialog: '' }
     case 'startSequence':
@@ -267,6 +273,9 @@ function EffectFields({
           />
         </>
       )
+    case 'gameOver':
+    case 'endGame':
+      return null // no params — the kind says it all
   }
 }
 

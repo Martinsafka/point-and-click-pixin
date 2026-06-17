@@ -6,6 +6,7 @@ import { DialogueBox } from './DialogueBox'
 import { CutsceneOverlay } from './CutsceneOverlay'
 import { GameCursor } from './GameCursor'
 import { TitleScreen } from './TitleScreen'
+import { LoadingScreen, TextScreen, CreditsScreen, FinalScreen } from './GameScreens'
 import { useStory } from './use-story'
 import { gameDoc } from '../data/game'
 import { hasDocDraft } from '../data/doc-draft'
@@ -13,14 +14,26 @@ import { storyStore } from '../state/story'
 import { loadGame } from '../state/storage'
 import { applySettings } from '../state/settings'
 
+/** A loading screen runs once per device, on the first visit (then this flag is stored). */
+const LOADED_KEY = 'pixin-loaded'
+
 /**
- * App shell with two phases: the title screen, and the running game. New game /
- * Continue set up the story store then enter the game (which mounts the Pixi
- * world); Exit to title leaves it (tearing the world down). The Pixi world only
- * exists while playing.
+ * App shell — a screen flow (M11): **loading** (first visit only) → **title** → **playing**,
+ * and from playing the `gameOver` effect → **game over** (retry / title) or the `endGame`
+ * effect → **end** → **credits** → **final** → title. The Pixi world only exists while playing.
  */
+type Phase = 'loading' | 'title' | 'playing' | 'gameover' | 'end' | 'credits' | 'final'
+
 export function App() {
-  const [playing, setPlaying] = useState(false)
+  const screens = gameDoc.screens
+  const firstVisit = (() => {
+    try {
+      return !localStorage.getItem(LOADED_KEY)
+    } catch {
+      return false
+    }
+  })()
+  const [phase, setPhase] = useState<Phase>(firstVisit ? 'loading' : 'title')
   const sceneId = useStory((s) => s.currentScene)
   const visited = useStory((s) => s.visited.length)
   const narration = useStory((s) => s.narration)
@@ -29,6 +42,17 @@ export function App() {
   useEffect(() => {
     applySettings()
     if (gameDoc.font) document.documentElement.style.setProperty('--game-font', gameDoc.font)
+  }, [])
+
+  // A `gameOver` / `endGame` effect (run from dialogue / a trigger) sets `story.screen`; react
+  // to it via a store subscription (an event), switching phase + clearing the request.
+  useEffect(() => {
+    return storyStore.subscribe(() => {
+      const sc = storyStore.getState().screen
+      if (!sc) return
+      setPhase(sc === 'gameOver' ? 'gameover' : 'end')
+      storyStore.getState().setScreen(null)
+    })
   }, [])
 
   // The narration line ("look at" text) auto-clears after a few seconds.
@@ -40,19 +64,85 @@ export function App() {
 
   const newGame = () => {
     storyStore.getState().reset(gameDoc)
-    setPlaying(true)
+    setPhase('playing')
   }
-
   const continueGame = async () => {
     const state = await loadGame()
     if (state && gameDoc.scenes[state.currentScene]) {
       storyStore.getState().load(state)
-      setPlaying(true)
+      setPhase('playing')
+    }
+  }
+  const retry = async () => {
+    const state = await loadGame()
+    if (state && gameDoc.scenes[state.currentScene]) {
+      storyStore.getState().load(state)
+      setPhase('playing')
+    } else {
+      newGame()
     }
   }
 
-  if (!playing) {
-    return <TitleScreen onNewGame={newGame} onContinue={() => void continueGame()} />
+  if (phase === 'loading') {
+    return (
+      <LoadingScreen
+        cfg={screens?.loading}
+        onDone={() => {
+          try {
+            localStorage.setItem(LOADED_KEY, '1')
+          } catch {
+            // ignore (private mode) — the loading screen just shows again next time
+          }
+          setPhase('title')
+        }}
+      />
+    )
+  }
+  if (phase === 'title') {
+    return (
+      <TitleScreen
+        cfg={screens?.title}
+        onNewGame={newGame}
+        onContinue={() => void continueGame()}
+      />
+    )
+  }
+  if (phase === 'gameover') {
+    return (
+      <TextScreen
+        cfg={screens?.gameOver}
+        fallback="Game over"
+        actions={
+          <>
+            <button type="button" className="screen__btn" onClick={() => void retry()}>
+              Retry
+            </button>
+            <button type="button" className="screen__btn" onClick={() => setPhase('title')}>
+              Title
+            </button>
+          </>
+        }
+      />
+    )
+  }
+  if (phase === 'end') {
+    return (
+      <TextScreen
+        cfg={screens?.end}
+        fallback="The End"
+        actions={
+          <button type="button" className="screen__btn" onClick={() => setPhase('credits')}>
+            Continue
+          </button>
+        }
+      />
+    )
+  }
+  if (phase === 'credits') {
+    return <CreditsScreen cfg={screens?.credits} onDone={() => setPhase('final')} />
+  }
+  if (phase === 'final') {
+    return <FinalScreen onDone={() => setPhase('title')} />
   }
 
   const sceneName = gameDoc.scenes[sceneId]?.name ?? sceneId
@@ -73,7 +163,7 @@ export function App() {
         <Inventory />
         <DialogueBox />
         <CutsceneOverlay />
-        <Menu onExit={() => setPlaying(false)} />
+        <Menu onExit={() => setPhase('title')} />
       </div>
       <GameCursor />
     </div>

@@ -28,6 +28,7 @@ function freshState(doc: GameDoc): StoryState {
     selectedItem: null,
     npcScene: {},
     npcNode: {},
+    screen: null,
   }
 }
 
@@ -50,9 +51,10 @@ export function createStoryStore(doc: GameDoc) {
       )
       return true
     },
-    load: (state) => set({ ...state, selectedItem: null, narration: null }),
-    reset: (nextDoc) => set({ ...freshState(nextDoc), narration: null }),
+    load: (state) => set({ ...state, selectedItem: null, narration: null, screen: null }),
+    reset: (nextDoc) => set({ ...freshState(nextDoc), narration: null, screen: null }),
     say: (text) => set({ narration: text }),
+    setScreen: (screen) => set({ screen }),
     enterRoutine: (npc, node, scene) =>
       set({
         npcNode: { ...(get().npcNode ?? {}), [npc]: node },

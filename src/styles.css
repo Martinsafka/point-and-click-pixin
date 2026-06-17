@@ -397,6 +397,132 @@ body {
   cursor: not-allowed;
 }
 
+.title__logo {
+  max-width: 70%;
+  max-height: 40vh;
+  margin-bottom: 6px;
+}
+.title__btn--image {
+  padding: 0;
+  background: none;
+  border: none;
+}
+.title__btn--image img {
+  display: block;
+  max-width: 240px;
+  max-height: 72px;
+}
+
+/* Game screens (M11) — loading / game-over / end / credits / final */
+.screen {
+  position: fixed;
+  inset: 0;
+  font-family: var(--game-font);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: #0b0d12;
+  color: #e6ebf2;
+  text-align: center;
+  padding: 6vh 8vw;
+}
+.screen__logo {
+  max-width: 60%;
+  max-height: 36vh;
+}
+.screen__content {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 70ch;
+}
+.screen__text {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+.screen__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.screen__btn {
+  padding: 10px 22px;
+  background: rgba(26, 34, 52, 0.9);
+  border: 1px solid #2a3650;
+  border-radius: 9px;
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+.screen__btn:hover {
+  border-color: #e8b552;
+}
+
+.loading-bar {
+  width: min(420px, 60vw);
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.loading-bar__fill {
+  height: 100%;
+  background: #e8b552;
+  transition: width 0.1s linear;
+}
+
+/* Credits — a column scrolling up from below; the scroller is positioned by JS transform. */
+.screen--credits {
+  overflow: hidden;
+  justify-content: flex-start;
+}
+.credits__scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 8vw;
+  will-change: transform;
+}
+.credits__line {
+  margin: 0;
+  line-height: 1.5;
+}
+.screen__skip {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  padding: 6px 12px;
+  background: rgba(20, 22, 34, 0.7);
+  border: 1px solid rgba(205, 214, 244, 0.25);
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.screen--final {
+  cursor: pointer;
+  background: #06070b;
+}
+.final__logo {
+  font-size: 26px;
+  letter-spacing: 0.04em;
+  opacity: 0.92;
+}
+.final__hint {
+  font-size: 12px;
+  opacity: 0.5;
+}
+
 /* Editor (dev-only, ?edit) */
 .editor {
   display: flex;

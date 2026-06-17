@@ -128,6 +128,10 @@ export type Effect =
   | { kind: 'giveItem'; item: ItemId }
   | { kind: 'takeItem'; item: ItemId }
   | { kind: 'goTo'; scene: SceneId }
+  // Show a full-screen end screen (M11): `gameOver` (retry / title) or `endGame`
+  // (end → credits → final → title).
+  | { kind: 'gameOver' }
+  | { kind: 'endGame' }
   | { kind: 'startDialog'; dialog: DialogId }
   // Play a cutscene (id into `GameDoc.sequences`); blocks input until it ends / is skipped.
   | { kind: 'startSequence'; sequence: SequenceId }
@@ -376,6 +380,75 @@ export interface LightningConfig {
   sound?: SoundId
   /** Only active while this Condition holds. */
   when?: Condition
+}
+
+// --- Game screens (M11) -----------------------------------------------------
+
+export type TextAlign = 'left' | 'center' | 'right'
+
+/** A screen background — an `image` (URL / data-URL) wins over a solid `color`. */
+export interface ScreenBg {
+  color?: string
+  image?: string
+}
+
+/** A styled text block (game-over / end / credits). */
+export interface ScreenText {
+  text: string
+  /** Font size in px. */
+  size: number
+  color: string
+  align: TextAlign
+}
+
+/** A title-screen button: a styled HTML **text** label, or a click-through **image**. */
+export interface TitleButton {
+  mode?: 'text' | 'image'
+  /** Label override (text mode; default "New game" / "Continue"). */
+  text?: string
+  /** Button image (image mode) — SVG / PNG / JPG. */
+  image?: string
+}
+
+export interface TitleScreenConfig {
+  bg?: ScreenBg
+  /** A logo image shown above the heading (or instead of it). */
+  logo?: string
+  /** The game name + its styling (omit when a logo says it all). */
+  heading?: string
+  headingSize?: number
+  headingColor?: string
+  tagline?: string
+  /** Shared button text styling + the two buttons. */
+  buttonFontSize?: number
+  buttonColor?: string
+  newGame?: TitleButton
+  continue?: TitleButton
+}
+
+export interface LoadingScreenConfig {
+  bg?: ScreenBg
+  logo?: string
+  /** Minimum visible time in ms (default 5000) — shown only on the first visit. */
+  minMs?: number
+}
+
+export interface CreditsScreenConfig extends ScreenText {
+  bg?: ScreenBg
+  /** Upward scroll speed in px/sec. */
+  scrollSpeed: number
+}
+
+export interface TextScreenConfig extends ScreenText {
+  bg?: ScreenBg
+}
+
+export interface ScreensConfig {
+  loading?: LoadingScreenConfig
+  title?: TitleScreenConfig
+  gameOver?: TextScreenConfig
+  end?: TextScreenConfig
+  credits?: CreditsScreenConfig
 }
 
 // --- Atmosphere: lighting (M10 10b) -----------------------------------------
@@ -764,6 +837,8 @@ export interface GameDoc {
   cursors?: Partial<Record<CursorKind, string>>
   /** UI font-family for the game (M11) — a CSS font stack; absent → the system default. */
   font?: string
+  /** Full-screen game screens — loading / title / game-over / end / credits (M11). */
+  screens?: ScreensConfig
   /** The protagonist's view (atlas + clips); absent → the built-in placeholder. */
   player?: ViewDescriptor
   /** The global NPC cast (id → definition); placed into scenes via `SceneData.npcs`. */
