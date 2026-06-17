@@ -709,13 +709,15 @@
         {
           "text": "Rough part of town, this.",
           "after": 2500,
-          "every": 7000
+          "every": 7000,
+          "sound": "sfx-pickup"
         },
         {
           "text": "I wouldn't wander down that alley after dark if I were you, friend."
         },
         {
-          "text": "Mind the puddles."
+          "text": "Mind the puddles.",
+          "sound": "sfx-pickup"
         },
         {
           "text": "You're still here?",

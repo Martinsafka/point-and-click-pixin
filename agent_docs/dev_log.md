@@ -23,6 +23,12 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Monologues: optional per-line sound (library `SoundId`)
+**What:** A monologue line can now play a sound when it appears (M12.5 #6 follow-up). `Monologue.sound?: SoundId` (a library reference, like every other sound). Runtime: `updateMonologues` plays it via `audioMod.playSoundById(line.sound)` right when the bubble shows (so it's once per appearance, muted in the editor preview). Editor: a **sound** `SoundSelect` per line in `MonologueList`. Demo: two stranger lines carry the built-in **`sfx-pickup`** blip (seeded in every doc, so no new asset needed — upload your own in the Sounds tab to replace it).
+**Why:** the user wanted monologues to have voice / audio, authored the same way as all other sounds (a library picker).
+**How:** reuses the existing `SoundSelect` + `playSoundById` (the same path as `playAnim` clip sounds / the `playSound` effect). The sound fires in the same branch that calls `bubbles.show`, so it stays in sync with the line and respects the cycle / `every` timing.
+**Verified:** typecheck + lint + build green; `MonologueList.tsx` Prettier-clean; `game.json` valid. (Visual: the stranger blips as those lines pop up; `/?edit` → NPC modal → Monologues → pick a **sound** per line.)
+
 ### 2026-06-18 — Speech bubbles → DOM overlay (Pixi Text clip finally beaten)
 **What:** Pixi `Text` kept clipping the right edge of bubble lines no matter what (padding, CanvasTextMetrics, manual `\n` wrap with `wordWrap:false` — all failed; the clip even scaled with line length). Gave up on Pixi for this and moved the bubbles to the **DOM**: `engine/bubble.ts` now only runs the typewriter + tracks each character's feet (design px) and publishes live bubbles on a `bubbleBridge` singleton; a new React overlay `ui/SpeechBubbles` maps those to the screen via `cameraOffset` (an rAF loop, same transform the cursor inverts) and renders one `<div>` per bubble. The browser lays out + wraps the text (CSS `max-width` + `overflow-wrap`), so it never clips; the font is `calc(15px * var(--ui-scale))` so it tracks the Settings text-size; a CSS `::after` triangle is the tail. `createBubbleSystem()` no longer takes a Pixi layer; `scene.ts` dropped the `bubbleLayer`.
 **Why:** after ~five attempts the clip was clearly a Pixi v8 `Text` texturing issue we couldn't configure away; DOM text is the bulletproof path and gets wrapping + the `--ui-scale` font for free.

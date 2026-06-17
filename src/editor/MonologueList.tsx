@@ -1,5 +1,6 @@
 import type { ItemDef, ItemId, Monologue, SceneId } from '../data/schema'
 import { ConditionEditor } from './ConditionEditor'
+import { SoundSelect } from './SoundSelect'
 
 /**
  * Ambient monologues (M12.5 #6) for an NPC — timed world-space speech bubbles. The first whose
@@ -72,6 +73,10 @@ export function MonologueList({
               value={m.every ?? ''}
               onChange={(e) => patch(i, { every: num(e.target.value) })}
             />
+          </div>
+          <div className="logic__field">
+            <span>sound</span>
+            <SoundSelect value={m.sound} onChange={(sound) => patch(i, { sound })} />
           </div>
           <div className="logic__field logic__field--col">
             <span>when (active while)</span>

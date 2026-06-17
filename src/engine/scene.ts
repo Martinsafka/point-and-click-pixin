@@ -800,6 +800,7 @@ export async function mountScene(
           x: m.char.displayObject.x,
           y: m.char.displayObject.y,
         }))
+        if (line.sound) audioMod?.playSoundById(line.sound) // M12.5 — line voice / blip
         m.idx += 1
         // Gap to the next line: this line's `every`, else a default while cycling, else stop
         // (a single line with no `every` shows once until the eligible set changes).

@@ -701,6 +701,8 @@ export interface Monologue {
   /** Repeat interval (ms); omit → show once (until the active monologue changes). */
   every?: number
   when?: Condition
+  /** A library sound (`SoundId`) played when the line appears (M12.5) — e.g. a voice blip. */
+  sound?: SoundId
 }
 
 /**

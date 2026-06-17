@@ -373,7 +373,8 @@ NPC modal — dialogue (+ gate), inspect, voice, **footsteps** (a library sound 
 this NPC walks), vision (stealth — incl. **approach**: walk to the player on detection, then
 run the effects), appearance (+ variants), **monologues** (M12.5 — timed world-space speech
 bubbles; eligible lines **cycle** in order, the first shows after `after` ms and each waits its
-`every` ms before the next — a flag adds / removes lines), its **routine** (below), and (when placed in more than one scene) its **home**
+`every` ms before the next — a flag adds / removes lines; each line can carry a **sound** from the
+library, played when it appears), its **routine** (below), and (when placed in more than one scene) its **home**
 start scene.
 
 #### Routine (cross-scene schedule)
