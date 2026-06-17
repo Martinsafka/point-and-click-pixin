@@ -11,6 +11,7 @@ import type {
   LightSource,
   PlayerLight,
   PointEmitter,
+  ScreensConfig,
   Vignette,
   DialogId,
   DialogNode,
@@ -158,6 +159,8 @@ interface EditorStore {
   setPickupSound(id: SoundId | undefined): void
   /** UI font-family (M11); undefined → system default. */
   setFont(font: string | undefined): void
+  /** Full-screen game screens config (M11) — loading / title / game-over / end / credits. */
+  setScreens(screens: ScreensConfig | undefined): void
   setTransitionSound(id: SoundId | undefined): void
   // Sound library (M9 9b) — upload once, reference by id everywhere.
   addSound(src: string): void
@@ -688,6 +691,7 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setPickupSound: (id) => patchDoc({ pickupSound: id }),
     setTransitionSound: (id) => patchDoc({ transitionSound: id }),
     setFont: (font) => patchDoc({ font }),
+    setScreens: (screens) => patchDoc({ screens }),
     addSound: (src) => {
       const sounds = get().doc.sounds ?? {}
       const id = uniqueKey(sounds, 'sound')

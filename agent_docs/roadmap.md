@@ -544,8 +544,11 @@ working until ME.6, so the migration is reversible at every point.
 - [x] **Font picker** — `GameDoc.font` (a CSS font stack) chosen in the **Project** tab; applied
       to the game shell + title via a `--game-font` var. _(No general UI-text editing: the
       inventory uses item names, dialogue uses NPC names — nothing else needs it.)_
-- [ ] **Game screens** — a set of editable full-screen screens (the bigger piece). **4a
-      (runtime + flow) done**; **4b (editor authoring) next.**
+- [x] **Game screens** — a set of editable full-screen screens. **4a** runtime + flow
+      (`GameDoc.screens`; App phase machine loading→title→playing→gameOver|end→credits→final;
+      `gameOver`/`endGame` effects); **4b** editor — a Project **Screens** section (image uploads
+      + colour / size / align text + per-title-button text/image mode). _(Final logo + real
+      loading-% are release/follow-up.)_
   - **Loading** — shown before anything (incl. the title): logo + background.
   - **Title** — logo + background (over the New game / Continue buttons).
   - **Game over** / **End** — a text screen (editable size / colour / alignment), reached by

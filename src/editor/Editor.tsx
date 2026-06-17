@@ -30,6 +30,7 @@ import { SceneLighting } from './SceneLighting'
 import { SceneEmitters } from './SceneEmitters'
 import { SceneFog } from './SceneFog'
 import { SceneGrade } from './SceneGrade'
+import { ScreensEditor } from './ScreensEditor'
 import { LightingDefaults } from './LightingDefaults'
 import { LightOverlay } from './LightOverlay'
 import { EmitterOverlay } from './EmitterOverlay'
@@ -765,6 +766,9 @@ export function Editor() {
           </Section>
           <Section title="Transition">
             <TransitionEditor transition={doc.transition} />
+          </Section>
+          <Section title="Screens">
+            <ScreensEditor screens={doc.screens} />
           </Section>
           <Section title="Document">
             <div className="editor__toolbar">

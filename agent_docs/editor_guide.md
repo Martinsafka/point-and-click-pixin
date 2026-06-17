@@ -429,7 +429,21 @@ the title. Shows in **▶ Test in game** (the editor's own chrome keeps its font
 set **text size** + **volume** themselves in the in-game ☰ Menu → Settings; those are
 per-device, not part of the game.)_
 
-### Cursors (global)
+### Screens (global, Project tab)
+
+Full-screen **game screens** (M11). Tick a screen to enable + author it:
+
+- **Loading** — a boot splash shown **only on the first visit** (then cached): background
+  (colour or uploaded image) + logo + a min time. (It's not the scene-transition fade.)
+- **Title** — background / logo / heading (text, colour, size) / tagline, and the **New game**
+  + **Continue** buttons, each a styled **text** label or an uploaded **image** (no text).
+- **Game over** / **End** — a text screen (text / colour / **size** / **align**) over a
+  background; game over offers **Retry** (last save) / **Title**, end goes on to credits.
+- **Credits** — formatted text that **scrolls up** (size / colour / align + scroll speed).
+
+Trigger **Game over** / **End** from a dialogue or trigger with the **gameOver** / **endGame**
+effect. The very last "made with" logo is fixed (dropped in at release, not editable). Author
+in **Project → Screens**; see them in **▶ Test in game**.
 
 The in-game pointer changes by what it's over: **walk** (over the walkable area),
 **pickable**, **interact**, **exit**, **inspect**, or **default** (anywhere else —
