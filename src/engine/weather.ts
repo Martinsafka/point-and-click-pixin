@@ -7,8 +7,9 @@ const DEG = Math.PI / 180
 
 /** A soft round particle texture (radial gradient), built once and shared. */
 let roundTex: Texture | null = null
-const ROUND_SIZE = 32
-function roundTexture(): Texture {
+/** Round particle texture size (px) — a particle's scale = desired-size ÷ this. */
+export const ROUND_SIZE = 32
+export function roundTexture(): Texture {
   if (roundTex) return roundTex
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = ROUND_SIZE

@@ -5,8 +5,10 @@ import type {
   Condition,
   CursorKind,
   DepthStop,
+  FogConfig,
   LightSource,
   PlayerLight,
+  PointEmitter,
   DialogId,
   DialogNode,
   DialogNodeId,
@@ -174,6 +176,13 @@ interface EditorStore {
   removeDarkArea(id: SceneId, index: number): void
   setDarkAreaPolygon(id: SceneId, index: number, polygon: number[]): void
   setDarkAreaFeather(id: SceneId, index: number, feather: number): void
+  // Point emitters (M10) — placed like lights; live in the world-space `emitters` slot.
+  addEmitter(id: SceneId): void
+  removeEmitter(id: SceneId, index: number): void
+  setEmitter(id: SceneId, index: number, patch: Partial<PointEmitter>): void
+  setEmitterPos(id: SceneId, index: number, x: number, y: number): void
+  /** Animated fog/clouds for this scene (M10 10c); undefined removes it. */
+  setSceneFog(id: SceneId, fog: FogConfig | undefined): void
   setDocAmbientLight(ambient: AmbientLight | undefined): void
   setPlayerLight(light: PlayerLight | undefined): void
   // Player character (M5) — bumps `revision` so the preview re-mounts the sprite.
@@ -779,6 +788,67 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         { lights: (get().doc.scenes[id].lights ?? []).map((l, i) => (i === index ? { ...l, x, y } : l)) },
         false,
       ),
+    addEmitter: (id) => {
+      const emitters = get().doc.scenes[id].emitters ?? []
+      const taken = new Set(emitters.map((e) => e.id))
+      let eid = 'smoke'
+      let n = 1
+      while (taken.has(eid)) eid = `smoke-${(n += 1)}`
+      patchScene(
+        id,
+        {
+          emitters: [
+            ...emitters,
+            {
+              id: eid,
+              x: 0.5,
+              y: 0.5,
+              rate: 14,
+              life: 3.2,
+              color: '#9aa0ab',
+              alpha: 0.32,
+              size: 12,
+              grow: 18,
+              shape: 'round',
+              angle: -90,
+              spread: 16,
+              speed: 26,
+              gravity: -6,
+              spawnRadius: 4,
+              blend: 'normal',
+            },
+          ],
+        },
+        false,
+      )
+    },
+    removeEmitter: (id, index) =>
+      patchScene(
+        id,
+        { emitters: (get().doc.scenes[id].emitters ?? []).filter((_, i) => i !== index) },
+        false,
+      ),
+    setEmitter: (id, index, patch) =>
+      patchScene(
+        id,
+        {
+          emitters: (get().doc.scenes[id].emitters ?? []).map((e, i) =>
+            i === index ? { ...e, ...patch } : e,
+          ),
+        },
+        false,
+      ),
+    setEmitterPos: (id, index, x, y) =>
+      patchScene(
+        id,
+        {
+          emitters: (get().doc.scenes[id].emitters ?? []).map((e, i) =>
+            i === index ? { ...e, x, y } : e,
+          ),
+        },
+        false,
+      ),
+    setSceneFog: (id, fog) => patchScene(id, { fog }, false),
     addDarkArea: (id) =>
       patchScene(id, { darkAreas: [...(get().doc.scenes[id].darkAreas ?? []), { polygon: [] }] }, false),
     removeDarkArea: (id, index) =>

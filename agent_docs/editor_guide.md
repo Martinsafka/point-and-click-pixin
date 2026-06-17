@@ -268,6 +268,35 @@ preview). Three parts:
   pushed toward black, with a **feather** slider for the soft edge. Visual only (hotspots
   still work — gate them with `when` if you want them dark-locked).
 
+### Emitters · _N_
+
+Localized **point particle** sources placed at a scene spot (vs full-screen Weather):
+chimney smoke, a fire's embers, a dripping pipe. **+ Emitter** adds one (⛲ marker), **Place**
+→ click the preview to position it, then tune: **colour / shape** (round / streak) **/ blend**
+(normal / add-glow), and sliders for **rate** (particles/sec), **life** (seconds, fades over
+it), **alpha**, **size** + **grow** (px/sec — smoke billows), **angle** (−90 = up, 90 = down)
++ **spread**, **speed** + **gravity** (negative rises like smoke), and **spawn r**(adius). A
+`when` gates it. It's world-space (stays at the spot, scrolls with the scene) and renders
+**live** as you tune.
+
+### Fog
+
+Animated **fog / clouds** for the scene (a scrolling soft-noise fake, not volumetrics). Tick
+**fog enabled**, then set **colour** and the sliders: **parallax X ↔ / Y ↕** (the drift
+velocity — fog can flow any direction; either sign; the front layer auto-leads for depth),
+**seed** (reshapes the cloud pattern), **noise W / H** (the cloud-texture aspect), **scale %**
+(zoom the whole noise at that W/H ratio; 100 = unchanged). Two layers (**back ◢** + **front
+◤**), each with its own **opacity**:
+
+- **front** is always a world overlay at **front depth** (over the scene; covers characters).
+- **back** uses **back depth** (a z-order vs the bands: background 0 · characters 10 ·
+  foreground 20) — **or** pick **back behind** = a scene layer to slot it _behind that layer_
+  (e.g. behind the buildings, over the sky). Since "behind the buildings" is geometrically
+  deeper than the characters, the back layer won't cover them — that's what the **front** haze
+  is for.
+
+Renders **live** as you tune.
+
 ### Items · _N_ and Recipes · _N_ (global)
 
 These two sections are **document-level** — they apply to the whole game, not the

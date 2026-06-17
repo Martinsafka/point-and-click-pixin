@@ -380,7 +380,40 @@
         {
           "preset": "rain"
         }
-      ]
+      ],
+      "emitters": [
+        {
+          "id": "chimney-smoke",
+          "x": 0.32,
+          "y": 0.34,
+          "rate": 14,
+          "life": 3.6,
+          "color": "#9aa0ab",
+          "alpha": 0.32,
+          "size": 12,
+          "grow": 20,
+          "shape": "round",
+          "angle": -90,
+          "spread": 16,
+          "speed": 26,
+          "gravity": -7,
+          "spawnRadius": 4,
+          "blend": "normal"
+        }
+      ],
+      "fog": {
+        "color": "#9fb0c4",
+        "parallaxX": 12,
+        "parallaxY": 2,
+        "seed": 1,
+        "scaleX": 2.6,
+        "scaleY": 2.6,
+        "scale": 100,
+        "opacity": 0.22,
+        "backZ": 8,
+        "frontOpacity": 0.1,
+        "frontZ": 26
+      }
     },
     "room": {
       "id": "room",

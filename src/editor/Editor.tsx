@@ -27,8 +27,11 @@ import { SoundSelect } from './SoundSelect'
 import { WeatherList } from './WeatherList'
 import { SceneWeather } from './SceneWeather'
 import { SceneLighting } from './SceneLighting'
+import { SceneEmitters } from './SceneEmitters'
+import { SceneFog } from './SceneFog'
 import { LightingDefaults } from './LightingDefaults'
 import { LightOverlay } from './LightOverlay'
+import { EmitterOverlay } from './EmitterOverlay'
 import { ConditionEditor } from './ConditionEditor'
 import { FloatingEditor, type FloatPanel } from './FloatingEditor'
 import { WorldState } from './WorldState'
@@ -57,7 +60,16 @@ const TAB_LABEL: Record<Tab, string> = {
 }
 
 /** Which polygon draw / placement mode is active (overlays share the preview). */
-type Draw = 'walkable' | 'hole' | 'hitarea' | 'npc' | 'npcpath' | 'light' | 'darkarea' | null
+type Draw =
+  | 'walkable'
+  | 'hole'
+  | 'hitarea'
+  | 'npc'
+  | 'npcpath'
+  | 'light'
+  | 'darkarea'
+  | 'emitter'
+  | null
 
 function round(n: number): number {
   return Math.round(n * 1000) / 1000
@@ -94,6 +106,7 @@ export function Editor() {
   const [selectedNpc, setSelectedNpc] = useState<number | null>(null)
   const [selectedLight, setSelectedLight] = useState<number | null>(null)
   const [selectedDarkArea, setSelectedDarkArea] = useState<number | null>(null)
+  const [selectedEmitter, setSelectedEmitter] = useState<number | null>(null)
   // Which of the selected placement's named paths is being drawn (index), in `npcpath` mode.
   const [drawPathIndex, setDrawPathIndex] = useState<number | null>(null)
   // The width slider drives a live % during drag, committing (one preview re-mount, since
@@ -119,6 +132,9 @@ export function Editor() {
     setSelectedInteractable(null)
     setSelectedHole(null)
     setSelectedNpc(null)
+    setSelectedLight(null)
+    setSelectedDarkArea(null)
+    setSelectedEmitter(null)
     setWidthDraft(null)
   }
 
@@ -234,6 +250,11 @@ export function Editor() {
   const placeLight = (xFrac: number, yFrac: number) => {
     if (selectedLight !== null) {
       editorStore.getState().setLightPos(selectedId, selectedLight, round(xFrac), round(yFrac))
+    }
+  }
+  const placeEmitter = (xFrac: number, yFrac: number) => {
+    if (selectedEmitter !== null) {
+      editorStore.getState().setEmitterPos(selectedId, selectedEmitter, round(xFrac), round(yFrac))
     }
   }
   const addDarkAreaPoint = (xFrac: number, yFrac: number) => {
@@ -541,6 +562,28 @@ export function Editor() {
             )}
           </Section>
 
+          <Section title={`Emitters · ${scene ? (scene.emitters?.length ?? 0) : 0}`}>
+            {scene && (
+              <SceneEmitters
+                sceneId={selectedId}
+                emitters={scene.emitters ?? []}
+                items={doc.items}
+                sceneIds={sceneIds}
+                selected={selectedEmitter}
+                onSelect={(i) => {
+                  setSelectedEmitter(i)
+                  setDraw(null)
+                }}
+                placeMode={draw === 'emitter'}
+                onTogglePlace={() => toggle('emitter')}
+              />
+            )}
+          </Section>
+
+          <Section title="Fog">
+            {scene && <SceneFog sceneId={selectedId} fog={scene.fog} layers={scene.layers} />}
+          </Section>
+
           {draw && (
             <p className="editor__hint">
               {draw === 'npc'
@@ -549,11 +592,13 @@ export function Editor() {
                   ? "Click in the preview to add waypoints to the NPC's path."
                   : draw === 'light'
                     ? 'Click in the preview to position the light.'
-                    : draw === 'darkarea'
-                      ? 'Click in the preview to add dark-area points.'
-                      : `Click in the preview to add ${
-                          draw === 'walkable' ? 'walkable' : draw === 'hole' ? 'hole' : 'hit-area'
-                        } points.`}
+                    : draw === 'emitter'
+                      ? 'Click in the preview to position the emitter.'
+                      : draw === 'darkarea'
+                        ? 'Click in the preview to add dark-area points.'
+                        : `Click in the preview to add ${
+                            draw === 'walkable' ? 'walkable' : draw === 'hole' ? 'hole' : 'hit-area'
+                          } points.`}
             </p>
           )}
         </>
@@ -746,6 +791,12 @@ export function Editor() {
                 mode={draw === 'light' ? 'light' : draw === 'darkarea' ? 'darkarea' : null}
                 onPlaceLight={placeLight}
                 onAddDarkPoint={addDarkAreaPoint}
+              />
+              <EmitterOverlay
+                emitters={scene.emitters ?? []}
+                selected={selectedEmitter}
+                placeMode={draw === 'emitter'}
+                onPlace={placeEmitter}
               />
             </SceneViewport>
           </div>

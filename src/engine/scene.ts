@@ -20,6 +20,8 @@ import { depthScaleAt } from '../systems/depth'
 import { buildNavigation } from '../systems/navmesh'
 import { createAtmosphere } from './atmosphere'
 import { createWeatherSystem, type WeatherSystem } from './weather'
+import { createEmitterSystem, type EmitterSystem } from './emitters'
+import { createFog, type FogBackInto, type FogSystem } from './fog'
 import { createLighting, type Lighting } from './lighting'
 import {
   routineNode,
@@ -342,6 +344,7 @@ export async function mountScene(
   let weatherPresetsRef = weatherPresets
   let lightScene = scene
   let lightDefaults: { ambientLight?: AmbientLight; playerLight?: PlayerLight } = lightingDefaults
+  let fogScene = scene
   let weatherSystem: WeatherSystem | null = null
   let weatherId: string | null = null
   const activeWeatherId = (st: StoryState): string | null =>
@@ -388,10 +391,13 @@ export async function mountScene(
   const pathSwitchers: ((s: StoryState) => void)[] = []
   // Background / foreground layers that scroll at their own rate (parallax).
   const parallaxLayers: { display: Container; baseX: number; baseY: number; p: number }[] = []
+  // Each layer's display, indexed by scene-layer index — fog can slot its back layer behind one.
+  const layerDisplays: Container[] = []
 
   for (let i = 0; i < scene.layers.length; i += 1) {
     const layer = scene.layers[i]
     const display = await buildLayer(layer, design)
+    layerDisplays[i] = display
     if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
       const anchorY = layer.anchorYFrac * design.height
       display.zIndex = anchorY
@@ -426,10 +432,55 @@ export async function mountScene(
     bandFor(layer.band).addChild(display)
   }
 
+  // M10 10c fog: an animated noise fog/cloud layer. Built after the layers so the back layer
+  // can slot **behind a chosen layer** (`fog.backLayer`) inside its band; else a world overlay
+  // at `backZ`. Rebuilt by `applyLive` when the scene's `fog` changes.
+  let fogSystem: FogSystem | null = null
+  const buildFog = (): void => {
+    fogSystem?.destroy()
+    const fog = fogScene.fog
+    if (!fog) {
+      fogSystem = null
+      return
+    }
+    let backInto: FogBackInto | undefined
+    const d = fog.backLayer !== undefined ? layerDisplays[fog.backLayer] : undefined
+    if (d?.parent) {
+      backInto = d.parent.sortableChildren
+        ? { parent: d.parent, zIndex: (d.zIndex ?? 0) - 0.001 } // sort just behind the layer
+        : { parent: d.parent, index: d.parent.getChildIndex(d) } // insert before it in order
+    }
+    fogSystem = createFog(world, fog, design, backInto)
+  }
+  buildFog()
+  atmosphere.onUpdate((dt) => fogSystem?.update(dt))
+
+  // M10 point emitters — smoke / embers / drips at scene points (world-space, in the
+  // `emitters` slot). Rebuildable live (`applyLive` → `buildEmitters`); one updater iterates
+  // the live set, and a `when` toggles each emitter's visibility reactively.
+  let emitterScene = scene
+  const emitterEntries: { system: EmitterSystem; when?: Condition }[] = []
+  const refreshEmitterVisibility = (st: StoryState): void => {
+    for (const e of emitterEntries) e.system.display.visible = !e.when || checkCondition(st, e.when)
+  }
+  const buildEmitters = (): void => {
+    for (const e of emitterEntries) e.system.destroy()
+    emitterEntries.length = 0
+    for (const em of emitterScene.emitters ?? []) {
+      emitterEntries.push({ system: createEmitterSystem(atmosphere.layers.emitters, em, design), when: em.when })
+    }
+    refreshEmitterVisibility(store.getState())
+  }
+  buildEmitters()
+  atmosphere.onUpdate((dt) => {
+    for (const e of emitterEntries) e.system.update(dt)
+  })
+
   const refreshVisibility = () => {
     const state = store.getState()
     for (const c of conditional) c.display.visible = c.show(state)
     for (const sw of pathSwitchers) sw(state)
+    refreshEmitterVisibility(state)
     syncWeather(state)
   }
   // Subscribe unconditionally — NPCs (below) may add conditional entries after this.
@@ -1049,6 +1100,8 @@ export async function mountScene(
       sc.lights,
       sc.darkAreas,
       sc.weather,
+      sc.fog,
+      sc.emitters,
       a.ambientLight,
       a.playerLight,
       a.weatherPresets,
@@ -1102,11 +1155,15 @@ export async function mountScene(
         weatherPresetsRef = atmo.weatherPresets ?? {}
         lightScene = sc
         lightDefaults = { ambientLight: atmo.ambientLight, playerLight: atmo.playerLight }
+        fogScene = sc
+        emitterScene = sc
         weatherSystem?.destroy()
         weatherSystem = null
         weatherId = null
         syncWeather(store.getState())
         buildLighting()
+        buildFog()
+        buildEmitters()
       }
       // Character size — the per-scene multiplier on top of each actor's depth scale.
       const cs = sc.characterScale ?? 1

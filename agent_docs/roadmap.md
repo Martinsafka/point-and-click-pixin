@@ -357,10 +357,15 @@ flag-driven through the existing condition vocabulary.
       reactive, so a story flag triggers / swaps weather).
 - [x] Editor: a **new top-level `Atmosphere` tab** (preset list + slider editor) + a per-scene
       **Weather** section (conditional preset picker with `when`). **→ 10a complete.**
-- [ ] **Localized point emitters** — placed in a scene like lights (position + a preset),
-      reusing the particle system for **chimney smoke / sparks / torch embers** (vs the
-      full-screen weather); gated by `when`. _(deferred within 10a)_
-- Follow-up: a **live weather preview** in the editor (slide → see it).
+- [x] **Localized point emitters** — `SceneData.emitters[]` (`PointEmitter`): particles
+      streaming from one **scene point** (smoke / embers / drips) — **world-space** (in a new
+      `emitters` atmosphere slot, over the foreground), launched along `angle` ± `spread` at
+      `speed`, accelerated by `gravity` (negative rises), `grow`n + faded over `life`, capped
+      by the quality budget; gated by `when`. Editor: a Scene-tab **Emitters** section (+ /
+      Place / sliders) + ⛲ preview markers (`createEmitterSystem`). Demo: chimney smoke on the
+      street.
+- Follow-up: a **live weather preview** in the editor — _resolved by the ME live world (weather
+  + emitters render live as you tune)._
 
 **10b — Lighting** _(one composited lighting layer over the scene)_
 
@@ -509,9 +514,15 @@ working until ME.6, so the migration is reversible at every point.
 
 **10c — Fog & clouds**
 
-- [ ] Animated noise-based "rolling" fog + cloud layers, **density sliders** — a convincing
-      *fake* (scrolling / warped noise), not true volumetrics. Authored in the Atmosphere
-      tab; uses the split (behind/front) compositing from the foundations.
+- [x] Animated noise-based "rolling" fog + cloud layers, **density sliders** — `SceneData.fog`
+      (`FogConfig`: colour, **back** + **front** opacity, scale, speed). `engine/fog.ts` scrolls
+      a **tileable soft-noise `TilingSprite`** (layered integer-freq sines → seamless clumps),
+      a back layer behind characters (`fogBack`) + a faster/larger front layer over them
+      (`fogFront`) for depth — world-space, scrolls with the scene. Live-rebuilt via `applyLive`
+      (`sc.fog` in the atmosphere hash). Editor: a Scene-tab **Fog** section (enable + colour +
+      back/front/scale/speed sliders). Demo: light fog on the street. _(Authored per-scene in
+      the Scene tab rather than the global Atmosphere tab — consistent with per-scene weather /
+      lighting.)_
 
 **10d — Polish**
 

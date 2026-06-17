@@ -273,6 +273,86 @@ export interface WeatherPreset {
   ambient?: SoundConfig
 }
 
+/**
+ * A **localized point emitter** (M10) — particles streaming from one scene position: chimney
+ * smoke, a fire's embers, a dripping pipe, a dust plume. Unlike full-screen weather it's
+ * **world-space** (placed at a scene point, scrolls with the scene). Each particle is launched
+ * along `angle` (± `spread`) at `speed`, accelerated by `gravity` (negative = rises), grows by
+ * `grow`, fades over `life`, then respawns. Placed in the editor like a light, gated by `when`.
+ */
+export interface PointEmitter {
+  id: string
+  /** Emission point — scene fractions (0..1). */
+  x: number
+  y: number
+  /** Particles spawned per second (live count ≈ rate × life, capped by the quality budget). */
+  rate: number
+  /** Particle lifetime in seconds (fades to 0 over it). */
+  life: number
+  color: string
+  alpha: number
+  /** Start size in px; grows by `grow` px/sec. */
+  size: number
+  grow: number
+  shape: WeatherShape
+  /** Launch direction in degrees (90 = down, -90 / 270 = up) + random spread (± deg). */
+  angle: number
+  spread: number
+  /** Initial speed (px/sec) + vertical acceleration (px/sec²; negative rises like smoke). */
+  speed: number
+  gravity: number
+  /** Spawn jitter radius around the point (px). */
+  spawnRadius: number
+  blend: 'normal' | 'add'
+  /** Shown only while this Condition holds (else always). */
+  when?: Condition
+}
+
+/**
+ * Animated **fog / clouds** (M10 10c) — a scrolling soft-noise fake (not volumetrics). A back
+ * layer sits behind characters; `frontOpacity` adds a faster layer over them for depth.
+ */
+export interface FogConfig {
+  color: string
+  /** Back-layer drift velocity (px/sec) — horizontal + vertical, so the fog can flow any
+   *  direction (negative = the other way). The front layer leads faster for a depth feel. */
+  parallaxX: number
+  parallaxY: number
+  /** Noise pattern seed — change it for a different cloud shape (deterministic). */
+  seed: number
+  /** Noise **aspect** — relative width / height of the cloud texture. */
+  scaleX: number
+  scaleY: number
+  /** Overall noise zoom as a **percent** (100 = the W/H above unchanged) — scales W and H
+   *  together, keeping their ratio. */
+  scale: number
+  /** Back-layer opacity (0 = none) + its **depth** (world zIndex: scene bands are background 0,
+   *  characters 10, foreground 20 — so 8 = behind characters & in front of the background). */
+  opacity: number
+  backZ: number
+  /** Optional: place the **back** layer **behind this scene layer** (index into
+   *  `SceneData.layers`) — slots it inside that layer's band (e.g. behind the buildings, over
+   *  the sky) instead of using `backZ`. The front layer always stays a world overlay. */
+  backLayer?: number
+  /** Front-layer opacity (0 = none) + its depth (e.g. 26 = over the whole scene). */
+  frontOpacity: number
+  frontZ: number
+}
+
+/**
+ * Per-scene **colour grade** (M10 10d) — a `ColorMatrixFilter` over the scene art (brightness /
+ * contrast / saturation / hue). The mood pass on top of the painted layers; lighting + weather
+ * still composite over it.
+ */
+export interface ColorGrade {
+  /** 1 = unchanged. */
+  brightness: number
+  contrast: number
+  saturation: number
+  /** Hue rotation in degrees (0 = unchanged). */
+  hue: number
+}
+
 // --- Atmosphere: lighting (M10 10b) -----------------------------------------
 
 /** Global/ambient light level — a scene-wide tint + darken. `intensity` 1 = full daylight,
@@ -602,6 +682,16 @@ export interface SceneData {
   ambientLight?: AmbientLight
   /** Placed local lights (M10 10b). */
   lights?: LightSource[]
+  /** Placed point particle emitters — smoke / embers / drips (M10). */
+  emitters?: PointEmitter[]
+  /** Animated fog / clouds (M10 10c). */
+  fog?: FogConfig
+  /** Colour grade over the scene art (M10 10d). */
+  colorGrade?: ColorGrade
+  /** Vignette — darkened edges (M10 10d). */
+  vignette?: Vignette
+  /** Lightning flashes + thunder (M10 10d). */
+  lightning?: Lightning
   /** Dark zones cut into the scene (M10 10b). */
   darkAreas?: DarkArea[]
   /** Effects run once when the scene is entered (mounted), gated by their own logic —
