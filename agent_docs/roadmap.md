@@ -567,9 +567,26 @@ all NPCs together** — distinct from M7 step 6, which is the **per-NPC** routin
 only). M12 sits above the per-NPC routines and coordinates them via the shared flag /
 condition / effect vocabulary.
 
-- [ ] React Flow (@xyflow/react) view/editor over the flag/condition graph, or an
-      auto-generated visualization. Keep primary logic local to objects.
-- [ ] Optional **time scheduler** nuance for routines (the part of step 6 deferred here).
+Broken into (chosen with the user; **start with M12a**):
+
+- [ ] **M12a — Global rules engine** ⭐ _(start here)_ — `GameDoc.rules`: game-wide reactive
+      rules `{ id?, when: Condition, then: Effect[], once? }`, evaluated **globally on every
+      story-state change** (a store subscription, fixpoint with a hop cap vs loops — like the
+      routine runner). The cross-cutting "game-wide event graph" — orchestrate logic / NPCs
+      without attaching it to a single object (e.g. `hasItem k1 & k2 & k3` → `setFlag gate-open`
+      → `moveNpc guard away`). Runtime runner lives globally (alongside the routine runner in
+      `createSceneHost`, subscribed to the story store). Editor: a Project **Rules** section
+      reusing `ConditionEditor` + `EffectList`. **Scope:** `then` = **state** effects
+      (setFlag / give / take / goTo / moveNpc / despawn / gameOver / endGame, via `store.run`);
+      engine effects (startSequence / playSound / playAnim) need the mounted scene's dispatch →
+      **follow-up**.
+- [ ] **M12b — Logic overview graph** — a React Flow (`@xyflow/react`, already used by the
+      routine editor), **auto-generated, read-only** view of the flag web: a node per flag with
+      edges from what **sets** it (interactables / triggers / dialogues / rules) and to what
+      **reads** it (gated objects, conditions). Derived by scanning the doc. Builds on M12a
+      (rules become graph nodes too).
+- [ ] **M12c — Time scheduler** _(optional; the part of M7 step 6 deferred here)_ — a game
+      clock; routine transitions can advance by **time-of-day** (not only `after` ms).
 
 ### M13 — Open-source packaging
 

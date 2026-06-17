@@ -23,6 +23,17 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-17 — Planning: M12 broken into a/b/c — next up M12a (global rules engine)
+**What:** Docs only (no code). Agreed the M12 breakdown with the user (see roadmap M12): **M12a** global rules engine ⭐ (do first), **M12b** auto-generated logic-overview graph (React Flow), **M12c** optional time scheduler. Context was near full → noting the plan so the next session resumes M12a cleanly.
+**M12a plan (build this next):**
+- **Schema:** `GameDoc.rules?: GameRule[]`, `GameRule = { id?: string; when: Condition; then: Effect[]; once?: boolean }`. (Add near `initialFlags` in `GameDoc`, ~schema.ts line 834.)
+- **Runtime:** a global rules runner created in **`createSceneHost`** (engine/scene.ts, next to `createRoutineRunner` ~line 1197) — **subscribe to the story `store`**; on each change, evaluate every rule's `when` via `checkCondition`; if true (and, for `once`, not already fired) run `then` via `store.run(then)`. **Loop guard:** re-evaluate to a fixpoint with a hop cap (mirror the routine runner's `MAX_HOPS = 32`) since a rule's effects change state → re-trigger. Track fired `once` rules in a Set. Unsubscribe on host `destroy()`. Editor live preview (ScenePreview → createSceneHost) gets it for free.
+- **Effect scope:** `then` = **state** effects only for now (setFlag / giveItem / takeItem / goTo / moveNpc / despawnNpc / gameOver / endGame — all handled by `applyEffects`/`store.run`). Engine effects (startSequence / playSound / playAnim) are inert in `applyEffects` (the scene dispatches them) → **follow-up** (would need to route through the mounted scene's `run`).
+- **Editor:** a **Project → Rules** section (new `editor/RulesEditor.tsx`): list of rules, each with `ConditionEditor` (when) + `EffectList` (then) + an `once` checkbox; store action `setRules` (patchDoc, no revision bump — it's runtime logic, not the Pixi scene). Reuse the patterns from `ScreensEditor` / `EffectList`.
+- **Verify:** typecheck + lint + build + dev smoke; a small Node test of the rules runner (mock store + a rule chain reaching a fixpoint, like the routine test). Demo: a rule in `content/game.json` (e.g. when the player has the key → setFlag something).
+**Why:** the "game-wide event graph that orchestrates NPCs together" (vs M7's per-NPC routines), keeping per-object logic local — the global layer is a thin reactive rules pass.
+**Follow-ups:** M12b graph, M12c scheduler, and rules firing engine effects.
+
 ### 2026-06-17 — M11 4b: Screens editor (Project) — author the game screens
 **What:** The authoring side of the M11 game screens. New `editor/ScreensEditor.tsx` in the **Project → Screens** section: each screen (loading / title / game-over / end / credits) has an **enable** toggle and fields. Reusable pieces: **`ImageField`** (upload → data-URL, with the SVG-mime fix), **`BgFields`** (a colour + an image, image wins), **`TextFields`** (text / colour / size / align, + scroll speed for credits), and **`ButtonFields`** (a title button's **text** label or uploaded **image**). Title also gets logo / heading (text + colour + size) / tagline / button colour + size. Store action `setScreens` (patchDoc). CSS: `.screens-editor` / `.screens-thumb`.
 **Why:** M11 4b — make 4a's screens authorable no-code. Backgrounds + logos + button images upload like cursors / layers (data-URLs in the doc); a note points the author to the `gameOver` / `endGame` effects for triggering, and that the final logo is fixed.
