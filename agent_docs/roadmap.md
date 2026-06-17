@@ -638,13 +638,61 @@ V2.) Each still follows schema-first → runtime → editor.
       player + NPC. Demo: the player swaps to a bright figure on the `night` flag. _(The "just eyes"
       ambiance stays a content technique — dark area + an eyes sprite.)_
 
-### M13 — Open-source packaging
+### M13 — Open-source packaging & launch
 
-- [ ] Split into pnpm-workspace packages: `@scope/engine`, `@scope/editor`,
-      example game.
-- [ ] Publish the `GameDoc` schema as the stable public API (types + JSON schema).
-- [ ] README, MIT license, `create-<name>` scaffolder, tutorial for non-tech authors.
-- [ ] CI + versioning + npm publish.
+**Editor v1 is complete** (M0–M12.5). M13 turns the project into an installable, documented,
+open-source template with a playable demo. Broken into a–e (chosen with the user; do **in order**
+— each feeds the next).
+
+**M13a — Documentation pass**
+
+- [ ] **Editor-guide coverage audit** — walk dev_log + editor_guide and confirm **every** shipped
+      editor feature has its controls / draw-modes / shortcuts documented; make a feature→guide
+      checklist and fill any gaps.
+- [ ] **Asset-prep section** in editor_guide (building on `asset_pipeline.md`) — exact formats:
+      the **animation** atlas (PNG grid, frame size, columns, fps, clip naming `walk.E` / `idle.S`,
+      anchor = feet), sounds (format / length), SVG/PNG layers, recommended resolutions.
+- [ ] **README** — an overview of every editor feature + a link to `editor_guide.md` **and** a link
+      to the installed **PixiJS skills** (so a dev knows to install them for Pixi work).
+- [ ] Open-source hygiene: **LICENSE (MIT)** + CONTRIBUTING + CODE_OF_CONDUCT.
+
+**M13b — Claude Code skills (AI authoring assist)** ⭐
+
+Repo-committed skills so anyone cloning gets AI help driving the editor / editing `game.json`:
+
+- [ ] **`pixin-gamedoc`** — the `GameDoc` schema reference (entities + the condition / effect / flag
+      vocabulary and how they connect) → an AI can edit `game.json` directly.
+- [ ] **`pixin-editor`** — an editor map: "to build mechanic X, go to panel Y, do Z" (precise UI
+      guidance from a described mechanic).
+- [ ] **`pixin-recipes`** — ready mechanic recipes (locked door, fetch quest, stealth beat, branching
+      dialogue, cutscene, weather, monologue …): each = editor steps **+** a `game.json` snippet.
+
+**M13c — Complete demo game (A→Z, real assets)**
+
+- [ ] A short, finished game built **in the editor** with **real, properly-licensed assets** (CC0 /
+      original — licensing to be vetted). Doubles as the validation pass for the docs / skills /
+      asset pipeline, and becomes the scaffolder's **demo** template + the repo's dev default.
+
+**M13d — Package & scaffolder**
+
+- [ ] **`npx create-…`** scaffolder — installs a ready-to-edit project; prompts (or `--template`)
+      **clean** (blank) vs **demo** (the M13c game). _(Decision: the demo is the **repo's dev
+      default** but is **not forced** on new projects — the developer chooses.)_
+- [ ] Split into pnpm-workspace packages: `engine` / `ui` / `editor` (dev-only) / `content`; an
+      **embedding API** `mountGame(gameDoc, canvas)` so the engine runs without the editor.
+- [ ] **`GameDoc` schema as the public API** — published types + a **JSON Schema** export (validation
+      + autocomplete when hand-editing `game.json`; the skills reference it) + a **`pixin validate`**
+      CLI.
+- [ ] **Versioning** — semver + `GameDoc.version` + a migration framework (generalise `migrateSounds`)
+      so older games keep loading after an update.
+- [ ] **CI** (GitHub Actions) — the green bar (typecheck / lint / build) on PRs + npm publish on tags.
+
+**M13e — Demo website (GitHub Pages)**
+
+- [ ] A static page hosting the **playable** demo game (M13c) — a showcase of what the editor can
+      build; CI auto-deploys it.
+- [ ] _Deferred: a live **"try the editor"** build — the editor is DEV-only (stripped from prod), so
+      exposing it publicly needs a separate build. (User chose: not now → later / V2.)_
 
 ### V2 — post-1.0 nice-to-haves
 

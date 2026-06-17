@@ -23,6 +23,13 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Editor v1 declared complete; M13 reshaped into a–e (docs / skills / demo game / package / site)
+**What:** Docs only (`agent_docs/roadmap.md`). The user declared the **editor v1 complete** (M0–M12.5) and we restructured M13 (open-source packaging) into five ordered sub-milestones, agreed in conversation: **M13a** documentation pass (editor-guide coverage audit + an asset-prep section incl. animation formats + README + LICENSE/CONTRIBUTING), **M13b** Claude Code skills (`pixin-gamedoc` / `pixin-editor` / `pixin-recipes` — AI help to drive the editor + edit `game.json`), **M13c** a complete short demo game with real licensed assets (also validates the docs/skills/pipeline), **M13d** package + `npx create-…` scaffolder (clean vs demo template) + schema-as-public-API (JSON Schema + `pixin validate`) + versioning/migrations + CI, **M13e** a GitHub Pages site hosting the playable demo.
+**Why:** M13 was one vague bullet; the user wanted it split + expanded with new asks (AI authoring skills, a real demo game first, an asset-prep doc, a showcase site).
+**Decisions (with the user):** (8) the scaffolder offers **clean vs demo**, demo = the repo's dev default but not forced on new projects; (7) a live **"try the editor"** build on the site is **deferred** (editor is DEV-only) — the site ships only the playable game for now; the README also links the installed **PixiJS skills**. My additions accepted: JSON Schema export + `pixin validate` CLI, `GameDoc.version` + a migration framework, an `engine` embedding API (`mountGame`), and CI/open-source hygiene files.
+**Order:** M13a → M13b → M13c → M13d → M13e (docs first; skills + game build on them; package + site last).
+**Follow-ups:** start **M13a** (documentation pass) next session. No code this turn.
+
 ### 2026-06-18 — Monologues: optional per-line sound (library `SoundId`)
 **What:** A monologue line can now play a sound when it appears (M12.5 #6 follow-up). `Monologue.sound?: SoundId` (a library reference, like every other sound). Runtime: `updateMonologues` plays it via `audioMod.playSoundById(line.sound)` right when the bubble shows (so it's once per appearance, muted in the editor preview). Editor: a **sound** `SoundSelect` per line in `MonologueList`. Demo: two stranger lines carry the built-in **`sfx-pickup`** blip (seeded in every doc, so no new asset needed — upload your own in the Sounds tab to replace it).
 **Why:** the user wanted monologues to have voice / audio, authored the same way as all other sounds (a library picker).
