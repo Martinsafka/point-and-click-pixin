@@ -413,6 +413,17 @@
         "backZ": 8,
         "frontOpacity": 0.1,
         "frontZ": 26
+      },
+      "lightning": {
+        "color": "#dfe8ff",
+        "intensity": 0.7,
+        "minGap": 6,
+        "maxGap": 16
+      },
+      "vignette": {
+        "intensity": 0.3,
+        "size": 0.45,
+        "color": "#070a12"
       }
     },
     "room": {
@@ -599,7 +610,18 @@
           "intensity": 1.3,
           "flicker": 0.12
         }
-      ]
+      ],
+      "colorGrade": {
+        "brightness": 0.95,
+        "contrast": 1.12,
+        "saturation": 0.88,
+        "hue": -6
+      },
+      "vignette": {
+        "intensity": 0.46,
+        "size": 0.5,
+        "color": "#05070d"
+      }
     }
   },
   "items": {

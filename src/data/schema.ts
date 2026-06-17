@@ -353,6 +353,31 @@ export interface ColorGrade {
   hue: number
 }
 
+/** A **vignette** (M10 10d) — a soft darkened frame, screen-space. */
+export interface Vignette {
+  /** Edge darkness 0..1. */
+  intensity: number
+  /** How far in the dark reaches (0 = thin rim, 1 = most of the frame). */
+  size: number
+  /** Tint of the darkening (usually black). */
+  color: string
+}
+
+/** **Lightning + thunder** (M10 10d) — a screen-space flash on a random interval, with an
+ *  optional thunder `SoundId` a beat later. Gated by `when` (e.g. only during a storm). */
+export interface LightningConfig {
+  color: string
+  /** Peak flash opacity 0..1. */
+  intensity: number
+  /** Min / max seconds between flashes (a random wait in the range). */
+  minGap: number
+  maxGap: number
+  /** Thunder sound (library reference), played shortly after the flash. */
+  sound?: SoundId
+  /** Only active while this Condition holds. */
+  when?: Condition
+}
+
 // --- Atmosphere: lighting (M10 10b) -----------------------------------------
 
 /** Global/ambient light level — a scene-wide tint + darken. `intensity` 1 = full daylight,
@@ -691,7 +716,7 @@ export interface SceneData {
   /** Vignette — darkened edges (M10 10d). */
   vignette?: Vignette
   /** Lightning flashes + thunder (M10 10d). */
-  lightning?: Lightning
+  lightning?: LightningConfig
   /** Dark zones cut into the scene (M10 10b). */
   darkAreas?: DarkArea[]
   /** Effects run once when the scene is entered (mounted), gated by their own logic —

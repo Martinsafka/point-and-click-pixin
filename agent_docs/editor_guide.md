@@ -297,6 +297,19 @@ velocity — fog can flow any direction; either sign; the front layer auto-leads
 
 Renders **live** as you tune.
 
+### Grade & FX
+
+The scene's mood pass (M10 10d) — three toggles, all live:
+
+- **colour grade** — a tone filter over the scene art: **brightness / contrast / saturation**
+  (1 = unchanged) and **hue°**.
+- **vignette** — a soft darkened frame: **colour**, **intensity**, **size** (how far in the
+  dark reaches).
+- **lightning + thunder** — a screen flash on a random interval: flash **colour** +
+  **intensity**, **gap min/max s** (the random wait between flashes), a **thunder** sound (from
+  the Sounds library; plays a beat after the flash — silent in the editor preview), and an
+  **only when** Condition (e.g. a storm flag — set it from the **World** window to test).
+
 ### Items · _N_ and Recipes · _N_ (global)
 
 These two sections are **document-level** — they apply to the whole game, not the

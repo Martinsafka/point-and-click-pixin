@@ -29,6 +29,7 @@ import { SceneWeather } from './SceneWeather'
 import { SceneLighting } from './SceneLighting'
 import { SceneEmitters } from './SceneEmitters'
 import { SceneFog } from './SceneFog'
+import { SceneGrade } from './SceneGrade'
 import { LightingDefaults } from './LightingDefaults'
 import { LightOverlay } from './LightOverlay'
 import { EmitterOverlay } from './EmitterOverlay'
@@ -582,6 +583,19 @@ export function Editor() {
 
           <Section title="Fog">
             {scene && <SceneFog sceneId={selectedId} fog={scene.fog} layers={scene.layers} />}
+          </Section>
+
+          <Section title="Grade & FX">
+            {scene && (
+              <SceneGrade
+                sceneId={selectedId}
+                colorGrade={scene.colorGrade}
+                vignette={scene.vignette}
+                lightning={scene.lightning}
+                items={doc.items}
+                sceneIds={sceneIds}
+              />
+            )}
           </Section>
 
           {draw && (

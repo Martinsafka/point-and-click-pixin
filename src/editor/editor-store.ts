@@ -5,10 +5,13 @@ import type {
   Condition,
   CursorKind,
   DepthStop,
+  ColorGrade,
   FogConfig,
+  LightningConfig,
   LightSource,
   PlayerLight,
   PointEmitter,
+  Vignette,
   DialogId,
   DialogNode,
   DialogNodeId,
@@ -183,6 +186,10 @@ interface EditorStore {
   setEmitterPos(id: SceneId, index: number, x: number, y: number): void
   /** Animated fog/clouds for this scene (M10 10c); undefined removes it. */
   setSceneFog(id: SceneId, fog: FogConfig | undefined): void
+  /** Colour grade / vignette / lightning for this scene (M10 10d); undefined removes each. */
+  setSceneColorGrade(id: SceneId, grade: ColorGrade | undefined): void
+  setSceneVignette(id: SceneId, vignette: Vignette | undefined): void
+  setSceneLightning(id: SceneId, lightning: LightningConfig | undefined): void
   setDocAmbientLight(ambient: AmbientLight | undefined): void
   setPlayerLight(light: PlayerLight | undefined): void
   // Player character (M5) — bumps `revision` so the preview re-mounts the sprite.
@@ -849,6 +856,9 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         false,
       ),
     setSceneFog: (id, fog) => patchScene(id, { fog }, false),
+    setSceneColorGrade: (id, colorGrade) => patchScene(id, { colorGrade }, false),
+    setSceneVignette: (id, vignette) => patchScene(id, { vignette }, false),
+    setSceneLightning: (id, lightning) => patchScene(id, { lightning }, false),
     addDarkArea: (id) =>
       patchScene(id, { darkAreas: [...(get().doc.scenes[id].darkAreas ?? []), { polygon: [] }] }, false),
     removeDarkArea: (id, index) =>

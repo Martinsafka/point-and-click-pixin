@@ -383,8 +383,9 @@ flag-driven through the existing condition vocabulary.
       following the player reveals around them.
 - [x] **Dark areas** — `SceneData.darkAreas[]`: a polygon of darkness with a feathered
       **gradient** edge (a local dark zone in an otherwise lit scene). Visual only.
-- [ ] **Per-scene colour grade** — a `ColorMatrixFilter` (contrast / saturation / tint /
-      brightness) for mood, on top of the ambient tint.
+- [x] **Per-scene colour grade** (M10 10d) — `SceneData.colorGrade` (`ColorGrade`:
+      brightness / contrast / saturation / hue) → a `ColorMatrixFilter` over the scene art
+      (`world`), live-rebuilt via `applyLive`. Editor: a Scene-tab **Grade & FX** section.
 - [x] Editor: place lights + draw dark-area polygons (preview); ambient + light
       sliders.
 
@@ -526,9 +527,13 @@ working until ME.6, so the migration is reversible at every point.
 
 **10d — Polish**
 
-- [ ] **Vignette** — darkened edges overlay (cheap, big mood).
-- [ ] **Lightning + thunder** — a timed full-screen flash (with rain), flag/weather-triggered,
-      **+ a thunder sound** (M9 synergy — the flash fires a `playSound`).
+- [x] **Vignette** — `SceneData.vignette` (`Vignette`: intensity / size / colour): a radial
+      darkened frame (screen-space, in `screenFx`).
+- [x] **Lightning + thunder** — `SceneData.lightning` (`LightningConfig`): a screen-space flash
+      on a random `minGap..maxGap` interval, gated by `when`, with an optional **thunder**
+      `SoundId` a beat after the flash (muted in the editor). Editor: both in the Scene-tab
+      **Grade & FX** section. _(→ 10d complete; M10 done bar the optional perf/quality UI, which
+      lands with the M11 settings screen.)_
 
 ### M11 — UI theming & settings  (+ the title-screen composer)
 

@@ -22,6 +22,9 @@ import { createAtmosphere } from './atmosphere'
 import { createWeatherSystem, type WeatherSystem } from './weather'
 import { createEmitterSystem, type EmitterSystem } from './emitters'
 import { createFog, type FogBackInto, type FogSystem } from './fog'
+import { gradeActive, makeColorGradeFilter } from './colorgrade'
+import { createVignette, type VignetteSystem } from './vignette'
+import { createLightning, type LightningSystem } from './lightning'
 import { createLighting, type Lighting } from './lighting'
 import {
   routineNode,
@@ -454,6 +457,43 @@ export async function mountScene(
   }
   buildFog()
   atmosphere.onUpdate((dt) => fogSystem?.update(dt))
+
+  // M10 10d colour grade + vignette + lightning. `gradeScene` is the live scene for all three
+  // (rebuilt together by applyLive). Grade is a world filter; vignette + lightning are
+  // screen-space (screenFx slot).
+  let gradeScene = scene
+  const buildColorGrade = (): void => {
+    const g = gradeScene.colorGrade
+    world.filters = g && gradeActive(g) ? [makeColorGradeFilter(g)] : []
+  }
+  buildColorGrade()
+
+  let vignetteSystem: VignetteSystem | null = null
+  const buildVignette = (): void => {
+    vignetteSystem?.destroy()
+    vignetteSystem = gradeScene.vignette
+      ? createVignette(atmosphere.layers.screenFx, gradeScene.vignette, app)
+      : null
+  }
+  buildVignette()
+  atmosphere.onUpdate(() => vignetteSystem?.update())
+
+  let lightningSystem: LightningSystem | null = null
+  const buildLightning = (): void => {
+    lightningSystem?.destroy()
+    lightningSystem = gradeScene.lightning
+      ? createLightning(atmosphere.layers.screenFx, gradeScene.lightning, () => {
+          const snd = gradeScene.lightning?.sound
+          if (!muteAudio && snd) audioMod?.playSoundById(snd)
+        })
+      : null
+  }
+  buildLightning()
+  atmosphere.onUpdate((dt) => {
+    const cfg = gradeScene.lightning
+    const active = !!cfg && (!cfg.when || checkCondition(store.getState(), cfg.when))
+    lightningSystem?.update(dt, active)
+  })
 
   // M10 point emitters — smoke / embers / drips at scene points (world-space, in the
   // `emitters` slot). Rebuildable live (`applyLive` → `buildEmitters`); one updater iterates
@@ -1102,6 +1142,9 @@ export async function mountScene(
       sc.weather,
       sc.fog,
       sc.emitters,
+      sc.colorGrade,
+      sc.vignette,
+      sc.lightning,
       a.ambientLight,
       a.playerLight,
       a.weatherPresets,
@@ -1157,6 +1200,7 @@ export async function mountScene(
         lightDefaults = { ambientLight: atmo.ambientLight, playerLight: atmo.playerLight }
         fogScene = sc
         emitterScene = sc
+        gradeScene = sc
         weatherSystem?.destroy()
         weatherSystem = null
         weatherId = null
@@ -1164,6 +1208,9 @@ export async function mountScene(
         buildLighting()
         buildFog()
         buildEmitters()
+        buildColorGrade()
+        buildVignette()
+        buildLightning()
       }
       // Character size — the per-scene multiplier on top of each actor's depth scale.
       const cs = sc.characterScale ?? 1
