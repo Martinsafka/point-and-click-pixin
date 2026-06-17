@@ -626,17 +626,16 @@ V2.) Each still follows schema-first → runtime → editor.
       like a light, not drawable/reshapable). Each is assigned a target — a specific NPC, the
       player, or `all`. `SceneData.spawnPoints[]`; the runtime seeds a character at its spawn
       point. Generalises today's single `SceneData.spawn` + per-placement spawns. _(#7.)_
-- [ ] **8 — Animated scene layers (+ conditional swap)** — a new **animated** layer kind (a looping
-      atlas as a scene layer — animated backgrounds / props), reusing the `AnimatedSprite` view.
-      With the layers' existing `when`, a flag swaps a **static or animated** asset (covers the
-      "swap asset by flag, incl. animated" idea). _(#8 / #9 / #11.)_
-- [ ] **3 — Conditional character appearance** — a character's view (player **and** NPC) can have
-      **variants gated by `when`**, swapped at runtime (e.g. the player steps into darkness → a
-      different atlas / clips). Today a character's view is **fixed at mount** (`createSpriteView`
-      runs once), so this is a new capability: add `views?: { when?, view }[]` on `GameDoc.player`
-      / `NpcDef`, re-resolved reactively. Makes "different assets after a flag" real for characters.
-      _(#3 — the "just eyes in the dark" **ambiance** for NPCs/scene is separately a content
-      technique today: a dark area + an eyes sprite/light, no engine work.)_
+- [x] **8 — Animated scene layers (+ conditional swap)** — a new `animated` `LayerData` kind (atlas
+      grid → a looping `AnimatedSprite`), placed / `when`-gated / draggable like an image, so a flag
+      swaps a **static or animated** asset. Editor: **+ Animated** upload + frame-grid inputs in the
+      Layers panel. Demo: a blinking lamp glow on the street. _(#8 / #9 / #11.)_
+- [x] **3 — Conditional character appearance** — `GameDoc.playerViews?` + `NpcDef.views?`
+      (`{ when?, view }[]`); the first matching variant renders instead of the base view, **swapped
+      live** (`Character.setView` re-parents a fresh sprite; the scene rebuilds only on an
+      index change). Editor: `AppearanceList` (ConditionEditor + `CharacterEditor` per variant) on the
+      player + NPC. Demo: the player swaps to a bright figure on the `night` flag. _(The "just eyes"
+      ambiance stays a content technique — dark area + an eyes sprite.)_
 
 ### M13 — Open-source packaging
 

@@ -3,6 +3,7 @@ import { EditorModal } from './EditorModal'
 import { ConditionEditor } from './ConditionEditor'
 import { EffectList } from './EffectList'
 import { CharacterEditor } from './CharacterEditor'
+import { AppearanceList } from './AppearanceList'
 import { RoutineEditor } from './RoutineEditor'
 import { SoundSelect } from './SoundSelect'
 import { SoundField } from './SoundField'
@@ -270,6 +271,12 @@ export function NpcEditor({ npcId, onClose }: { npcId: string; onClose: () => vo
             npc.view && s().patchNpcDef(npcId, { view: { ...npc.view, ...patch } })
           }
           onRemove={() => s().patchNpcDef(npcId, { view: undefined })}
+        />
+        <AppearanceList
+          variants={npc.views ?? []}
+          onChange={(views) => s().patchNpcDef(npcId, { views: views.length ? views : undefined })}
+          items={doc.items}
+          sceneIds={sceneIds}
         />
       </div>
 

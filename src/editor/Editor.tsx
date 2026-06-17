@@ -14,6 +14,7 @@ import { ItemCatalogue } from './ItemCatalogue'
 import { RecipeTable } from './RecipeTable'
 import { CursorEditor } from './CursorEditor'
 import { CharacterEditor } from './CharacterEditor'
+import { AppearanceList } from './AppearanceList'
 import { DepthEditor } from './DepthEditor'
 import { TransitionEditor } from './TransitionEditor'
 import { NpcList } from './NpcList'
@@ -655,6 +656,12 @@ export function Editor() {
               onCreate={() => editorStore.getState().createPlayer()}
               onChange={(patch) => editorStore.getState().updatePlayer(patch)}
               onRemove={() => editorStore.getState().removePlayer()}
+            />
+            <AppearanceList
+              variants={doc.playerViews ?? []}
+              onChange={(v) => editorStore.getState().setPlayerViews(v)}
+              items={doc.items}
+              sceneIds={sceneIds}
             />
           </Section>
           <Section title={`NPCs · ${Object.keys(doc.npcs ?? {}).length}`}>

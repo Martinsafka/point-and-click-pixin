@@ -4,6 +4,7 @@ import type {
   AmbientLight,
   Condition,
   CursorKind,
+  CharacterAppearance,
   ClockConfig,
   DepthStop,
   ColorGrade,
@@ -80,6 +81,20 @@ interface EditorStore {
   setTransition(patch: Partial<TransitionConfig>): void
   /** Append an uploaded image as a full-screen background layer (a backdrop). */
   addImageLayer(id: SceneId, src: string): void
+  /** Add an animated (atlas) scene layer (M12.5 #8). */
+  addAnimatedLayer(id: SceneId, src: string): void
+  /** Patch an animated layer's frame grid / fps (M12.5 #8). */
+  setLayerAnim(
+    id: SceneId,
+    index: number,
+    patch: Partial<{
+      frameWidth: number
+      frameHeight: number
+      columns: number
+      frames: number
+      fps: number
+    }>,
+  ): void
   removeLayer(id: SceneId, index: number): void
   moveLayer(id: SceneId, index: number, dir: -1 | 1): void
   setLayerBand(id: SceneId, index: number, band: SceneBand): void
@@ -213,6 +228,8 @@ interface EditorStore {
   createPlayer(): void
   removePlayer(): void
   updatePlayer(patch: Partial<ViewDescriptor>): void
+  /** Conditional appearance variants for the player (M12.5 #3). */
+  setPlayerViews(views: CharacterAppearance[] | undefined): void
 }
 
 function blankScene(id: SceneId): SceneData {
@@ -365,6 +382,25 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       patchScene(id, { depth: { ...get().doc.scenes[id].depth, stops } }, true),
     addImageLayer: (id, src) =>
       mapLayers(id, (ls) => [...ls, { kind: 'image', band: 'background', src, fit: 'cover' }]),
+    addAnimatedLayer: (id, src) =>
+      mapLayers(id, (ls) => [
+        ...ls,
+        {
+          kind: 'animated',
+          band: 'foreground',
+          src,
+          frameWidth: 64,
+          frameHeight: 64,
+          columns: 4,
+          frames: 4,
+          fps: 8,
+          fit: 'none',
+        },
+      ]),
+    setLayerAnim: (id, index, patch) =>
+      mapLayers(id, (ls) =>
+        ls.map((l, i) => (i === index && l.kind === 'animated' ? { ...l, ...patch } : l)),
+      ),
     removeLayer: (id, index) => mapLayers(id, (ls) => ls.filter((_, i) => i !== index)),
     moveLayer: (id, index, dir) =>
       mapLayers(id, (ls) => {
@@ -378,7 +414,9 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, band } : l))),
     setLayerFit: (id, index, fit) =>
       mapLayers(id, (ls) =>
-        ls.map((l, i) => (i === index && l.kind === 'image' ? { ...l, fit } : l)),
+        ls.map((l, i) =>
+          i === index && (l.kind === 'image' || l.kind === 'animated') ? { ...l, fit } : l,
+        ),
       ),
     setLayerParallax: (id, index, parallax) =>
       mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, parallax } : l)), false),
@@ -479,7 +517,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       // re-mount; the rest (vision / dialog / footstep / voice / inspect) are live via the
       // overlay or don't show in the editor, so they don't churn the preview. Speed is hot
       // (`setNpcDefSpeed` → applyLive).
-      const structural = 'view' in patch || 'routine' in patch || 'home' in patch
+      const structural =
+        'view' in patch || 'views' in patch || 'routine' in patch || 'home' in patch
       set({
         doc: { ...doc, npcs: { ...npcs, [npcId]: { ...npcs[npcId], ...patch } } },
         ...(structural ? { revision: revision + 1 } : {}),
@@ -922,6 +961,13 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       const { doc, revision } = get()
       if (!doc.player) return
       set({ doc: { ...doc, player: { ...doc.player, ...patch } }, revision: revision + 1 })
+    },
+    setPlayerViews: (views) => {
+      const { doc, revision } = get()
+      set({
+        doc: { ...doc, playerViews: views?.length ? views : undefined },
+        revision: revision + 1,
+      })
     },
   }
 })

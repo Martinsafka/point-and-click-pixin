@@ -7,7 +7,7 @@ const FITS: LayerFit[] = ['none', 'width', 'cover', 'contain', 'stretch']
 const ROLES: LayerRole[] = ['scenery', 'occluder', 'floor']
 
 function layerLabel(layer: LayerData): string {
-  return layer.kind === 'image' ? 'image' : layer.builder
+  return layer.kind === 'builtin' ? layer.builder : layer.kind
 }
 
 /**
@@ -17,10 +17,7 @@ function layerLabel(layer: LayerData): string {
  * layers appear here too and can be rebanded / reordered / removed.
  */
 export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: LayerData[] }) {
-  const onUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
+  const readSrc = (file: File, onLoad: (src: string) => void) => {
     const reader = new FileReader()
     reader.onload = () => {
       let src = String(reader.result)
@@ -29,9 +26,19 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
       if (/\.svg$/i.test(file.name) && !src.startsWith('data:image/svg+xml')) {
         src = src.replace(/^data:[^,;]*/, 'data:image/svg+xml')
       }
-      editorStore.getState().addImageLayer(sceneId, src)
+      onLoad(src)
     }
     reader.readAsDataURL(file)
+  }
+  const onUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (file) readSrc(file, (src) => editorStore.getState().addImageLayer(sceneId, src))
+  }
+  const onUploadAnim = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (file) readSrc(file, (src) => editorStore.getState().addAnimatedLayer(sceneId, src))
   }
 
   return (
@@ -40,6 +47,10 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
         <label className="editor__import">
           + Image
           <input type="file" accept="image/*,.svg" hidden onChange={onUpload} />
+        </label>
+        <label className="editor__import">
+          + Animated
+          <input type="file" accept="image/*,.svg" hidden onChange={onUploadAnim} />
         </label>
       </div>
       {layers.length === 0 && <p className="layer-list__empty">No layers yet — upload an image.</p>}
@@ -90,7 +101,7 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                   </option>
                 ))}
               </select>
-              {layer.kind === 'image' && (
+              {(layer.kind === 'image' || layer.kind === 'animated') && (
                 <select
                   value={layer.fit ?? 'none'}
                   title="Fit"
@@ -140,6 +151,34 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                 />
               )}
             </div>
+            {layer.kind === 'animated' && (
+              <div className="layer-row__anim">
+                {(
+                  [
+                    ['frameWidth', 'w'],
+                    ['frameHeight', 'h'],
+                    ['columns', 'cols'],
+                    ['frames', 'frames'],
+                    ['fps', 'fps'],
+                  ] as const
+                ).map(([key, lbl]) => (
+                  <label key={key} className="layer-row__anim-field">
+                    <span>{lbl}</span>
+                    <input
+                      type="number"
+                      className="logic__in"
+                      min="1"
+                      value={layer[key] ?? (key === 'fps' ? 8 : 1)}
+                      onChange={(e) =>
+                        editorStore
+                          .getState()
+                          .setLayerAnim(sceneId, i, { [key]: Math.max(1, Number(e.target.value)) })
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
           </li>
         ))}
       </ul>

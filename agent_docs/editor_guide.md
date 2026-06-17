@@ -137,6 +137,10 @@ painters, listed in paint order.
 
 - **+ Image** — upload an SVG or PNG. It's added as a full-screen background
   backdrop and stored **inside the document** (a data-URL), so it survives Export.
+- **+ Animated** (M12.5) — upload an **atlas** (a grid of equal frames) → a looping
+  animated layer (animated background / prop). Set its **frame grid** (w / h / cols /
+  frames / fps) on the layer row. Placed / `when`-gated / draggable like an image — so a
+  flag can swap a static **or** animated asset (two layers gated by opposite flags).
 
 Each layer row:
 
@@ -347,6 +351,12 @@ placeholder figure.
   - **sound** — a library sound auto-played when the clip runs as a **one-shot** (e.g.
     `interact`), so a gesture's SFX needs no separate `playSound` effect.
   - Names + frame lists commit when the field loses focus.
+
+**Appearance variants (M12.5 #3):** under the player (and in the NPC modal) — add **+ variant**
+to give a character an alternate full view gated by a **condition**. The first variant whose
+condition passes replaces the base view, **swapped live** when the flag flips (e.g. the player
+steps into darkness → a different atlas / clips). Each variant is a `when` + a full
+`CharacterEditor` (same fields as the base).
 
 **NPCs (cast):** the global roster of characters. **+ NPC** creates one (a fixed id, an
 editable **name**, and a walk **speed** ×); place them into scenes from each scene's

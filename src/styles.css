@@ -846,6 +846,24 @@ body {
   width: 52px;
 }
 
+/* Animated-layer frame-grid controls (M12.5 #8). */
+.layer-row__anim {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.layer-row__anim-field {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  opacity: 0.8;
+}
+.layer-row__anim-field input {
+  width: 48px;
+}
+
 /* NPC walk speed (cast list) */
 .npc-cast__speed {
   width: 52px;

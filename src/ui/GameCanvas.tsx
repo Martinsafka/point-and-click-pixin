@@ -58,6 +58,7 @@ export function GameCanvas() {
         { ambientLight: gameDoc.ambientLight, playerLight: gameDoc.playerLight },
         gameDoc.rules,
         gameDoc.clock,
+        { playerViews: gameDoc.playerViews },
       )
     })()
 

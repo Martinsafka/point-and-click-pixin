@@ -80,6 +80,13 @@ export interface ViewDescriptor {
   clips: Record<string, AnimClip>
 }
 
+/** A conditional character appearance (M12.5 #3): while `when` passes the character renders with
+ *  `view` instead of its base view. The first matching variant wins; swapped reactively at runtime. */
+export interface CharacterAppearance {
+  when?: Condition
+  view: ViewDescriptor
+}
+
 export type SoundId = string
 
 /** One clip in the global sound library (`GameDoc.sounds`): uploaded once, referenced by
@@ -568,6 +575,30 @@ export type LayerData =
       role?: LayerRole
       when?: Condition
     }
+  | {
+      // An **animated** scene layer (M12.5 #8) — a looping `AnimatedSprite` from an atlas grid
+      // (animated background / prop). Positioned + fit like an `image` layer; gated by `when`
+      // (so a flag can swap a static or animated asset for another).
+      kind: 'animated'
+      band: SceneBand
+      parallax?: number
+      /** Atlas image URL (a grid of equal frames). */
+      src: string
+      frameWidth: number
+      frameHeight: number
+      /** Frames per atlas row. */
+      columns: number
+      /** Number of frames played in order from index 0. */
+      frames: number
+      /** Playback speed (frames per second), default 8. */
+      fps?: number
+      xFrac?: number
+      yFrac?: number
+      anchorYFrac?: number
+      role?: LayerRole
+      fit?: LayerFit
+      when?: Condition
+    }
 
 /**
  * A clickable thing in a scene, gated by an optional `when` Condition. `uses`
@@ -686,6 +717,9 @@ export interface NpcDef {
   inspect?: { text?: string; audio?: string }
   /** The NPC's appearance (atlas + clips); absent → the built-in placeholder figure. */
   view?: ViewDescriptor
+  /** Conditional appearance variants (M12.5 #3) — the first whose `when` passes renders instead
+   *  of `view`, swapped reactively at runtime. */
+  views?: CharacterAppearance[]
   /** The NPC's dialogue voice (procedural pitch / an uploaded blip); absent → default. */
   voice?: VoiceConfig
   /** Footsteps for this NPC while it walks (a library sound + volume); absent → silent.
@@ -907,6 +941,10 @@ export interface GameDoc {
   screens?: ScreensConfig
   /** The protagonist's view (atlas + clips); absent → the built-in placeholder. */
   player?: ViewDescriptor
+  /** Conditional appearance variants for the player (M12.5 #3) — the first whose `when` passes
+   *  renders instead of `player`, swapped reactively at runtime (e.g. step into darkness → a
+   *  different atlas / clips). */
+  playerViews?: CharacterAppearance[]
   /** The global NPC cast (id → definition); placed into scenes via `SceneData.npcs`. */
   npcs?: Record<NpcId, NpcDef>
   /** The reusable dialogue library (id → tree); referenced by NPCs / placements. */

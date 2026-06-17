@@ -1,8 +1,11 @@
 import {
+  AnimatedSprite,
   Assets,
   Container,
   Graphics,
+  Rectangle,
   Sprite,
+  Texture,
   type Application,
   type FederatedPointerEvent,
   type Ticker,
@@ -40,6 +43,7 @@ import { containsPoint } from '../systems/walkable'
 import { checkCondition, type StoryState, type StoryStore } from '../systems/conditions'
 import type {
   AmbientLight,
+  CharacterAppearance,
   ClockConfig,
   Condition,
   Dialog,
@@ -48,6 +52,7 @@ import type {
   GameRule,
   InteractableData,
   LayerData,
+  LayerFit,
   NpcDef,
   PlayerLight,
   NpcId,
@@ -99,6 +104,9 @@ export interface SceneOptions {
   /** Internal (`createSceneHost` → `mountScene`): a routine NPC's current `once`-path progress
    *  (0..1), so the mounted scene resumes it mid-walk instead of restarting (B-lite). */
   npcPathProgress?: (npcId: NpcId) => number
+  /** Conditional appearance variants for the player (M12.5 #3) — the scene swaps the player's
+   *  view reactively when the matching variant changes. */
+  playerViews?: CharacterAppearance[]
 }
 
 /** The slice of the story store the engine needs: read state + react to it. */
@@ -142,7 +150,7 @@ function resolvePolygon(frac: readonly number[], { width, height }: Size): numbe
 /** Size + place an `image` layer's sprite per its `fit` (default 'none'). */
 function fitImageSprite(
   sprite: Sprite,
-  layer: Extract<LayerData, { kind: 'image' }>,
+  layer: { fit?: LayerFit; xFrac?: number; yFrac?: number },
   screen: Size,
 ): void {
   const fit = layer.fit ?? 'none'
@@ -177,6 +185,32 @@ async function buildLayer(layer: LayerData, screen: Size): Promise<Container> {
   if (layer.kind === 'image') {
     const texture = await Assets.load(layer.src)
     const sprite = new Sprite(texture)
+    fitImageSprite(sprite, layer, screen)
+    return sprite
+  }
+  if (layer.kind === 'animated') {
+    // A looping AnimatedSprite sliced from the atlas grid (M12.5 #8).
+    const sheet = await Assets.load<Texture>(layer.src)
+    const source = sheet.source
+    const cols = Math.max(1, layer.columns)
+    const frames: Texture[] = []
+    for (let i = 0; i < Math.max(1, layer.frames); i += 1) {
+      frames.push(
+        new Texture({
+          source,
+          frame: new Rectangle(
+            (i % cols) * layer.frameWidth,
+            Math.floor(i / cols) * layer.frameHeight,
+            layer.frameWidth,
+            layer.frameHeight,
+          ),
+        }),
+      )
+    }
+    const sprite = new AnimatedSprite(frames.length ? frames : [Texture.WHITE])
+    sprite.animationSpeed = (layer.fps ?? 8) / 60
+    sprite.loop = true
+    sprite.play()
     fitImageSprite(sprite, layer, screen)
     return sprite
   }
@@ -423,7 +457,7 @@ export async function mountScene(
     }
     // Editor: drag free image layers to place them. In `fit` the camera pins parallax layers
     // to their base each frame, so keep that base in sync with the drag (else it snaps back).
-    if (onLayerMove && layer.kind === 'image') {
+    if (onLayerMove && (layer.kind === 'image' || layer.kind === 'animated')) {
       const fit = layer.fit ?? 'none'
       const axis = fit === 'none' ? 'xy' : fit === 'width' ? 'y' : null
       if (axis) {
@@ -520,12 +554,53 @@ export async function mountScene(
     for (const e of emitterEntries) e.system.update(dt)
   })
 
+  // Conditional character appearance (M12.5 #3): each entry tracks an actor's base view + its
+  // `when`-gated variants. On a state change the resolved variant is recomputed; when it changes,
+  // a fresh sprite view is built and swapped in (createSpriteView is async — the result is dropped
+  // if the scene tore down or the desired variant changed meanwhile). Seeded to -1 (the base) so
+  // a base-active mount doesn't needlessly rebuild.
+  const appearances: {
+    id: string
+    char: Character
+    base: ViewDescriptor
+    variants?: CharacterAppearance[]
+  }[] = []
+  const appearanceIdx = new Map<string, number>()
+  const resolveAppearanceIdx = (
+    variants: CharacterAppearance[] | undefined,
+    state: StoryState,
+  ): number => {
+    if (variants)
+      for (let i = 0; i < variants.length; i += 1) {
+        const v = variants[i]
+        if (!v.when || checkCondition(state, v.when)) return i
+      }
+    return -1
+  }
+  const refreshAppearances = (state: StoryState): void => {
+    for (const a of appearances) {
+      if (!a.variants?.length) continue
+      const idx = resolveAppearanceIdx(a.variants, state)
+      if (appearanceIdx.get(a.id) === idx) continue
+      appearanceIdx.set(a.id, idx)
+      const desc = idx < 0 ? a.base : a.variants[idx].view
+      void createSpriteView(desc).then((view) => {
+        if (torn || appearanceIdx.get(a.id) !== idx) {
+          view.destroy()
+          return
+        }
+        a.char.setView(view)
+      })
+    }
+  }
+
   const refreshVisibility = () => {
     const state = store.getState()
     for (const c of conditional) c.display.visible = c.show(state)
     for (const sw of pathSwitchers) sw(state)
     refreshEmitterVisibility(state)
     syncWeather(state)
+    refreshAppearances(state)
   }
   // Subscribe unconditionally — NPCs (below) may add conditional entries after this.
   const unsubscribeVisibility = store.subscribe(refreshVisibility)
@@ -537,6 +612,8 @@ export async function mountScene(
   const character = new Character(await createSpriteView(playerView), depthScale, nav, charScale)
   interactive.addChild(character.displayObject)
   character.setPosition(scene.spawn.xFrac * design.width, scene.spawn.yFrac * design.height)
+  appearances.push({ id: 'player', char: character, base: playerView, variants: options.playerViews })
+  appearanceIdx.set('player', -1)
 
   // NPCs: characters placed in the scene. They share the nav-mesh + depth, Y-sort
   // with the player, and `when` gates presence. The actor registry addresses every
@@ -576,6 +653,13 @@ export async function mountScene(
     }
     npcs.push({ id: placement.npc, character: npcChar, interaction })
     actors.set(placement.npc, npcChar)
+    appearances.push({
+      id: npcId,
+      char: npcChar,
+      base: def?.view ?? placeholderView,
+      variants: def?.views,
+    })
+    appearanceIdx.set(npcId, -1)
     // Active route, most-specific first: when the NPC has a **routine** and its active node
     // is in this scene, the node's **referenced** placement path (by `pathId`; absent →
     // stand still); otherwise a conditional `paths` **override** whose `when` passes, else
@@ -612,6 +696,10 @@ export async function mountScene(
       })
     }
   }
+
+  // Apply any appearance variant already active at mount (player + NPCs); base-active actors
+  // were seeded to -1 above, so this is a no-op unless a variant's `when` already passes.
+  refreshAppearances(store.getState())
 
   // Stealth vision: per-NPC watchers with a precomputed range (px) + cone half-angle
   // (rad). `seen` tracks the per-NPC detection edge so the beat fires once per spotting.

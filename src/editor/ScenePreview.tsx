@@ -91,6 +91,7 @@ export function ScenePreview({ scene, paused }: { scene: SceneData; paused: bool
           cameraMode: 'fit',
           gameplayInput: false,
           muteAudio: true,
+          playerViews: d.playerViews,
           onLayerMove: (index, xFrac, yFrac) =>
             editorStore.getState().setLayerPos(scene.id, index, xFrac, yFrac),
         },

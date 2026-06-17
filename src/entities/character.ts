@@ -39,7 +39,7 @@ export class Character {
   private stance?: string
 
   constructor(
-    private readonly view: CharacterView,
+    private view: CharacterView,
     private readonly depthScale: DepthScale,
     private readonly nav?: Navigation,
     /** Per-scene size multiplier on top of the depth scale (default 1). */
@@ -245,6 +245,17 @@ export class Character {
   setStance(action?: string): void {
     this.stance = action || undefined
     if (!this.held()) this.syncView()
+  }
+
+  /** Swap the rendered view in place (M12.5 #3 — conditional appearance). Re-parents the new
+   *  container into the old one's layer, drops the old, and re-applies the current pose, so the
+   *  swap is seamless (position / facing / state preserved). */
+  setView(view: CharacterView): void {
+    const parent = this.view.container.parent
+    this.view.destroy()
+    this.view = view
+    if (parent) parent.addChild(view.container)
+    this.syncView()
   }
 
   destroy(): void {
