@@ -546,6 +546,22 @@ condition / effect vocabulary.
 - [ ] README, MIT license, `create-<name>` scaffolder, tutorial for non-tech authors.
 - [ ] CI + versioning + npm publish.
 
+### V2 — post-1.0 nice-to-haves
+
+- [ ] **Full persistent world simulation** (NPC routines + movement). _Shipped now: **B-lite**
+      — routine progression is persistent off-scene (an `onArrive` edge completes by the path's
+      estimated walk time when its scene isn't mounted; the mounted scene seeds an NPC mid-walk
+      at its global progress). What B-lite does **not** do: simulate exact off-scene **2D
+      positions** (it tracks 1D path progress; off-scene NPCs aren't rendered, so position
+      doesn't matter — nothing reads it today)._ **Full B** would decouple `Character` sim from
+      its view and run a global headless simulation of **all** NPCs across **all** scenes
+      (per-scene nav off-screen; the mounted scene renders agents at their simulated positions;
+      dynamic view add/remove as NPCs cross scene boundaries). Cost: medium-large refactor (the
+      `Character` sim/view split is the risky part — it's used by the player, stealth, dialogue
+      freeze, cutscenes, depth/Y-sort). **Only worth it when a feature actually reads off-scene
+      positions** — a minimap, NPCs perceiving each other across scenes, or precise mid-path
+      entry without the 1D approximation.
+
 ## Notes
 
 - Already well-positioned: `engine/ systems/ entities/ data/` are React-free,

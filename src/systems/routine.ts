@@ -53,9 +53,22 @@ export interface RoutineStore {
   getState(): StoryStore
 }
 
+/** Timing of an NPC's current node `once` path — so the runner can complete an `onArrive`
+ *  edge by the path's estimated walk time even off-scene (persistent routines). */
+export interface RoutinePathInfo {
+  /** ms to walk the current node's `once` path at the NPC's speed. */
+  durationMs: number
+  /** Is the node's scene currently mounted? On-scene the visual walk fires arrival (precise),
+   *  so the runner only times it out off-scene. */
+  onScene: boolean
+}
+
 /** A running routine engine; `tick` each frame, `destroy` on teardown. */
 export interface RoutineRunner {
   tick(deltaMs: number): void
+  /** Progress 0..1 along the NPC's current `once` path (0 when none) — the mounted scene
+   *  seeds the NPC mid-path so it isn't restarted from the start. */
+  progressOf(npc: NpcId): number
   destroy(): void
 }
 
@@ -74,6 +87,10 @@ export function createRoutineRunner(
   /** True while `npc` is busy (e.g. mid-dialogue) — its routine is frozen, so a timed /
    *  conditional transition can't move it away during a conversation. */
   isBusy: (npc: NpcId) => boolean = () => false,
+  /** Timing of the NPC's current `once` path (null = no finite path). Lets an `onArrive`
+   *  edge complete by the estimated walk time when the scene isn't mounted, so routines run
+   *  off-scene; also drives `progressOf` for mid-path render seeding. */
+  pathInfo: (npc: NpcId) => RoutinePathInfo | null = () => null,
 ): RoutineRunner {
   // NPCs with a routine, paired with it; ms elapsed in each one's current node; whether
   // the current node's path has finished (set via `routineArrival.notify` from the scene).
@@ -111,7 +128,15 @@ export function createRoutineRunner(
         // Frozen while busy (mid-dialogue): don't accrue node time or take transitions,
         // so talking to an NPC can't be cut short by its own schedule moving it away.
         if (isBusy(npc.id)) continue
-        elapsed.set(npc.id, (elapsed.get(npc.id) ?? 0) + deltaMs)
+        const e = (elapsed.get(npc.id) ?? 0) + deltaMs
+        elapsed.set(npc.id, e)
+        // Off-scene path arrival: a `once` path completes after its estimated walk time even
+        // when its scene isn't mounted, so `onArrive` routines progress without the player
+        // present. On-scene the mounted scene's visual walk fires arrival instead (precise).
+        if (!arrived.has(npc.id)) {
+          const info = pathInfo(npc.id)
+          if (info && !info.onScene && e >= info.durationMs) arrived.add(npc.id)
+        }
         // Advance through any chain of eligible transitions this frame (instant edges
         // resolve immediately; capped so a cycle can't hang the loop).
         for (let hop = 0; hop < MAX_HOPS; hop += 1) {
@@ -131,6 +156,11 @@ export function createRoutineRunner(
           enter(npc.id, node)
         }
       }
+    },
+    progressOf(npc) {
+      const info = pathInfo(npc)
+      if (!info || info.durationMs <= 0) return 0
+      return Math.min(1, (elapsed.get(npc) ?? 0) / info.durationMs)
     },
     destroy() {
       elapsed.clear()

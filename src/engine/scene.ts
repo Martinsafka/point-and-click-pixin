@@ -21,8 +21,13 @@ import { buildNavigation } from '../systems/navmesh'
 import { createAtmosphere } from './atmosphere'
 import { createWeatherSystem, type WeatherSystem } from './weather'
 import { createLighting, type Lighting } from './lighting'
-import { routineNode, createRoutineRunner, routineArrival } from '../systems/routine'
-import { facingToAngle } from '../systems/movement'
+import {
+  routineNode,
+  createRoutineRunner,
+  routineArrival,
+  type RoutinePathInfo,
+} from '../systems/routine'
+import { facingToAngle, WALK_SPEED } from '../systems/movement'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
 import { containsPoint } from '../systems/walkable'
 import { checkCondition, type StoryState, type StoryStore } from '../systems/conditions'
@@ -82,6 +87,9 @@ export interface SceneOptions {
   /** Editor only: make free-positioned (`fit: none` / `width`) image layers draggable to place
    *  them, committing the new fractional position on release. Omitted in the game. */
   onLayerMove?: (index: number, xFrac: number, yFrac: number) => void
+  /** Internal (`createSceneHost` → `mountScene`): a routine NPC's current `once`-path progress
+   *  (0..1), so the mounted scene resumes it mid-walk instead of restarting (B-lite). */
+  npcPathProgress?: (npcId: NpcId) => number
 }
 
 /** The slice of the story store the engine needs: read state + react to it. */
@@ -199,6 +207,17 @@ function resolveNpc(
   return null
 }
 
+/** Total length (px) of a fractional polyline (`[x0,y0,x1,y1,…]`) against a design size. */
+function polylineLengthPx(points: readonly number[], design: Size): number {
+  let len = 0
+  for (let i = 2; i < points.length; i += 2) {
+    const dx = (points[i] - points[i - 2]) * design.width
+    const dy = (points[i + 1] - points[i - 1]) * design.height
+    len += Math.hypot(dx, dy)
+  }
+  return len
+}
+
 /** Drive a placed NPC along its patrol route (once / loop / pingpong). Each leg is
  *  nav-routed (so it rounds holes), chained via the character's onArrive callback.
  *  `onDone` fires when a `once` path reaches its end (the NPC arrived) — the routine
@@ -208,6 +227,9 @@ function startNpcPath(
   path: NpcPath | undefined,
   design: Size,
   onDone?: () => void,
+  /** Resume a `once` path at this fraction (0..1) of its length, so a routine NPC the player
+   *  walks in on isn't restarted from the start (B-lite mid-path seeding). */
+  startProgress = 0,
 ): void {
   if (!path || path.points.length < 4) return
   const pts: { x: number; y: number }[] = []
@@ -231,6 +253,25 @@ function startNpcPath(
       idx += dir
     }
     npc.setTarget(pts[idx].x, pts[idx].y, advance)
+  }
+  // Seek a `once` path to `startProgress` (resume mid-walk): place the NPC along the polyline
+  // and head to the next vertex. Other modes always start at the first point.
+  if (path.mode === 'once' && startProgress > 0 && startProgress < 1) {
+    const segLen = pts.slice(1).map((p, i) => Math.hypot(p.x - pts[i].x, p.y - pts[i].y))
+    const total = segLen.reduce((a, b) => a + b, 0)
+    let remain = startProgress * total
+    let i = 0
+    while (i < segLen.length && remain > segLen[i]) {
+      remain -= segLen[i]
+      i += 1
+    }
+    if (i < segLen.length) {
+      const t = segLen[i] > 0 ? remain / segLen[i] : 0
+      npc.setPosition(pts[i].x + (pts[i + 1].x - pts[i].x) * t, pts[i].y + (pts[i + 1].y - pts[i].y) * t)
+      idx = i + 1
+      npc.setTarget(pts[idx].x, pts[idx].y, advance)
+      return
+    }
   }
   npc.setTarget(pts[0].x, pts[0].y, advance)
 }
@@ -261,6 +302,7 @@ export async function mountScene(
   const gameplayInput = options.gameplayInput ?? true
   const muteAudio = options.muteAudio ?? false
   const onLayerMove = options.onLayerMove
+  const npcPathProgress = options.npcPathProgress
   // Design space vs viewport: the scene is authored in a fixed design space
   // (`scene.width` × `referenceHeight` px). The world Container holds it; the camera
   // (below) fits the design *height* to the viewport with one uniform scale, then
@@ -453,10 +495,18 @@ export async function mountScene(
       return placement.paths?.find((p) => p.when && checkCondition(st, p.when)) ?? placement.path
     }
     // A routine NPC's finished `once` path signals the runner (→ `onArrive` edges).
-    const start = (path: NpcPath | undefined) =>
-      startNpcPath(npcChar, path, design, routine ? () => routineArrival.notify(npcId) : undefined)
+    const start = (path: NpcPath | undefined, progress = 0) =>
+      startNpcPath(
+        npcChar,
+        path,
+        design,
+        routine ? () => routineArrival.notify(npcId) : undefined,
+        progress,
+      )
     let currentPath = activePathOf(store.getState())
-    start(currentPath)
+    // Initial: resume a routine NPC mid-walk at its global path progress (B-lite); a later
+    // path switch (a new path) always starts at the beginning.
+    start(currentPath, routine ? (npcPathProgress?.(npcId) ?? 0) : 0)
     if (placement.paths || routine) {
       pathSwitchers.push((st) => {
         const next = activePathOf(st)
@@ -1194,11 +1244,32 @@ export function createSceneHost(
   // routine NPCs travel between scenes on their own. Created before the first mount so it
   // seeds each routine NPC's start node (→ `npcScene`/`npcNode`) before the scene reads it.
   // The `isBusy` predicate freezes an NPC's routine while the player is talking to it.
-  const routines = createRoutineRunner(cast, store, (npc) => {
-    if (sequenceStore.getState().active) return true // a cutscene owns the stage
-    const d = dialogueStore.getState()
-    return d.active && d.partner === npc
-  })
+  // Timing of an NPC's current `once` path, so the runner can complete an `onArrive` edge by
+  // the estimated walk time when its scene isn't mounted (B-lite persistent routines). On-scene
+  // the visual walk drives arrival, so this only times out off-scene.
+  const pathInfo = (npcId: NpcId): RoutinePathInfo | null => {
+    const routine = cast[npcId]?.routine
+    if (!routine) return null
+    const node = routineNode(routine, store.getState().npcNode?.[npcId])
+    if (!node?.pathId) return null
+    const sc = scenes[node.scene]
+    const path = sc?.npcs?.find((p) => p.npc === npcId)?.paths?.find((p) => p.id === node.pathId)
+    if (!path || path.mode !== 'once') return null
+    const len = polylineLengthPx(path.points, designSize(sc, referenceHeight))
+    const speed = WALK_SPEED * (cast[npcId]?.speed ?? 1)
+    if (len <= 0 || speed <= 0) return null
+    return { durationMs: (len / speed) * 1000, onScene: node.scene === shownId }
+  }
+  const routines = createRoutineRunner(
+    cast,
+    store,
+    (npc) => {
+      if (sequenceStore.getState().active) return true // a cutscene owns the stage
+      const d = dialogueStore.getState()
+      return d.active && d.partner === npc
+    },
+    pathInfo,
+  )
   const onRoutineTick = (ticker: Ticker) => routines.tick(ticker.deltaMS)
   app.ticker.add(onRoutineTick)
 
@@ -1297,7 +1368,8 @@ export function createSceneHost(
       audio,
       weatherPresets,
       lightingDefaults,
-      options,
+      // Seed routine NPCs at their global path progress so they resume mid-walk (B-lite).
+      { ...options, npcPathProgress: (npc) => routines.progressOf(npc) },
     )
     clearTimeout(spinTimer)
     spinner.visible = false
