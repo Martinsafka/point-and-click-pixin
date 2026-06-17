@@ -451,10 +451,18 @@ overlays are the sensitive bits).
         NPCs / Lighting placement) into windows as their overlays move to the live camera (with
         ME.4).
   - [ ] **c** — once the launcher reaches parity, retire the fixed `editor__panel` (→ ME.6).
-- [ ] **ME.3 — Live-update the tunable systems** — lighting rebuilds on doc change (sliders
-      live), ambient / colour live, weather already reactive; **structural** changes
-      (add/remove layer) re-mount the current scene. Define a live-update-vs-re-mount policy
-      per system (hot params live, avoid re-mount churn + teardown stress).
+- [x] **ME.3 — Live-update the tunable systems** — the preview applies **hot** params in place
+      and **re-mounts** only on structural change. Policy: **hot (live, no re-mount)** =
+      atmosphere (ambient / lights / dark areas / weather / player light, via
+      `refreshAtmosphere`) + **character size** (`setCharacterScale` → `Character.setCharScale`,
+      now committing live as you drag); **re-mount (revision bump)** = geometry / structure
+      (scene width, reference height, depth, add/remove/move layer, player sprite,
+      add/remove scene); **overlay-only** (walkable / holes / hit-areas / interactables) updates
+      via the React DOM overlay. Both preview modes (Edit `mountPreview`, Live `createSceneHost`)
+      route the hot updates through the same `ScenePreview` subscription (separate diffs so a
+      cheap edit doesn't rebuild the lightmap).
+      _(Follow-up: **depth** edits currently neither re-mount nor live-update — they apply on the
+      next re-mount; make depth live or bump revision when that bites.)_
 - [ ] **ME.4 — Migrate placement/drawing overlays to the live camera** — walkable / holes /
       hit-areas / NPC spawn+path / lights / dark areas convert screen↔world via
       `cameraOffset` (already used by the cursor); editor mode suppresses gameplay clicks

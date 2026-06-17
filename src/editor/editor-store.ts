@@ -322,7 +322,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         false,
       ),
     setSceneWidth: (id, width) => patchScene(id, { width }, true),
-    setCharacterScale: (id, scale) => patchScene(id, { characterScale: scale }, true),
+    // Hot tunable (ME.3) — the preview rescales the character live, no re-mount.
+    setCharacterScale: (id, scale) => patchScene(id, { characterScale: scale }, false),
     setReferenceHeight: (height) =>
       set({ doc: { ...get().doc, referenceHeight: height }, revision: get().revision + 1 }),
     setDepthStops: (id, stops) =>

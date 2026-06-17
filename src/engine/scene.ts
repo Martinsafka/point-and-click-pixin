@@ -111,6 +111,8 @@ export interface SceneHost {
    *  editor calls this as the author tunes atmosphere. No-op while no scene is mounted (e.g.
    *  mid-swap). */
   refreshAtmosphere(scene: SceneData, atmo: PreviewAtmosphere): void
+  /** Live-update the current scene's character size multiplier (hot tunable, no re-mount). */
+  setCharacterScale(scale: number): void
   destroy(): void
 }
 
@@ -1000,6 +1002,12 @@ export async function mountScene(
       syncWeather(store.getState())
       buildLighting()
     },
+    // Live character-size tuning (the editor): rescale the player + all NPCs in place. The
+    // per-scene multiplier sits on top of each actor's depth scale.
+    setCharacterScale(scale) {
+      if (torn) return
+      for (const a of actors.values()) a.setCharScale(scale)
+    },
   }
 }
 
@@ -1020,6 +1028,8 @@ export interface PreviewAtmosphere {
  *  be rebuilt live as the author edits, without re-mounting the whole scene. */
 export interface PreviewScene extends Scene {
   refreshAtmosphere(scene: SceneData, atmo: PreviewAtmosphere): void
+  /** Live-update the scene's character size multiplier (a hot tunable — no re-mount). */
+  setCharacterScale(scale: number): void
 }
 
 /**
@@ -1197,6 +1207,11 @@ export async function mountPreview(
       root.destroy({ children: true })
     },
     refreshAtmosphere: buildAtmo,
+    // Live character-size tuning: rescale the static placeholder in place (no re-mount).
+    setCharacterScale(scale) {
+      if (torn) return
+      view.container.scale.set(depthScaleAt(feetY, depthScale) * scale)
+    },
   }
 }
 
@@ -1377,6 +1392,9 @@ export function createSceneHost(
   return {
     refreshAtmosphere(scene, atmo) {
       current?.refreshAtmosphere(scene, atmo)
+    },
+    setCharacterScale(scale) {
+      current?.setCharacterScale(scale)
     },
     destroy() {
       destroyed = true

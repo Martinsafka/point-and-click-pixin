@@ -94,7 +94,8 @@ selected scene, and the preview shows it).
   character; the readout shows the aspect (e.g. `2.20:1`) and whether it scrolls.
 - **characters** — a per-scene **size multiplier** (%) for the player and NPCs, for
   scenes drawn from a closer or different angle. It rides on top of the perspective
-  (Walkable depth), not instead of it; the preview updates on release.
+  (Walkable depth), not instead of it; the preview **rescales live as you drag** (no
+  reload).
 
 ### Walkable · _N_ pts
 

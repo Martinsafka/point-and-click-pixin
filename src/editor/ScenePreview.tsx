@@ -66,9 +66,10 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
       app = created
       host.appendChild(created.canvas)
 
-      // The atmosphere refresher differs by mode (preview vs the live host), but both rebuild
-      // the current scene's weather + lighting without a re-mount.
+      // The hot-tunable refreshers differ by mode (preview vs the live host), but both update
+      // in place (no re-mount): atmosphere (weather + lighting) and the character size.
       let refresh: (sc: SceneData, atmo: PreviewAtmosphere) => void
+      let setCharScale: (scale: number) => void
 
       if (live) {
         // Run the REAL world from the editor's working doc — its own story store, parked at
@@ -93,6 +94,7 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
         )
         const sceneHostRef = sceneHost
         refresh = (sc, atmo) => sceneHostRef.refreshAtmosphere(sc, atmo)
+        setCharScale = (s) => sceneHostRef.setCharacterScale(s)
       } else {
         preview = await mountPreview(
           created,
@@ -108,11 +110,15 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
         if (cancelled) return teardown(created)
         const previewRef = preview
         refresh = (sc, atmo) => previewRef.refreshAtmosphere(sc, atmo)
+        setCharScale = (s) => previewRef.setCharacterScale(s)
       }
 
-      // Rebuild the atmosphere when this scene's lighting / weather config (or the doc-level
-      // defaults) change — a hash diff avoids rebuilding on unrelated edits.
+      // Apply hot-tunable edits live (no re-mount): rebuild atmosphere on a lighting / weather
+      // change (hash-diffed to skip unrelated edits), and rescale the character on a
+      // characterScale change. Each is diffed separately so a cheap edit doesn't rebuild the
+      // (expensive) lightmap.
       let lastHash = ''
+      let lastCharScale = scene.characterScale ?? 1
       const sync = () => {
         const d = editorStore.getState().doc
         const sc = d.scenes[scene.id]
@@ -126,9 +132,15 @@ export function ScenePreview({ scene }: { scene: SceneData }) {
           d.playerLight,
           d.weatherPresets,
         ])
-        if (hash === lastHash) return
-        lastHash = hash
-        refresh(sc, atmoOf())
+        if (hash !== lastHash) {
+          lastHash = hash
+          refresh(sc, atmoOf())
+        }
+        const cs = sc.characterScale ?? 1
+        if (cs !== lastCharScale) {
+          lastCharScale = cs
+          setCharScale(cs)
+        }
       }
       sync()
       unsubscribe = editorStore.subscribe(sync)

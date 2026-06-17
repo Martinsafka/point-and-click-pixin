@@ -43,9 +43,16 @@ export class Character {
     private readonly depthScale: DepthScale,
     private readonly nav?: Navigation,
     /** Per-scene size multiplier on top of the depth scale (default 1). */
-    private readonly charScale = 1,
+    private charScale = 1,
   ) {
     this.syncView()
+  }
+
+  /** Live-update the per-scene size multiplier (editor tuning) — re-positions without a
+   *  re-mount, so the character resizes as the author drags the slider. */
+  setCharScale(scale: number): void {
+    this.charScale = scale
+    this.positionView()
   }
 
   /** The Pixi container to drop into a scene layer. */

@@ -102,9 +102,9 @@ export function Editor() {
   // Which of the selected placement's named paths is being drawn (index), in `npcpath` mode.
   const [drawPathIndex, setDrawPathIndex] = useState<number | null>(null)
   const [panelWidth, setPanelWidth] = useState(340)
-  // The character-size slider drives a live % during drag, committing (one preview
-  // re-mount) on release; null means "read the saved value". Width is the same.
-  const [charDraft, setCharDraft] = useState<number | null>(null)
+  // The width slider drives a live % during drag, committing (one preview re-mount, since
+  // width changes the design aspect) on release; null means "read the saved value". The
+  // character-size slider is a hot tunable (ME.3) — it commits live, no re-mount.
   const [widthDraft, setWidthDraft] = useState<number | null>(null)
   const mainRef = useRef<HTMLElement>(null)
   const [stage, setStage] = useState({ w: 0, h: 0 })
@@ -139,7 +139,6 @@ export function Editor() {
     setSelectedInteractable(null)
     setSelectedHole(null)
     setSelectedNpc(null)
-    setCharDraft(null)
     setWidthDraft(null)
   }
 
@@ -156,16 +155,11 @@ export function Editor() {
   const savedWidth = scene?.width ?? defaultWidth
   const aspect = savedWidth / refH
   const sceneWidth = widthDraft ?? savedWidth
-  const charScale = charDraft ?? scene?.characterScale ?? 1
+  const charScale = scene?.characterScale ?? 1
   const commitWidth = () => {
     if (widthDraft === null) return
     editorStore.getState().setSceneWidth(selectedId, Math.max(refH, Math.round(widthDraft) || refH))
     setWidthDraft(null)
-  }
-  const commitCharScale = () => {
-    if (charDraft === null) return
-    editorStore.getState().setCharacterScale(selectedId, charDraft)
-    setCharDraft(null)
   }
 
   // The preview "stage" is a box of the scene's aspect, fit inside the preview pane
@@ -479,9 +473,9 @@ export function Editor() {
                     max="4"
                     step="0.05"
                     value={charScale}
-                    onChange={(e) => setCharDraft(Number(e.target.value))}
-                    onPointerUp={commitCharScale}
-                    onBlur={commitCharScale}
+                    onChange={(e) =>
+                      editorStore.getState().setCharacterScale(selectedId, Number(e.target.value))
+                    }
                   />
                   <span className="intr-form__note">{Math.round(charScale * 100)}%</span>
                 </div>
