@@ -33,6 +33,7 @@ import {
   type RoutinePathInfo,
 } from '../systems/routine'
 import { createRulesRunner } from '../systems/rules'
+import { itemAction } from './item-action'
 import { facingToAngle, WALK_SPEED } from '../systems/movement'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
 import { containsPoint } from '../systems/walkable'
@@ -770,6 +771,10 @@ export async function mountScene(
     }
   }
 
+  // Inventory item actions (M12.5 #5) dispatch through this scene's `run` (so `startDialog` etc.
+  // work from the DOM inventory). Reset to a no-op on teardown (next mount re-sets it).
+  itemAction.run = (effects) => run(effects)
+
   // --- Cutscene runner (M8) -------------------------------------------------
   // Plays a Sequence's steps in order over the scene's actors + camera; input is blocked
   // (sequenceStore.active) and the whole thing is skippable. Skipping fast-forwards: the
@@ -1176,6 +1181,7 @@ export async function mountScene(
       // Close a conversation / cutscene tied to this scene (e.g. a `goTo` swapped scenes).
       if (dialogueStore.getState().active) dialogueStore.getState().end()
       if (sequenceStore.getState().active) sequenceStore.getState().end()
+      itemAction.run = () => {}
       unsubscribeVisibility()
       app.ticker.remove(onTick)
       app.stage.off('pointertap', onTap)

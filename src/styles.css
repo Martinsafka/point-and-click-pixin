@@ -123,6 +123,25 @@ body {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
 }
 
+/* Skip-conversation button (M12.5 #14), top-right of the dialogue box. */
+.dialogue__skip {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  padding: 2px 8px;
+  font: inherit;
+  font-size: calc(11px * var(--ui-scale, 1));
+  color: #aeb6c6;
+  background: rgba(42, 54, 80, 0.55);
+  border: 1px solid #2a3650;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.dialogue__skip:hover {
+  color: #fff;
+  background: rgba(42, 54, 80, 0.9);
+}
+
 .dialogue__speaker {
   display: inline-block;
   margin-bottom: 6px;

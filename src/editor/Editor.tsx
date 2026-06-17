@@ -639,7 +639,7 @@ export function Editor() {
       {t === 'items' && (
         <>
           <Section title={`Items · ${Object.keys(doc.items).length}`}>
-            <ItemCatalogue items={doc.items} />
+            <ItemCatalogue items={doc.items} doc={doc} />
           </Section>
           <Section title={`Recipes · ${(doc.recipes ?? []).length}`}>
             <RecipeTable recipes={doc.recipes ?? []} items={doc.items} />

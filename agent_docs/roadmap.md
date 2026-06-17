@@ -604,17 +604,16 @@ exists, just wire it" wins first, then a few new-but-contained character/scene f
 heavier ideas — global animation library, full UI theming, map/journal/checkpoints — went to
 V2.) Each still follows schema-first → runtime → editor.
 
-- [ ] **1b — Conditional examine** — an item's / object's "look at" text can vary by state: the
-      `examine` text gains a conditional form (`{ when?, text }[]`, first match wins), so a flag
-      changes what the player learns on inspect. Reuses `ConditionEditor`. _(Base examine already
-      ships — this adds the modifier.)_
-- [ ] **5 — Inventory item dialogs / effects** — clicking (or using) an inventory item can run
-      Effects / `startDialog` (today only interactables can). `ItemDef` gains optional `effects?`
-      / `dialog?` (gated by `when`); the click routes through the shared runEffects + dialogue
-      runtime (both already exist). Enables item-driven conversations, flag-setting, conditional
-      reveals. _(#5.)_
-- [ ] **14 — Skip dialogue** — a skip control that ends the current conversation (beyond the
-      per-line typewriter fast-forward, which already works). Mirrors the cutscene skip. _(#14.)_
+- [x] **1b — Conditional examine** — `ItemDef.examineWhen?: { when?, text }[]` (first match wins
+      over `examine`); `systems/examine.ts` `resolveExamine`; the inventory shows the
+      state-dependent line. Editor: per-item conditional-examine list (ItemCatalogue). _(Items-only
+      for now; world-object / inspect conditional examine is a follow-up.)_
+- [x] **5 — Inventory item dialogs / effects** — `ItemDef.use?: { when?, effects?, dialog? }[]`;
+      clicking an item runs the first matching `use` (effects + optional `startDialog`) instead of
+      selecting. Routed through the mounted scene via the `engine/item-action.ts` bridge so
+      `startDialog` + engine effects fire from the DOM inventory. Editor: per-item on-click actions.
+- [x] **14 — Skip dialogue** — a Skip ⏭ button on the dialogue box → `dialogueStore.end()` (beyond
+      the per-line typewriter complete-on-click).
 - [ ] **18 — Player-approach detection** — extend NPC `vision`: on detection the NPC can **walk to
       the player** (a new `approach` step) before running its effects (`startDialog` / `setFlag` /
       `playAnim`, multiple events — already supported). Builds on the existing vision→effects edge;

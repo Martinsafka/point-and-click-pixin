@@ -104,6 +104,27 @@ export interface ItemDef {
   icon?: string
   /** "Look at" flavour text shown when the item is examined. */
   examine?: string
+  /** Conditional examine variants (M12.5 #1b) — the first whose `when` passes is shown
+   *  instead of `examine`, so a flag changes what the player learns on inspect. */
+  examineWhen?: ExamineLine[]
+  /** Clicking the item in the inventory runs the first `use` whose `when` passes (M12.5 #5) —
+   *  its `effects` + an optional `dialog`. Absent → the item just selects (for combine / use-on). */
+  use?: ItemUse[]
+}
+
+/** A conditional "look at" line (M12.5 #1b): shown when its `when` passes (first match wins). */
+export interface ExamineLine {
+  when?: Condition
+  text: string
+}
+
+/** A conditional inventory-item action (M12.5 #5): when `when` passes, clicking the item runs
+ *  `effects` and (optionally) starts `dialog`. Dispatched through the mounted scene so engine
+ *  effects + `startDialog` work. */
+export interface ItemUse {
+  when?: Condition
+  effects?: Effect[]
+  dialog?: DialogId
 }
 
 /** Combining `a` + `b` (order-independent) consumes both and yields `output`. */

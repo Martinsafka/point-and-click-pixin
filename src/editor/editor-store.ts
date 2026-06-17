@@ -7,8 +7,10 @@ import type {
   ClockConfig,
   DepthStop,
   ColorGrade,
+  ExamineLine,
   FogConfig,
   GameRule,
+  ItemUse,
   LightningConfig,
   LightSource,
   PlayerLight,
@@ -151,6 +153,10 @@ interface EditorStore {
   setInteractableText(id: SceneId, index: number, text: string): void
   setInteractableAudio(id: SceneId, index: number, audio: string | undefined): void
   setItemExamine(id: ItemId, examine: string): void
+  /** Conditional examine variants (M12.5 #1b). */
+  setItemExamineWhen(id: ItemId, rules: ExamineLine[] | undefined): void
+  /** Inventory-item click actions (M12.5 #5). */
+  setItemUse(id: ItemId, use: ItemUse[] | undefined): void
   setItemIcon(id: ItemId, icon: string | undefined): void
   setCursorIcon(kind: CursorKind, icon: string | undefined): void
   // Audio (M9) — document defaults + per-scene ambient. No `revision` bump (not visual).
@@ -684,6 +690,15 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setItemExamine: (id, examine) => {
       const { items } = get().doc
       patchDoc({ items: { ...items, [id]: { ...items[id], examine } } })
+    },
+    setItemExamineWhen: (id, rules) => {
+      const { items } = get().doc
+      const examineWhen = rules?.length ? rules : undefined
+      patchDoc({ items: { ...items, [id]: { ...items[id], examineWhen } } })
+    },
+    setItemUse: (id, use) => {
+      const { items } = get().doc
+      patchDoc({ items: { ...items, [id]: { ...items[id], use: use?.length ? use : undefined } } })
     },
     setItemIcon: (id, icon) => {
       const { items } = get().doc

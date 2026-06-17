@@ -643,7 +643,27 @@
     },
     "gem": {
       "id": "gem",
-      "name": "Gem"
+      "name": "Gem",
+      "examine": "A dull green gem. It feels inert.",
+      "examineWhen": [
+        {
+          "when": {
+            "kind": "flag",
+            "flag": "machine-ready"
+          },
+          "text": "The gem hums — the machine is ready."
+        }
+      ],
+      "use": [
+        {
+          "effects": [
+            {
+              "kind": "setFlag",
+              "flag": "gem-handled"
+            }
+          ]
+        }
+      ]
     }
   },
   "npcs": {

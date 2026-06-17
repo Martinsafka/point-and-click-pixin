@@ -62,6 +62,17 @@ export function DialogueBox() {
 
   return (
     <div className="dialogue" onClick={onBoxClick}>
+      <button
+        type="button"
+        className="dialogue__skip"
+        title="Skip conversation"
+        onClick={(e) => {
+          e.stopPropagation()
+          dialogueStore.getState().end()
+        }}
+      >
+        Skip ⏭
+      </button>
       {speaker && <div className="dialogue__speaker">{speaker}</div>}
       <p className="dialogue__line">{line.slice(0, revealed)}</p>
       {done && choices && choices.length > 0 && (
