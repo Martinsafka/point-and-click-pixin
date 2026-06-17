@@ -59,7 +59,8 @@ cutscenes, audio, atmosphere, theming) → packaging.
 - [x] Inventory: add + combine (data-driven recipes) + "use item on object".
 - [x] UI: simple menu.
 - [x] Audio: ambient loop + ≥1 SFX (Howler, triggered by state).
-- [ ] Stealth detection → folded into **M7** (NPC vision).
+- [x] Stealth detection → folded into **M7** (NPC vision). _(Done: M7 step 5 — NPC vision cone
+      + crouch-at-cover.)_
 - [x] Author the 2–3 scene vertical slice → JAM BUILD DONE. _(2 scenes, full
       mechanics, placeholder art; stealth optional.)_
 
@@ -193,9 +194,9 @@ adventure model: define a character once, place it where it appears.
 - [x] `SceneData.npcs` becomes **placements**: `{ npc, spawn, when }` referencing the cast
       (click-to-place stays). **Unique** — one NPC is placed in at most one scene
       (editor-enforced; cast id fixed at creation, removal cascades to placements).
-- [ ] An NPC's **current scene is runtime state** (its placement is only the *start*); a
-      `moveNpc` / `despawnNpc` effect + its routine move it between scenes — **lands with
-      the routine (step 6)**.
+- [x] An NPC's **current scene is runtime state** (its placement is only the *start*); a
+      `moveNpc` / `despawnNpc` effect + its routine move it between scenes. _(Done in step 6a —
+      `StoryState.npcScene` + the effects, commit 715457c.)_
 
 **Step 3 — NPC movement paths (in-scene)** ✅ _(idea: draw a route; chains with triggers)_
 
@@ -329,15 +330,16 @@ flag-driven through the existing condition vocabulary.
 
 **Cross-cutting foundations (apply to all of 10a–10d):**
 
-- [ ] **Compositing order** — a small atmosphere/lighting layer stack with a fixed order:
+- [x] **Compositing order** — a small atmosphere/lighting layer stack with a fixed order:
       rain/snow in the **foreground** (over characters); fog can **split** (a back layer
       behind characters + a front layer over them); the **lighting overlay** sits above the
-      scene art (characters lit too); the **player light is topmost**. Establish this stack
-      once; 10a–10d slot into it.
+      scene art (characters lit too); the **player light is topmost**. _(Done — `engine/atmosphere.ts`
+      slot stack: emitters / lighting / weather / screenFx; fog placed by author z into `world`.)_
 - [ ] **Performance + quality** — particle **caps**, cull off-screen, cap filter cost; a
-      **quality / reduced-motion** setting (low / med / high → particle budget + which
-      filters run). The runtime hooks live here; the settings **UI lands in M11**
-      (volume + this), and reduced-motion respects accessibility.
+      **quality / reduced-motion** setting (low / med / high → particle budget + which filters
+      run). _Runtime particle **budget shipped** (weather + emitters cap to it). The
+      **quality / reduced-motion toggle UI** moved to **V2** — M11 shipped only text-size +
+      volume._
 - **Darkness is visual-only** — dark scenes / dark areas never block hotspots or clicks at
   the render level; they only change what's *seen*. To make a dark room's hotspots
   unresponsive until the lights are on, gate them with the **existing `when`** vocabulary
@@ -426,7 +428,7 @@ overlays are the sensitive bits).
       the dev **sees lighting / weather** while authoring. Lighting's camera is parameterised
       (the preview passes its fit transform). _(Gated lights need their `when` met — ME.5
       will add flag-setting in the preview.)_
-- [ ] **ME.1 — The editor preview runs the *real* world** _(reframed — keep two documents)_
+- [x] **ME.1 — The editor preview runs the *real* world** _(reframed — keep two documents)_
       — instead of merging stores (risky, invisible in isolation), the editor keeps its own
       working doc and the production `gameDoc` stays separate; the **preview gains an
       Edit ⇄ Live toggle**. **Live** mounts the real `createSceneHost` from `editorStore.doc`
@@ -443,7 +445,7 @@ overlays are the sensitive bits).
         over the working doc (`{ cameraMode:'fit', gameplayInput:false, muteAudio:true }`) and
         subscribes to the editor store for the live atmosphere refresh. _(Persistence /
         Test / Discard / draft are untouched — both docs stay as they were.)_
-- [ ] **ME.2 — In-game floating editor (coexists with `?edit`)** — a dev-only **launcher
+- [x] **ME.2 — In-game floating editor (coexists with `?edit`)** — a dev-only **launcher
       bar** (top-left) over the **live `createSceneHost` world**; each entry opens a
       **floating, draggable modal window** (✕ top-right) hosting that section's existing
       forms. **Multiple windows at once.** Edits mutate the unified doc; the game reacts
@@ -457,7 +459,8 @@ overlays are the sensitive bits).
         (single source — removed the earlier per-section duplication). The **Scene** window
         drives the same `draw` modes, so its tools place/draw on the (ME.4) overlays from a
         floating window too.
-  - [ ] **c** — once the launcher reaches parity, retire the fixed `editor__panel` (→ ME.6).
+  - [x] **c** — retire the fixed `editor__panel`. _(Done in **ME.6.3** — the panel/tabs/footer
+        were deleted; the editor is now the fullscreen world + launcher only.)_
 - [x] **ME.3 — Live-update the tunable systems** — the preview applies **hot** params in place
       and **re-mounts** only on structural change; **nothing stays silently stale**. One host
       hook **`applyLive({ scene, atmo, cast })`** (replacing `refreshAtmosphere` +
