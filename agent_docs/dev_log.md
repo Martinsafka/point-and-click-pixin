@@ -23,6 +23,40 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Demo P0–P2: greybox scaffold + parallax layout + items/interactables (_Magický polibek_)
+**What:** Started the real demo build. Replaced the old street/room demo with a fresh
+`content/game.json` for **_Magický polibek_** — 4 scenes (tavern / street / tower-exterior /
+tower-room), walkable + depth + spawn + exits wiring the loop, **parallax greybox** backgrounds
+(inline base64-SVG `image` layers), the 6 items (hook / charm / fish / cat / beer / onion), and P2
+world objects: the **fork→hook** pickup, the **poster** (reads the proclamation + sets
+`read-poster`), the **cellar** (rats hint) and the alley **grate** (use-wiring deferred to P4).
+Title heading/tagline set. Authored by `tools/build_demo.py` (gitignored aid; `content/game.json`
+is the source of truth) + a reusable `tools/verify.mjs` (Playwright, isolated in gitignored `tools/`).
+**Why:** Execute the demo roadmap A→Z, mechanics-first / greybox so the loop is playable before the
+PixelLab art pass (P8). Art is a swappable layer.
+**How:**
+- **Greybox = inline base64 `image` SVG layers** (not code `builtin` painters): fully data-driven +
+  swappable for PixelLab PNGs in P8 by changing `src`. **Parallax** far layers (sky / hills /
+  buildings) are oversized + `fit:'none'` (centered) so slow parallax doesn't reveal edges on the
+  wide (4000px) street; ground / zone-overlay use `fit:'stretch'`. Confirmed `fitImageSprite` sizes
+  layers to the **scene design space**, not the viewport — so the wide street fills correctly.
+- **Verified in a real browser** (Playwright, clean context → baked doc, no IndexedDB draft): loads
+  with **0 console errors**; title → New game → **Hospoda**; click the door → **Ulice** (walking,
+  pathfinding, exits, transitions, wide-street parallax all working); player placeholder renders
+  (moved the tavern spawn off the foreground table).
+- **Art-direction locked** from the user's reference (Octavi Navarro–style detailed painterly pixel
+  art, muted earthy palette, warm interiors vs cool exteriors, atmospheric depth) → `demo-assets.md`
+  style suffix + note. **Session locks** in `demo-roadmap.md`: hero = **Claude**; parallax sky+nature;
+  animated assets (engine particles now + PixelLab anims in P8); full default-style sounds; credits =
+  Director (user) + „sabe" on all other roles.
+**Follow-ups:**
+- Diacritics: greybox examines / `say`s are ASCII; full Czech-diacritic sweep in the P3 content pass
+  (the title is already fixed).
+- HUD hint text is the engine English default — localize in P9.
+- tower / tower-room greybox not yet eyeballed (same mechanism as the verified scenes) — covered by
+  the P6 playthrough.
+- **Next (P3):** the 4 cast NPCs + dialogue trees.
+
 ### 2026-06-18 — Demo: agent to build it via skills + PixelLab MCP (decision recorded in demo-roadmap)
 **What:** Docs only. Decided the agent (Claude Code) will assemble the **whole demo itself** as a live test of the Pixin **skills** + **PixelLab via its MCP** for assets — recorded as a new **"Test skills and PixelLab"** section at the top of `demo-roadmap.md`. The user accepts the pixel art won't be polished (their review/tweak afterwards; art is a swappable layer). **Key operational note:** the PixelLab **MCP must be installed and the Claude Code session restarted** — MCP tools register at session start, so they won't appear mid-conversation; nothing is lost on restart (on disk + this dev log), resume from `demo-roadmap.md` (both engine prereqs ✅, next P0). Fallback = hand-authored SVG/geometric greybox if PixelLab is unavailable.
 **Why:** the user wants the demo done fast and to see the skills + PixelLab work in practice; the user's subscription is active and just needs the MCP added.

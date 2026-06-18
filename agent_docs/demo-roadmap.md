@@ -241,6 +241,20 @@ PixelLab): copy-paste prompts in [`demo-assets.md`](demo-assets.md).**
   light = sun + scene lights blended by intensity × distance) → **V2** (a meaningful way to make
   scene lights affect shadows without one-shadow-per-light noise).
 
+## Session additions (locked — build run)
+
+- **Hero name** — the tramp is **Claude** (used in dialogue, intro, examines, credits).
+- **Parallax backgrounds** — sky + nature composed as parallax bands (street + tower-exterior;
+  the tower room shows a landscape through its window).
+- **Animated assets** — dynamism in two layers: engine particles / light-flicker / fog drift
+  now, plus PixelLab `animate_object` sprite layers in P8 (fire, fountain water, swaying sign,
+  birds, breathing princess, cat-tail twitch).
+- **Sounds** — full **default-style** audio: per-scene ambient beds, footsteps, pickup,
+  transition, SFX (pour / gulp / snore / wake), per-NPC procedural voices. (PixelLab is image-only;
+  use the engine's built-in / procedural audio — real recordings are a later swap.)
+- **Credits** — the user is the **Director**; the alias **„sabe"** is credited on every other role
+  (art / code / design / sound / writing) — a one-person-show gag.
+
 ## Open questions
 
 - **Beer count** — 3 (recommended, tidy ladder) vs 5 (the original idea). Decide at P5.

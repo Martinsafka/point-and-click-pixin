@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # vite cache
 .vite
+
+# demo build scaffolding (content/game.json is the source of truth)
+tools/
