@@ -644,17 +644,19 @@ V2.) Each still follows schema-first → runtime → editor.
 open-source template with a playable demo. Broken into a–e (chosen with the user; do **in order**
 — each feeds the next).
 
-**M13a — Documentation pass**
+**M13a — Documentation pass** ✅
 
-- [ ] **Editor-guide coverage audit** — walk dev_log + editor_guide and confirm **every** shipped
-      editor feature has its controls / draw-modes / shortcuts documented; make a feature→guide
-      checklist and fill any gaps.
-- [ ] **Asset-prep section** in editor_guide (building on `asset_pipeline.md`) — exact formats:
-      the **animation** atlas (PNG grid, frame size, columns, fps, clip naming `walk.E` / `idle.S`,
-      anchor = feet), sounds (format / length), SVG/PNG layers, recommended resolutions.
-- [ ] **README** — an overview of every editor feature + a link to `editor_guide.md` **and** a link
-      to the installed **PixiJS skills** (so a dev knows to install them for Pixi work).
-- [ ] Open-source hygiene: **LICENSE (MIT)** + CONTRIBUTING + CODE_OF_CONDUCT.
+- [x] **Editor-guide coverage audit** — audited dev_log + editor_guide; filled the gaps found
+      (a **Dialogs** authoring section, **Items** conditional-examine + on-click actions, a
+      complete **Effects** reference table, a **Keyboard & mouse** note).
+- [x] **Asset-prep section** in editor_guide (a new **Preparing assets** section building on
+      `asset_pipeline.md`): design space + the **animation** atlas grid (frame size / columns /
+      fps / clip naming `walk.E` / `idle.S` / anchor = feet), images (SVG/PNG/JPG, fit), sounds
+      (formats, loopable), animated layers.
+- [x] **README** — overview of every editor feature + links to `editor_guide.md`, the docs, and the
+      **PixiJS** Claude Code skills.
+- [x] Open-source hygiene: **LICENSE (MIT)** + CONTRIBUTING + CODE_OF_CONDUCT + `package.json`
+      license/description. **→ M13a complete.**
 
 **M13b — Claude Code skills (AI authoring assist)** ⭐
 

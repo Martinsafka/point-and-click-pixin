@@ -334,6 +334,14 @@ selected scene.
   inventory icon (SVG/PNG, stored in the document). **✕** deletes. The **id** is
   fixed at creation because interactables, uses, effects and recipes reference it —
   the name is just the label shown in the pickers.
+- **Examine when** (M12.5) — conditional "look at" variants: each is a `when` + a text; the
+  first whose condition passes is shown instead of the base examine, so a flag changes what the
+  player learns on inspect.
+- **On click** (M12.5) — make the item **actionable**: each entry is a `when` + a **dialog**
+  (from the Dialogs library) and/or **effects**. Clicking the item in the inventory runs the
+  first matching one (starts the dialog, runs the effects) instead of selecting it for combine —
+  so an item can start a conversation, set a flag, or reveal something. Items with no "On click"
+  keep the plain select-to-combine / use-on-object behaviour.
 
 **Recipes** — combine rules: `a + b → output`, order-independent. Selecting two
 matching items in the inventory consumes both and yields the output.
@@ -440,6 +448,31 @@ kind (**+ Step**), reorder with **↑/↓**, remove with **✕**. Step kinds:
 
 Then add a `startSequence` effect somewhere (its picker lists your cutscenes) to fire it.
 _(Points are typed as fractions for now; picking them on the preview is a follow-up.)_
+
+### Dialogs (global)
+
+The **Dialogs tab** is the reusable **dialogue library** — write a tree once, then attach it to
+NPCs, items, triggers or cutscenes. **+ Dialog** adds one (a fixed id); **Edit** opens its
+**node editor**; **✕** deletes.
+
+A dialog is a set of named **nodes** entered from a **start node**. Each node has:
+
+- **speaker** — whose name shows (a character id; blank = the NPC you're talking to).
+- **text** — the line, revealed with a **typewriter** in-game (the NPC's **voice** blips while it
+  types — see the NPC modal → voice). Blank text + only effects/branch = a silent routing node.
+- **On enter** (effects) — run when the node is entered (set a flag, give an item, start a
+  cutscene…).
+- **Branch (router)** — conditional openings: the first branch whose `when` passes **redirects**
+  to another node before this node shows — so the conversation starts differently by story state.
+- **Choices** — player replies, each a **reply text** + optional `when` (only offered while it
+  passes) + **→ effects** + **→ next** node. No choices = a click-to-continue line.
+- **next** — where a click-to-continue line goes (blank = the dialogue ends).
+
+**Attach a dialog:** in the **NPC modal** (Characters → Edit) pick the NPC's default **dialog**
+(+ an optional **dialogWhen** gate — when it fails, clicking the NPC falls back to its **inspect**
+line); a **placement** can override it per scene (Scene → NPCs). Items can start one (Items → On
+click), and any effect list can `startDialog`. In-game, clicking an NPC walks the player over,
+the NPC **pauses + faces** them, and the box opens (a **Skip** button ends it).
 
 ### Display (global)
 
@@ -608,6 +641,58 @@ screen is covered — the game never reveals a half-loaded scene.
 
 ---
 
+## Preparing assets
+
+Everything you upload (images, atlases, sounds) is stored **inside the document** as a data-URL,
+so a single `game.json` carries the whole game and survives **Export**. Keep assets lean — big
+files bloat the document. For _how to create_ the art (Recraft → Inkscape → atlas, animation
+technique, the geometric-placeholder style), see `asset_pipeline.md`; this section is the exact
+**formats the editor expects**.
+
+### Design space
+
+Author against the document's **reference height** (Project → Display, default **1080 px**). The
+player's viewport is fitted to it with one uniform scale, so size your art for a 1080-tall stage
+(a 16:9 scene is ~1920×1080). Scene positions are **fractions** (0..1), so art stays
+resolution-independent; a scene's **width** (in these px) past the screen aspect makes the camera
+scroll.
+
+### Animation atlases (characters, NPCs, animated layers)
+
+A character / NPC **view**, and an **animated layer**, are a single **atlas** image — a grid of
+equal-size frames — plus a description of how to slice + play it.
+
+- **Image** — one PNG (or SVG) holding all frames in a **grid**, packed **left-to-right,
+  top-to-bottom**; frame indices start at **0**. No padding between cells.
+- **Frame size + columns** — set **frame width**, **frame height**, and **columns** so the editor
+  can cut the grid. (Rows are inferred.)
+- **Clips** (character/NPC) — name each animation and list its **frame indices** + **fps** +
+  **loop**. Naming convention: **`state.facing`**, e.g. `idle.S`, `walk.E`. Five base directions
+  suffice — **S / SE / E / NE / N** — the **W-side mirrors automatically** (SW / W / NW). One-shots
+  are named by action: **`pickup`**, **`interact`** (played on use), plus **`talk`** / **`crouch`**
+  where used; a one-shot clip can carry its own **sound**.
+- **Anchor** — the sprite origin in 0..1. Feet at the bottom = **anchorY `1`** (logic positions the
+  character by its feet). anchorX `0.5` centres it.
+- **Animated layer** — same grid; set frame w/h / columns / **frames** (how many to play) / **fps**;
+  it loops. Gate it with `when` to swap a static **or** animated asset by flag.
+
+### Images (layers, icons, cursors, screens)
+
+SVG / PNG / JPG, uploaded where each field asks (a scene **Layer**, an item **Icon**, a context
+**Cursor**, screen **backgrounds / logos / title-button images**). **SVG is preferred** for crisp
+scaling (Pixi rasterises it to a texture at runtime). A backdrop **Layer** fits via **cover /
+contain / width / stretch / none**; `none` / `width` layers are **draggable** in the preview.
+
+### Sounds
+
+Upload audio clips **once** in the **Sounds tab** (stored as data-URLs); everything else
+**references** them by name (ambient, footsteps, weather, `playSound`, voice, a monologue line…).
+Use a common web audio format (**WAV / MP3 / OGG**); keep one-shots short and ambient clips
+**loopable** (seamless start/end). Built-in **procedural** sounds are seeded into every document
+(ambient / pickup / transition / footstep / rain) and can be referenced or replaced.
+
+---
+
 ## Reference
 
 ### Conditions (the `when` vocabulary)
@@ -625,16 +710,34 @@ screen is covered — the game never reveals a half-loaded scene.
 
 ### Effects
 
-| Kind          | Does…                                            |
-| ------------- | ------------------------------------------------ |
-| `setFlag`     | set a flag on/off.                               |
-| `giveItem`    | add an item to the inventory.                    |
-| `takeItem`    | remove an item.                                  |
-| `goTo`        | switch to a scene.                               |
-| `startDialog` | marker only — the dialogue runtime arrives in M7.|
-| `playSound`   | play an uploaded sound clip.                     |
-| `playAnim`    | play a one-shot animation (`action`) on a character (default the player). |
-| `say`         | show a world-space **speech bubble** (`text`) over a character (M12.5). |
+Effects run in order, from an interactable / trigger / dialogue node / cutscene step / rule.
+**State** effects change the saved game; **engine** effects act on the live scene.
+
+| Kind            | Does…                                                                          |
+| --------------- | ------------------------------------------------------------------------------ |
+| `setFlag`       | set a flag on / off (state).                                                   |
+| `giveItem`      | add an item to the inventory (state).                                          |
+| `takeItem`      | remove an item (state).                                                        |
+| `goTo`          | switch to a scene (state).                                                     |
+| `moveNpc`       | move a cast NPC to another scene — its runtime location (state).               |
+| `despawnNpc`    | remove an NPC from play (state).                                               |
+| `gameOver`      | show the **Game over** screen (Retry / Title) (state, M11).                    |
+| `endGame`       | show the **End** screen → credits → final → title (state, M11).                |
+| `startDialog`   | start a dialogue (id from the **Dialogs** library).                            |
+| `startSequence` | play a **cutscene** (id from the Cutscenes library); blocks input until it ends. |
+| `playSound`     | play a library sound clip.                                                     |
+| `playAnim`      | play a one-shot animation (`action`) on a character (default the player).      |
+| `say`           | show a world-space **speech bubble** (`text`) over a character (M12.5).         |
+| `wait`          | linger the entering NPC / dialogue partner for `ms` (optionally looping `anim`); never the player. |
+| `setStance`     | hold an idle posture (e.g. `crouch`) on a character until cleared (crouch at cover). |
+
+### Keyboard & mouse
+
+- **Esc** — close the editor's open modal (NPC) / cancel a draw mode; in-game, opens the menu.
+- **Backspace / Delete** — remove the selected node or edge in a graph (routine / logic).
+- **Drag** — reposition free (`none` / `width`-fit) image / animated layers, lights, emitters,
+  spawn points, and NPC spawns in the preview; drag graph nodes to arrange them.
+- **▶ Test in game** lives in the top-right toolbar with **Discard** and the panel toggle.
 
 ---
 

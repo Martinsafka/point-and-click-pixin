@@ -2,6 +2,8 @@
   "name": "point-and-click-pixin",
   "private": true,
   "version": "0.0.0",
+  "description": "A data-driven point-and-click adventure engine + no-code visual editor (PixiJS v8).",
+  "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=20"
