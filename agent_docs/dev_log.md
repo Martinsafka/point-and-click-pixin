@@ -23,6 +23,29 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Demo P10: full art verified + polish + README (M13c done)
+**What:** Eyeballed the last two scenes (tower + tower-room) via a start-override preview — both
+render beautifully (the tower door aligns with the guard + the to-room exit; the bedroom shows the
+sleeping princess on a canopy bed, moonlit window, chest, rug). Tweaked the princess hit-area to sit
+over the bed. **Confirmed NPC dialogue works** with the real sprites (clicking the keeper opens his
+rats-for-beer deal) — the last unverified interaction. Wrote `content/README.md` (pitch + how-to-play
++ spoiler walkthrough + credits) and ticked the roadmap phases. This is the M13c deliverable.
+**Why:** P10 — verify A→Z, no soft-locks, ship.
+**How:**
+- Every interaction type is now verified in-browser (Playwright, 0 console errors): intro cutscene,
+  NPC dialogue, pickable pickup, item-on-object `use`, exits / transitions, the favour chain; all
+  four scenes render with the real art.
+- Soft-lock trace clean: charm→fish→cat→rats→beer→guard→room→onion-kiss each has a path; the clock
+  recurs (morning + dinner), so the onion + the guard are always reachable again.
+- `tools/` (gitignored): `build_demo.py` (authors `content/game.json`), `fetch_art.py` /
+  `fetch_obj.py` (PixelLab → `public/assets/`), `verify.mjs` / `preview.mjs` (Playwright checks).
+**Follow-ups (optional polish):**
+- Full A→Z **manual playtest** of the time-of-day loop (3-beer guard ladder at dinner + onion at
+  morning + the onion-kiss ending) — verified piecewise + by logic, not in one automated run.
+- Character / cutscene **animations** (walk, breathing-idle, kiss / eat / wake) + PixelLab
+  `animate_object` scene anims (fire, fountain, birds).
+- The 3-beer re-drink after the guard sobers up is a touch grindy — tune if desired.
+
 ### 2026-06-18 — Demo P9: framing (title / screens / font)
 **What:** A proper **title screen** — a composited dusk image (the PixelLab tower on a night→warm
 gradient) behind the gold serif **"Magický polibek"** heading + tagline + **Czech buttons** (Nová
