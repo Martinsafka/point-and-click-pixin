@@ -272,7 +272,8 @@
         "intensity": 0.28,
         "size": 0.72,
         "color": "#000000"
-      }
+      },
+      "characterScale": 3.0
     },
     "street": {
       "id": "street",
@@ -602,7 +603,8 @@
         "intensity": 0.22,
         "size": 0.74,
         "color": "#000000"
-      }
+      },
+      "characterScale": 3.0
     },
     "tower": {
       "id": "tower",
@@ -766,7 +768,8 @@
         "intensity": 0.26,
         "size": 0.72,
         "color": "#000000"
-      }
+      },
+      "characterScale": 3.0
     },
     "tower-room": {
       "id": "tower-room",
@@ -894,7 +897,8 @@
         "intensity": 0.36,
         "size": 0.66,
         "color": "#000000"
-      }
+      },
+      "characterScale": 3.0
     }
   },
   "items": {
@@ -1024,6 +1028,30 @@
       "dialog": "keeper",
       "voice": {
         "pitch": 0.8
+      },
+      "view": {
+        "atlas": "/assets/char/keeper.png",
+        "frameWidth": 92,
+        "frameHeight": 92,
+        "columns": 2,
+        "anchorX": 0.5,
+        "anchorY": 0.88,
+        "clips": {
+          "idle.S": {
+            "frames": [
+              0
+            ],
+            "fps": 1,
+            "loop": true
+          },
+          "idle.E": {
+            "frames": [
+              1
+            ],
+            "fps": 1,
+            "loop": true
+          }
+        }
       }
     },
     "vendor": {
@@ -1032,6 +1060,30 @@
       "dialog": "vendor",
       "voice": {
         "pitch": 1.35
+      },
+      "view": {
+        "atlas": "/assets/char/vendor.png",
+        "frameWidth": 92,
+        "frameHeight": 92,
+        "columns": 2,
+        "anchorX": 0.5,
+        "anchorY": 0.88,
+        "clips": {
+          "idle.S": {
+            "frames": [
+              0
+            ],
+            "fps": 1,
+            "loop": true
+          },
+          "idle.E": {
+            "frames": [
+              1
+            ],
+            "fps": 1,
+            "loop": true
+          }
+        }
       }
     },
     "onion": {
@@ -1052,7 +1104,31 @@
             "to": 780
           }
         }
-      ]
+      ],
+      "view": {
+        "atlas": "/assets/char/onion.png",
+        "frameWidth": 92,
+        "frameHeight": 92,
+        "columns": 2,
+        "anchorX": 0.5,
+        "anchorY": 0.88,
+        "clips": {
+          "idle.S": {
+            "frames": [
+              0
+            ],
+            "fps": 1,
+            "loop": true
+          },
+          "idle.E": {
+            "frames": [
+              1
+            ],
+            "fps": 1,
+            "loop": true
+          }
+        }
+      }
     },
     "guard": {
       "id": "guard",
@@ -1060,6 +1136,30 @@
       "dialog": "guard",
       "voice": {
         "pitch": 0.7
+      },
+      "view": {
+        "atlas": "/assets/char/guard.png",
+        "frameWidth": 92,
+        "frameHeight": 92,
+        "columns": 2,
+        "anchorX": 0.5,
+        "anchorY": 0.87,
+        "clips": {
+          "idle.S": {
+            "frames": [
+              0
+            ],
+            "fps": 1,
+            "loop": true
+          },
+          "idle.E": {
+            "frames": [
+              1
+            ],
+            "fps": 1,
+            "loop": true
+          }
+        }
       }
     },
     "drunk": {
@@ -1082,7 +1182,31 @@
           "after": 6500,
           "every": 9000
         }
-      ]
+      ],
+      "view": {
+        "atlas": "/assets/char/drunk.png",
+        "frameWidth": 92,
+        "frameHeight": 92,
+        "columns": 2,
+        "anchorX": 0.5,
+        "anchorY": 0.87,
+        "clips": {
+          "idle.S": {
+            "frames": [
+              0
+            ],
+            "fps": 1,
+            "loop": true
+          },
+          "idle.E": {
+            "frames": [
+              1
+            ],
+            "fps": 1,
+            "loop": true
+          }
+        }
+      }
     }
   },
   "dialogs": {
@@ -1775,6 +1899,30 @@
       "color": "#e6ebf2",
       "align": "center",
       "text": "Magický polibek\n\n— Director —\nsabe\n\n— a všechny ostatní role —\nArt: sabe\nKód: sabe\nDesign: sabe\nHudba: sabe\nScénář: sabe\nCibule: sabe\n\nV hlavní roli: Claude\n\nVytvořeno v editoru Pixin\n\nDíky, žes to dohrál!"
+    }
+  },
+  "player": {
+    "atlas": "/assets/char/claude.png",
+    "frameWidth": 92,
+    "frameHeight": 92,
+    "columns": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.88,
+    "clips": {
+      "idle.S": {
+        "frames": [
+          0
+        ],
+        "fps": 1,
+        "loop": true
+      },
+      "idle.E": {
+        "frames": [
+          1
+        ],
+        "fps": 1,
+        "loop": true
+      }
     }
   }
 }
