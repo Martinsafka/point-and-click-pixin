@@ -150,6 +150,7 @@ Each layer row:
 | **fit**    | _(images)_ how it sizes to the screen — see the table below.                 |
 | **role**   | scenery / occluder / floor — metadata for now (drives future occlusion).     |
 | **parallax** | _(background / foreground)_ scroll rate: 1 = with the world, <1 = farther / slower, 0 = locked, >1 = nearer. |
+| **shadow**   | _(props)_ cast a soft **contact (blob) shadow** at the layer's base (M13c). |
 | **↑ / ↓**  | reorder within the band (paint order).                                       |
 | **✕**      | delete the layer.                                                            |
 
@@ -321,6 +322,14 @@ The scene's mood pass (M10 10d) — three toggles, all live:
   **intensity**, **gap min/max s** (the random wait between flashes), a **thunder** sound (from
   the Sounds library; plays a beat after the flash — silent in the editor preview), and an
   **only when** Condition (e.g. a storm flag — set it from the **World** window to test).
+
+### Shadows
+
+Soft **contact (blob) shadows** (M13c) — a depth-scaled ellipse under each entity, grounding
+them. **Characters cast one automatically.** Per scene: toggle **contact shadows** on/off and tune
+**opacity / squash** (how flat the ellipse) **/ size**. For **props**, tick a layer's **shadow**
+checkbox (Layers) → a blob at its base. _(Plain contact shadows — directional, light-driven ones
+are a V2 item.)_
 
 ### Items · _N_ and Recipes · _N_ (global)
 

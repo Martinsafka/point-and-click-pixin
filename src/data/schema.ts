@@ -570,6 +570,9 @@ export type LayerData =
       role?: LayerRole
       fit?: LayerFit
       when?: Condition
+      /** Cast a soft contact (blob) shadow at this prop's base (M13c). For discrete props,
+       *  not full-bleed backdrops. */
+      castShadow?: boolean
     }
   | {
       kind: 'builtin'
@@ -581,6 +584,7 @@ export type LayerData =
       anchorYFrac?: number
       role?: LayerRole
       when?: Condition
+      castShadow?: boolean
     }
   | {
       // An **animated** scene layer (M12.5 #8) — a looping `AnimatedSprite` from an atlas grid
@@ -605,6 +609,7 @@ export type LayerData =
       role?: LayerRole
       fit?: LayerFit
       when?: Condition
+      castShadow?: boolean
     }
 
 /**
@@ -860,6 +865,19 @@ export interface SpawnPoint {
   target: string
 }
 
+/** Soft contact ("blob") shadows under characters / opted-in props (M13c). Absent → on with
+ *  sensible defaults; tune or turn off per scene. No light direction (directional shadows = V2). */
+export interface ShadowConfig {
+  /** Overall opacity 0..1 (default ~0.32). */
+  opacity?: number
+  /** Ellipse squash — height as a fraction of width (default ~0.32). */
+  squash?: number
+  /** Shadow width as a multiple of the entity's on-screen width (default ~0.7). */
+  scale?: number
+  /** Turn shadows off for this scene. */
+  disabled?: boolean
+}
+
 export interface SceneData {
   id: SceneId
   name: string
@@ -899,6 +917,8 @@ export interface SceneData {
   npcs?: NpcPlacement[]
   /** Spawn-point markers (M12.5 #7) — override where the player / NPCs start in this scene. */
   spawnPoints?: SpawnPoint[]
+  /** Contact (blob) shadows config (M13c); absent → on with defaults. */
+  shadows?: ShadowConfig
   depth: DepthConfig
   /** Character spawn (feet), as design-space fractions. */
   spawn: { xFrac: number; yFrac: number }

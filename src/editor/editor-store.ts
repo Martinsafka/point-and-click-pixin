@@ -35,6 +35,7 @@ import type {
   Recipe,
   SceneBand,
   SceneData,
+  ShadowConfig,
   SpawnPoint,
   SceneId,
   SeqStep,
@@ -100,6 +101,10 @@ interface EditorStore {
   moveLayer(id: SceneId, index: number, dir: -1 | 1): void
   setLayerBand(id: SceneId, index: number, band: SceneBand): void
   setLayerFit(id: SceneId, index: number, fit: LayerFit): void
+  /** Opt a prop layer into a contact (blob) shadow (M13c). */
+  setLayerCastShadow(id: SceneId, index: number, on: boolean): void
+  /** Per-scene contact-shadow config (M13c). */
+  setSceneShadows(id: SceneId, shadows: ShadowConfig | undefined): void
   /** Parallax scroll factor for a background / foreground layer. No `revision` bump
    *  (the preview doesn't scroll). */
   setLayerParallax(id: SceneId, index: number, parallax: number): void
@@ -424,6 +429,11 @@ export const editorStore = createStore<EditorStore>((set, get) => {
           i === index && (l.kind === 'image' || l.kind === 'animated') ? { ...l, fit } : l,
         ),
       ),
+    setLayerCastShadow: (id, index, on) =>
+      mapLayers(id, (ls) =>
+        ls.map((l, i) => (i === index ? { ...l, castShadow: on || undefined } : l)),
+      ),
+    setSceneShadows: (id, shadows) => patchScene(id, { shadows }, true),
     setLayerParallax: (id, index, parallax) =>
       mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, parallax } : l)), false),
     setLayerRole: (id, index, role) =>

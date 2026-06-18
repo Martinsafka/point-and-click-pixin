@@ -150,6 +150,16 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                   }
                 />
               )}
+              <label className="logic__chk" title="Cast a contact (blob) shadow at this prop's base">
+                <input
+                  type="checkbox"
+                  checked={!!layer.castShadow}
+                  onChange={(e) =>
+                    editorStore.getState().setLayerCastShadow(sceneId, i, e.target.checked)
+                  }
+                />
+                shadow
+              </label>
             </div>
             {layer.kind === 'animated' && (
               <div className="layer-row__anim">

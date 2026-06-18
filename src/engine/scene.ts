@@ -38,6 +38,7 @@ import {
 import { createRulesRunner } from '../systems/rules'
 import { itemAction } from './item-action'
 import { createBubbleSystem } from './bubble'
+import { createShadowSystem } from './shadow'
 import { facingToAngle, WALK_SPEED } from '../systems/movement'
 import { effectsFor, effectsForUse, pickInteractable } from '../systems/interactions'
 import { containsPoint } from '../systems/walkable'
@@ -368,6 +369,13 @@ export async function mountScene(
   const foreground = new Container()
   foreground.zIndex = 20
   world.addChild(background, interactive, foreground)
+  // Contact (blob) shadows (M13c): a ground-plane pass between the background and the characters,
+  // so every shadow is under every entity. On by default; `scene.shadows.disabled` turns it off.
+  const shadowLayer = new Container()
+  shadowLayer.zIndex = 5 // above background (0), below interactive (10)
+  shadowLayer.eventMode = 'none'
+  world.addChild(shadowLayer)
+  const shadows = scene.shadows?.disabled ? null : createShadowSystem(shadowLayer, scene.shadows)
   // World-space speech bubbles (M12.5 #6 / #18) — the engine runs the typewriter + tracks each
   // character's feet; the DOM overlay (ui/SpeechBubbles) renders them (Pixi Text clipped lines).
   const bubbles = createBubbleSystem()
@@ -476,6 +484,13 @@ export async function mountScene(
       }
     }
     bandFor(layer.band).addChild(display)
+    // Opt-in prop shadow (M13c) — a blob at the layer's base (bottom-centre of its bounds).
+    if (layer.castShadow) {
+      const d = display
+      shadows?.add({
+        sample: () => ({ x: d.x, y: d.y + d.height / 2, width: d.width, visible: d.visible }),
+      })
+    }
   }
 
   // M10 10c fog: an animated noise fog/cloud layer. Built after the layers so the back layer
@@ -626,6 +641,13 @@ export async function mountScene(
   character.setPosition(playerSpawn.xFrac * design.width, playerSpawn.yFrac * design.height)
   appearances.push({ id: 'player', char: character, base: playerView, variants: options.playerViews })
   appearanceIdx.set('player', -1)
+  shadows?.add({
+    sample: () => ({
+      x: character.displayObject.x,
+      y: character.displayObject.y,
+      width: character.displayObject.width,
+    }),
+  })
 
   // NPCs: characters placed in the scene. They share the nav-mesh + depth, Y-sort
   // with the player, and `when` gates presence. The actor registry addresses every
@@ -677,6 +699,14 @@ export async function mountScene(
       variants: def?.views,
     })
     appearanceIdx.set(npcId, -1)
+    shadows?.add({
+      sample: () => ({
+        x: npcChar.displayObject.x,
+        y: npcChar.displayObject.y,
+        width: npcChar.displayObject.width,
+        visible: npcChar.displayObject.visible,
+      }),
+    })
     // Active route, most-specific first: when the NPC has a **routine** and its active node
     // is in this scene, the node's **referenced** placement path (by `pathId`; absent →
     // stand still); otherwise a conditional `paths` **override** whose `when` passes, else
@@ -1300,6 +1330,7 @@ export async function mountScene(
     character.update(ticker.deltaMS)
     for (const n of npcs) n.character.update(ticker.deltaMS)
     updateCamera(ticker.deltaMS)
+    shadows?.update()
     bubbles.update(ticker.deltaMS)
     updateMonologues(ticker.deltaMS)
     atmosphere.update(ticker.deltaMS)
@@ -1373,6 +1404,7 @@ export async function mountScene(
       if (sequenceStore.getState().active) sequenceStore.getState().end()
       itemAction.run = () => {}
       bubbles.destroy()
+      shadows?.destroy()
       unsubscribeVisibility()
       app.ticker.remove(onTick)
       app.stage.off('pointertap', onTap)

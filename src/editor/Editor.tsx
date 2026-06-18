@@ -39,6 +39,7 @@ import { LightingDefaults } from './LightingDefaults'
 import { LightOverlay } from './LightOverlay'
 import { SceneSpawns } from './SceneSpawns'
 import { SpawnOverlay } from './SpawnOverlay'
+import { SceneShadows } from './SceneShadows'
 import { EmitterOverlay } from './EmitterOverlay'
 import { ConditionEditor } from './ConditionEditor'
 import { FloatingEditor, type FloatPanel } from './FloatingEditor'
@@ -641,6 +642,10 @@ export function Editor() {
                 sceneIds={sceneIds}
               />
             )}
+          </Section>
+
+          <Section title="Shadows">
+            {scene && <SceneShadows sceneId={selectedId} shadows={scene.shadows} />}
           </Section>
 
           {draw && (

@@ -23,6 +23,30 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — M13c Prereq 2: contact (blob) shadows
+**What:** Built the missed M10 piece — soft **contact shadows**. New `engine/shadow.ts`
+`createShadowSystem(layer, cfg)`: a shared soft radial **shadow texture**, and per-caster `Sprite`s
+it positions/squashes each frame. A **caster** `sample()`s its feet/base `{x, y, width, visible?}`.
+In `scene.ts` a `shadowLayer` (zIndex 5 — above the background, below the characters) holds them;
+the **player + every NPC** register automatically (sampling `displayObject.x/y/width` — already
+depth-scaled), and a hidden NPC drops its shadow (`visible`). **Props** opt in via new
+`LayerData.castShadow` (a blob at the layer's base). Schema: `ShadowConfig {opacity, squash, scale,
+disabled}` on `SceneData.shadows` (on by default with sensible defaults). Editor: a Scene-tab
+**Shadows** section (`SceneShadows` — toggle + opacity/squash/size sliders) + a **shadow** checkbox
+per layer row (`setLayerCastShadow` / `setSceneShadows`).
+**Why:** M13c Prereq 2 / variant A — objects + characters should look grounded; we forgot shadows
+in M10 chiaroscuro.
+**How:** it's plain ambient-occlusion grounding — **no light direction** (that's the V2 directional
+shadow). It renders in the **world** (camera-tracked, depth-scaled), independent of the lighting
+overlay, which still sits above and darkens the shadow in dark areas. The shadow width is the
+entity's on-screen `displayObject.width × scale` (config `scale` default 0.7, `squash` 0.32,
+`opacity` 0.32). Config edits + `castShadow` re-mount (structural), like spawn points.
+**Verified:** typecheck + lint + build green; `shadow.ts` + `SceneShadows.tsx` Prettier-clean; dev
+smoke `/` + `/?edit` 200. (Visual: the existing demo's player + NPCs now sit on soft shadows that
+scale with depth and vanish when an NPC isn't in the scene — eyeball in `pnpm dev`.) Editor_guide
+updated (Layers row + a Shadows section).
+**Follow-ups:** both demo prereqs done (`timeOfDay` ✅, blob shadows ✅) → **P0 — Scaffold** next.
+
 ### 2026-06-18 — Plan: shadows — contact (blob) shadows now (M13c Prereq 2), light-driven shadows → V2
 **What:** Docs only. Noted that **shadows were missed in M10** (chiaroscuro) and planned them. **Now (M13c Prereq 2):** **variant A — contact / "blob" shadows** — a soft depth-scaled ellipse at each entity's feet, rendered in a world-space pass below the entities (independent of the lighting overlay): characters auto, props opt-in (a layer flag), a small per-scene `shadow` config (opacity + squash). **V2:** **variant B — directional, light-driven shadows** — the user's good question ("shadows aren't only from the sun but from scene lights too — is that even solvable?") → yes, meaningfully, by casting **one** skewed silhouette away from the **dominant light**: blend the ambient/sun direction + nearby placed lights weighted by **intensity × falloff/distance** into a single resultant, length/opacity from the strength. The shadow swings as the player passes a candle/torch; sun + scene lights unify into one believable shadow — avoiding the noise + cost of one-shadow-per-light (≈ full 2D shadow-mapping). Could tie length to time-of-day. Recorded A in the demo-roadmap (Prereq 2 + Decided), B in roadmap V2.
 **Why:** the user wants objects + characters to cast shadows; A is the right fidelity for the flat / pixel-art style and cheap, B is the "wow" upgrade once 1.0 ships.
