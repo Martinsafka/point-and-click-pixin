@@ -263,6 +263,18 @@
           "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCA0MDAwIDEwODAiPjxyZWN0IHg9Ijk4MCIgeT0iMzAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ2MCIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMC42Ii8+PHRleHQgeD0iMTEzMCIgeT0iNzcwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjQ0IiBmaWxsPSIjZjRkNThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBvcGFjaXR5PSIwLjkiPlVMSUNLQTwvdGV4dD48cmVjdCB4PSIyMDQwIiB5PSI1NjAiIHdpZHRoPSIzMjAiIGhlaWdodD0iMTcwIiBmaWxsPSIjNWM0NjMyIiBvcGFjaXR5PSIxLjAiLz48dGV4dCB4PSIyMjAwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDQiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+VFJIPC90ZXh0PjxlbGxpcHNlIGN4PSIzMTUwIiBjeT0iNzEwIiByeD0iMTUwIiByeT0iNDYiIGZpbGw9IiM1YzU5NGYiLz48dGV4dCB4PSIzMTUwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDQiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+S0FTTkE8L3RleHQ+PHRleHQgeD0iMTUwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDAiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJzdGFydCIgb3BhY2l0eT0iMC45Ij5EVkVSRTwvdGV4dD48dGV4dCB4PSIzOTgwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDQiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJlbmQiIG9wYWNpdHk9IjAuOSI+VkVaPC90ZXh0Pjx0ZXh0IHg9IjEwMDAiIHk9IjEwMDAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMjgiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+TVJJWjwvdGV4dD48dGV4dCB4PSIxMzAwIiB5PSIxMDAwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjRkNThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBvcGFjaXR5PSIwLjkiPktPQ0tBPC90ZXh0Pjwvc3ZnPg==",
           "parallax": 1.0,
           "fit": "stretch"
+        },
+        {
+          "kind": "image",
+          "band": "foreground",
+          "parallax": 1.0,
+          "fit": "stretch",
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCA0MDAwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI0MDAwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiNlMGEyM2MiIG9wYWNpdHk9IjAuMjIiLz48L3N2Zz4=",
+          "when": {
+            "kind": "timeOfDay",
+            "from": 960,
+            "to": 1380
+          }
         }
       ],
       "npcs": [
@@ -278,6 +290,11 @@
           "spawn": {
             "xFrac": 0.6,
             "yFrac": 0.9
+          },
+          "when": {
+            "kind": "timeOfDay",
+            "from": 300,
+            "to": 780
           },
           "path": {
             "points": [
@@ -502,6 +519,18 @@
           "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjY2MCIgeT0iMjgwIiB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iIzczNmY2NiIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iNjYwIiB5PSIyODAiIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAiIGZpbGw9IiM1YzU5NGYiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjY2MCIgeT0iMjUwIiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIGZpbGw9IiM3MzZmNjYiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9Ijc1MCIgeT0iMjUwIiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIGZpbGw9IiM3MzZmNjYiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9Ijg0MCIgeT0iMjUwIiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIGZpbGw9IiM3MzZmNjYiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjkzMCIgeT0iMjUwIiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIGZpbGw9IiM3MzZmNjYiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjEwMjAiIHk9IjI1MCIgd2lkdGg9IjUwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjNzM2ZjY2IiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSIxMTEwIiB5PSIyNTAiIHdpZHRoPSI1MCIgaGVpZ2h0PSI0MCIgZmlsbD0iIzczNmY2NiIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iMTIwMCIgeT0iMjUwIiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIGZpbGw9IiM3MzZmNjYiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9Ijg0MCIgeT0iNTYwIiB3aWR0aD0iMjQwIiBoZWlnaHQ9IjMyMCIgZmlsbD0iIzI0MWYxYiIgb3BhY2l0eT0iMS4wIi8+PHRleHQgeD0iOTYwIiB5PSI1NDAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMzgiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+RFZFUkU8L3RleHQ+PHRleHQgeD0iNTIwIiB5PSI4MDAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMzYiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+U1RSQVo8L3RleHQ+PC9zdmc+",
           "parallax": 1.0,
           "fit": "stretch"
+        },
+        {
+          "kind": "image",
+          "band": "foreground",
+          "parallax": 1.0,
+          "fit": "stretch",
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiNlMGEyM2MiIG9wYWNpdHk9IjAuMjIiLz48L3N2Zz4=",
+          "when": {
+            "kind": "timeOfDay",
+            "from": 960,
+            "to": 1380
+          }
         }
       ],
       "npcs": [
@@ -544,7 +573,39 @@
             0.4,
             0.9
           ],
-          "examine": "Dveře do věže."
+          "examine": "Dveře do věže.",
+          "when": {
+            "kind": "flag",
+            "flag": "guard-asleep"
+          }
+        },
+        {
+          "kind": "interact",
+          "id": "tower-locked",
+          "hitArea": [
+            0.4,
+            0.42,
+            0.6,
+            0.42,
+            0.6,
+            0.9,
+            0.4,
+            0.9
+          ],
+          "effects": [
+            {
+              "kind": "say",
+              "text": "Zamčeno. Nejdřív musím tu stráž nějak dostat od dveří."
+            }
+          ],
+          "examine": "Těžké okované dveře věže.",
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "guard-asleep"
+            }
+          }
         }
       ]
     },
@@ -662,6 +723,10 @@
     }
   },
   "initialFlags": {},
+  "clock": {
+    "dayLengthSec": 180,
+    "startMinutes": 600
+  },
   "rules": [
     {
       "id": "beer-unlocked",
@@ -676,6 +741,48 @@
         }
       ],
       "once": true
+    },
+    {
+      "id": "guard-sober-up",
+      "when": {
+        "kind": "all",
+        "of": [
+          {
+            "kind": "not",
+            "of": {
+              "kind": "timeOfDay",
+              "from": 960,
+              "to": 1380
+            }
+          },
+          {
+            "kind": "flag",
+            "flag": "guard-asleep"
+          }
+        ]
+      },
+      "then": [
+        {
+          "kind": "setFlag",
+          "flag": "guard-asleep",
+          "value": false
+        },
+        {
+          "kind": "setFlag",
+          "flag": "beer1",
+          "value": false
+        },
+        {
+          "kind": "setFlag",
+          "flag": "beer2",
+          "value": false
+        },
+        {
+          "kind": "setFlag",
+          "flag": "beer3",
+          "value": false
+        }
+      ]
     }
   ],
   "npcs": {
@@ -706,7 +813,12 @@
         {
           "text": "Cibule! Kupte si cibuli!",
           "after": 1500,
-          "every": 6000
+          "every": 6000,
+          "when": {
+            "kind": "timeOfDay",
+            "from": 300,
+            "to": 780
+          }
         }
       ]
     },
@@ -956,14 +1068,46 @@
           "next": "taunt"
         },
         "taunt": {
+          "branch": [
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "hasItem",
+                    "item": "beer"
+                  },
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "timeOfDay",
+                      "from": 960,
+                      "to": 1380
+                    }
+                  }
+                ]
+              },
+              "to": "notyet"
+            }
+          ],
           "speaker": "guard",
           "text": "Stůj! Trhani do královské věže nesmějí. Mazej, než tě praštím halapartnou.",
           "choices": [
             {
               "text": "Nedal by sis pivko?",
               "when": {
-                "kind": "hasItem",
-                "item": "beer"
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "hasItem",
+                    "item": "beer"
+                  },
+                  {
+                    "kind": "timeOfDay",
+                    "from": 960,
+                    "to": 1380
+                  }
+                ]
               },
               "next": "drink"
             },
@@ -975,6 +1119,10 @@
               "text": "Tak jo, už du."
             }
           ]
+        },
+        "notyet": {
+          "speaker": "guard",
+          "text": "Teď ne, trhane - služba. Ale večer u večeře bych pivo neodmít. To si piš."
         },
         "no": {
           "speaker": "guard",

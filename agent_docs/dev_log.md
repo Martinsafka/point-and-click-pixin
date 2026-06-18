@@ -23,6 +23,27 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Demo P5: clock, time-of-day gates & the tower gate
+**What:** Added the game **clock** (`dayLengthSec` 180, start 10:00) and gated the late game on
+time-of-day. The onion-seller's street placement + his "Cibule!" monologue are `when timeOfDay
+MORNING (05–13)`; the guard's "offer a beer" choice is `when all(hasItem beer, timeOfDay DINNER
+(16–23))`, with a `notyet` branch hinting to come back at dinner. A **sober-up rule** resets
+`guard-asleep` + `beer1/2/3` once dinner ends (the kiss-puzzle loop). The tower→tower-room door is
+`when guard-asleep` (else a "locked" interactable). A golden **dusk overlay** layer washes the
+outdoor scenes `when timeOfDay DINNER` — the visible morning↔dinner mood change.
+**Why:** P5 — the clock showcase + the time-gated guard/onion loop + the tower gate.
+**How:**
+- All gates use the engine `timeOfDay {from,to}` condition (the M13c prereq). Windows are module
+  constants (`MORNING` / `DINNER`) — tune in P10.
+- The dusk mood is a translucent gold foreground layer gated by `when` (cheap + visible); proper
+  per-time lighting / fog comes in P7.
+- **Verified**: builds clean, loads with 0 console errors, the favour-chain regression still passes.
+  Time-specific visuals span game-time, so they're confirmed in the P6 / P10 playthrough.
+**Follow-ups:**
+- P6: the sleeping princess + kiss cutscene (fails) + failed-attempt beats + onion eat + onion-kiss
+  wake cutscene + ending dialogue + `endGame` → credits.
+- P10: tune the clock windows + `dayLengthSec` for a brisk loop.
+
 ### 2026-06-18 — Demo P4: the favour chain wired
 **What:** Wired the interdependent favour chain end-to-end. The alley **grate** `uses` hook →
 `charm` (+ `fished-charm`, with a "grate-empty" variant after); a new alley **cat** interactable
