@@ -177,7 +177,8 @@ anywhere (dialogue, NPC presence, exits, rules).
 ## Asset checklist (for the user to create)
 
 Formats + the exact grids are in **`agent_docs/editor_guide.md` → Preparing assets**. Greybox
-first; these land in P8 (characters can come earlier if ready).
+first; these land in P8 (characters can come earlier if ready). **Generating the art (pixel art via
+PixelLab): copy-paste prompts in [`demo-assets.md`](demo-assets.md).**
 
 - **Backgrounds (3):** tavern interior, the wide street (sky / buildings / road, layered for
   parallax + the 4 zones), tower exterior + interior.
