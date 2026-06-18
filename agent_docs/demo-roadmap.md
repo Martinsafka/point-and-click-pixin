@@ -10,6 +10,29 @@ assets**; **mechanics are built together** in the editor / `content/game.json`.
 
 ---
 
+## Test skills and PixelLab
+
+This build doubles as a **live test** of (a) the Pixin authoring skills (`pixin-gamedoc` /
+`pixin-editor` / `pixin-recipes`) and (b) **PixelLab via its MCP** for the pixel art — the agent
+(Claude Code) assembles the **whole game itself**: mechanics authored straight into
+`content/game.json` (verified by `pnpm typecheck` + the game loading), assets **generated through
+the PixelLab MCP**.
+
+- **Goal:** a **complete, working** demo, fast — everything we agreed must function. The pixel art
+  does **not** need to be polished (the user reviews / tweaks it afterwards; art is a swappable
+  layer, so it never blocks the mechanics).
+- **Agent prereq — install the PixelLab MCP.** The user's subscription is active; the MCP just
+  needs adding. MCP tools load at **session start**, so add it, then **start a fresh Claude Code
+  session** — new tools don't appear mid-conversation. Nothing is lost across a restart (everything
+  is on disk + the dev log); resume from this file (**both engine prereqs are ✅, next is P0**).
+- **In the new session:** verify with **`/mcp`**, then tell the agent to continue the demo — it
+  re-checks that the PixelLab tools are visible, reads `demo-roadmap.md` + `demo-assets.md`, and
+  starts **P0 → …** generating assets via PixelLab.
+- **Fallback:** if PixelLab is unavailable / insufficient, the agent greyboxes with simple
+  hand-authored SVG / geometric placeholders so the demo still works end-to-end (swap art in later).
+
+---
+
 ## Concept (locked)
 
 **Pitch.** A fairy-tale comedy. You play a **nameless, penniless tramp** who's drunk away

@@ -23,6 +23,11 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Demo: agent to build it via skills + PixelLab MCP (decision recorded in demo-roadmap)
+**What:** Docs only. Decided the agent (Claude Code) will assemble the **whole demo itself** as a live test of the Pixin **skills** + **PixelLab via its MCP** for assets — recorded as a new **"Test skills and PixelLab"** section at the top of `demo-roadmap.md`. The user accepts the pixel art won't be polished (their review/tweak afterwards; art is a swappable layer). **Key operational note:** the PixelLab **MCP must be installed and the Claude Code session restarted** — MCP tools register at session start, so they won't appear mid-conversation; nothing is lost on restart (on disk + this dev log), resume from `demo-roadmap.md` (both engine prereqs ✅, next P0). Fallback = hand-authored SVG/geometric greybox if PixelLab is unavailable.
+**Why:** the user wants the demo done fast and to see the skills + PixelLab work in practice; the user's subscription is active and just needs the MCP added.
+**Follow-ups:** user installs the PixelLab MCP + restarts; new session: `/mcp` to verify, then "continue the demo" → P0 (scaffold) onward, generating assets through PixelLab.
+
 ### 2026-06-18 — M13c Prereq 2: contact (blob) shadows
 **What:** Built the missed M10 piece — soft **contact shadows**. New `engine/shadow.ts`
 `createShadowSystem(layer, cfg)`: a shared soft radial **shadow texture**, and per-caster `Sprite`s
