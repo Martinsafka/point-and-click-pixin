@@ -67,6 +67,36 @@
       ],
       "interactables": [
         {
+          "kind": "trigger",
+          "id": "intro-trigger",
+          "hitArea": [
+            0.05,
+            0.7,
+            0.95,
+            0.7,
+            0.95,
+            0.965,
+            0.05,
+            0.965
+          ],
+          "effects": [
+            {
+              "kind": "startSequence",
+              "sequence": "intro"
+            }
+          ],
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "saw-intro"
+            }
+          },
+          "once": true,
+          "by": "player",
+          "on": "enter"
+        },
+        {
           "kind": "pickable",
           "id": "take-fork",
           "item": "hook",
@@ -672,6 +702,34 @@
       ],
       "interactables": [
         {
+          "kind": "interact",
+          "id": "princess",
+          "hitArea": [
+            0.33,
+            0.5,
+            0.66,
+            0.5,
+            0.66,
+            0.86,
+            0.33,
+            0.86
+          ],
+          "effects": [
+            {
+              "kind": "startDialog",
+              "dialog": "princess"
+            }
+          ],
+          "examine": "Spící princezna. Klid jak v sarkofágu. Skoro škoda ji budit.",
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "princess-awake"
+            }
+          }
+        },
+        {
           "kind": "exit",
           "id": "to-tower",
           "to": "tower",
@@ -719,7 +777,32 @@
     "onion": {
       "id": "onion",
       "name": "Cibule",
-      "examine": "Žlutá cibule. Štiplavá až k slzám."
+      "examine": "Žlutá cibule. Štiplavá až k slzám. ...Co kdybych si do ní pořádně kousl?",
+      "use": [
+        {
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "ate-onion"
+            }
+          },
+          "effects": [
+            {
+              "kind": "setFlag",
+              "flag": "ate-onion"
+            },
+            {
+              "kind": "takeItem",
+              "item": "onion"
+            },
+            {
+              "kind": "say",
+              "text": "Kousl jsem si do syrové cibule. AÚÚ! Oči tečou, huba pálí - ale teď mám dech jak rozzuřený drak. Dokonalý."
+            }
+          ]
+        }
+      ]
     }
   },
   "initialFlags": {},
@@ -1198,6 +1281,280 @@
           "text": "*chrrr... chrrr... pšššš... chrrr*"
         }
       }
+    },
+    "intro-line": {
+      "start": "a",
+      "nodes": {
+        "a": {
+          "speaker": "Vypravěč",
+          "text": "Byl jednou jeden trhan. Bez koruny, bez domova - a hlavně bez piva.",
+          "next": "b"
+        },
+        "b": {
+          "speaker": "Claude",
+          "text": "*škytne* Jmenuju se Claude. A propil jsem úplně všecko. I boty.",
+          "next": "c"
+        },
+        "c": {
+          "speaker": "Claude",
+          "text": "Ale na téhle vyhlášce stojí: kdo probudí princeznu, dostane půl království. PŮL!",
+          "next": "d"
+        },
+        "d": {
+          "speaker": "Claude",
+          "text": "Jak těžkej může bejt jeden polibek? ...ptá se chlap, co ještě netuší, do čeho jde."
+        }
+      }
+    },
+    "princess": {
+      "start": "root",
+      "nodes": {
+        "root": {
+          "branch": [
+            {
+              "when": {
+                "kind": "flag",
+                "flag": "ate-onion"
+              },
+              "to": "ready"
+            }
+          ],
+          "next": "asleep"
+        },
+        "asleep": {
+          "speaker": "Claude",
+          "text": "Spí jako dřevo. Celých sto let. Tak čím ji probrat?",
+          "choices": [
+            {
+              "text": "Zkusit polibek pravé lásky",
+              "effects": [
+                {
+                  "kind": "setFlag",
+                  "flag": "tried-kiss"
+                },
+                {
+                  "kind": "startSequence",
+                  "sequence": "kiss-fail"
+                }
+              ]
+            },
+            {
+              "text": "Jemně s ní zatřást",
+              "next": "shake"
+            },
+            {
+              "text": "Plácnout ji přes tvář",
+              "next": "slap"
+            },
+            {
+              "text": "Zařvat jí do ucha",
+              "next": "yell"
+            },
+            {
+              "text": "Nechat ji spát"
+            }
+          ]
+        },
+        "shake": {
+          "speaker": "Princezna",
+          "text": "Mňhm... ještě pět minutek, chůvo...",
+          "next": "asleep"
+        },
+        "slap": {
+          "speaker": "Princezna",
+          "text": "...ošklivý drak... dortík ti nedám... chrr...",
+          "next": "asleep"
+        },
+        "yell": {
+          "speaker": "Princezna",
+          "text": "Chrrr... chtělo... by to... něco silnějšího... fujtajbl...",
+          "next": "asleep"
+        },
+        "ready": {
+          "speaker": "Claude",
+          "text": "Pusa mi čpí cibulí jak dračí sluj. Teď, nebo nikdy.",
+          "choices": [
+            {
+              "text": "CIBULOVÝ POLIBEK!",
+              "effects": [
+                {
+                  "kind": "startSequence",
+                  "sequence": "onion-kiss"
+                }
+              ]
+            },
+            {
+              "text": "Ještě chvíli počkat"
+            }
+          ]
+        }
+      }
+    },
+    "kiss-fail-line": {
+      "start": "a",
+      "nodes": {
+        "a": {
+          "speaker": "Claude",
+          "text": "Tak jo, princezno... polibek pravé lásky. *cmrk*",
+          "next": "b"
+        },
+        "b": {
+          "speaker": "Princezna",
+          "text": "Mňh... chrrr... ble, kdo mi to dýchá na obličej... chrrr...",
+          "next": "c"
+        },
+        "c": {
+          "speaker": "Claude",
+          "text": "Nic. Ani ťuk. Tohle nám teda pohádky pěkně zatajily.",
+          "next": "d"
+        },
+        "d": {
+          "speaker": "Claude",
+          "text": "Chtělo by to dech s pořádnou šťávou. Něco, co probudí i mrtvého."
+        }
+      }
+    },
+    "ending": {
+      "start": "a",
+      "nodes": {
+        "a": {
+          "speaker": "Claude",
+          "text": "*zhluboka se nadechne a vtiskne princezně mohutný cibulový polibek*",
+          "next": "b"
+        },
+        "b": {
+          "speaker": "Princezna",
+          "text": "*PRSK!* ...Co?! Kdo?! ...FUJ! CO TO JE ZA PŘÍŠERNÝ SMRAD?!",
+          "next": "c"
+        },
+        "c": {
+          "speaker": "Princezna",
+          "text": "*kýchá, slzí* Já se... probudila? Sto let kouzel, a vzbudí mě CIBULE?!",
+          "next": "d"
+        },
+        "d": {
+          "speaker": "Claude",
+          "text": "Dobrý den. Já su Claude. Du si pro slíbenou půlku království.",
+          "next": "e"
+        },
+        "e": {
+          "speaker": "Princezna",
+          "text": "Půl království? Ty? Trhan, co smrdí jak utěrka namočená v cibulačce?",
+          "next": "f"
+        },
+        "f": {
+          "speaker": "Princezna",
+          "text": "...Moment. Tys kvůli mně vyhnal krysy, vylovil amulet, opil stráž a kousl do syrové cibule?",
+          "next": "g"
+        },
+        "g": {
+          "speaker": "Claude",
+          "text": "No... když to řekneš takhle nahlas, zní to dost zoufale, uznávám.",
+          "next": "h"
+        },
+        "h": {
+          "speaker": "Princezna",
+          "text": "Je to absolutně nechutné. A zároveň nejromantičtější věc, co pro mě kdy kdo udělal.",
+          "next": "i"
+        },
+        "i": {
+          "speaker": "Princezna",
+          "text": "Půl království ti patří. Ale úplně nejdřív, snažně tě prosím - mátový bonbón. HNED.",
+          "next": "j"
+        },
+        "j": {
+          "speaker": "Claude",
+          "text": "Platí, princezno. A klidně dva.",
+          "effects": [
+            {
+              "kind": "endGame"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "sequences": {
+    "intro": {
+      "steps": [
+        {
+          "kind": "effects",
+          "effects": [
+            {
+              "kind": "setFlag",
+              "flag": "saw-intro"
+            }
+          ]
+        },
+        {
+          "kind": "camera",
+          "to": {
+            "xFrac": 0.5,
+            "yFrac": 0.5
+          },
+          "zoom": 1.25,
+          "ms": 500
+        },
+        {
+          "kind": "dialog",
+          "dialog": "intro-line"
+        }
+      ]
+    },
+    "kiss-fail": {
+      "steps": [
+        {
+          "kind": "camera",
+          "to": {
+            "xFrac": 0.5,
+            "yFrac": 0.55
+          },
+          "zoom": 1.6,
+          "ms": 600
+        },
+        {
+          "kind": "wait",
+          "ms": 400
+        },
+        {
+          "kind": "dialog",
+          "dialog": "kiss-fail-line"
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        }
+      ]
+    },
+    "onion-kiss": {
+      "steps": [
+        {
+          "kind": "camera",
+          "to": {
+            "xFrac": 0.5,
+            "yFrac": 0.55
+          },
+          "zoom": 1.7,
+          "ms": 600
+        },
+        {
+          "kind": "wait",
+          "ms": 400
+        },
+        {
+          "kind": "effects",
+          "effects": [
+            {
+              "kind": "setFlag",
+              "flag": "princess-awake"
+            }
+          ]
+        },
+        {
+          "kind": "dialog",
+          "dialog": "ending"
+        }
+      ]
     }
   },
   "ambient": {
@@ -1228,6 +1585,25 @@
       "headingSize": 64,
       "tagline": "Pohádková komedie o jednom cibulovém polibku.",
       "buttonColor": "#e8dcc0"
+    },
+    "end": {
+      "bg": {
+        "color": "#171a14"
+      },
+      "size": 30,
+      "color": "#f4d58d",
+      "align": "center",
+      "text": "Konec.\n\nA žili spolu šťastně až do smrti -\nteda hlavně co se týče zásob mátových bonbónů."
+    },
+    "credits": {
+      "bg": {
+        "color": "#141414"
+      },
+      "scrollSpeed": 46,
+      "size": 26,
+      "color": "#e6ebf2",
+      "align": "center",
+      "text": "Magický polibek\n\n— Director —\nsabe\n\n— a všechny ostatní role —\nArt: sabe\nKód: sabe\nDesign: sabe\nHudba: sabe\nScénář: sabe\nCibule: sabe\n\nV hlavní roli: Claude\n\nVytvořeno v editoru Pixin\n\nDíky, žes to dohrál!"
     }
   }
 }

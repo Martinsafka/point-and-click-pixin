@@ -23,6 +23,33 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Demo P6: princess, cutscenes & the ending
+**What:** Built the endgame + the two required cutscenes. An **intro cutscene** (a tavern `trigger`
+`when not saw-intro`, `once`) auto-plays at game start — a camera push-in + the narrator/Claude
+intro. The sleeping **princess** is a bed interactable → `startDialog princess`: the wake-puzzle
+offers a true-love's kiss (→ **kiss-fail** cutscene; she mumbles, nothing) + funny failed attempts
+(shake / slap / yell, one hinting "needs something stronger"). The **onion** is now an inventory
+`use` (eat → `ate-onion`, dragon breath); once eaten, the kiss option becomes the **onion-kiss**
+cutscene → `princess-awake` → the funny-warm Fiona-style **ending** dialogue → `endGame`. Added
+`GameDoc.sequences` (intro / kiss-fail / onion-kiss) + the `end` and `credits` screens (the "sabe
+directs everything" gag, Claude in the lead role).
+**Why:** P6 — the payoff: the wake puzzle, the comedy, and the A→Z finish.
+**How:**
+- Intro-once relies on trigger semantics: `t.active` is empty on mount, so a player spawned **inside**
+  an `enter` trigger fires it on frame 1; the `when not saw-intro` gate (the sequence sets the flag)
+  makes it once-per-game.
+- Kiss vs onion-kiss = two `when`-gated choices on the same princess node (on `ate-onion`).
+- Cutscenes use `camera {to,zoom}` + `dialog` + `effects` steps (no `anim` yet — real kiss / eat /
+  wake one-shots arrive with the P8 sprites).
+- **Verified** (Playwright): the intro auto-plays on start (narrator "Vypravěč" line + camera
+  push-in + Skip), 0 console errors; the favour-chain regression still passes. The full A→Z
+  wake/ending (needs the guard NPC + onion + dinner) is the **P10 manual playthrough**.
+**Follow-ups:**
+- P7: ambient townsfolk + per-scene lighting / fog / weather + the full sound pass + engine
+  particles (smoke / fountain mist / fire) for dynamism.
+- P8: real PixelLab art (incl. the princess sleeping / waking sprites + kiss / eat / wake one-shots).
+- P10: the full A→Z playthrough (the ending + the clock loop).
+
 ### 2026-06-18 — Demo P5: clock, time-of-day gates & the tower gate
 **What:** Added the game **clock** (`dayLengthSec` 180, start 10:00) and gated the late game on
 time-of-day. The onion-seller's street placement + his "Cibule!" monologue are `when timeOfDay
