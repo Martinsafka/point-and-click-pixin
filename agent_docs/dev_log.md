@@ -23,6 +23,29 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Demo P11: character animations (idle + walk)
+**What:** Brought the cast to life (user-requested follow-up). Generated PixelLab **template
+animations** — **breathing-idle** for every character (south + east) + a **walk** cycle for the two
+movers (Claude + the onion-seller). `fetch_art.py` now downloads each character's export **zip** and
+assembles a single-row **animated atlas** (idle.S / idle.E [+ walk.S / walk.E]; W mirrors E),
+emitting `char/views.json` with multi-frame clips (idle 4f @5fps, walk 6f @10fps); `build_demo.py`
+reads views.json to set the player + NPC `view`s. Every character now breathes; Claude + the
+onion-seller walk.
+**Why:** P11 — the deferred animation pass; the world should move.
+**How:**
+- The public `…/characters/<id>/download` zip exposes a clean `rotations/` +
+  `animations/<name>/<dir>/frame_NNN.png` layout + `metadata.json` — simpler than per-animation
+  frame URLs. A robust direction fallback (missing dir → south anim → static rotation) handled the
+  quadruped cat's south-only idle.
+- The engine's `AnimatedSprite` view already plays multi-frame `state.facing` clips (walk falls back
+  to `idle.<dir>`), so this is **pure data — no engine change**.
+- **Verified** (Playwright): characters render clean single frames (atlas slicing correct); the full
+  chain + intro cutscene + NPC dialogue still pass, 0 console errors. Looping playback is core
+  engine behaviour (the multi-frame clips are present) — the motion is visible in play.
+**Follow-ups (optional):**
+- One-shot cutscene anims (kiss / eat / wake); guard drink / sleep states (`create_character_state`);
+  PixelLab `animate_object` scene anims (fountain water, a fire sprite, birds).
+
 ### 2026-06-18 — Demo P10: full art verified + polish + README (M13c done)
 **What:** Eyeballed the last two scenes (tower + tower-room) via a start-override preview — both
 render beautifully (the tower door aligns with the guard + the to-room exit; the bedroom shows the

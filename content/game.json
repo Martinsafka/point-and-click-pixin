@@ -1043,22 +1043,28 @@
         "atlas": "/assets/char/keeper.png",
         "frameWidth": 92,
         "frameHeight": 92,
-        "columns": 2,
+        "columns": 8,
         "anchorX": 0.5,
         "anchorY": 0.88,
         "clips": {
           "idle.S": {
             "frames": [
-              0
+              0,
+              1,
+              2,
+              3
             ],
-            "fps": 1,
+            "fps": 5,
             "loop": true
           },
           "idle.E": {
             "frames": [
-              1
+              4,
+              5,
+              6,
+              7
             ],
-            "fps": 1,
+            "fps": 5,
             "loop": true
           }
         }
@@ -1075,22 +1081,28 @@
         "atlas": "/assets/char/vendor.png",
         "frameWidth": 92,
         "frameHeight": 92,
-        "columns": 2,
+        "columns": 8,
         "anchorX": 0.5,
         "anchorY": 0.88,
         "clips": {
           "idle.S": {
             "frames": [
-              0
+              0,
+              1,
+              2,
+              3
             ],
-            "fps": 1,
+            "fps": 5,
             "loop": true
           },
           "idle.E": {
             "frames": [
-              1
+              4,
+              5,
+              6,
+              7
             ],
-            "fps": 1,
+            "fps": 5,
             "loop": true
           }
         }
@@ -1119,22 +1131,52 @@
         "atlas": "/assets/char/onion.png",
         "frameWidth": 92,
         "frameHeight": 92,
-        "columns": 2,
+        "columns": 20,
         "anchorX": 0.5,
         "anchorY": 0.88,
         "clips": {
           "idle.S": {
             "frames": [
-              0
+              0,
+              1,
+              2,
+              3
             ],
-            "fps": 1,
+            "fps": 5,
             "loop": true
           },
           "idle.E": {
             "frames": [
-              1
+              4,
+              5,
+              6,
+              7
             ],
-            "fps": 1,
+            "fps": 5,
+            "loop": true
+          },
+          "walk.S": {
+            "frames": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13
+            ],
+            "fps": 10,
+            "loop": true
+          },
+          "walk.E": {
+            "frames": [
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "fps": 10,
             "loop": true
           }
         }
@@ -1151,22 +1193,28 @@
         "atlas": "/assets/char/guard.png",
         "frameWidth": 92,
         "frameHeight": 92,
-        "columns": 2,
+        "columns": 8,
         "anchorX": 0.5,
         "anchorY": 0.87,
         "clips": {
           "idle.S": {
             "frames": [
-              0
+              0,
+              1,
+              2,
+              3
             ],
-            "fps": 1,
+            "fps": 5,
             "loop": true
           },
           "idle.E": {
             "frames": [
-              1
+              4,
+              5,
+              6,
+              7
             ],
-            "fps": 1,
+            "fps": 5,
             "loop": true
           }
         }
@@ -1197,22 +1245,28 @@
         "atlas": "/assets/char/drunk.png",
         "frameWidth": 92,
         "frameHeight": 92,
-        "columns": 2,
+        "columns": 8,
         "anchorX": 0.5,
         "anchorY": 0.87,
         "clips": {
           "idle.S": {
             "frames": [
-              0
+              0,
+              1,
+              2,
+              3
             ],
-            "fps": 1,
+            "fps": 5,
             "loop": true
           },
           "idle.E": {
             "frames": [
-              1
+              4,
+              5,
+              6,
+              7
             ],
-            "fps": 1,
+            "fps": 5,
             "loop": true
           }
         }
@@ -1921,22 +1975,52 @@
     "atlas": "/assets/char/claude.png",
     "frameWidth": 92,
     "frameHeight": 92,
-    "columns": 2,
+    "columns": 20,
     "anchorX": 0.5,
     "anchorY": 0.88,
     "clips": {
       "idle.S": {
         "frames": [
-          0
+          0,
+          1,
+          2,
+          3
         ],
-        "fps": 1,
+        "fps": 5,
         "loop": true
       },
       "idle.E": {
         "frames": [
-          1
+          4,
+          5,
+          6,
+          7
         ],
-        "fps": 1,
+        "fps": 5,
+        "loop": true
+      },
+      "walk.S": {
+        "frames": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "fps": 10,
+        "loop": true
+      },
+      "walk.E": {
+        "frames": [
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "fps": 10,
         "loop": true
       }
     }
