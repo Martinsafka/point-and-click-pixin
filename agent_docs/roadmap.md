@@ -658,16 +658,19 @@ open-source template with a playable demo. Broken into a–e (chosen with the us
 - [x] Open-source hygiene: **LICENSE (MIT)** + CONTRIBUTING + CODE_OF_CONDUCT + `package.json`
       license/description. **→ M13a complete.**
 
-**M13b — Claude Code skills (AI authoring assist)** ⭐
+**M13b — Claude Code skills (AI authoring assist)** ⭐ ✅
 
-Repo-committed skills so anyone cloning gets AI help driving the editor / editing `game.json`:
+Repo-committed skills in `.claude/skills/` so anyone cloning gets AI help driving the editor /
+editing `game.json`:
 
-- [ ] **`pixin-gamedoc`** — the `GameDoc` schema reference (entities + the condition / effect / flag
-      vocabulary and how they connect) → an AI can edit `game.json` directly.
-- [ ] **`pixin-editor`** — an editor map: "to build mechanic X, go to panel Y, do Z" (precise UI
-      guidance from a described mechanic).
-- [ ] **`pixin-recipes`** — ready mechanic recipes (locked door, fetch quest, stealth beat, branching
-      dialogue, cutscene, weather, monologue …): each = editor steps **+** a `game.json` snippet.
+- [x] **`pixin-gamedoc`** — the `GameDoc` schema mental model (top-level shape, the condition /
+      effect / flag vocabulary, coordinate conventions, the main sub-shapes) → an AI edits
+      `game.json` directly; points to `src/data/schema.ts` as the source of truth.
+- [x] **`pixin-editor`** — an editor map (launcher/tabs table + "I want to… → panel + steps") from a
+      described mechanic; points to `editor_guide.md`.
+- [x] **`pixin-recipes`** — 10 ready recipes (locked door, fetch quest, stealth beat, branching
+      dialogue, cutscene, conditional weather, monologue, global rule, flag-gated asset swap,
+      game-over): each = editor steps **+** a `game.json` snippet. **→ M13b complete.**
 
 **M13c — Complete demo game (A→Z, real assets)**
 
