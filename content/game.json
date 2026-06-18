@@ -133,7 +133,58 @@
               "text": "Z poklopu se ozývá cupitání. Krysy. Tam dolů bez kočky nelezu."
             }
           ],
-          "examine": "Poklop do sklepa."
+          "examine": "Poklop do sklepa.",
+          "uses": [
+            {
+              "item": "cat",
+              "effects": [
+                {
+                  "kind": "takeItem",
+                  "item": "cat"
+                },
+                {
+                  "kind": "setFlag",
+                  "flag": "rats-cleared"
+                },
+                {
+                  "kind": "say",
+                  "text": "Spustil jsem kočku dolů. Chvíli lov, vřískot - a pak ticho. Krysy jsou v tahu!"
+                }
+              ]
+            }
+          ],
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "rats-cleared"
+            }
+          }
+        },
+        {
+          "kind": "interact",
+          "id": "cellar-clear",
+          "hitArea": [
+            0.39,
+            0.78,
+            0.55,
+            0.78,
+            0.55,
+            0.89,
+            0.39,
+            0.89
+          ],
+          "effects": [
+            {
+              "kind": "say",
+              "text": "Zdola se ozývá jen spokojené předení. Hodná kočka."
+            }
+          ],
+          "examine": "Poklop do sklepa - teď bez krys.",
+          "when": {
+            "kind": "flag",
+            "flag": "rats-cleared"
+          }
         },
         {
           "kind": "exit",
@@ -209,7 +260,7 @@
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCA0MDAwIDEwODAiPjxyZWN0IHg9Ijk4MCIgeT0iMzAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ2MCIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMC42Ii8+PHRleHQgeD0iMTEzMCIgeT0iNzcwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjQ0IiBmaWxsPSIjZjRkNThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBvcGFjaXR5PSIwLjkiPlVMSUNLQTwvdGV4dD48cmVjdCB4PSIyMDQwIiB5PSI1NjAiIHdpZHRoPSIzMjAiIGhlaWdodD0iMTcwIiBmaWxsPSIjNWM0NjMyIiBvcGFjaXR5PSIxLjAiLz48dGV4dCB4PSIyMjAwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDQiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+VFJIPC90ZXh0PjxlbGxpcHNlIGN4PSIzMTUwIiBjeT0iNzEwIiByeD0iMTUwIiByeT0iNDYiIGZpbGw9IiM1YzU5NGYiLz48dGV4dCB4PSIzMTUwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDQiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+S0FTTkE8L3RleHQ+PHRleHQgeD0iMTUwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDAiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJzdGFydCIgb3BhY2l0eT0iMC45Ij5EVkVSRTwvdGV4dD48dGV4dCB4PSIzOTgwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDQiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJlbmQiIG9wYWNpdHk9IjAuOSI+VkVaPC90ZXh0Pjwvc3ZnPg==",
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCA0MDAwIDEwODAiPjxyZWN0IHg9Ijk4MCIgeT0iMzAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ2MCIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMC42Ii8+PHRleHQgeD0iMTEzMCIgeT0iNzcwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjQ0IiBmaWxsPSIjZjRkNThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBvcGFjaXR5PSIwLjkiPlVMSUNLQTwvdGV4dD48cmVjdCB4PSIyMDQwIiB5PSI1NjAiIHdpZHRoPSIzMjAiIGhlaWdodD0iMTcwIiBmaWxsPSIjNWM0NjMyIiBvcGFjaXR5PSIxLjAiLz48dGV4dCB4PSIyMjAwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDQiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+VFJIPC90ZXh0PjxlbGxpcHNlIGN4PSIzMTUwIiBjeT0iNzEwIiByeD0iMTUwIiByeT0iNDYiIGZpbGw9IiM1YzU5NGYiLz48dGV4dCB4PSIzMTUwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDQiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+S0FTTkE8L3RleHQ+PHRleHQgeD0iMTUwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDAiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJzdGFydCIgb3BhY2l0eT0iMC45Ij5EVkVSRTwvdGV4dD48dGV4dCB4PSIzOTgwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDQiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJlbmQiIG9wYWNpdHk9IjAuOSI+VkVaPC90ZXh0Pjx0ZXh0IHg9IjEwMDAiIHk9IjEwMDAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMjgiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+TVJJWjwvdGV4dD48dGV4dCB4PSIxMzAwIiB5PSIxMDAwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjRkNThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBvcGFjaXR5PSIwLjkiPktPQ0tBPC90ZXh0Pjwvc3ZnPg==",
           "parallax": 1.0,
           "fit": "stretch"
         }
@@ -258,10 +309,112 @@
           "effects": [
             {
               "kind": "say",
-              "text": "Skrz mříž dole něco probleskuje. Rukou nedosáhnu."
+              "text": "Skrz mříž dole něco probleskuje. Rukou nedosáhnu - ale hákem snad jo."
             }
           ],
-          "examine": "Rezavá mříž v dlažbě."
+          "examine": "Rezavá mříž v dlažbě.",
+          "uses": [
+            {
+              "item": "hook",
+              "effects": [
+                {
+                  "kind": "giveItem",
+                  "item": "charm"
+                },
+                {
+                  "kind": "setFlag",
+                  "flag": "fished-charm"
+                },
+                {
+                  "kind": "say",
+                  "text": "Cvak! Hák zabral. Vytáhl jsem nějaký třpytivý amulet."
+                }
+              ]
+            }
+          ],
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "fished-charm"
+            }
+          }
+        },
+        {
+          "kind": "interact",
+          "id": "grate-empty",
+          "hitArea": [
+            0.22,
+            0.82,
+            0.28,
+            0.82,
+            0.28,
+            0.9,
+            0.22,
+            0.9
+          ],
+          "effects": [
+            {
+              "kind": "say",
+              "text": "Prázdná mříž. Nic dalšího tam dole nesvítí."
+            }
+          ],
+          "examine": "Rezavá mříž v dlažbě.",
+          "when": {
+            "kind": "flag",
+            "flag": "fished-charm"
+          }
+        },
+        {
+          "kind": "interact",
+          "id": "cat",
+          "hitArea": [
+            0.3,
+            0.84,
+            0.35,
+            0.84,
+            0.35,
+            0.93,
+            0.3,
+            0.93
+          ],
+          "effects": [
+            {
+              "kind": "say",
+              "text": "Zatoulaná kočka. Kručí jí v břiše a měří si mě."
+            }
+          ],
+          "examine": "Mourovatá kočka v uličce.",
+          "uses": [
+            {
+              "item": "fish",
+              "effects": [
+                {
+                  "kind": "takeItem",
+                  "item": "fish"
+                },
+                {
+                  "kind": "giveItem",
+                  "item": "cat"
+                },
+                {
+                  "kind": "setFlag",
+                  "flag": "got-cat"
+                },
+                {
+                  "kind": "say",
+                  "text": "Hodil jsem jí rybu - a kočka jde teď za mnou. Mňau."
+                }
+              ]
+            }
+          ],
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "got-cat"
+            }
+          }
         },
         {
           "kind": "exit",
@@ -509,6 +662,22 @@
     }
   },
   "initialFlags": {},
+  "rules": [
+    {
+      "id": "beer-unlocked",
+      "when": {
+        "kind": "flag",
+        "flag": "rats-cleared"
+      },
+      "then": [
+        {
+          "kind": "setFlag",
+          "flag": "beer-unlocked"
+        }
+      ],
+      "once": true
+    }
+  ],
   "npcs": {
     "keeper": {
       "id": "keeper",

@@ -23,6 +23,25 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Demo P4: the favour chain wired
+**What:** Wired the interdependent favour chain end-to-end. The alley **grate** `uses` hook →
+`charm` (+ `fished-charm`, with a "grate-empty" variant after); a new alley **cat** interactable
+`uses` fish → `cat` item (+ `got-cat`); the tavern **cellar** `uses` cat → `rats-cleared` (+ a
+"cellar-clear" variant); a global **rule** `rats-cleared → beer-unlocked`. The charm→fish trade is
+the vendor's P3 dialogue; the keeper pours beer once `rats-cleared`. Full chain: fork→hook →
+(grate) charm → (vendor) fish → (cat) cat → (cellar) rats-cleared → (keeper) beer.
+**Why:** P4 — make the puzzle chain actually playable, no skips / soft-locks.
+**How:**
+- Item-on-object steps are interactable `uses` (a `UseRule` has no `when`, so single-shot links use
+  a **gated pair**: the active interactable `when not <flag>` + an "empty/clear" variant `when <flag>`).
+- **Verified** (Playwright): pick up the fork → **Hák** in inventory; cross to the street; select Hák
+  and use it on the grate → **Amulet** obtained; 0 console errors. (The street scrolls, so the test
+  maps scene-x→viewport for the click.) The remaining links reuse the same proven patterns
+  (item-on-object `uses`; NPC trade dialogue) → full A→Z playthrough verified in P6.
+**Follow-ups:**
+- P5: clock + `timeOfDay` gates (guard drinkable at dinner; onion-seller mornings) + the sober-up
+  rule + the tower door `when guard-asleep` + morning↔dinner lighting.
+
 ### 2026-06-18 — Demo P3: cast NPCs + dialogue trees
 **What:** Added the 4 cast NPCs to `GameDoc.npcs` — **Hospodský** (keeper), **Rybářka** (vendor),
 **Cibulář** (onion-seller), **Stráž** (guard) — each with a procedural voice, placed in their scenes
