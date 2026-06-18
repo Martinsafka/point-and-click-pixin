@@ -1877,23 +1877,29 @@
   "screens": {
     "loading": {
       "bg": {
-        "color": "#1c1a17"
+        "image": "/assets/bg/tavern.png"
       },
       "minMs": 2000
     },
     "title": {
       "bg": {
-        "color": "#1c1a17"
+        "image": "/assets/bg/title.png"
       },
       "heading": "Magický polibek",
       "headingColor": "#f4d58d",
       "headingSize": 64,
       "tagline": "Pohádková komedie o jednom cibulovém polibku.",
-      "buttonColor": "#e8dcc0"
+      "buttonColor": "#e8dcc0",
+      "newGame": {
+        "text": "Nová hra"
+      },
+      "continue": {
+        "text": "Pokračovat"
+      }
     },
     "end": {
       "bg": {
-        "color": "#171a14"
+        "image": "/assets/bg/room-awake.png"
       },
       "size": 30,
       "color": "#f4d58d",
@@ -1934,5 +1940,6 @@
         "loop": true
       }
     }
-  }
+  },
+  "font": "Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif"
 }

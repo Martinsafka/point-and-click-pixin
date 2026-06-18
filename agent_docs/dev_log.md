@@ -23,6 +23,21 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Demo P9: framing (title / screens / font)
+**What:** A proper **title screen** — a composited dusk image (the PixelLab tower on a night→warm
+gradient) behind the gold serif **"Magický polibek"** heading + tagline + **Czech buttons** (Nová
+hra / Pokračovat). Screen backgrounds: loading = the tavern, end = the awake-princess bedroom. Set a
+storybook **serif font** (Georgia stack — full Czech diacritics, zero setup). Credits keep the
+"sabe directs everything" gag (Claude in the lead role). The scene-transition wash is already in place.
+**Why:** P9 — the framing so the demo presents as a finished title.
+**How:**
+- The title tower came back with its sky removed (object bg-removal), so `fetch_obj.py` composites it
+  onto a dusk gradient → `bg/title.png` (Pillow).
+- **Verified**: the title renders (tower + gold heading + Czech buttons); the chain regression passes.
+**Follow-ups:**
+- Credits / end screens are reached only via `endGame` — eyeball in the P10 playthrough.
+- Cutscene one-shot anims (kiss / eat / wake) still deferred with the character animations.
+
 ### 2026-06-18 — Demo P8: real PixelLab art (characters, backgrounds, items, props)
 **What:** Generated + wired the full art pass via the PixelLab MCP. **7 characters** (Claude +
 keeper / vendor / onion / guard / drunk + a quadruped cat) → composed [south, east] atlases →
