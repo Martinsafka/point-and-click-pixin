@@ -30,38 +30,48 @@
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiM0NzM3MjkiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjAiIHk9IjEyMCIgd2lkdGg9IjE5MjAiIGhlaWdodD0iNSIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMC4zNSIvPjxyZWN0IHg9IjAiIHk9IjIxMCIgd2lkdGg9IjE5MjAiIGhlaWdodD0iNSIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMC4zNSIvPjxyZWN0IHg9IjAiIHk9IjMwMCIgd2lkdGg9IjE5MjAiIGhlaWdodD0iNSIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMC4zNSIvPjxyZWN0IHg9IjAiIHk9IjM5MCIgd2lkdGg9IjE5MjAiIGhlaWdodD0iNSIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMC4zNSIvPjxyZWN0IHg9IjAiIHk9IjQ4MCIgd2lkdGg9IjE5MjAiIGhlaWdodD0iNSIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMC4zNSIvPjxyZWN0IHg9IjAiIHk9IjU3MCIgd2lkdGg9IjE5MjAiIGhlaWdodD0iNSIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMC4zNSIvPjxyZWN0IHg9IjAiIHk9IjY2MCIgd2lkdGg9IjE5MjAiIGhlaWdodD0iNSIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMC4zNSIvPjxyZWN0IHg9IjAiIHk9Ijc1MCIgd2lkdGg9IjE5MjAiIGhlaWdodD0iNSIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMC4zNSIvPjwvc3ZnPg==",
-          "parallax": 1.0,
-          "fit": "stretch"
+          "src": "/assets/bg/tavern.png",
+          "fit": "stretch",
+          "parallax": 1.0
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9Ijg0MiIgd2lkdGg9IjE5MjAiIGhlaWdodD0iMjM4IiBmaWxsPSIjM2EyZjI2IiBvcGFjaXR5PSIxLjAiLz48L3N2Zz4=",
-          "parallax": 1.0,
-          "fit": "stretch"
+          "src": "/assets/item/hook.png",
+          "fit": "none",
+          "xFrac": 0.33,
+          "yFrac": 0.54,
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "hasItem",
+              "item": "hook"
+            }
+          }
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjEyMCIgeT0iNDcwIiB3aWR0aD0iMjgwIiBoZWlnaHQ9IjMyMCIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iMTcwIiB5PSI1NjAiIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiBmaWxsPSIjZDM5YTRlIiBvcGFjaXR5PSIwLjg1Ii8+PHRleHQgeD0iMjU4IiB5PSI0NTAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDAiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+S1JCPC90ZXh0PjxyZWN0IHg9IjExODAiIHk9IjU2MCIgd2lkdGg9IjU2MCIgaGVpZ2h0PSIyMzAiIGZpbGw9IiM1YzQ2MzIiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9IjE0NjAiIHk9IjU0MCIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSIgZm9udC1zaXplPSI0MCIgZmlsbD0iI2Y0ZDU4ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC45Ij5WWUNFUDwvdGV4dD48cmVjdCB4PSIxNTAwIiB5PSIzMzAiIHdpZHRoPSIyMjAiIGhlaWdodD0iNDQiIGZpbGw9IiM2YjUzNDAiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9IjE2MTAiIHk9IjMyMCIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSIgZm9udC1zaXplPSIzMiIgZmlsbD0iI2Y0ZDU4ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC45Ij5WSURMSUNLQTwvdGV4dD48cmVjdCB4PSI0NzAiIHk9IjI1MCIgd2lkdGg9IjE3MCIgaGVpZ2h0PSIyMjAiIGZpbGw9IiNiN2E5OGMiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9IjU1NSIgeT0iMjM1IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjMwIiBmaWxsPSIjZjRkNThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBvcGFjaXR5PSIwLjkiPlBMQUtBVDwvdGV4dD48cmVjdCB4PSI3NjAiIHk9Ijg1MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIxMTAiIGZpbGw9IiMyMzIwMWIiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9IjkxMCIgeT0iOTE1IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjM2IiBmaWxsPSIjZjRkNThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBvcGFjaXR5PSIwLjkiPlNLTEVQPC90ZXh0Pjwvc3ZnPg==",
-          "parallax": 1.0,
-          "fit": "stretch"
+          "src": "/assets/prop/poster.png",
+          "fit": "none",
+          "xFrac": 0.605,
+          "yFrac": 0.36
         },
         {
           "kind": "image",
-          "band": "foreground",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjU2MCIgeT0iODgwIiB3aWR0aD0iNDMwIiBoZWlnaHQ9IjE3MCIgZmlsbD0iIzJlMjYyMCIgb3BhY2l0eT0iMS4wIi8+PGVsbGlwc2UgY3g9Ijc3NSIgY3k9IjkwMCIgcng9IjcwIiByeT0iMjgiIGZpbGw9IiNkMzlhNGUiLz48dGV4dCB4PSI3NzUiIHk9Ijk5MCIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSIgZm9udC1zaXplPSIzNCIgZmlsbD0iI2Y0ZDU4ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC45Ij5TVFVMPC90ZXh0Pjwvc3ZnPg==",
-          "parallax": 1.06,
-          "fit": "stretch"
+          "band": "background",
+          "src": "/assets/prop/cellar.png",
+          "fit": "none",
+          "xFrac": 0.5,
+          "yFrac": 0.86
         }
       ],
       "npcs": [
         {
           "npc": "keeper",
           "spawn": {
-            "xFrac": 0.8,
-            "yFrac": 0.88
+            "xFrac": 0.24,
+            "yFrac": 0.9
           }
         }
       ],
@@ -101,16 +111,16 @@
           "id": "take-fork",
           "item": "hook",
           "hitArea": [
-            0.77,
-            0.28,
-            0.9,
-            0.28,
-            0.9,
+            0.26,
+            0.43,
             0.4,
-            0.77,
-            0.4
+            0.43,
+            0.4,
+            0.63,
+            0.26,
+            0.63
           ],
-          "examine": "Stará ohnutá vidlička. Tak akorát na hák.",
+          "examine": "Stará ohnutá vidlička na pultu. Tak akorát na hák.",
           "when": {
             "kind": "not",
             "of": {
@@ -123,14 +133,14 @@
           "kind": "interact",
           "id": "poster",
           "hitArea": [
-            0.24,
-            0.23,
-            0.34,
-            0.23,
-            0.34,
-            0.44,
-            0.24,
-            0.44
+            0.54,
+            0.25,
+            0.67,
+            0.25,
+            0.67,
+            0.48,
+            0.54,
+            0.48
           ],
           "effects": [
             {
@@ -148,14 +158,14 @@
           "kind": "interact",
           "id": "cellar",
           "hitArea": [
-            0.39,
-            0.78,
-            0.55,
-            0.78,
-            0.55,
-            0.89,
-            0.39,
-            0.89
+            0.42,
+            0.8,
+            0.58,
+            0.8,
+            0.58,
+            0.93,
+            0.42,
+            0.93
           ],
           "effects": [
             {
@@ -195,14 +205,14 @@
           "kind": "interact",
           "id": "cellar-clear",
           "hitArea": [
-            0.39,
-            0.78,
-            0.55,
-            0.78,
-            0.55,
-            0.89,
-            0.39,
-            0.89
+            0.42,
+            0.8,
+            0.58,
+            0.8,
+            0.58,
+            0.93,
+            0.42,
+            0.93
           ],
           "effects": [
             {
@@ -303,37 +313,47 @@
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCA2MDAwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI2MDAwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiM5ZGIwYmIiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI2MDAwIiBoZWlnaHQ9IjQ4NiIgZmlsbD0iI2MyY2NkMCIgb3BhY2l0eT0iMC40NSIvPjwvc3ZnPg==",
-          "parallax": 0.3,
-          "fit": "none"
+          "src": "/assets/bg/street-sky.png",
+          "fit": "stretch",
+          "parallax": 0.4
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MjAwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCA1MjAwIDEwODAiPjxwb2x5Z29uIHBvaW50cz0iMCw2MTggNjUwLDY1NSAxMzAwLDYyMiAxOTUwLDY1OSAyNjAwLDYyNiAzMjUwLDY2MyAzOTAwLDYzMCA0NTUwLDY2NyA1MjAwLDYzNCA1MjAwLDg4NSAwLDg4NSIgZmlsbD0iIzVmNzM1NSIgb3BhY2l0eT0iMS4wIi8+PHBvbHlnb24gcG9pbnRzPSI2NzYsNjc4IDcxMCw0OTggNzQ0LDY3OCIgZmlsbD0iIzM2NDMyZiIgb3BhY2l0eT0iMS4wIi8+PHBvbHlnb24gcG9pbnRzPSIxMzI2LDY3OCAxMzYwLDQ5OCAxMzk0LDY3OCIgZmlsbD0iIzM2NDMyZiIgb3BhY2l0eT0iMS4wIi8+PHBvbHlnb24gcG9pbnRzPSIxOTc2LDY3OCAyMDEwLDQ5OCAyMDQ0LDY3OCIgZmlsbD0iIzM2NDMyZiIgb3BhY2l0eT0iMS4wIi8+PHBvbHlnb24gcG9pbnRzPSIyNjI2LDY3OCAyNjYwLDQ5OCAyNjk0LDY3OCIgZmlsbD0iIzM2NDMyZiIgb3BhY2l0eT0iMS4wIi8+PHBvbHlnb24gcG9pbnRzPSIzMjc2LDY3OCAzMzEwLDQ5OCAzMzQ0LDY3OCIgZmlsbD0iIzM2NDMyZiIgb3BhY2l0eT0iMS4wIi8+PHBvbHlnb24gcG9pbnRzPSIzOTI2LDY3OCAzOTYwLDQ5OCAzOTk0LDY3OCIgZmlsbD0iIzM2NDMyZiIgb3BhY2l0eT0iMS4wIi8+PHBvbHlnb24gcG9pbnRzPSI0NTc2LDY3OCA0NjEwLDQ5OCA0NjQ0LDY3OCIgZmlsbD0iIzM2NDMyZiIgb3BhY2l0eT0iMS4wIi8+PC9zdmc+",
-          "parallax": 0.5,
-          "fit": "none"
+          "src": "/assets/bg/street-houses-wide.png",
+          "fit": "stretch",
+          "parallax": 0.85
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NjAwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCA0NjAwIDEwODAiPjxyZWN0IHg9IjQwIiB5PSIzNjAiIHdpZHRoPSIyMTAiIGhlaWdodD0iNDE4IiBmaWxsPSIjNmE1YjQ5IiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSIzNCIgeT0iMzM0IiB3aWR0aD0iMjIyIiBoZWlnaHQ9IjMwIiBmaWxsPSIjNTM0NDM3IiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSI2NiIgeT0iNDEwIiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjE3NiIgeT0iNDEwIiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjI4MCIgeT0iNDMxIiB3aWR0aD0iMjYzIiBoZWlnaHQ9IjM0NyIgZmlsbD0iIzdjNmM1OSIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iMjc0IiB5PSI0MDUiIHdpZHRoPSIyNzUiIGhlaWdodD0iMzAiIGZpbGw9IiM1MzQ0MzciIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjMwNiIgeT0iNDgxIiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjQ2OSIgeT0iNDgxIiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjU3MyIgeT0iMzcyIiB3aWR0aD0iMzE2IiBoZWlnaHQ9IjQwNiIgZmlsbD0iIzZhNWI0OSIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iNTY3IiB5PSIzNDYiIHdpZHRoPSIzMjgiIGhlaWdodD0iMzAiIGZpbGw9IiM1MzQ0MzciIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjU5OSIgeT0iNDIyIiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjgxNSIgeT0iNDIyIiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjkxOSIgeT0iNDQzIiB3aWR0aD0iMzY5IiBoZWlnaHQ9IjMzNSIgZmlsbD0iIzdjNmM1OSIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iOTEzIiB5PSI0MTciIHdpZHRoPSIzODEiIGhlaWdodD0iMzAiIGZpbGw9IiM1MzQ0MzciIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9Ijk0NSIgeT0iNDkzIiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjEyMTQiIHk9IjQ5MyIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjU4IiBmaWxsPSIjY2FhMTVhIiBvcGFjaXR5PSIwLjciLz48cmVjdCB4PSIxMzE4IiB5PSIzODQiIHdpZHRoPSIyNTIiIGhlaWdodD0iMzk0IiBmaWxsPSIjNmE1YjQ5IiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSIxMzEyIiB5PSIzNTgiIHdpZHRoPSIyNjQiIGhlaWdodD0iMzAiIGZpbGw9IiM1MzQ0MzciIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjEzNDQiIHk9IjQzNCIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjU4IiBmaWxsPSIjY2FhMTVhIiBvcGFjaXR5PSIwLjciLz48cmVjdCB4PSIxNDk2IiB5PSI0MzQiIHdpZHRoPSI0NCIgaGVpZ2h0PSI1OCIgZmlsbD0iI2NhYTE1YSIgb3BhY2l0eT0iMC43Ii8+PHJlY3QgeD0iMTYwMCIgeT0iNDU1IiB3aWR0aD0iMzA1IiBoZWlnaHQ9IjMyMyIgZmlsbD0iIzdjNmM1OSIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iMTU5NCIgeT0iNDI5IiB3aWR0aD0iMzE3IiBoZWlnaHQ9IjMwIiBmaWxsPSIjNTM0NDM3IiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSIxNjI2IiB5PSI1MDUiIHdpZHRoPSI0NCIgaGVpZ2h0PSI1OCIgZmlsbD0iI2NhYTE1YSIgb3BhY2l0eT0iMC43Ii8+PHJlY3QgeD0iMTgzMSIgeT0iNTA1IiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjE5MzUiIHk9IjM5NiIgd2lkdGg9IjM1OCIgaGVpZ2h0PSIzODIiIGZpbGw9IiM2YTViNDkiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjE5MjkiIHk9IjM3MCIgd2lkdGg9IjM3MCIgaGVpZ2h0PSIzMCIgZmlsbD0iIzUzNDQzNyIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iMTk2MSIgeT0iNDQ2IiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjIyMTkiIHk9IjQ0NiIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjU4IiBmaWxsPSIjY2FhMTVhIiBvcGFjaXR5PSIwLjciLz48cmVjdCB4PSIyMzIzIiB5PSI0NjciIHdpZHRoPSIyNDEiIGhlaWdodD0iMzExIiBmaWxsPSIjN2M2YzU5IiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSIyMzE3IiB5PSI0NDEiIHdpZHRoPSIyNTMiIGhlaWdodD0iMzAiIGZpbGw9IiM1MzQ0MzciIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjIzNDkiIHk9IjUxNyIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjU4IiBmaWxsPSIjY2FhMTVhIiBvcGFjaXR5PSIwLjciLz48cmVjdCB4PSIyNDkwIiB5PSI1MTciIHdpZHRoPSI0NCIgaGVpZ2h0PSI1OCIgZmlsbD0iI2NhYTE1YSIgb3BhY2l0eT0iMC43Ii8+PHJlY3QgeD0iMjU5NCIgeT0iNDA4IiB3aWR0aD0iMjk0IiBoZWlnaHQ9IjM3MCIgZmlsbD0iIzZhNWI0OSIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iMjU4OCIgeT0iMzgyIiB3aWR0aD0iMzA2IiBoZWlnaHQ9IjMwIiBmaWxsPSIjNTM0NDM3IiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSIyNjIwIiB5PSI0NTgiIHdpZHRoPSI0NCIgaGVpZ2h0PSI1OCIgZmlsbD0iI2NhYTE1YSIgb3BhY2l0eT0iMC43Ii8+PHJlY3QgeD0iMjgxNCIgeT0iNDU4IiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjI5MTgiIHk9IjQ3OSIgd2lkdGg9IjM0NyIgaGVpZ2h0PSIyOTkiIGZpbGw9IiM3YzZjNTkiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjI5MTIiIHk9IjQ1MyIgd2lkdGg9IjM1OSIgaGVpZ2h0PSIzMCIgZmlsbD0iIzUzNDQzNyIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iMjk0NCIgeT0iNTI5IiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjMxOTEiIHk9IjUyOSIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjU4IiBmaWxsPSIjY2FhMTVhIiBvcGFjaXR5PSIwLjciLz48cmVjdCB4PSIzMjk1IiB5PSI0MjAiIHdpZHRoPSIyMzAiIGhlaWdodD0iMzU4IiBmaWxsPSIjNmE1YjQ5IiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSIzMjg5IiB5PSIzOTQiIHdpZHRoPSIyNDIiIGhlaWdodD0iMzAiIGZpbGw9IiM1MzQ0MzciIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjMzMjEiIHk9IjQ3MCIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjU4IiBmaWxsPSIjY2FhMTVhIiBvcGFjaXR5PSIwLjciLz48cmVjdCB4PSIzNDUxIiB5PSI0NzAiIHdpZHRoPSI0NCIgaGVpZ2h0PSI1OCIgZmlsbD0iI2NhYTE1YSIgb3BhY2l0eT0iMC43Ii8+PHJlY3QgeD0iMzU1NSIgeT0iMzYxIiB3aWR0aD0iMjgzIiBoZWlnaHQ9IjQxNyIgZmlsbD0iIzdjNmM1OSIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iMzU0OSIgeT0iMzM1IiB3aWR0aD0iMjk1IiBoZWlnaHQ9IjMwIiBmaWxsPSIjNTM0NDM3IiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSIzNTgxIiB5PSI0MTEiIHdpZHRoPSI0NCIgaGVpZ2h0PSI1OCIgZmlsbD0iI2NhYTE1YSIgb3BhY2l0eT0iMC43Ii8+PHJlY3QgeD0iMzc2NCIgeT0iNDExIiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjM4NjgiIHk9IjQzMiIgd2lkdGg9IjMzNiIgaGVpZ2h0PSIzNDYiIGZpbGw9IiM2YTViNDkiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjM4NjIiIHk9IjQwNiIgd2lkdGg9IjM0OCIgaGVpZ2h0PSIzMCIgZmlsbD0iIzUzNDQzNyIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iMzg5NCIgeT0iNDgyIiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjQxMzAiIHk9IjQ4MiIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjU4IiBmaWxsPSIjY2FhMTVhIiBvcGFjaXR5PSIwLjciLz48cmVjdCB4PSI0MjM0IiB5PSIzNzMiIHdpZHRoPSIyMTkiIGhlaWdodD0iNDA1IiBmaWxsPSIjN2M2YzU5IiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSI0MjI4IiB5PSIzNDciIHdpZHRoPSIyMzEiIGhlaWdodD0iMzAiIGZpbGw9IiM1MzQ0MzciIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjQyNjAiIHk9IjQyMyIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjU4IiBmaWxsPSIjY2FhMTVhIiBvcGFjaXR5PSIwLjciLz48cmVjdCB4PSI0Mzc5IiB5PSI0MjMiIHdpZHRoPSI0NCIgaGVpZ2h0PSI1OCIgZmlsbD0iI2NhYTE1YSIgb3BhY2l0eT0iMC43Ii8+PHJlY3QgeD0iNDQ4MyIgeT0iNDQ0IiB3aWR0aD0iMjcyIiBoZWlnaHQ9IjMzNCIgZmlsbD0iIzZhNWI0OSIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iNDQ3NyIgeT0iNDE4IiB3aWR0aD0iMjg0IiBoZWlnaHQ9IjMwIiBmaWxsPSIjNTM0NDM3IiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSI0NTA5IiB5PSI0OTQiIHdpZHRoPSI0NCIgaGVpZ2h0PSI1OCIgZmlsbD0iI2NhYTE1YSIgb3BhY2l0eT0iMC43Ii8+PHJlY3QgeD0iNDY4MSIgeT0iNDk0IiB3aWR0aD0iNDQiIGhlaWdodD0iNTgiIGZpbGw9IiNjYWExNWEiIG9wYWNpdHk9IjAuNyIvPjwvc3ZnPg==",
-          "parallax": 0.75,
-          "fit": "none"
+          "src": "/assets/bg/street-ground.png",
+          "fit": "stretch",
+          "parallax": 1.0
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCA0MDAwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjczNCIgd2lkdGg9IjQwMDAiIGhlaWdodD0iMzQ2IiBmaWxsPSIjNmI1ZDRmIiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSIwIiB5PSI5NzIiIHdpZHRoPSI0MDAwIiBoZWlnaHQ9IjgiIGZpbGw9IiM1MzQ4NDAiIG9wYWNpdHk9IjEuMCIvPjwvc3ZnPg==",
-          "parallax": 1.0,
-          "fit": "stretch"
+          "src": "/assets/prop/stall.png",
+          "fit": "none",
+          "xFrac": 0.55,
+          "yFrac": 0.72
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCA0MDAwIDEwODAiPjxyZWN0IHg9Ijk4MCIgeT0iMzAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ2MCIgZmlsbD0iIzJjMjcyMiIgb3BhY2l0eT0iMC42Ii8+PHRleHQgeD0iMTEzMCIgeT0iNzcwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjQ0IiBmaWxsPSIjZjRkNThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBvcGFjaXR5PSIwLjkiPlVMSUNLQTwvdGV4dD48cmVjdCB4PSIyMDQwIiB5PSI1NjAiIHdpZHRoPSIzMjAiIGhlaWdodD0iMTcwIiBmaWxsPSIjNWM0NjMyIiBvcGFjaXR5PSIxLjAiLz48dGV4dCB4PSIyMjAwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDQiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+VFJIPC90ZXh0PjxlbGxpcHNlIGN4PSIzMTUwIiBjeT0iNzEwIiByeD0iMTUwIiByeT0iNDYiIGZpbGw9IiM1YzU5NGYiLz48dGV4dCB4PSIzMTUwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDQiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+S0FTTkE8L3RleHQ+PHRleHQgeD0iMTUwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDAiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJzdGFydCIgb3BhY2l0eT0iMC45Ij5EVkVSRTwvdGV4dD48dGV4dCB4PSIzOTgwIiB5PSI3NzAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDQiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJlbmQiIG9wYWNpdHk9IjAuOSI+VkVaPC90ZXh0Pjx0ZXh0IHg9IjEwMDAiIHk9IjEwMDAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMjgiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+TVJJWjwvdGV4dD48dGV4dCB4PSIxMzAwIiB5PSIxMDAwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjI4IiBmaWxsPSIjZjRkNThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBvcGFjaXR5PSIwLjkiPktPQ0tBPC90ZXh0Pjwvc3ZnPg==",
-          "parallax": 1.0,
-          "fit": "stretch"
+          "src": "/assets/prop/fountain.png",
+          "fit": "none",
+          "xFrac": 0.79,
+          "yFrac": 0.72
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "/assets/prop/grate.png",
+          "fit": "none",
+          "xFrac": 0.25,
+          "yFrac": 0.87
         },
         {
           "kind": "image",
@@ -634,30 +654,9 @@
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiM5ZGIwYmIiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjQ4NiIgZmlsbD0iI2MyY2NkMCIgb3BhY2l0eT0iMC40NSIvPjwvc3ZnPg==",
-          "parallax": 0.4,
-          "fit": "stretch"
-        },
-        {
-          "kind": "image",
-          "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxwb2x5Z29uIHBvaW50cz0iMCw2MTggMjQwLDY1NSA0ODAsNjIyIDcyMCw2NTkgOTYwLDYyNiAxMjAwLDY2MyAxNDQwLDYzMCAxNjgwLDY2NyAxOTIwLDYzNCAxOTIwLDg4NSAwLDg4NSIgZmlsbD0iIzVmNzM1NSIgb3BhY2l0eT0iMS4wIi8+PHBvbHlnb24gcG9pbnRzPSIyNjYsNjc4IDMwMCw0OTggMzM0LDY3OCIgZmlsbD0iIzM2NDMyZiIgb3BhY2l0eT0iMS4wIi8+PHBvbHlnb24gcG9pbnRzPSI1MDYsNjc4IDU0MCw0OTggNTc0LDY3OCIgZmlsbD0iIzM2NDMyZiIgb3BhY2l0eT0iMS4wIi8+PHBvbHlnb24gcG9pbnRzPSI3NDYsNjc4IDc4MCw0OTggODE0LDY3OCIgZmlsbD0iIzM2NDMyZiIgb3BhY2l0eT0iMS4wIi8+PHBvbHlnb24gcG9pbnRzPSI5ODYsNjc4IDEwMjAsNDk4IDEwNTQsNjc4IiBmaWxsPSIjMzY0MzJmIiBvcGFjaXR5PSIxLjAiLz48cG9seWdvbiBwb2ludHM9IjEyMjYsNjc4IDEyNjAsNDk4IDEyOTQsNjc4IiBmaWxsPSIjMzY0MzJmIiBvcGFjaXR5PSIxLjAiLz48cG9seWdvbiBwb2ludHM9IjE0NjYsNjc4IDE1MDAsNDk4IDE1MzQsNjc4IiBmaWxsPSIjMzY0MzJmIiBvcGFjaXR5PSIxLjAiLz48cG9seWdvbiBwb2ludHM9IjE3MDYsNjc4IDE3NDAsNDk4IDE3NzQsNjc4IiBmaWxsPSIjMzY0MzJmIiBvcGFjaXR5PSIxLjAiLz48L3N2Zz4=",
-          "parallax": 0.6,
-          "fit": "stretch"
-        },
-        {
-          "kind": "image",
-          "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjczNCIgd2lkdGg9IjE5MjAiIGhlaWdodD0iMzQ2IiBmaWxsPSIjNmI1ZDRmIiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSIwIiB5PSI5NzIiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjgiIGZpbGw9IiM1MzQ4NDAiIG9wYWNpdHk9IjEuMCIvPjwvc3ZnPg==",
-          "parallax": 1.0,
-          "fit": "stretch"
-        },
-        {
-          "kind": "image",
-          "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjY2MCIgeT0iMjgwIiB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iIzczNmY2NiIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iNjYwIiB5PSIyODAiIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAiIGZpbGw9IiM1YzU5NGYiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjY2MCIgeT0iMjUwIiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIGZpbGw9IiM3MzZmNjYiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9Ijc1MCIgeT0iMjUwIiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIGZpbGw9IiM3MzZmNjYiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9Ijg0MCIgeT0iMjUwIiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIGZpbGw9IiM3MzZmNjYiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjkzMCIgeT0iMjUwIiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIGZpbGw9IiM3MzZmNjYiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjEwMjAiIHk9IjI1MCIgd2lkdGg9IjUwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjNzM2ZjY2IiBvcGFjaXR5PSIxLjAiLz48cmVjdCB4PSIxMTEwIiB5PSIyNTAiIHdpZHRoPSI1MCIgaGVpZ2h0PSI0MCIgZmlsbD0iIzczNmY2NiIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iMTIwMCIgeT0iMjUwIiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIGZpbGw9IiM3MzZmNjYiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9Ijg0MCIgeT0iNTYwIiB3aWR0aD0iMjQwIiBoZWlnaHQ9IjMyMCIgZmlsbD0iIzI0MWYxYiIgb3BhY2l0eT0iMS4wIi8+PHRleHQgeD0iOTYwIiB5PSI1NDAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMzgiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+RFZFUkU8L3RleHQ+PHRleHQgeD0iNTIwIiB5PSI4MDAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMzYiIGZpbGw9IiNmNGQ1OGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+U1RSQVo8L3RleHQ+PC9zdmc+",
-          "parallax": 1.0,
-          "fit": "stretch"
+          "src": "/assets/bg/tower.png",
+          "fit": "stretch",
+          "parallax": 1.0
         },
         {
           "kind": "image",
@@ -799,37 +798,27 @@
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiM0ZjQ2NTQiIG9wYWNpdHk9IjEuMCIvPjwvc3ZnPg==",
+          "src": "/assets/bg/room-asleep.png",
+          "fit": "stretch",
           "parallax": 1.0,
-          "fit": "stretch"
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "princess-awake"
+            }
+          }
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9Ijg4NiIgd2lkdGg9IjE5MjAiIGhlaWdodD0iMTk0IiBmaWxsPSIjM2IzMzQwIiBvcGFjaXR5PSIxLjAiLz48L3N2Zz4=",
+          "src": "/assets/bg/room-awake.png",
+          "fit": "stretch",
           "parallax": 1.0,
-          "fit": "stretch"
-        },
-        {
-          "kind": "image",
-          "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjEyODAiIHk9IjI4MCIgd2lkdGg9IjM0MCIgaGVpZ2h0PSIzODAiIGZpbGw9IiMyYjI2MjAiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjEzMDAiIHk9IjMwMCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzNDAiIGZpbGw9IiM5ZGIwYmIiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjEzMDAiIHk9IjQ3MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIxNzAiIGZpbGw9IiM1ZjczNTUiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9IjE0NTAiIHk9IjI3MCIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSIgZm9udC1zaXplPSIzMCIgZmlsbD0iI2Y0ZDU4ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgb3BhY2l0eT0iMC45Ij5PS05PPC90ZXh0Pjwvc3ZnPg==",
-          "parallax": 1.0,
-          "fit": "stretch"
-        },
-        {
-          "kind": "image",
-          "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjY0MCIgeT0iNjQwIiB3aWR0aD0iNjAwIiBoZWlnaHQ9IjI0MCIgZmlsbD0iIzdjNjM3NiIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iNjIwIiB5PSI0NzAiIHdpZHRoPSI2MCIgaGVpZ2h0PSI0MTAiIGZpbGw9IiMzYzM0NDIiIG9wYWNpdHk9IjEuMCIvPjxyZWN0IHg9IjEyMDAiIHk9IjQ3MCIgd2lkdGg9IjYwIiBoZWlnaHQ9IjQxMCIgZmlsbD0iIzNjMzQ0MiIgb3BhY2l0eT0iMS4wIi8+PHJlY3QgeD0iNjAwIiB5PSI0NTAiIHdpZHRoPSI2ODAiIGhlaWdodD0iNDAiIGZpbGw9IiMzYzM0NDIiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9Ijk0MCIgeT0iNjIwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjM2IiBmaWxsPSIjZjRkNThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBvcGFjaXR5PSIwLjkiPlBSSU5DRVpOQTwvdGV4dD48L3N2Zz4=",
-          "parallax": 1.0,
-          "fit": "stretch"
-        },
-        {
-          "kind": "image",
-          "band": "foreground",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxlbGxpcHNlIGN4PSI5NjAiIGN5PSIxMDEwIiByeD0iNTIwIiByeT0iNDAiIGZpbGw9IiMyNDFmMjgiLz48L3N2Zz4=",
-          "parallax": 1.04,
-          "fit": "stretch"
+          "when": {
+            "kind": "flag",
+            "flag": "princess-awake"
+          }
         }
       ],
       "interactables": [
@@ -905,27 +894,32 @@
     "hook": {
       "id": "hook",
       "name": "Hák",
-      "examine": "Ohnutý drát na klacku. Šlo by s tím něco lovit."
+      "examine": "Ohnutý drát na klacku. Šlo by s tím něco lovit.",
+      "icon": "/assets/item/hook.png"
     },
     "charm": {
       "id": "charm",
       "name": "Amulet",
-      "examine": "Zlatá brož pro štěstí. Hezky se třpytí."
+      "examine": "Zlatá brož pro štěstí. Hezky se třpytí.",
+      "icon": "/assets/item/charm.png"
     },
     "fish": {
       "id": "fish",
       "name": "Ryba",
-      "examine": "Čerstvá stříbrná ryba. Páchne lákavě - aspoň pro kočku."
+      "examine": "Čerstvá stříbrná ryba. Páchne lákavě - aspoň pro kočku.",
+      "icon": "/assets/item/fish.png"
     },
     "cat": {
       "id": "cat",
       "name": "Kočka",
-      "examine": "Zatoulaná mourovatá kočka. Vrní, když ji držíš."
+      "examine": "Zatoulaná mourovatá kočka. Vrní, když ji držíš.",
+      "icon": "/assets/item/cat.png"
     },
     "beer": {
       "id": "beer",
       "name": "Pivo",
-      "examine": "Korbel zlatavého piva s pěknou čepicí pěny."
+      "examine": "Korbel zlatavého piva s pěknou čepicí pěny.",
+      "icon": "/assets/item/beer.png"
     },
     "onion": {
       "id": "onion",
@@ -955,7 +949,8 @@
             }
           ]
         }
-      ]
+      ],
+      "icon": "/assets/item/onion.png"
     }
   },
   "initialFlags": {},
