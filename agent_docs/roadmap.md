@@ -709,6 +709,14 @@ editing `game.json`:
 
 ### V2 — post-1.0 nice-to-haves
 
+- [ ] **Directional, light-driven shadows** (M10 follow-up; **contact "blob" shadows ship in
+      M13c Prereq 2**). Cast **one** skewed, darkened silhouette of the sprite away from the
+      **dominant light** at the entity's position — a blend of the ambient/"sun" direction **+**
+      nearby placed lights, each weighted by **intensity × falloff/distance**, resolved to a single
+      direction; length / opacity from the light's strength. So the shadow **swings** as the player
+      passes a candle / the torch (reads as "that light casts it"), and the sun + scene lights unify
+      into one believable shadow — avoiding the visual noise + cost of one-shadow-per-light (full
+      2D shadow-mapping). Could tie shadow length to **time-of-day** (short midday, long at dusk).
 - [ ] **Localization (i18n)** — UI texts + dialogue in multiple languages (deferred from M11;
       do once there's demand — needs a string/locale layer over dialogue + any UI text).
 - [ ] **Richer settings** — music / SFX volume split (categorise sound channels), a

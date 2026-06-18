@@ -140,6 +140,19 @@ anywhere (dialogue, NPC presence, exits, rules).
     (it just won't appear in the flag web).
   - **Verify:** `pnpm typecheck` + `lint` + `build`; a small Node test of the `timeOfDay` case
     (inside / outside / midnight-wrap / no-clock); a quick gated-dialogue smoke. Then start P0.
+- [ ] **Prereq 2 (engine) — contact shadows (variant A).** Characters + objects cast a soft
+      **contact / "blob" shadow** — a missed piece of M10 atmosphere. A dark, soft ellipse at the
+      entity's **feet**, depth-scaled (like the depth-scale already applied to characters),
+      semi-transparent, rendered in a **world-space shadow pass below the entities** (independent of
+      the lighting overlay — so the overlay still darkens it in dark areas).
+  - **Characters** get one automatically (player + NPCs) — the `Character` positions/scales it each
+    frame from its feet, like its view.
+  - **Props/objects** opt in: a scene **layer** can flag "casts a shadow" → a blob at its base
+    (covers "objects cast shadows"; static art can also just bake it).
+  - **Config:** a small per-scene (or project default) `shadow` setting — **opacity** + **size**
+    (squash); default on, sensible values. No light direction (that's V2).
+  - **Verify:** typecheck/lint/build + a visual check (characters read as grounded; shadows scale
+    with depth). _Directional, light-driven shadows are **V2** (see the roadmap)._
 - [ ] **P0 — Scaffold.** Start a fresh `content/game.json` for this game (the old demo stays in git
       history): `start`, three empty scenes (tavern / street / tower), `referenceHeight`, a basic
       walkable per scene, and the three exits wiring them together. _(Assets: none — geometric.)_
@@ -206,6 +219,10 @@ PixelLab): copy-paste prompts in [`demo-assets.md`](demo-assets.md).**
 - **How time gates things → variant A (locked):** add the engine **`timeOfDay` condition** (the
   Prereq phase) so `when` reads the clock anywhere — chosen over the routine-only / "timekeeper
   flag" hacks because we want time-gating on **anything** and it's the clean, missing primitive.
+- **Shadows → variant A now (Prereq 2):** soft **contact / blob** shadows for characters (auto) +
+  props (opt-in). **Directional, light-driven** shadows (a single shadow away from the **dominant**
+  light = sun + scene lights blended by intensity × distance) → **V2** (a meaningful way to make
+  scene lights affect shadows without one-shadow-per-light noise).
 
 ## Open questions
 
