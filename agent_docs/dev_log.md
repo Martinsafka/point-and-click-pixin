@@ -23,6 +23,23 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Fix: decorative scene layers were blocking pointer input
+**What:** A full-screen **foreground** layer (the demo's dinner dusk overlay) intercepted clicks on
+NPCs beneath it — the NPC's own `pointertap` never fired, so dialogues couldn't be triggered once the
+overlay showed (user report: "once the screen goes orange in the evening, can't talk to the tower
+guard / trigger things"). Fixed in `engine/scene.ts`: every scene layer's display is now
+`eventMode: 'none'`, so clicks pass through to NPCs (mid band) + the stage (interactables / walk).
+The editor's `makeLayerDraggable` still re-enables `'static'` on positionable (fit none / width)
+layers, so layer dragging is unaffected.
+**Why:** Decorative scenery should never capture input — only NPCs + the stage do. Affects **any**
+scene with a foreground / weather / overlay layer, not just this demo.
+**How / verified:** Reproduced headlessly (tower at dinner → guard click did nothing); after the fix
+the guard dialogue opens with the overlay on. Interactables (the stage `onTap` polygon test) always
+worked via event-bubbling — it was specifically **NPC sprite clicks** the overlay shadowed. Audio
+was healthy throughout (Howler `running`, ambient loops, footsteps + voice play) — the "sounds
+stopped" was the blocked interaction, not an audio fault. Favour-chain + keeper-dialogue regression
+passes, 0 console errors.
+
 ### 2026-06-18 — Demo P11b: scene-object animations (fountain water + breathing princess)
 **What:** `animate_object` (v3) animations wired as `animated` layers — the street **fountain water**
 trickling, and the tower-room **sleeping princess breathing** (candle flickering too): the asleep

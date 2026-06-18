@@ -452,6 +452,11 @@ export async function mountScene(
     const layer = scene.layers[i]
     const display = await buildLayer(layer, design)
     layerDisplays[i] = display
+    // Scenery never captures pointer input: NPCs (mid) + the stage (interactables / walk) handle
+    // clicks. Without this a full-screen foreground layer (e.g. a dusk/weather overlay) intercepts
+    // clicks on the NPCs beneath it — their `pointertap` never fires. The editor's
+    // makeLayerDraggable re-enables 'static' on positionable layers below, so dragging still works.
+    display.eventMode = 'none'
     if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
       const anchorY = layer.anchorYFrac * design.height
       display.zIndex = anchorY
