@@ -695,7 +695,7 @@
         {
           "npc": "guard",
           "spawn": {
-            "xFrac": 0.42,
+            "xFrac": 0.3,
             "yFrac": 0.9
           }
         }
