@@ -677,6 +677,14 @@ editing `game.json`:
 - [ ] A short, finished game built **in the editor** with **real, properly-licensed assets** (CC0 /
       original — licensing to be vetted). Doubles as the validation pass for the docs / skills /
       asset pipeline, and becomes the scaffolder's **demo** template + the repo's dev default.
+- **Design + build plan locked → [`demo-roadmap.md`](demo-roadmap.md).** _Magický polibek_ (A Magic
+  Kiss): a fairy-tale comedy — a penniless tramp earns beer through a favour chain (rats → cat →
+  fish → charm → grate) to get the guard drunk, reaches the princess, and (after the kiss fails)
+  wakes her with an **onion-kiss** — a Shrek/Fiona twist. 3 scenes (tavern / scrolling street /
+  tower), **4 NPCs** (tavernkeeper / fish vendor / a mobile morning **onion seller** / guard).
+  Showcases **routines + time-of-day + lighting**: the onion seller is mornings-only, the guard is
+  drinkable at dinner only (+ a sober-up rule). **Prereq:** a small engine **`timeOfDay` condition**
+  (resolves the M12c follow-up). Greybox first, then an art pass; phases Prereq + P0–P10.
 
 **M13d — Package & scaffolder**
 
