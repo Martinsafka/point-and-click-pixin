@@ -56,6 +56,15 @@
           "fit": "stretch"
         }
       ],
+      "npcs": [
+        {
+          "npc": "keeper",
+          "spawn": {
+            "xFrac": 0.8,
+            "yFrac": 0.88
+          }
+        }
+      ],
       "interactables": [
         {
           "kind": "pickable",
@@ -71,7 +80,7 @@
             0.77,
             0.4
           ],
-          "examine": "Stara ohnuta vidlicka. Tak akorat na hak.",
+          "examine": "Stará ohnutá vidlička. Tak akorát na hák.",
           "when": {
             "kind": "not",
             "of": {
@@ -100,10 +109,10 @@
             },
             {
               "kind": "say",
-              "text": "Vyhlaska: kdo probudi spici princeznu, dostane pul kralovstvi! Pul kralovstvi pro me, Clauda. To zni jako plan."
+              "text": "Vyhláška: kdo probudí spící princeznu, dostane půl království! Půl království pro mě, Clauda. To zní jako plán."
             }
           ],
-          "examine": "Kralovska vyhlaska pribita na prkne."
+          "examine": "Královská vyhláška přibitá na prkně."
         },
         {
           "kind": "interact",
@@ -121,7 +130,7 @@
           "effects": [
             {
               "kind": "say",
-              "text": "Z poklopu se ozyva cupitani. Krysy. Tam dolu bez kocky nelezu."
+              "text": "Z poklopu se ozývá cupitání. Krysy. Tam dolů bez kočky nelezu."
             }
           ],
           "examine": "Poklop do sklepa."
@@ -140,7 +149,7 @@
             0.9,
             0.96
           ],
-          "examine": "Dvere ven na ulici."
+          "examine": "Dveře ven na ulici."
         }
       ]
     },
@@ -205,6 +214,33 @@
           "fit": "stretch"
         }
       ],
+      "npcs": [
+        {
+          "npc": "vendor",
+          "spawn": {
+            "xFrac": 0.49,
+            "yFrac": 0.9
+          }
+        },
+        {
+          "npc": "onion",
+          "spawn": {
+            "xFrac": 0.6,
+            "yFrac": 0.9
+          },
+          "path": {
+            "points": [
+              0.45,
+              0.9,
+              0.68,
+              0.9
+            ],
+            "mode": "pingpong",
+            "id": "onion-patrol",
+            "name": "Ranní trh"
+          }
+        }
+      ],
       "interactables": [
         {
           "kind": "interact",
@@ -222,10 +258,10 @@
           "effects": [
             {
               "kind": "say",
-              "text": "Skrz mriz dole neco probleskuje. Rukou nedosahnu."
+              "text": "Skrz mříž dole něco probleskuje. Rukou nedosáhnu."
             }
           ],
-          "examine": "Rezava mriz v dlazbe."
+          "examine": "Rezavá mříž v dlažbě."
         },
         {
           "kind": "exit",
@@ -241,7 +277,7 @@
             0.002,
             0.96
           ],
-          "examine": "Zpatky do hospody."
+          "examine": "Zpátky do hospody."
         },
         {
           "kind": "exit",
@@ -257,13 +293,13 @@
             0.96,
             0.96
           ],
-          "examine": "Cesta k vezi."
+          "examine": "Cesta k věži."
         }
       ]
     },
     "tower": {
       "id": "tower",
-      "name": "Vez (venku)",
+      "name": "Věž (venku)",
       "width": 1920,
       "depth": {
         "yNearFrac": 0.96,
@@ -315,6 +351,15 @@
           "fit": "stretch"
         }
       ],
+      "npcs": [
+        {
+          "npc": "guard",
+          "spawn": {
+            "xFrac": 0.42,
+            "yFrac": 0.9
+          }
+        }
+      ],
       "interactables": [
         {
           "kind": "exit",
@@ -330,7 +375,7 @@
             0.002,
             0.96
           ],
-          "examine": "Zpatky do mesta."
+          "examine": "Zpátky do města."
         },
         {
           "kind": "exit",
@@ -346,13 +391,13 @@
             0.4,
             0.9
           ],
-          "examine": "Dvere do veze."
+          "examine": "Dveře do věže."
         }
       ]
     },
     "tower-room": {
       "id": "tower-room",
-      "name": "Loznice ve vezi",
+      "name": "Ložnice ve věži",
       "width": 1920,
       "depth": {
         "yNearFrac": 0.96,
@@ -426,7 +471,7 @@
             0.002,
             0.96
           ],
-          "examine": "Dolu po schodech."
+          "examine": "Dolů po schodech."
         }
       ]
     }
@@ -434,36 +479,410 @@
   "items": {
     "hook": {
       "id": "hook",
-      "name": "Hak",
-      "examine": "Ohnuty drat na klacku. Slo by s tim neco lovit."
+      "name": "Hák",
+      "examine": "Ohnutý drát na klacku. Šlo by s tím něco lovit."
     },
     "charm": {
       "id": "charm",
       "name": "Amulet",
-      "examine": "Zlata broz pro stesti. Hezky se trpyti."
+      "examine": "Zlatá brož pro štěstí. Hezky se třpytí."
     },
     "fish": {
       "id": "fish",
       "name": "Ryba",
-      "examine": "Cerstva stribrna ryba. Pachne lakave - aspon pro kocku."
+      "examine": "Čerstvá stříbrná ryba. Páchne lákavě - aspoň pro kočku."
     },
     "cat": {
       "id": "cat",
-      "name": "Kocka",
-      "examine": "Zatoulana mourovata kocka. Vrni, kdyz ji drzis."
+      "name": "Kočka",
+      "examine": "Zatoulaná mourovatá kočka. Vrní, když ji držíš."
     },
     "beer": {
       "id": "beer",
       "name": "Pivo",
-      "examine": "Korbel zlatateho piva s peknou cepici peny."
+      "examine": "Korbel zlatavého piva s pěknou čepicí pěny."
     },
     "onion": {
       "id": "onion",
       "name": "Cibule",
-      "examine": "Zluta cibule. Stiplava az k slzam."
+      "examine": "Žlutá cibule. Štiplavá až k slzám."
     }
   },
   "initialFlags": {},
+  "npcs": {
+    "keeper": {
+      "id": "keeper",
+      "name": "Hospodský",
+      "dialog": "keeper",
+      "voice": {
+        "pitch": 0.8
+      }
+    },
+    "vendor": {
+      "id": "vendor",
+      "name": "Rybářka",
+      "dialog": "vendor",
+      "voice": {
+        "pitch": 1.35
+      }
+    },
+    "onion": {
+      "id": "onion",
+      "name": "Cibulář",
+      "dialog": "onion-seller",
+      "voice": {
+        "pitch": 1.1
+      },
+      "monologues": [
+        {
+          "text": "Cibule! Kupte si cibuli!",
+          "after": 1500,
+          "every": 6000
+        }
+      ]
+    },
+    "guard": {
+      "id": "guard",
+      "name": "Stráž",
+      "dialog": "guard",
+      "voice": {
+        "pitch": 0.7
+      }
+    }
+  },
+  "dialogs": {
+    "keeper": {
+      "start": "root",
+      "nodes": {
+        "root": {
+          "branch": [
+            {
+              "when": {
+                "kind": "flag",
+                "flag": "rats-cleared"
+              },
+              "to": "free"
+            },
+            {
+              "when": {
+                "kind": "flag",
+                "flag": "keeper-deal"
+              },
+              "to": "nag"
+            }
+          ],
+          "next": "offer"
+        },
+        "offer": {
+          "speaker": "keeper",
+          "text": "Á, nová tvář. Poslyš, trhane - mám ve sklepě krysy. Vyžeň je a piva ti naleju, kolik uneseš.",
+          "choices": [
+            {
+              "text": "Beru ten kšeft.",
+              "effects": [
+                {
+                  "kind": "setFlag",
+                  "flag": "keeper-deal"
+                }
+              ],
+              "next": "dealdone"
+            },
+            {
+              "text": "A pivo hned, zadarmo?",
+              "next": "nochance"
+            },
+            {
+              "text": "Zatím ne."
+            }
+          ]
+        },
+        "dealdone": {
+          "speaker": "keeper",
+          "text": "Platí. Sklep je tamhle pod poklopem. Žádné krysy - a teče pivo."
+        },
+        "nochance": {
+          "speaker": "keeper",
+          "text": "Zadarmo? Cha! Na pivo si tady musíš zasloužit, chlapče.",
+          "next": "offer"
+        },
+        "nag": {
+          "speaker": "keeper",
+          "text": "Pořád ty krysy slyším cupitat. Žádné krysy - žádné pivo."
+        },
+        "free": {
+          "branch": [
+            {
+              "when": {
+                "kind": "hasItem",
+                "item": "beer"
+              },
+              "to": "hasbeer"
+            },
+            {
+              "when": {
+                "kind": "flag",
+                "flag": "got-first-beer"
+              },
+              "to": "more"
+            }
+          ],
+          "speaker": "keeper",
+          "text": "Sklep je čistý! Tu máš, na účet podniku. ...A někdo tam u poklopu nechal rybářský splávek, co? Cha.",
+          "effects": [
+            {
+              "kind": "giveItem",
+              "item": "beer"
+            },
+            {
+              "kind": "setFlag",
+              "flag": "got-first-beer"
+            }
+          ]
+        },
+        "more": {
+          "speaker": "keeper",
+          "text": "Další pivo? Drž. Ale pomalu, chlapče.",
+          "effects": [
+            {
+              "kind": "giveItem",
+              "item": "beer"
+            }
+          ]
+        },
+        "hasbeer": {
+          "speaker": "keeper",
+          "text": "Nejdřív dopij, co máš v ruce. Jedno po druhém."
+        }
+      }
+    },
+    "vendor": {
+      "start": "root",
+      "nodes": {
+        "root": {
+          "branch": [
+            {
+              "when": {
+                "kind": "hasItem",
+                "item": "charm"
+              },
+              "to": "trade"
+            },
+            {
+              "when": {
+                "kind": "flag",
+                "flag": "traded-fish"
+              },
+              "to": "done"
+            }
+          ],
+          "next": "lament"
+        },
+        "lament": {
+          "speaker": "vendor",
+          "text": "Ach jo. Ztratila jsem svůj amulet pro štěstí - spadl mi do té mříže v uličce. Bez něj mi ryby na udici nejdou.",
+          "choices": [
+            {
+              "text": "Mrknu po něm."
+            },
+            {
+              "text": "Nemáš rybu nazbyt?",
+              "next": "norfree"
+            }
+          ]
+        },
+        "norfree": {
+          "speaker": "vendor",
+          "text": "Rybu jen tak? Přines mi ten amulet a dostaneš tu nejtučnější, co mám!"
+        },
+        "trade": {
+          "speaker": "vendor",
+          "text": "Můj amulet! Tys ho našel! Ty jsi učiněný anděl, trhane. Na - vem si tu nejlepší rybu!",
+          "effects": [
+            {
+              "kind": "takeItem",
+              "item": "charm"
+            },
+            {
+              "kind": "giveItem",
+              "item": "fish"
+            },
+            {
+              "kind": "setFlag",
+              "flag": "traded-fish"
+            }
+          ]
+        },
+        "done": {
+          "speaker": "vendor",
+          "text": "Díky tobě zas loví jako za mlada. Víc ryb nazbyt nemám, promiň."
+        }
+      }
+    },
+    "onion-seller": {
+      "start": "root",
+      "nodes": {
+        "root": {
+          "branch": [
+            {
+              "when": {
+                "kind": "hasItem",
+                "item": "onion"
+              },
+              "to": "hasonion"
+            }
+          ],
+          "next": "sell"
+        },
+        "sell": {
+          "speaker": "onion",
+          "text": "Cibule! Krásná cibule! Ty vypadáš jako chlap, co potřebuje cibuli. První je zadarmo - stejně ji nikdo nechce.",
+          "choices": [
+            {
+              "text": "Beru cibuli.",
+              "effects": [
+                {
+                  "kind": "giveItem",
+                  "item": "onion"
+                }
+              ],
+              "next": "took"
+            },
+            {
+              "text": "Na co mi je cibule?",
+              "next": "why"
+            },
+            {
+              "text": "Dík, nechci."
+            }
+          ]
+        },
+        "took": {
+          "speaker": "onion",
+          "text": "Moudrá volba! Cibule vyřeší skoro všechno."
+        },
+        "why": {
+          "speaker": "onion",
+          "text": "Na co? Na guláš, na pláč, na zahnání upírů... a kdo ví, na co ještě.",
+          "next": "sell"
+        },
+        "hasonion": {
+          "speaker": "onion",
+          "text": "Cibuli už máš. Víc než jednu cibuli člověk nepotřebuje, věř starému cibuláři."
+        }
+      }
+    },
+    "guard": {
+      "start": "root",
+      "nodes": {
+        "root": {
+          "branch": [
+            {
+              "when": {
+                "kind": "flag",
+                "flag": "guard-asleep"
+              },
+              "to": "asleep"
+            }
+          ],
+          "next": "taunt"
+        },
+        "taunt": {
+          "speaker": "guard",
+          "text": "Stůj! Trhani do královské věže nesmějí. Mazej, než tě praštím halapartnou.",
+          "choices": [
+            {
+              "text": "Nedal by sis pivko?",
+              "when": {
+                "kind": "hasItem",
+                "item": "beer"
+              },
+              "next": "drink"
+            },
+            {
+              "text": "Jen se kouknu dovnitř.",
+              "next": "no"
+            },
+            {
+              "text": "Tak jo, už du."
+            }
+          ]
+        },
+        "no": {
+          "speaker": "guard",
+          "text": "Ani náhodou. Padej."
+        },
+        "drink": {
+          "branch": [
+            {
+              "when": {
+                "kind": "flag",
+                "flag": "beer2"
+              },
+              "to": "rung3"
+            },
+            {
+              "when": {
+                "kind": "flag",
+                "flag": "beer1"
+              },
+              "to": "rung2"
+            }
+          ],
+          "next": "rung1"
+        },
+        "rung1": {
+          "speaker": "guard",
+          "text": "No... jedno pivko službu nezkazí. *glo glo glo* ...Dík.",
+          "effects": [
+            {
+              "kind": "takeItem",
+              "item": "beer"
+            },
+            {
+              "kind": "setFlag",
+              "flag": "beer1"
+            }
+          ]
+        },
+        "rung2": {
+          "speaker": "guard",
+          "text": "Šecko nej-nejlepší! *škyt* Eště jedno bys neměl?",
+          "effects": [
+            {
+              "kind": "takeItem",
+              "item": "beer"
+            },
+            {
+              "kind": "setFlag",
+              "flag": "beer2"
+            }
+          ]
+        },
+        "rung3": {
+          "speaker": "guard",
+          "text": "Já jen... na chvilinku... zavřu očííí... *chrrr*",
+          "effects": [
+            {
+              "kind": "takeItem",
+              "item": "beer"
+            },
+            {
+              "kind": "setFlag",
+              "flag": "beer3"
+            },
+            {
+              "kind": "setFlag",
+              "flag": "guard-asleep"
+            }
+          ]
+        },
+        "asleep": {
+          "speaker": "guard",
+          "text": "*chrrr... chrrr... pšššš... chrrr*"
+        }
+      }
+    }
+  },
   "ambient": {
     "sound": "sfx-ambient"
   },

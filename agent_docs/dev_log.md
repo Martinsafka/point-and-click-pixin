@@ -23,6 +23,34 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Demo P3: cast NPCs + dialogue trees
+**What:** Added the 4 cast NPCs to `GameDoc.npcs` — **Hospodský** (keeper), **Rybářka** (vendor),
+**Cibulář** (onion-seller), **Stráž** (guard) — each with a procedural voice, placed in their scenes
+(keeper at the bar, vendor + a roaming onion-seller with a market patrol path, guard at the tower
+door), and wrote their Czech comedy dialogue trees (`GameDoc.dialogs`): the keeper's rats-for-beer
+deal + post-rats "free beer + fishing-float quip", the vendor's charm→fish trade, the onion-seller's
+free-onion patter + "Cibule! Kupte si cibuli!" monologue, and the guard's taunt + the 3-rung
+**beer-ladder** (`beer1`/`beer2`/`beer3` → `guard-asleep`). Also did the promised **Czech-diacritics
+sweep** over all P0–P2 content strings. Hero = **Claude** (named in the poster proclamation).
+**Why:** P3 of the roadmap — the cast + the conversational logic the favour chain (P4) and the
+guard gate (P5) build on.
+**How:**
+- Dialogue uses the engine's `branch` routers for state-driven openings (keeper routes on
+  `rats-cleared` / `keeper-deal`; the guard's ladder routes on `beer1` / `beer2`). Trades are
+  `takeItem` + `giveItem` + `setFlag` choice effects. The beer choice is gated `when hasItem beer`
+  for now; the `timeOfDay dinner` gate + the onion-seller's morning gate land in P5 with the clock.
+- `tools/build_demo.py` now validates dialog `start` / `next` / `branch.to` / `choice.next` node refs
+  + npc↔dialog id refs at build time.
+- **Verified** (Playwright): loads with 0 console errors; the interaction→effect pipeline + Czech
+  diacritics render (clicking the poster shows its bubble); the tavern→street loop still works. NPC
+  dialogue uses the same proven `beginDialogue` pipeline; the headless click can't reliably hit the
+  thin greybox NPC sprite, so the **interactive NPC-dialogue click is deferred to the P6 playthrough**
+  (real sprites in P8 + the talk-cursor hotspot make it a non-issue in actual play).
+**Follow-ups:**
+- **P4 next:** wire the favour chain (hook→grate→charm; charm→vendor→fish; fish→cat→`cat`;
+  cat→cellar→`rats-cleared`→`beer-unlocked` rule) + the cat interactable in the alley.
+- P5: clock + `timeOfDay` gates + sober-up rule + tower-door gate + morning↔dinner lighting.
+
 ### 2026-06-18 — Demo P0–P2: greybox scaffold + parallax layout + items/interactables (_Magický polibek_)
 **What:** Started the real demo build. Replaced the old street/room demo with a fresh
 `content/game.json` for **_Magický polibek_** — 4 scenes (tavern / street / tower-exterior /
