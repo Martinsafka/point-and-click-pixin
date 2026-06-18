@@ -121,10 +121,12 @@ anywhere (dialogue, NPC presence, exits, rules).
 > art; the **real-asset pass** (Phase 8) swaps it in. Assets can be made in parallel — each phase
 > lists what it needs.
 
-- [ ] **Prereq (engine, FIRST) — the `timeOfDay` condition.** _(Locked: variant A — we want time
-      on **anything**.)_ The clock writes `clockMinutes` but nothing except a routine edge can read
-      it; this adds the missing half so `when` can gate on time everywhere (dialogue, NPC presence,
-      exits, lights, rules). Resolves the M12c "general timeOfDay condition" follow-up.
+- [x] **Prereq (engine, FIRST) — the `timeOfDay` condition.** ✅ _(variant A — time on
+      **anything**.)_ The clock wrote `clockMinutes` but nothing except a routine edge could read
+      it; now `when` gates on time everywhere (dialogue, NPC presence, exits, lights, rules).
+      Resolves the M12c "general timeOfDay condition" follow-up. _(Shipped: `Condition` kind
+      `timeOfDay {from?,to?}`; `inTimeWindow` moved into `conditions.ts`; `ConditionEditor` HH:MM
+      inputs; 13-check Node test green.)_
   - **Schema** (`data/schema.ts`): `Condition |= { kind:'timeOfDay', from: number, to: number }`
     (minutes past midnight; wraps when `from > to`, e.g. 22:00–06:00).
   - **Evaluator** (`systems/conditions.ts`): a `case 'timeOfDay'` in `checkCondition` over

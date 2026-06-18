@@ -702,6 +702,7 @@ Use a common web audio format (**WAV / MP3 / OGG**); keep one-shots short and am
 | `hasItem`   | the player holds an item.                   |
 | `flag`      | a flag is on (or off — the checkbox).       |
 | `visited`   | a scene has been visited.                   |
+| `timeOfDay` | the **game clock** is within a from–to window (HH:MM; wraps past midnight; always true with no clock). |
 | `all`       | **all** nested conditions are true (AND).   |
 | `any`       | **any** nested condition is true (OR).      |
 | `not`       | the nested condition is false.              |

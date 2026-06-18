@@ -8,29 +8,12 @@
 // Scope: transitions are condition- and/or time-driven (`when` / `after` ms in node).
 // The full time-of-day scheduler stays M12.
 
-import { checkCondition, type StoryState, type StoryStore } from './conditions'
+import { checkCondition, inTimeWindow, type StoryState, type StoryStore } from './conditions'
 import type { NpcDef, NpcId, Routine, RoutineNode } from '../data/schema'
 
 /** Find a routine node by id (undefined id / missing node → undefined). */
 export function routineNode(routine: Routine, id: string | undefined): RoutineNode | undefined {
   return id ? routine.nodes.find((n) => n.id === id) : undefined
-}
-
-/**
- * Is the time-of-day `now` (minutes past midnight) inside the window `[from, to)`? Either
- * bound may be omitted (open); wraps past midnight when `from` > `to`. When no clock is
- * running (`now` undefined) or no window is set, it's always in (the gate is inert). (M12c)
- */
-export function inTimeWindow(
-  now: number | undefined,
-  from: number | undefined,
-  to: number | undefined,
-): boolean {
-  if (from === undefined && to === undefined) return true
-  if (now === undefined) return true
-  const f = from ?? 0
-  const t = to ?? 1440
-  return f <= t ? now >= f && now < t : now >= f || now < t
 }
 
 /**

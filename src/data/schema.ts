@@ -150,6 +150,10 @@ export type Condition =
   | { kind: 'all'; of: Condition[] }
   | { kind: 'any'; of: Condition[] }
   | { kind: 'not'; of: Condition }
+  // True while the game clock's time-of-day is within `[from, to)` minutes past midnight
+  // (wraps past midnight when `from > to`, e.g. 1320..360 = 22:00–06:00). Either bound may be
+  // omitted (open). Always true when no clock is configured. (M12.5 — gates `when` on time.)
+  | { kind: 'timeOfDay'; from?: number; to?: number }
 
 export type Effect =
   | { kind: 'setFlag'; flag: FlagId; value?: boolean }

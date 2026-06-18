@@ -1,7 +1,8 @@
 import type { Condition, ItemDef, ItemId, SceneId } from '../data/schema'
 import { ItemSelect, SceneSelect } from './EffectList'
+import { minutesToHHMM, hhmmToMinutes } from './time-format'
 
-const COND_KINDS = ['hasItem', 'flag', 'visited', 'all', 'any', 'not'] as const
+const COND_KINDS = ['hasItem', 'flag', 'visited', 'timeOfDay', 'all', 'any', 'not'] as const
 
 function defaultCondition(kind: string, sceneIds: SceneId[]): Condition | undefined {
   switch (kind) {
@@ -11,6 +12,8 @@ function defaultCondition(kind: string, sceneIds: SceneId[]): Condition | undefi
       return { kind: 'flag', flag: '' }
     case 'visited':
       return { kind: 'visited', scene: sceneIds[0] ?? '' }
+    case 'timeOfDay':
+      return { kind: 'timeOfDay', from: 360, to: 1080 } // 06:00–18:00 by default
     case 'all':
       return { kind: 'all', of: [] }
     case 'any':
@@ -95,6 +98,34 @@ export function ConditionEditor({
           sceneIds={sceneIds}
           onChange={(scene) => onChange({ kind: 'visited', scene })}
         />
+      )}
+
+      {condition?.kind === 'timeOfDay' && (
+        <>
+          <input
+            type="time"
+            className="logic__in"
+            title="from (time of day; needs a game clock)"
+            value={minutesToHHMM(condition.from)}
+            onChange={(e) =>
+              onChange({ kind: 'timeOfDay', from: hhmmToMinutes(e.target.value), to: condition.to })
+            }
+          />
+          <span>–</span>
+          <input
+            type="time"
+            className="logic__in"
+            title="to (time of day)"
+            value={minutesToHHMM(condition.to)}
+            onChange={(e) =>
+              onChange({
+                kind: 'timeOfDay',
+                from: condition.from,
+                to: hhmmToMinutes(e.target.value),
+              })
+            }
+          />
+        </>
       )}
 
       {(condition?.kind === 'all' || condition?.kind === 'any') && (

@@ -54,6 +54,24 @@ export interface StoryStore extends StoryState {
   enterRoutine(npc: NpcId, node: string, scene: SceneId): void
 }
 
+/**
+ * Is the time-of-day `now` (minutes past midnight) inside the window `[from, to)`? Either bound
+ * may be omitted (open); wraps past midnight when `from` > `to`. When no clock is running (`now`
+ * undefined) or no window is set, it's always in (the gate is inert). (M12c — also used by the
+ * routine runner and the `timeOfDay` condition.)
+ */
+export function inTimeWindow(
+  now: number | undefined,
+  from: number | undefined,
+  to: number | undefined,
+): boolean {
+  if (from === undefined && to === undefined) return true
+  if (now === undefined) return true
+  const f = from ?? 0
+  const t = to ?? 1440
+  return f <= t ? now >= f && now < t : now >= f || now < t
+}
+
 /** Evaluate a Condition against the current story state. */
 export function checkCondition(state: StoryState, cond: Condition): boolean {
   switch (cond.kind) {
@@ -69,6 +87,8 @@ export function checkCondition(state: StoryState, cond: Condition): boolean {
       return cond.of.some((c) => checkCondition(state, c))
     case 'not':
       return !checkCondition(state, cond.of)
+    case 'timeOfDay':
+      return inTimeWindow(state.clockMinutes, cond.from, cond.to)
   }
 }
 
