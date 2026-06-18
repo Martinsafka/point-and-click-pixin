@@ -232,7 +232,47 @@
           ],
           "examine": "Dveře ven na ulici."
         }
-      ]
+      ],
+      "ambientLight": {
+        "color": "#ffcf9a",
+        "intensity": 0.82
+      },
+      "lights": [
+        {
+          "id": "hearth",
+          "x": 0.135,
+          "y": 0.6,
+          "radius": 0.28,
+          "color": "#ff9a3c",
+          "intensity": 1.3,
+          "flicker": 0.45
+        }
+      ],
+      "emitters": [
+        {
+          "id": "embers",
+          "x": 0.135,
+          "y": 0.6,
+          "rate": 8,
+          "life": 1.8,
+          "color": "#ffb24a",
+          "alpha": 0.7,
+          "size": 4,
+          "grow": -1,
+          "shape": "round",
+          "angle": -90,
+          "spread": 25,
+          "speed": 42,
+          "gravity": -8,
+          "spawnRadius": 16,
+          "blend": "add"
+        }
+      ],
+      "vignette": {
+        "intensity": 0.28,
+        "size": 0.72,
+        "color": "#000000"
+      }
     },
     "street": {
       "id": "street",
@@ -336,6 +376,13 @@
             "mode": "pingpong",
             "id": "onion-patrol",
             "name": "Ranní trh"
+          }
+        },
+        {
+          "npc": "drunk",
+          "spawn": {
+            "xFrac": 0.83,
+            "yFrac": 0.92
           }
         }
       ],
@@ -495,7 +542,67 @@
           ],
           "examine": "Cesta k věži."
         }
-      ]
+      ],
+      "ambientLight": {
+        "color": "#eaf0f5",
+        "intensity": 1.0
+      },
+      "fog": {
+        "color": "#c8d2d8",
+        "parallaxX": 6,
+        "parallaxY": 0,
+        "seed": 7,
+        "scaleX": 1.0,
+        "scaleY": 0.6,
+        "scale": 150,
+        "opacity": 0.1,
+        "backZ": 8,
+        "frontOpacity": 0.05,
+        "frontZ": 26
+      },
+      "emitters": [
+        {
+          "id": "mist",
+          "x": 0.787,
+          "y": 0.62,
+          "rate": 14,
+          "life": 1.6,
+          "color": "#dceaf0",
+          "alpha": 0.4,
+          "size": 5,
+          "grow": 3,
+          "shape": "round",
+          "angle": -90,
+          "spread": 45,
+          "speed": 22,
+          "gravity": 20,
+          "spawnRadius": 12,
+          "blend": "add"
+        },
+        {
+          "id": "smoke",
+          "x": 0.42,
+          "y": 0.3,
+          "rate": 6,
+          "life": 3.6,
+          "color": "#9aa0a4",
+          "alpha": 0.32,
+          "size": 10,
+          "grow": 14,
+          "shape": "round",
+          "angle": -90,
+          "spread": 12,
+          "speed": 28,
+          "gravity": -6,
+          "spawnRadius": 6,
+          "blend": "normal"
+        }
+      ],
+      "vignette": {
+        "intensity": 0.22,
+        "size": 0.74,
+        "color": "#000000"
+      }
     },
     "tower": {
       "id": "tower",
@@ -637,7 +744,29 @@
             }
           }
         }
-      ]
+      ],
+      "ambientLight": {
+        "color": "#dfe6f2",
+        "intensity": 0.95
+      },
+      "fog": {
+        "color": "#cdd6dc",
+        "parallaxX": 5,
+        "parallaxY": 0,
+        "seed": 11,
+        "scaleX": 1.0,
+        "scaleY": 0.6,
+        "scale": 150,
+        "opacity": 0.1,
+        "backZ": 8,
+        "frontOpacity": 0.05,
+        "frontZ": 26
+      },
+      "vignette": {
+        "intensity": 0.26,
+        "size": 0.72,
+        "color": "#000000"
+      }
     },
     "tower-room": {
       "id": "tower-room",
@@ -745,7 +874,27 @@
           ],
           "examine": "Dolů po schodech."
         }
-      ]
+      ],
+      "ambientLight": {
+        "color": "#b9c2e8",
+        "intensity": 0.72
+      },
+      "lights": [
+        {
+          "id": "candle",
+          "x": 0.5,
+          "y": 0.55,
+          "radius": 0.32,
+          "color": "#ffd9a0",
+          "intensity": 0.95,
+          "flicker": 0.18
+        }
+      ],
+      "vignette": {
+        "intensity": 0.36,
+        "size": 0.66,
+        "color": "#000000"
+      }
     }
   },
   "items": {
@@ -912,6 +1061,28 @@
       "voice": {
         "pitch": 0.7
       }
+    },
+    "drunk": {
+      "id": "drunk",
+      "name": "Opilec",
+      "voice": {
+        "pitch": 0.6
+      },
+      "inspect": {
+        "text": "Místní štamgast. Chrápe na lavičce u kašny."
+      },
+      "monologues": [
+        {
+          "text": "...eště jedno, hospodo...",
+          "after": 2500,
+          "every": 9000
+        },
+        {
+          "text": "Zzzz... chrrr... pšš...",
+          "after": 6500,
+          "every": 9000
+        }
+      ]
     }
   },
   "dialogs": {

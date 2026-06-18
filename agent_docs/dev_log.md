@@ -23,6 +23,29 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Demo P7: atmosphere, dynamism & ambient life
+**What:** Added per-scene mood + motion (engine-driven, art-agnostic). **Tavern**: warm dim
+`ambientLight` + a flickering **hearth light** + a rising **ember** emitter + a vignette. **Street**:
+bright-day ambient + a light **fog** haze (atmospheric depth, like the reference) + **fountain-mist**
++ **chimney-smoke** emitters + a vignette + an ambient **drunk** townsfolk (idle, two cycling
+monologues + an inspect line). **Tower**: cool ambient + haze + vignette. **Tower-room**: dim cool
+"moonlit" ambient + a flickering **candle** + a heavier vignette.
+**Why:** P7 — make the world feel alive (the user asked for animated / dynamic assets) + the
+atmospheric depth of the art reference.
+**How:**
+- Dynamism without sprite atlases yet: engine **PointEmitter** particles (embers / mist / smoke),
+  **LightSource** `flicker` (hearth / candle), animated **fog** — all data. PixelLab `animate_object`
+  sprite layers (fire, fountain water, birds, breathing princess, cat tail) come in P8.
+- Atmosphere merged post-build (a clean block), tuned with the real art in P8 / P10.
+- **Sound** already matches / exceeds the **default project** — global ambient / footstep / pickup /
+  transition (P0) + per-NPC procedural voices (P3). Custom recorded SFX / music are the only gap
+  (PixelLab is image-only; a later upload swap).
+- **Verified** (Playwright): 0 console errors; the warm hearth glow + vignette + fog + smoke render;
+  the intro cutscene + favour-chain regression still pass.
+**Follow-ups:**
+- P8: the real PixelLab art pass — lock the style on a hero asset, then backgrounds (layered), 7
+  character atlases, 6 item icons, props; wire + re-tune lighting / fog to the painted art.
+
 ### 2026-06-18 — Demo P6: princess, cutscenes & the ending
 **What:** Built the endgame + the two required cutscenes. An **intro cutscene** (a tavern `trigger`
 `when not saw-intro`, `once`) auto-plays at game start — a camera push-in + the narrator/Claude
