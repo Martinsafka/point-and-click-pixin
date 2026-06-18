@@ -357,6 +357,21 @@
         },
         {
           "kind": "image",
+          "band": "background",
+          "src": "/assets/prop/cat.png",
+          "fit": "none",
+          "xFrac": 0.325,
+          "yFrac": 0.85,
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "got-cat"
+            }
+          }
+        },
+        {
+          "kind": "image",
           "band": "foreground",
           "parallax": 1.0,
           "fit": "stretch",

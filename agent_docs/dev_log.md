@@ -23,6 +23,32 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Demo P8: real PixelLab art (characters, backgrounds, items, props)
+**What:** Generated + wired the full art pass via the PixelLab MCP. **7 characters** (Claude +
+keeper / vendor / onion / guard / drunk + a quadruped cat) → composed [south, east] atlases →
+ViewDescriptors (idle.S / idle.E, W mirrors E) on the player + NPCs. **Backgrounds** for every scene
+(tavern; tower; tower-room with an asleep↔awake bg swap on `princess-awake`; the wide street composed
+in Pillow from a mirror-alternated house row + sky gradient + ground strip). **6 item icons**
+(hook / charm / fish / beer / onion + the cat from its sprite). **Props** placed as layers (tavern:
+poster / cellar / fork-on-bar; street: stall / fountain / grate / alley-cat). Re-anchored the tavern
+interactables to the painted bar-left layout.
+**Why:** P8 — swap greybox for real art (the showcase). PixelLab proved strong at both characters
+**and** backgrounds; cohesion held from style words alone (no style-reference needed).
+**How:**
+- Gitignored tools: `fetch_art.py` (char rotations → atlases + feet-anchor detection), `fetch_obj.py`
+  (objects → trimmed icons / full bgs + the Pillow street compose + cat icon & prop). Assets land in
+  `public/assets/` (committed) + are referenced by URL from `game.json`.
+- Characters are **static directional stills** (idle.S front / idle.E profile, W mirrored) at
+  `characterScale` 3.0 — walk / one-shot **animations are a deferred follow-up**.
+- Backgrounds use `fit:'stretch'` (square PixelLab art → 16:9 scene; keeps the floor + composition;
+  `cover` would crop the floor). The wide street is parallax bands (sky 0.4 / houses 0.85 / ground 1).
+- **Verified** (Playwright): the full pickup → use → street chain + the intro cutscene pass with the
+  real art, 0 console errors; tavern + street eyeballed (cohesive, grounded, atmospheric).
+**Follow-ups:**
+- Eyeball + re-anchor **tower / tower-room** in the P10 playthrough (bg swaps wired, not yet seen).
+- Character **animations** + PixelLab `animate_object` scene anims (fire / fountain / birds) — polish.
+- The street mid-band is a touch sparse; could add dressing.
+
 ### 2026-06-18 — Demo P7: atmosphere, dynamism & ambient life
 **What:** Added per-scene mood + motion (engine-driven, art-agnostic). **Tavern**: warm dim
 `ambientLight` + a flickering **hearth light** + a rising **ember** emitter + a vignette. **Street**:
