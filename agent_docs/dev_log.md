@@ -23,6 +23,18 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-18 — Demo P11b: scene-object animations (fountain water + breathing princess)
+**What:** `animate_object` (v3) animations wired as `animated` layers — the street **fountain water**
+trickling, and the tower-room **sleeping princess breathing** (candle flickering too): the asleep
+bedroom is now an animated full-scene layer (gated `when not princess-awake`). `fetch_obj.py`
+composes the 7-frame object animations into single-row atlases; `build_demo.py` gained an
+`anim_layer` helper.
+**Verified**: both render clean frames (room preview + street shot), the chain passes, 0 console
+errors. The world now moves at every layer — characters breathe / walk, particles + fog drift, the
+fountain runs, the princess breathes.
+**Follow-ups (optional, low value):** a flickering-fire sprite (redundant with the ember particles +
+hearth flicker-light), flying birds, one-shot cutscene anims (kiss / eat / wake).
+
 ### 2026-06-18 — Demo P11: character animations (idle + walk)
 **What:** Brought the cast to life (user-requested follow-up). Generated PixelLab **template
 animations** — **breathing-idle** for every character (south + east) + a **walk** cycle for the two

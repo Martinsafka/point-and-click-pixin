@@ -340,9 +340,14 @@
           "yFrac": 0.72
         },
         {
-          "kind": "image",
+          "kind": "animated",
           "band": "background",
-          "src": "/assets/prop/fountain.png",
+          "src": "/assets/anim/fountain.png",
+          "frameWidth": 200,
+          "frameHeight": 200,
+          "columns": 7,
+          "frames": 7,
+          "fps": 8,
           "fit": "none",
           "xFrac": 0.79,
           "yFrac": 0.72
@@ -811,11 +816,15 @@
       ],
       "layers": [
         {
-          "kind": "image",
+          "kind": "animated",
           "band": "background",
-          "src": "/assets/bg/room-asleep.png",
+          "src": "/assets/anim/room-asleep.png",
+          "frameWidth": 256,
+          "frameHeight": 256,
+          "columns": 7,
+          "frames": 7,
+          "fps": 6,
           "fit": "stretch",
-          "parallax": 1.0,
           "when": {
             "kind": "not",
             "of": {
