@@ -10,6 +10,14 @@ import { editorStore } from './editor-store'
 import { Slider } from './Slider'
 import { ConditionEditor } from './ConditionEditor'
 import { SoundSelect } from './SoundSelect'
+import { hhmmToMinutes, minutesToHHMM } from './time-format'
+
+const GRADE_FIELDS = [
+  ['brightness', 'b'],
+  ['contrast', 'c'],
+  ['saturation', 's'],
+  ['hue', 'h°'],
+] as const
 
 const DEFAULT_GRADE: ColorGrade = { brightness: 1, contrast: 1, saturation: 1, hue: 0 }
 const DEFAULT_VIGNETTE: Vignette = { intensity: 0.4, size: 0.5, color: '#000000' }
@@ -27,6 +35,7 @@ const DEFAULT_LIGHTNING: LightningConfig = {
 export function SceneGrade({
   sceneId,
   colorGrade,
+  colorGradeByTime,
   vignette,
   lightning,
   items,
@@ -34,6 +43,7 @@ export function SceneGrade({
 }: {
   sceneId: SceneId
   colorGrade: ColorGrade | undefined
+  colorGradeByTime: { at: number; grade: ColorGrade }[] | undefined
   vignette: Vignette | undefined
   lightning: LightningConfig | undefined
   items: Record<ItemId, ItemDef>
@@ -94,6 +104,83 @@ export function SceneGrade({
             onChange={(v) => grade({ hue: v })}
           />
         </>
+      )}
+
+      {/* Day-cycle grade — time-of-day keyframes (M13d): tints the whole scene over the clock */}
+      <label className="logic__chk">
+        <input
+          type="checkbox"
+          checked={!!colorGradeByTime}
+          onChange={(e) =>
+            s().setSceneColorGradeByTime(
+              sceneId,
+              e.target.checked ? [{ at: 720, grade: DEFAULT_GRADE }] : undefined,
+            )
+          }
+        />
+        day-cycle grade (time keyframes)
+      </label>
+      {colorGradeByTime && (
+        <div className="logic__col">
+          {colorGradeByTime.map((kf, i) => {
+            const setKf = (patch: Partial<{ at: number; grade: ColorGrade }>) =>
+              s().setSceneColorGradeByTime(
+                sceneId,
+                colorGradeByTime.map((k, j) => (j === i ? { ...k, ...patch } : k)),
+              )
+            return (
+              <div key={i} className="layer-row__anim">
+                <input
+                  type="time"
+                  className="logic__in"
+                  value={minutesToHHMM(kf.at)}
+                  onChange={(e) => {
+                    const m = hhmmToMinutes(e.target.value)
+                    if (m !== undefined) setKf({ at: m })
+                  }}
+                />
+                {GRADE_FIELDS.map(([key, lbl]) => (
+                  <label key={key} className="layer-row__anim-field">
+                    <span>{lbl}</span>
+                    <input
+                      type="number"
+                      className="logic__in"
+                      step={key === 'hue' ? 5 : 0.05}
+                      value={kf.grade[key]}
+                      onChange={(e) =>
+                        setKf({ grade: { ...kf.grade, [key]: Number(e.target.value) } })
+                      }
+                    />
+                  </label>
+                ))}
+                <button
+                  type="button"
+                  title="Remove keyframe"
+                  onClick={() =>
+                    s().setSceneColorGradeByTime(
+                      sceneId,
+                      colorGradeByTime.filter((_, j) => j !== i),
+                    )
+                  }
+                >
+                  ✕
+                </button>
+              </div>
+            )
+          })}
+          <button
+            type="button"
+            className="editor__import"
+            onClick={() =>
+              s().setSceneColorGradeByTime(sceneId, [
+                ...colorGradeByTime,
+                { at: 0, grade: DEFAULT_GRADE },
+              ])
+            }
+          >
+            + keyframe
+          </button>
+        </div>
       )}
 
       {/* Vignette */}

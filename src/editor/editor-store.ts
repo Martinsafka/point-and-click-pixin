@@ -233,6 +233,8 @@ interface EditorStore {
   setSceneFog(id: SceneId, fog: FogConfig | undefined): void
   /** Colour grade / vignette / lightning for this scene (M10 10d); undefined removes each. */
   setSceneColorGrade(id: SceneId, grade: ColorGrade | undefined): void
+  /** Time-of-day grade keyframes (M13d); undefined removes the day cycle. */
+  setSceneColorGradeByTime(id: SceneId, kf: { at: number; grade: ColorGrade }[] | undefined): void
   setSceneVignette(id: SceneId, vignette: Vignette | undefined): void
   setSceneLightning(id: SceneId, lightning: LightningConfig | undefined): void
   setDocAmbientLight(ambient: AmbientLight | undefined): void
@@ -987,6 +989,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       ),
     setSceneFog: (id, fog) => patchScene(id, { fog }, false),
     setSceneColorGrade: (id, colorGrade) => patchScene(id, { colorGrade }, false),
+    setSceneColorGradeByTime: (id, colorGradeByTime) =>
+      patchScene(id, { colorGradeByTime }, false),
     setSceneVignette: (id, vignette) => patchScene(id, { vignette }, false),
     setSceneLightning: (id, lightning) => patchScene(id, { lightning }, false),
     addDarkArea: (id) =>

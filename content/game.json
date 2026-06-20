@@ -374,18 +374,6 @@
               "flag": "got-cat"
             }
           }
-        },
-        {
-          "kind": "image",
-          "band": "foreground",
-          "parallax": 1.0,
-          "fit": "stretch",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCA0MDAwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI0MDAwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiNlMGEyM2MiIG9wYWNpdHk9IjAuMjIiLz48L3N2Zz4=",
-          "when": {
-            "kind": "timeOfDay",
-            "from": 960,
-            "to": 1380
-          }
         }
       ],
       "npcs": [
@@ -644,7 +632,45 @@
         "size": 0.74,
         "color": "#000000"
       },
-      "characterScale": 3.0
+      "characterScale": 3.0,
+      "colorGradeByTime": [
+        {
+          "at": 360,
+          "grade": {
+            "brightness": 1.05,
+            "contrast": 1.0,
+            "saturation": 1.0,
+            "hue": -6
+          }
+        },
+        {
+          "at": 720,
+          "grade": {
+            "brightness": 1.0,
+            "contrast": 1.0,
+            "saturation": 1.0,
+            "hue": 0
+          }
+        },
+        {
+          "at": 1080,
+          "grade": {
+            "brightness": 0.92,
+            "contrast": 1.06,
+            "saturation": 1.12,
+            "hue": 20
+          }
+        },
+        {
+          "at": 0,
+          "grade": {
+            "brightness": 0.58,
+            "contrast": 1.06,
+            "saturation": 0.78,
+            "hue": -22
+          }
+        }
+      ]
     },
     "tower": {
       "id": "tower",
@@ -677,18 +703,6 @@
           "src": "/assets/bg/tower.png",
           "fit": "stretch",
           "parallax": 1.0
-        },
-        {
-          "kind": "image",
-          "band": "foreground",
-          "parallax": 1.0,
-          "fit": "stretch",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiNlMGEyM2MiIG9wYWNpdHk9IjAuMjIiLz48L3N2Zz4=",
-          "when": {
-            "kind": "timeOfDay",
-            "from": 960,
-            "to": 1380
-          }
         }
       ],
       "npcs": [
@@ -788,7 +802,45 @@
         "size": 0.72,
         "color": "#000000"
       },
-      "characterScale": 3.0
+      "characterScale": 3.0,
+      "colorGradeByTime": [
+        {
+          "at": 360,
+          "grade": {
+            "brightness": 1.05,
+            "contrast": 1.0,
+            "saturation": 1.0,
+            "hue": -6
+          }
+        },
+        {
+          "at": 720,
+          "grade": {
+            "brightness": 1.0,
+            "contrast": 1.0,
+            "saturation": 1.0,
+            "hue": 0
+          }
+        },
+        {
+          "at": 1080,
+          "grade": {
+            "brightness": 0.92,
+            "contrast": 1.06,
+            "saturation": 1.12,
+            "hue": 20
+          }
+        },
+        {
+          "at": 0,
+          "grade": {
+            "brightness": 0.58,
+            "contrast": 1.06,
+            "saturation": 0.78,
+            "hue": -22
+          }
+        }
+      ]
     },
     "tower-room": {
       "id": "tower-room",
@@ -989,7 +1041,45 @@
           "examine": "Zpět do hry."
         }
       ],
-      "characterScale": 3.0
+      "characterScale": 3.0,
+      "colorGradeByTime": [
+        {
+          "at": 360,
+          "grade": {
+            "brightness": 1.05,
+            "contrast": 1.0,
+            "saturation": 1.0,
+            "hue": -6
+          }
+        },
+        {
+          "at": 720,
+          "grade": {
+            "brightness": 1.0,
+            "contrast": 1.0,
+            "saturation": 1.0,
+            "hue": 0
+          }
+        },
+        {
+          "at": 1080,
+          "grade": {
+            "brightness": 0.92,
+            "contrast": 1.06,
+            "saturation": 1.12,
+            "hue": 20
+          }
+        },
+        {
+          "at": 0,
+          "grade": {
+            "brightness": 0.58,
+            "contrast": 1.06,
+            "saturation": 0.78,
+            "hue": -22
+          }
+        }
+      ]
     }
   },
   "items": {

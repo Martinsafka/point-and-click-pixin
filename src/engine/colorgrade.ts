@@ -11,11 +11,16 @@ export function gradeActive(g: ColorGrade): boolean {
  * change` for brightness / contrast / saturation and degrees for hue; mapped to the filter's
  * native deltas (0 = no change) and chained (`multiply`).
  */
-export function makeColorGradeFilter(g: ColorGrade): ColorMatrixFilter {
-  const f = new ColorMatrixFilter()
+/** Apply a colour grade to an existing filter (resets, then chains) — for live / time-driven updates. */
+export function setColorGrade(f: ColorMatrixFilter, g: ColorGrade): void {
   f.brightness(g.brightness, false) // resets the matrix, then we chain
   f.saturate(g.saturation - 1, true)
   f.contrast(g.contrast - 1, true)
   if (g.hue) f.hue(g.hue, true)
+}
+
+export function makeColorGradeFilter(g: ColorGrade): ColorMatrixFilter {
+  const f = new ColorMatrixFilter()
+  setColorGrade(f, g)
   return f
 }

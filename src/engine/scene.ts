@@ -25,7 +25,7 @@ import { createAtmosphere } from './atmosphere'
 import { createWeatherSystem, type WeatherSystem } from './weather'
 import { createEmitterSystem, type EmitterSystem } from './emitters'
 import { createFog, type FogBackInto, type FogSystem } from './fog'
-import { gradeActive, makeColorGradeFilter } from './colorgrade'
+import { gradeActive, makeColorGradeFilter, setColorGrade } from './colorgrade'
 import { createVignette, type VignetteSystem } from './vignette'
 import { createLightning, type LightningSystem } from './lightning'
 import { createLighting, type Lighting } from './lighting'
@@ -503,14 +503,40 @@ export async function mountScene(
     }
   }
 
-  // Time-of-day crossfade (M13d): cross-dissolve the `timeFadeAt` background layers over the clock.
-  // The two bracketing keyframes blend (smoothstep); the fading-in layer is z-ordered above the
-  // base so the midnight wrap composites correctly. Driven smoothly by the clock ticker below, and
-  // applied once now for the initial time (also the only pass for a static, clock-less scene).
+  // Time-of-day crossfade (M13d): the `timeFadeAt` background layers + the `colorGradeByTime` global
+  // grade both blend (smoothstep) between their two bracketing day-cycle keyframes over the game
+  // clock; the fading-in layer is z-ordered above the base so the midnight wrap has no gap.
   if (fadeLayers.length > 1) background.sortableChildren = true
   const smoothstep = (x: number): number => {
     const t = Math.min(1, Math.max(0, x))
     return t * t * (3 - 2 * t)
+  }
+  // The two day-cycle keyframes bracketing `now` (a 24h ring) + the smoothstep blend fraction.
+  const timeBracket = <T extends { at: number }>(
+    items: T[],
+    now: number,
+  ): { a: T; b: T; f: number } => {
+    const s = [...items].sort((x, y) => x.at - y.at)
+    const n = s.length
+    let bi = -1
+    for (let k = 0; k < n; k += 1) if (s[k].at <= now) bi = k
+    let a: T
+    let b: T
+    let aAt: number
+    let bAt: number
+    if (bi === -1) {
+      a = s[n - 1] // before the first keyframe — wrap in from the previous day
+      aAt = s[n - 1].at - 1440
+      b = s[0]
+      bAt = s[0].at
+    } else {
+      a = s[bi]
+      aAt = s[bi].at
+      b = s[(bi + 1) % n]
+      bAt = bi + 1 < n ? s[bi + 1].at : s[0].at + 1440
+    }
+    const span = bAt - aAt
+    return { a, b, f: span > 0 ? smoothstep((now - aAt) / span) : 0 }
   }
   const applyTimeFade = (now: number): void => {
     if (fadeLayers.length === 0) return
@@ -518,36 +544,15 @@ export async function mountScene(
       fadeLayers[0].display.alpha = 1
       return
     }
-    const sorted = [...fadeLayers].sort((a, b) => a.at - b.at)
-    const n = sorted.length
-    let bi = -1
-    for (let k = 0; k < n; k += 1) if (sorted[k].at <= now) bi = k
-    let base: { display: Container; at: number }
-    let next: { display: Container; at: number }
-    let baseAt: number
-    let nextAt: number
-    if (bi === -1) {
-      // before the first keyframe — wrap from the last (previous day)
-      base = sorted[n - 1]
-      baseAt = sorted[n - 1].at - 1440
-      next = sorted[0]
-      nextAt = sorted[0].at
-    } else {
-      base = sorted[bi]
-      baseAt = sorted[bi].at
-      next = sorted[(bi + 1) % n]
-      nextAt = bi + 1 < n ? sorted[bi + 1].at : sorted[0].at + 1440
-    }
-    const span = nextAt - baseAt
-    const f = span > 0 ? smoothstep((now - baseAt) / span) : 0
-    for (const l of sorted) {
+    for (const l of fadeLayers) {
       l.display.alpha = 0
       l.display.zIndex = 0
     }
-    base.display.alpha = 1
-    base.display.zIndex = 1
-    next.display.alpha = f
-    next.display.zIndex = 2
+    const { a, b, f } = timeBracket(fadeLayers, now)
+    a.display.alpha = 1
+    a.display.zIndex = 1
+    b.display.alpha = f
+    b.display.zIndex = 2
   }
   applyTimeFade(store.getState().clockMinutes ?? 0)
 
@@ -578,7 +583,32 @@ export async function mountScene(
   // (rebuilt together by applyLive). Grade is a world filter; vignette + lightning are
   // screen-space (screenFx slot).
   let gradeScene = scene
+  // Time-of-day global grade (M13d): one ColorMatrixFilter on `world` (tints backdrop + props +
+  // characters together), its matrix re-interpolated between `colorGradeByTime` keyframes each
+  // clock-minute (and on the editor's World-time scrub).
+  const timeGradeFilter = makeColorGradeFilter({ brightness: 1, contrast: 1, saturation: 1, hue: 0 })
+  const applyTimeGrade = (now: number): void => {
+    const kf = gradeScene.colorGradeByTime
+    if (!kf || kf.length === 0) return
+    if (kf.length === 1) {
+      setColorGrade(timeGradeFilter, kf[0].grade)
+      return
+    }
+    const { a, b, f } = timeBracket(kf, now)
+    const mix = (x: number, y: number): number => x + (y - x) * f
+    setColorGrade(timeGradeFilter, {
+      brightness: mix(a.grade.brightness, b.grade.brightness),
+      contrast: mix(a.grade.contrast, b.grade.contrast),
+      saturation: mix(a.grade.saturation, b.grade.saturation),
+      hue: mix(a.grade.hue, b.grade.hue),
+    })
+  }
   const buildColorGrade = (): void => {
+    if (gradeScene.colorGradeByTime?.length) {
+      applyTimeGrade(store.getState().clockMinutes ?? 0)
+      world.filters = [timeGradeFilter]
+      return
+    }
     const g = gradeScene.colorGrade
     world.filters = g && gradeActive(g) ? [makeColorGradeFilter(g)] : []
   }
@@ -675,7 +705,8 @@ export async function mountScene(
   const refreshVisibility = () => {
     const state = store.getState()
     for (const c of conditional) c.display.visible = c.show(state)
-    applyTimeFade(state.clockMinutes ?? 0) // time-of-day crossfade (M13d): per clock-minute + scrub
+    applyTimeFade(state.clockMinutes ?? 0) // time-of-day layer crossfade (M13d): per minute + scrub
+    applyTimeGrade(state.clockMinutes ?? 0) // time-of-day global grade (M13d)
     for (const sw of pathSwitchers) sw(state)
     refreshEmitterVisibility(state)
     syncWeather(state)
@@ -1431,6 +1462,7 @@ export async function mountScene(
       sc.fog,
       sc.emitters,
       sc.colorGrade,
+      sc.colorGradeByTime,
       sc.vignette,
       sc.lightning,
       a.ambientLight,

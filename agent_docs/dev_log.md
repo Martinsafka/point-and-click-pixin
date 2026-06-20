@@ -23,6 +23,30 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-20 — M13d+: global time-of-day colour grade (whole-scene day/night)
+**What:** Extended the day cycle to a **global grade** so the *whole* scene — backdrop, props **and
+characters** — matches the time of day from **one neutral asset set** (the user's worry: the
+4-render backdrop crossfade left props / NPCs in flat daylight). A scene can set **`colorGradeByTime`**
+(grade keyframes by clock minute); the engine interpolates the grade (brightness / contrast /
+saturation / hue, smoothstep, looping) and applies it as a **`world` filter** — which tints every
+band, incl. the mid (characters). Replaced the demo's old foreground **dusk overlay** on the street +
+tower with this grade, and gave the **`daycycle`** showcase both (layer crossfade + grade together).
+**Why:** opacity-crossfading 4 variants of *every* asset (props, NPCs, animations) is impractical;
+one global time-driven grade is the standard, cheap way to keep everything consistent.
+**How:**
+- **Schema:** `SceneData.colorGradeByTime?: { at, grade }[]`.
+- **Engine** (`scene.ts` + `colorgrade.ts`): a persistent `ColorMatrixFilter` on `world`;
+  `applyTimeGrade(now)` interpolates the bracketing keyframes (shared **`timeBracket`** helper with
+  the layer crossfade) and updates the matrix via the new `setColorGrade(filter, grade)`. Driven from
+  `refreshVisibility` (per clock-minute + World-scrub); added to the live `atmoHash` so editor edits
+  re-apply with no remount.
+- **Editor** (`SceneGrade` + `editor-store`): a **"day-cycle grade (time keyframes)"** section — add /
+  remove keyframes, each an `<input type=time>` + brightness / contrast / saturation / hue inputs →
+  `setSceneColorGradeByTime`.
+- **Verified:** typecheck + lint clean; favour-chain regression passes; previewed the street at noon
+  vs night — the **whole** scene (player + props + cat + houses) tints dark-blue at night.
+**Follow-ups:** none. (The build tool's old `dusk_overlay` helper is now unused.)
+
 ### 2026-06-20 — M13d: time-of-day layer crossfade (clock-driven day cycle)
 **What:** New engine + editor feature (user request — they render 4 lit variants of a scene in UE5
 and want a gradual time blend). A background `image` / `animated` layer can set **`timeFadeAt`**

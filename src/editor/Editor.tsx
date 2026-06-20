@@ -636,6 +636,7 @@ export function Editor() {
               <SceneGrade
                 sceneId={selectedId}
                 colorGrade={scene.colorGrade}
+                colorGradeByTime={scene.colorGradeByTime}
                 vignette={scene.vignette}
                 lightning={scene.lightning}
                 items={doc.items}

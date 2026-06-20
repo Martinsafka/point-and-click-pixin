@@ -911,6 +911,11 @@ export interface SceneData {
   fog?: FogConfig
   /** Colour grade over the scene art (M10 10d). */
   colorGrade?: ColorGrade
+  /** Time-of-day grade keyframes (M13d): the global grade interpolates between these over the game
+   *  clock (each `at` = minutes past midnight), tinting the **whole** scene — backdrop, props and
+   *  characters together — so one neutral asset set matches the time of day. Overrides `colorGrade`
+   *  when set; pair with `timeFadeAt` backdrop layers for a full day cycle. */
+  colorGradeByTime?: { at: number; grade: ColorGrade }[]
   /** Vignette — darkened edges (M10 10d). */
   vignette?: Vignette
   /** Lightning flashes + thunder (M10 10d). */
