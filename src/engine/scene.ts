@@ -447,6 +447,9 @@ export async function mountScene(
   const parallaxLayers: { display: Container; baseX: number; baseY: number; p: number }[] = []
   // Each layer's display, indexed by scene-layer index — fog can slot its back layer behind one.
   const layerDisplays: Container[] = []
+  // Time-of-day crossfade (M13d): background layers that cross-dissolve over the game clock, each
+  // peaking at its `timeFadeAt` (minutes past midnight). The two bracketing keyframes blend.
+  const fadeLayers: { display: Container; at: number }[] = []
 
   for (let i = 0; i < scene.layers.length; i += 1) {
     const layer = scene.layers[i]
@@ -489,6 +492,8 @@ export async function mountScene(
       }
     }
     bandFor(layer.band).addChild(display)
+    if ((layer.kind === 'image' || layer.kind === 'animated') && layer.timeFadeAt !== undefined)
+      fadeLayers.push({ display, at: layer.timeFadeAt })
     // Opt-in prop shadow (M13c) — a blob at the layer's base (bottom-centre of its bounds).
     if (layer.castShadow) {
       const d = display
@@ -497,6 +502,54 @@ export async function mountScene(
       })
     }
   }
+
+  // Time-of-day crossfade (M13d): cross-dissolve the `timeFadeAt` background layers over the clock.
+  // The two bracketing keyframes blend (smoothstep); the fading-in layer is z-ordered above the
+  // base so the midnight wrap composites correctly. Driven smoothly by the clock ticker below, and
+  // applied once now for the initial time (also the only pass for a static, clock-less scene).
+  if (fadeLayers.length > 1) background.sortableChildren = true
+  const smoothstep = (x: number): number => {
+    const t = Math.min(1, Math.max(0, x))
+    return t * t * (3 - 2 * t)
+  }
+  const applyTimeFade = (now: number): void => {
+    if (fadeLayers.length === 0) return
+    if (fadeLayers.length === 1) {
+      fadeLayers[0].display.alpha = 1
+      return
+    }
+    const sorted = [...fadeLayers].sort((a, b) => a.at - b.at)
+    const n = sorted.length
+    let bi = -1
+    for (let k = 0; k < n; k += 1) if (sorted[k].at <= now) bi = k
+    let base: { display: Container; at: number }
+    let next: { display: Container; at: number }
+    let baseAt: number
+    let nextAt: number
+    if (bi === -1) {
+      // before the first keyframe — wrap from the last (previous day)
+      base = sorted[n - 1]
+      baseAt = sorted[n - 1].at - 1440
+      next = sorted[0]
+      nextAt = sorted[0].at
+    } else {
+      base = sorted[bi]
+      baseAt = sorted[bi].at
+      next = sorted[(bi + 1) % n]
+      nextAt = bi + 1 < n ? sorted[bi + 1].at : sorted[0].at + 1440
+    }
+    const span = nextAt - baseAt
+    const f = span > 0 ? smoothstep((now - baseAt) / span) : 0
+    for (const l of sorted) {
+      l.display.alpha = 0
+      l.display.zIndex = 0
+    }
+    base.display.alpha = 1
+    base.display.zIndex = 1
+    next.display.alpha = f
+    next.display.zIndex = 2
+  }
+  applyTimeFade(store.getState().clockMinutes ?? 0)
 
   // M10 10c fog: an animated noise fog/cloud layer. Built after the layers so the back layer
   // can slot **behind a chosen layer** (`fog.backLayer`) inside its band; else a world overlay
@@ -622,6 +675,7 @@ export async function mountScene(
   const refreshVisibility = () => {
     const state = store.getState()
     for (const c of conditional) c.display.visible = c.show(state)
+    applyTimeFade(state.clockMinutes ?? 0) // time-of-day crossfade (M13d): per clock-minute + scrub
     for (const sw of pathSwitchers) sw(state)
     refreshEmitterVisibility(state)
     syncWeather(state)

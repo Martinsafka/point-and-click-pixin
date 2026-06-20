@@ -1,6 +1,7 @@
 import { type ChangeEvent } from 'react'
 import { editorStore } from './editor-store'
 import type { LayerData, LayerFit, LayerRole, SceneBand, SceneId } from '../data/schema'
+import { hhmmToMinutes, minutesToHHMM } from './time-format'
 
 const BANDS: SceneBand[] = ['background', 'mid', 'foreground']
 const FITS: LayerFit[] = ['none', 'width', 'cover', 'contain', 'stretch']
@@ -115,6 +116,23 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                     </option>
                   ))}
                 </select>
+              )}
+              {(layer.kind === 'image' || layer.kind === 'animated') && (
+                <input
+                  type="text"
+                  className="logic__in layer-row__parallax"
+                  title="Day-cycle peak time (HH:MM). Background layers that set a peak cross-dissolve over the game clock."
+                  placeholder="peak HH:MM"
+                  defaultValue={minutesToHHMM(layer.timeFadeAt)}
+                  onChange={(e) => {
+                    const v = e.target.value.trim()
+                    if (v === '') editorStore.getState().setLayerTimeFade(sceneId, i, undefined)
+                    else {
+                      const m = hhmmToMinutes(v)
+                      if (m !== undefined) editorStore.getState().setLayerTimeFade(sceneId, i, m)
+                    }
+                  }}
+                />
               )}
               <select
                 value={layer.role ?? ''}

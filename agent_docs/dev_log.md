@@ -23,6 +23,31 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-20 — M13d: time-of-day layer crossfade (clock-driven day cycle)
+**What:** New engine + editor feature (user request — they render 4 lit variants of a scene in UE5
+and want a gradual time blend). A background `image` / `animated` layer can set **`timeFadeAt`**
+(minutes past midnight = its peak opacity). Layers with a peak **cross-dissolve** over the game
+clock — fully opaque at the peak, blending (smoothstep) into the two nearest neighbours, looping
+over midnight. So 4 lit renders at 06:00 / 12:00 / 18:00 / 00:00 glide morning→afternoon→evening→
+night→morning. Added a showcase scene **`daycycle`** (4 full-scene colour layers) + the editor UI + docs.
+**Why:** opacity vs blend mode → **opacity** is correct (alpha cross-dissolves; blend modes *combine*
+pixels = double-bright, wrong for a transition). Explicit per-layer peak times (the user wanted
+control over uneven phases — short morning, long afternoon).
+**How:**
+- **Schema** (`data/schema.ts`): `timeFadeAt?: number` on the image + animated `LayerData`.
+- **Engine** (`engine/scene.ts`): collect the `timeFadeAt` layers; `applyTimeFade(now)` finds the two
+  bracketing keyframes (sorted ring), sets base α 1 + fading-in α smoothstep(f), and z-orders the
+  fading-in layer above the base so the **midnight wrap** composites with no gap
+  (`background.sortableChildren` enabled when fade layers exist). Driven from `refreshVisibility`
+  (the existing store subscription) → updates per clock-minute **and** on the editor's World-time
+  scrub. A fade spans the whole inter-peak interval, so per-minute steps read smooth.
+- **Editor** (`LayerList` + `editor-store`): a per-layer **"peak HH:MM"** input (uncontrolled;
+  commits on a valid time, clears when blank) → `setLayerTimeFade`; reuses the M12c HH:MM widget.
+- **Verified:** typecheck + lint clean; previewed `daycycle` at 3 times — distinct blended tints
+  (blue morning → gold afternoon with both labels overlapping mid-dissolve → dark-blue night).
+**Follow-ups:** none required. The crossfade is the **backdrop**; the cast isn't time-tinted —
+combine with the scene's `ambientLight` if you want the characters lit too.
+
 ### 2026-06-18 — Fix: decorative scene layers were blocking pointer input
 **What:** A full-screen **foreground** layer (the demo's dinner dusk overlay) intercepted clicks on
 NPCs beneath it — the NPC's own `pointertap` never fired, so dialogues couldn't be triggered once the

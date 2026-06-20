@@ -912,6 +912,84 @@
         "color": "#000000"
       },
       "characterScale": 3.0
+    },
+    "daycycle": {
+      "id": "daycycle",
+      "name": "Ukázka: denní cyklus",
+      "width": 1920,
+      "depth": {
+        "yNearFrac": 0.96,
+        "yFarFrac": 0.7,
+        "scaleNear": 1.0,
+        "scaleFar": 0.62
+      },
+      "spawn": {
+        "xFrac": 0.5,
+        "yFrac": 0.9
+      },
+      "walkable": [
+        0.05,
+        0.7,
+        0.95,
+        0.7,
+        0.95,
+        0.965,
+        0.05,
+        0.965
+      ],
+      "layers": [
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiNiOWM2ZGEiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9Ijk2MCIgeT0iNDk2IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9Ijg0IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UsOBTk88L3RleHQ+PHRleHQgeD0iOTYwIiB5PSI2MTUiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDYiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4wNjowMDwvdGV4dD48L3N2Zz4=",
+          "fit": "stretch",
+          "parallax": 1.0,
+          "timeFadeAt": 360
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiNlZmU2YzIiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9Ijk2MCIgeT0iNDk2IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9Ijg0IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+T0RQT0xFRE5FPC90ZXh0Pjx0ZXh0IHg9Ijk2MCIgeT0iNjE1IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjQ2IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+MTI6MDA8L3RleHQ+PC9zdmc+",
+          "fit": "stretch",
+          "parallax": 1.0,
+          "timeFadeAt": 720
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiNlMGEyNGEiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9Ijk2MCIgeT0iNDk2IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9Ijg0IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+VkXEjEVSPC90ZXh0Pjx0ZXh0IHg9Ijk2MCIgeT0iNjE1IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjQ2IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+MTg6MDA8L3RleHQ+PC9zdmc+",
+          "fit": "stretch",
+          "parallax": 1.0,
+          "timeFadeAt": 1080
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiMyMjJhNDQiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9Ijk2MCIgeT0iNDk2IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9Ijg0IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Tk9DPC90ZXh0Pjx0ZXh0IHg9Ijk2MCIgeT0iNjE1IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjQ2IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+MDA6MDA8L3RleHQ+PC9zdmc+",
+          "fit": "stretch",
+          "parallax": 1.0,
+          "timeFadeAt": 0
+        }
+      ],
+      "interactables": [
+        {
+          "kind": "exit",
+          "id": "to-tavern",
+          "to": "tavern",
+          "hitArea": [
+            0.0,
+            0.5,
+            0.06,
+            0.5,
+            0.06,
+            0.96,
+            0.0,
+            0.96
+          ],
+          "examine": "Zpět do hry."
+        }
+      ],
+      "characterScale": 3.0
     }
   },
   "items": {

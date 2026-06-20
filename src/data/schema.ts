@@ -573,6 +573,11 @@ export type LayerData =
       /** Cast a soft contact (blob) shadow at this prop's base (M13c). For discrete props,
        *  not full-bleed backdrops. */
       castShadow?: boolean
+      /** Time-of-day crossfade (M13d): the clock time (minutes past midnight) at which this layer
+       *  is fully opaque. Layers that set `timeFadeAt` cross-dissolve between their two nearest
+       *  peaks as the game clock advances — e.g. four lit variants of a backdrop at 360 / 720 /
+       *  1080 / 0 glide morning→afternoon→evening→night→morning. (image / animated only.) */
+      timeFadeAt?: number
     }
   | {
       kind: 'builtin'
@@ -610,6 +615,8 @@ export type LayerData =
       fit?: LayerFit
       when?: Condition
       castShadow?: boolean
+      /** Time-of-day crossfade peak, minutes past midnight (M13d) — see the `image` variant. */
+      timeFadeAt?: number
     }
 
 /**

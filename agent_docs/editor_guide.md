@@ -151,6 +151,7 @@ Each layer row:
 | **role**   | scenery / occluder / floor — metadata for now (drives future occlusion).     |
 | **parallax** | _(background / foreground)_ scroll rate: 1 = with the world, <1 = farther / slower, 0 = locked, >1 = nearer. |
 | **shadow**   | _(props)_ cast a soft **contact (blob) shadow** at the layer's base (M13c). |
+| **peak HH:MM** | _(images / animated)_ time-of-day **crossfade** peak — see below (M13d).  |
 | **↑ / ↓**  | reorder within the band (paint order).                                       |
 | **✕**      | delete the layer.                                                            |
 
@@ -173,6 +174,16 @@ below 1 to sit "farther" — a distant skyline barely moves while the near groun
 the character. It only shows in the **game** (the editor preview is at rest), and a
 slow layer should be **wider than the scene** so its edge doesn't appear as you scroll.
 The **mid** band (the gameplay plane) is always 1.
+
+**Time-of-day crossfade (peak HH:MM):** give two or more layers a **peak** time and they
+**cross-dissolve** as the game **clock** advances — each is fully opaque at its peak and blends
+(smoothstep) into its neighbours between peaks. Stack e.g. four lit variants of the same backdrop at
+**06:00 / 12:00 / 18:00 / 00:00** and the scene glides morning → afternoon → evening → night →
+morning (the loop wraps over midnight; the fading-in layer is auto-ordered on top so there's no
+gap). Needs the scene's **clock** running; in the editor, scrub the **World** time to preview the
+blend live. Ideal for the same scene rendered under four lightings (e.g. exported from a 3D tool).
+Leave **peak** blank for a normal static layer. _See the **`daycycle`** demo scene for a worked
+example._
 
 ### Interactables · _N_
 
