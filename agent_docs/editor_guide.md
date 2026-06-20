@@ -70,9 +70,11 @@ ride the scene's on-screen rect (so the letterbox around a non-matching-aspect w
 fine).
 
 **World window.** A `World` launcher entry opens controls that drive the **running** world to
-a state you want to author against: **jump scene**, **set / clear flags** (it lists the flags
-used anywhere in the doc, plus an input to add a new one), **give / take items**, and **Reset
-world**. Use it to reveal gated content while authoring: e.g. to see a light that's gated on
+a state you want to author against: **jump scene**, **scrub the time of day** (a `time · HH:MM`
+slider — shown only when the doc has a **clock**; previews `timeOfDay` gates, layer **peak**
+crossfades and the **day-cycle grade** live), **set / clear flags** (it lists the flags used
+anywhere in the doc, plus an input to add a new one), **give / take items**, and **Reset world**.
+Use it to reveal gated content while authoring: e.g. to see a light that's gated on
 `hasItem flashlight`, **Give** the flashlight and it appears.
 
 ---
