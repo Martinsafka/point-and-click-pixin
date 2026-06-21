@@ -1896,3 +1896,19 @@ body {
   stroke-dasharray: 0.01 0.008;
   vector-effect: non-scaling-stroke;
 }
+
+/* Day-cycle grade keyframe (M13d) — a separated stack of grade sliders per time-of-day. */
+.grade-kf {
+  border-top: 1px solid #2a3650;
+  padding-top: 6px;
+  margin-top: 6px;
+}
+.grade-kf__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.grade-kf__head .logic__in {
+  flex: 1;
+}

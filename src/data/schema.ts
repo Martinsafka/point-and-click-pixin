@@ -390,6 +390,11 @@ export interface ColorGrade {
   saturation: number
   /** Hue rotation in degrees (0 = unchanged). */
   hue: number
+  /** Optional colour cast (hex), e.g. a blue night. Multiplies the image toward this colour;
+   *  `tintStrength` (0..1) sets how far (0 = none). Adds a warm / cool cast a hue rotation can't
+   *  paint onto near-grey pixels (M13d). */
+  tint?: string
+  tintStrength?: number
 }
 
 /** A **vignette** (M10 10d) — a soft darkened frame, screen-space. */

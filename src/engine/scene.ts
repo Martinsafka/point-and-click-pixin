@@ -192,6 +192,16 @@ function layerScaleFor(layer: LayerData): number {
     : 1
 }
 
+/** Lerp two `#rrggbb` colours (either may be undefined → falls back to the other). M13d tint. */
+function lerpHex(a: string | undefined, b: string | undefined, t: number): string | undefined {
+  if (!a && !b) return undefined
+  const pa = parseInt((a ?? (b as string)).slice(1), 16)
+  const pb = parseInt((b ?? (a as string)).slice(1), 16)
+  const mix = (sh: number): number =>
+    Math.round(((pa >> sh) & 255) + (((pb >> sh) & 255) - ((pa >> sh) & 255)) * t)
+  return '#' + ((1 << 24) | (mix(16) << 16) | (mix(8) << 8) | mix(0)).toString(16).slice(1)
+}
+
 async function buildLayer(layer: LayerData, screen: Size): Promise<Container> {
   if (layer.kind === 'image') {
     const texture = await Assets.load(layer.src)
@@ -639,6 +649,8 @@ export async function mountScene(
       contrast: mix(a.grade.contrast, b.grade.contrast),
       saturation: mix(a.grade.saturation, b.grade.saturation),
       hue: mix(a.grade.hue, b.grade.hue),
+      tint: lerpHex(a.grade.tint, b.grade.tint, f),
+      tintStrength: mix(a.grade.tintStrength ?? 0, b.grade.tintStrength ?? 0),
     })
   }
   const buildColorGrade = (): void => {

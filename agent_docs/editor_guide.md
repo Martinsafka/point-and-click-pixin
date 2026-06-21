@@ -344,13 +344,15 @@ Renders **live** as you tune.
 
 The scene's mood pass (M10 10d) — three toggles, all live:
 
-- **colour grade** — a tone filter over the scene art: **brightness / contrast / saturation**
-  (1 = unchanged) and **hue°**.
+- **colour grade** — a tone filter over the scene art (sliders): **brightness / contrast /
+  saturation** (1 = unchanged), **hue°**, and a **tint** — a colour **cast** (pick a colour +
+  **strength** 0..1) that a hue rotation can't add to near-grey pixels (e.g. a blue night).
 - **day-cycle grade (time keyframes)** (M13d) — a colour grade that **interpolates over the game
   clock**, tinting props / characters / foreground so they **blend into the backdrop** at each time
   of day. Layers with a **peak** are the lit reference and are **not** graded (so the crossfading
-  backdrops stay exactly as authored). Add **keyframes** — each a **HH:MM** + the four grade values;
-  the grade smoothly blends between them across the day and loops over midnight. Scrub the **World**
+  backdrops stay exactly as authored). Add **keyframes** — each a **HH:MM** + the same grade sliders
+  (incl. **tint**); the grade smoothly blends between them across the day and loops over midnight.
+  Scrub the **World**
   time to preview it live. Overrides the static colour grade. Pair with **per-layer peak** backdrop
   crossfades (Layers panel) for a full day cycle — see the **`daycycle`** demo scene.
 - **vignette** — a soft darkened frame: **colour**, **intensity**, **size** (how far in the

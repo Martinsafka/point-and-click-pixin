@@ -23,6 +23,24 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-21 — Colour grade: tint (colour cast) + slider UI for every param
+**What:** Added a **tint** to `ColorGrade` — a colour **cast** (`tint` hex + `tintStrength` 0..1)
+that a hue rotation can't paint onto near-grey pixels (e.g. a blue night over a stone statue). Also
+reworked the grade UI: every param (brightness / contrast / saturation / hue / tint strength) is now
+a **slider on its own line**, shared by the static grade **and** each day-cycle keyframe (keyframes
+were a cramped inline number row before).
+**How:**
+- **Schema:** `ColorGrade.tint?: string` + `tintStrength?: number`.
+- **Engine** (`colorgrade.ts`): `setColorGrade` applies it via `ColorMatrixFilter.tint` (multiply),
+  the effective colour lerped white→tint by strength (0 = no-op); `gradeActive` counts a tint.
+  `scene.ts` `applyTimeGrade` interpolates the tint (RGB lerp, `lerpHex`) + strength across keyframes.
+- **Editor:** new shared **`GradeSliders`** component (the five sliders + a tint colour picker), used
+  by the static colour grade and each `colorGradeByTime` keyframe (one slider per line, in a
+  separated `.grade-kf` block).
+- **Verified:** typecheck + lint clean; engine — a blue tint turns the warm night street fully blue
+  (before / after); editor smoke — sliders + tint render, 0 console errors.
+**Follow-ups:** none.
+
 ### 2026-06-21 — Fix: time-of-day grade must not touch the peak (timeFadeAt) backdrops
 **What:** The global `colorGradeByTime` was a filter on the whole `world`, so it also re-tinted the
 `timeFadeAt` crossfade backdrops — which are *already* lit per time (the grade's reference). That
