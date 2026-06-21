@@ -92,6 +92,14 @@ selected scene, and the preview shows it).
   reference height — see **Project → Display**, default 1080). A scene wider than the
   screen's aspect makes the game's **camera** scroll horizontally to follow the
   character; the readout shows the aspect (e.g. `2.20:1`) and whether it scrolls.
+  - _Scrolling backdrop that always fills the viewport height:_ the camera fits the
+    **reference height** to the screen and scrolls the width, so set the scene width to match the
+    image's aspect **at that height** —
+    **`width = referenceHeight × (imageWidth ÷ imageHeight)`**. E.g. a **4612×1922** render at the
+    default **1080**: `1080 × 4612 ÷ 1922 ≈ 2592` → set width `2592`, then give the layer
+    `fit: cover`. It fills the height on any window and scrolls across the whole image; only the
+    visible width per screen varies (gameplay fractions stay fixed). _(Only an ultrawide viewport
+    past the scene's own aspect — here `2.4:1` — would letterbox the sides instead of scrolling.)_
 - **characters** — a per-scene **size multiplier** (%) for the player and NPCs, for
   scenes drawn from a closer or different angle. It rides on top of the perspective
   (Walkable depth), not instead of it; the preview **rescales live as you drag** (no
