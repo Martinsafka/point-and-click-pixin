@@ -200,8 +200,9 @@ The **mid** band (the gameplay plane) is always 1.
 morning (the loop wraps over midnight; the fading-in layer is auto-ordered on top so there's no
 gap). Needs the scene's **clock** running; in the editor, scrub the **World** time to preview the
 blend live. Ideal for the same scene rendered under four lightings (e.g. exported from a 3D tool).
-Leave **peak** blank for a normal static layer. _See the **`daycycle`** demo scene for a worked
-example._
+Leave **peak** blank for a normal static layer. Layers with a peak are the lit reference, so the
+**day-cycle grade** (Grade & FX) never tints them — it tints everything else to blend in. _See the
+**`daycycle`** demo scene for a worked example._
 
 ### Interactables · _N_
 
@@ -346,11 +347,12 @@ The scene's mood pass (M10 10d) — three toggles, all live:
 - **colour grade** — a tone filter over the scene art: **brightness / contrast / saturation**
   (1 = unchanged) and **hue°**.
 - **day-cycle grade (time keyframes)** (M13d) — a colour grade that **interpolates over the game
-  clock**, tinting the **whole scene** (backdrop + props + characters) so neutral assets match the
-  time of day. Add **keyframes** — each a **HH:MM** + the four grade values; the grade smoothly
-  blends between them across the day and loops over midnight. Scrub the **World** time to preview it
-  live. Overrides the static colour grade. Pair with **per-layer peak** backdrop crossfades (Layers
-  panel) for a full day cycle — see the **`daycycle`** demo scene for both together.
+  clock**, tinting props / characters / foreground so they **blend into the backdrop** at each time
+  of day. Layers with a **peak** are the lit reference and are **not** graded (so the crossfading
+  backdrops stay exactly as authored). Add **keyframes** — each a **HH:MM** + the four grade values;
+  the grade smoothly blends between them across the day and loops over midnight. Scrub the **World**
+  time to preview it live. Overrides the static colour grade. Pair with **per-layer peak** backdrop
+  crossfades (Layers panel) for a full day cycle — see the **`daycycle`** demo scene.
 - **vignette** — a soft darkened frame: **colour**, **intensity**, **size** (how far in the
   dark reaches).
 - **lightning + thunder** — a screen flash on a random interval: flash **colour** +

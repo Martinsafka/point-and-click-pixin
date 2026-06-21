@@ -23,6 +23,22 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-21 — Fix: time-of-day grade must not touch the peak (timeFadeAt) backdrops
+**What:** The global `colorGradeByTime` was a filter on the whole `world`, so it also re-tinted the
+`timeFadeAt` crossfade backdrops — which are *already* lit per time (the grade's reference). That
+double-graded them, so props could never blend correctly into them. Now **peak layers are exempt**:
+the grade tints only everything else, to blend into the untouched backdrops.
+**How (`scene.ts`):** split the camera-transformed world into two subtrees — `backdrop` (ungraded,
+behind; holds every `timeFadeAt` layer) and `graded` (bands + shadows + world-space atmosphere +
+fog) which carries the grade filter. Routed peak layers to `backdrop`; moved the bands, shadow
+layer, `createAtmosphere`, `createFog` + the grade filter onto `graded`. The camera transforms the
+whole world, so peak layers still scroll / crossfade; lighting / weather / vignette are stage
+overlays, so they still cover the backdrop — peak layers skip **only** the colour grade.
+**Verified:** typecheck + lint clean; favour-chain regression passes; street night (no peak layers)
+still fully graded = no regression; daycycle with a saturation-0 grade keeps its backdrops fully
+coloured while the character desaturates = peak exemption confirmed.
+**Follow-ups:** none.
+
 ### 2026-06-21 — Editor: per-layer scale % for none-fit props
 **What:** A **scale %** slider on each `none`-fit image / animated layer (10–300 %) — resize a prop
 to fit the scene without re-uploading or re-exporting, independent of its source resolution. (The

@@ -369,6 +369,19 @@ export async function mountScene(
   const world = new Container()
   world.sortableChildren = true
   app.stage.addChild(world)
+  // Two camera-transformed subtrees under the world (M13d). `backdrop` holds the `timeFadeAt`
+  // (peak) layers: already lit per time-of-day, they are the colour-grade *reference*, so they sit
+  // behind everything and are NEVER graded. `graded` holds the rest (bands, shadows, world-space
+  // atmosphere) and carries the grade filter — tinting props / characters to blend into the
+  // untouched backdrop.
+  const backdrop = new Container()
+  backdrop.zIndex = -100
+  backdrop.sortableChildren = true // the crossfade z-orders the peak layers among themselves
+  backdrop.eventMode = 'none'
+  const graded = new Container()
+  graded.zIndex = 0
+  graded.sortableChildren = true
+  world.addChild(backdrop, graded)
   const background = new Container()
   background.zIndex = 0
   const interactive = new Container()
@@ -376,13 +389,13 @@ export async function mountScene(
   interactive.sortableChildren = true // Y-sort by feet Y happens in here
   const foreground = new Container()
   foreground.zIndex = 20
-  world.addChild(background, interactive, foreground)
+  graded.addChild(background, interactive, foreground)
   // Contact (blob) shadows (M13c): a ground-plane pass between the background and the characters,
   // so every shadow is under every entity. On by default; `scene.shadows.disabled` turns it off.
   const shadowLayer = new Container()
   shadowLayer.zIndex = 5 // above background (0), below interactive (10)
   shadowLayer.eventMode = 'none'
-  world.addChild(shadowLayer)
+  graded.addChild(shadowLayer)
   const shadows = scene.shadows?.disabled ? null : createShadowSystem(shadowLayer, scene.shadows)
   // World-space speech bubbles (M12.5 #6 / #18) — the engine runs the typewriter + tracks each
   // character's feet; the DOM overlay (ui/SpeechBubbles) renders them (Pixi Text clipped lines).
@@ -390,7 +403,7 @@ export async function mountScene(
 
   // M10 atmosphere/lighting compositing stack (weather / lighting / fog / polish render
   // into its slots; subsystems register per-frame updaters, ticked below).
-  const atmosphere = createAtmosphere(world, app.stage)
+  const atmosphere = createAtmosphere(graded, app.stage)
 
   // Audio module, dynamic-imported below (kept out of the editor preview's graph); declared
   // here so the weather block can drive its `'weather'` ambient channel once loaded.
@@ -499,9 +512,12 @@ export async function mountScene(
         })
       }
     }
-    bandFor(layer.band).addChild(display)
-    if ((layer.kind === 'image' || layer.kind === 'animated') && layer.timeFadeAt !== undefined)
+    if ((layer.kind === 'image' || layer.kind === 'animated') && layer.timeFadeAt !== undefined) {
+      backdrop.addChild(display) // peak / time-fade layer: ungraded lit reference (M13d)
       fadeLayers.push({ display, at: layer.timeFadeAt })
+    } else {
+      bandFor(layer.band).addChild(display)
+    }
     // Opt-in prop shadow (M13c) — a blob at the layer's base (bottom-centre of its bounds).
     if (layer.castShadow) {
       const d = display
@@ -514,7 +530,6 @@ export async function mountScene(
   // Time-of-day crossfade (M13d): the `timeFadeAt` background layers + the `colorGradeByTime` global
   // grade both blend (smoothstep) between their two bracketing day-cycle keyframes over the game
   // clock; the fading-in layer is z-ordered above the base so the midnight wrap has no gap.
-  if (fadeLayers.length > 1) background.sortableChildren = true
   const smoothstep = (x: number): number => {
     const t = Math.min(1, Math.max(0, x))
     return t * t * (3 - 2 * t)
@@ -597,18 +612,18 @@ export async function mountScene(
         ? { parent: d.parent, zIndex: (d.zIndex ?? 0) - 0.001 } // sort just behind the layer
         : { parent: d.parent, index: d.parent.getChildIndex(d) } // insert before it in order
     }
-    fogSystem = createFog(world, fog, design, backInto)
+    fogSystem = createFog(graded, fog, design, backInto)
   }
   buildFog()
   atmosphere.onUpdate((dt) => fogSystem?.update(dt))
 
   // M10 10d colour grade + vignette + lightning. `gradeScene` is the live scene for all three
-  // (rebuilt together by applyLive). Grade is a world filter; vignette + lightning are
+  // (rebuilt together by applyLive). Grade filters the `graded` subtree; vignette + lightning are
   // screen-space (screenFx slot).
   let gradeScene = scene
-  // Time-of-day global grade (M13d): one ColorMatrixFilter on `world` (tints backdrop + props +
-  // characters together), its matrix re-interpolated between `colorGradeByTime` keyframes each
-  // clock-minute (and on the editor's World-time scrub).
+  // Time-of-day global grade (M13d): one ColorMatrixFilter on the `graded` subtree — tints props /
+  // characters / foreground but NOT the peak `backdrop` layers (those are the lit reference). Its
+  // matrix re-interpolates between `colorGradeByTime` keyframes each clock-minute (+ World scrub).
   const timeGradeFilter = makeColorGradeFilter({ brightness: 1, contrast: 1, saturation: 1, hue: 0 })
   const applyTimeGrade = (now: number): void => {
     const kf = gradeScene.colorGradeByTime
@@ -629,11 +644,11 @@ export async function mountScene(
   const buildColorGrade = (): void => {
     if (gradeScene.colorGradeByTime?.length) {
       applyTimeGrade(store.getState().clockMinutes ?? 0)
-      world.filters = [timeGradeFilter]
+      graded.filters = [timeGradeFilter]
       return
     }
     const g = gradeScene.colorGrade
-    world.filters = g && gradeActive(g) ? [makeColorGradeFilter(g)] : []
+    graded.filters = g && gradeActive(g) ? [makeColorGradeFilter(g)] : []
   }
   buildColorGrade()
 
