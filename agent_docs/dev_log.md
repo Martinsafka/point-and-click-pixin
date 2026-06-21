@@ -23,6 +23,29 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-21 — Editor: swap any uploaded asset in place (shared AssetSwap)
+**What:** Every uploaded asset in the editor (scene layers, sounds, item icons, cursors, the
+transition art, screen backgrounds / logos / buttons, character atlases) now has a **⇄ Swap**
+control that replaces its source file **in place** — keeping the asset's id + every reference to it.
+Before, only single-slot assets could be replaced (an unlabelled "Change"); **scene layers and
+sounds had no swap at all** — you had to delete + re-add, which for a sound *broke its id and every
+reference* (ambient / footstep / playSound / voice / inspect).
+**Why:** the user produces assets externally (UE5 renders, audio) and needs to drop in a new version
+without rewiring the doc.
+**How:**
+- New shared **`AssetSwap`** component (`src/editor/AssetSwap.tsx`) — one file-picker button + the
+  data-URL read with the SVG-mime fix; replaces ~6 duplicated `FileReader` handlers across panels.
+  `label` switches `+ Image` / `+ Sound` (empty slot) vs `⇄ Swap` (replace existing).
+- New store actions `setLayerSrc(scene, index, src)` + `setSoundSrc(id, src)` (in-place; keep id +
+  references). The single-slot setters (icon / cursor / transition / screens / atlas) already
+  replaced in place — just relabelled + routed through `AssetSwap` for consistency.
+- Wired `AssetSwap` into LayerList (per-layer swap + the add buttons), SoundList (per-sound swap),
+  ItemCatalogue, CursorEditor, TransitionEditor, ScreensEditor, CharacterEditor.
+- **Verified:** typecheck + lint clean; editor smoke test (Playwright, `tools/editor-smoke.mjs`) —
+  swap controls render in every panel (Scene / Items / Sounds / Project / Characters), 0 console
+  errors.
+**Follow-ups:** none.
+
 ### 2026-06-20 — M13d+: global time-of-day colour grade (whole-scene day/night)
 **What:** Extended the day cycle to a **global grade** so the *whole* scene — backdrop, props **and
 characters** — matches the time of day from **one neutral asset set** (the user's worry: the

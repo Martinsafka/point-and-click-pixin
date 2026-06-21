@@ -85,6 +85,8 @@ interface EditorStore {
   addImageLayer(id: SceneId, src: string): void
   /** Add an animated (atlas) scene layer (M12.5 #8). */
   addAnimatedLayer(id: SceneId, src: string): void
+  /** Swap an image / animated layer's source in place (keeps its band / fit / position). */
+  setLayerSrc(id: SceneId, index: number, src: string): void
   /** Patch an animated layer's frame grid / fps (M12.5 #8). */
   setLayerAnim(
     id: SceneId,
@@ -201,6 +203,8 @@ interface EditorStore {
   addSound(src: string): void
   removeSound(id: SoundId): void
   setSoundName(id: SoundId, name: string): void
+  /** Swap a sound's audio source in place, keeping its id + name + every reference to it. */
+  setSoundSrc(id: SoundId, src: string): void
   // Weather presets (M10 10a) — the Atmosphere tab library + per-scene conditional weather.
   addWeatherPreset(): void
   removeWeatherPreset(id: WeatherId): void
@@ -397,6 +401,12 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       patchScene(id, { depth: { ...get().doc.scenes[id].depth, stops } }, true),
     addImageLayer: (id, src) =>
       mapLayers(id, (ls) => [...ls, { kind: 'image', band: 'background', src, fit: 'cover' }]),
+    setLayerSrc: (id, index, src) =>
+      mapLayers(id, (ls) =>
+        ls.map((l, i) =>
+          i === index && (l.kind === 'image' || l.kind === 'animated') ? { ...l, src } : l,
+        ),
+      ),
     addAnimatedLayer: (id, src) =>
       mapLayers(id, (ls) => [
         ...ls,
@@ -794,6 +804,11 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       const sounds = get().doc.sounds ?? {}
       if (!sounds[id]) return
       patchDoc({ sounds: { ...sounds, [id]: { ...sounds[id], name } } })
+    },
+    setSoundSrc: (id, src) => {
+      const sounds = get().doc.sounds ?? {}
+      if (!sounds[id]) return
+      patchDoc({ sounds: { ...sounds, [id]: { ...sounds[id], src } } })
     },
     addWeatherPreset: () => {
       const presets = get().doc.weatherPresets ?? {}

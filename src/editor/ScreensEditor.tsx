@@ -1,4 +1,3 @@
-import { type ChangeEvent } from 'react'
 import type {
   CreditsScreenConfig,
   ScreenBg,
@@ -8,6 +7,7 @@ import type {
   TitleButton,
 } from '../data/schema'
 import { editorStore } from './editor-store'
+import { AssetSwap } from './AssetSwap'
 import { Slider } from './Slider'
 
 const DEFAULT_LOADING = { minMs: 5000 }
@@ -32,18 +32,6 @@ const DEFAULT_CREDITS: CreditsScreenConfig = {
   scrollSpeed: 45,
 }
 
-function readImage(file: File, onLoad: (src: string) => void): void {
-  const reader = new FileReader()
-  reader.onload = () => {
-    let src = String(reader.result)
-    if (/\.svg$/i.test(file.name) && !src.startsWith('data:image/svg+xml')) {
-      src = src.replace(/^data:[^,;]*/, 'data:image/svg+xml')
-    }
-    onLoad(src)
-  }
-  reader.readAsDataURL(file)
-}
-
 function ImageField({
   label,
   value,
@@ -53,19 +41,15 @@ function ImageField({
   value?: string
   onChange: (v: string | undefined) => void
 }) {
-  const upload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (file) readImage(file, onChange)
-  }
   return (
     <div className="intr-form__field">
       <span>{label}</span>
       {value && <img className="screens-thumb" src={value} alt="" />}
-      <label className="editor__import">
-        {value ? 'Change' : '+ Image'}
-        <input type="file" accept="image/*,.svg" hidden onChange={upload} />
-      </label>
+      <AssetSwap
+        accept="image/*,.svg"
+        label={value ? '⇄ Swap' : '+ Image'}
+        onPick={(src) => onChange(src)}
+      />
       {value && (
         <button type="button" className="logic__del" onClick={() => onChange(undefined)}>
           ✕

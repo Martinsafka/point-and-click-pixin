@@ -1,6 +1,6 @@
-import { type ChangeEvent } from 'react'
 import { editorStore } from './editor-store'
 import type { ExamineLine, GameDoc, ItemDef, ItemId, ItemUse } from '../data/schema'
+import { AssetSwap } from './AssetSwap'
 import { ConditionEditor } from './ConditionEditor'
 import { EffectList } from './EffectList'
 import { actionNames, actorIds } from './effect-options'
@@ -18,21 +18,6 @@ export function ItemCatalogue({ items, doc }: { items: Record<ItemId, ItemDef>; 
   const animations = actionNames(doc)
   const targets = actorIds(doc)
   const dialogIds = Object.keys(doc.dialogs ?? {})
-
-  const onIcon = (id: ItemId, e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      let src = String(reader.result)
-      if (/\.svg$/i.test(file.name) && !src.startsWith('data:image/svg+xml')) {
-        src = src.replace(/^data:[^,;]*/, 'data:image/svg+xml')
-      }
-      s().setItemIcon(id, src)
-    }
-    reader.readAsDataURL(file)
-  }
 
   const setExamineWhen = (id: ItemId, rules: ExamineLine[]) => s().setItemExamineWhen(id, rules)
   const setUse = (id: ItemId, use: ItemUse[]) => s().setItemUse(id, use)
@@ -207,15 +192,12 @@ export function ItemCatalogue({ items, doc }: { items: Record<ItemId, ItemDef>; 
 
             <div className="cat-row__icon">
               {it.icon && <img className="cat-row__thumb" src={it.icon} alt="" />}
-              <label className="editor__import cat-row__upload">
-                {it.icon ? 'Change icon' : '+ Icon'}
-                <input
-                  type="file"
-                  accept="image/*,.svg"
-                  hidden
-                  onChange={(e) => onIcon(it.id, e)}
-                />
-              </label>
+              <AssetSwap
+                accept="image/*,.svg"
+                className="editor__import cat-row__upload"
+                label={it.icon ? '⇄ Swap' : '+ Icon'}
+                onPick={(src) => s().setItemIcon(it.id, src)}
+              />
               {it.icon && (
                 <button
                   type="button"

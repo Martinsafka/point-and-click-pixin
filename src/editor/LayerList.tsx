@@ -1,7 +1,7 @@
-import { type ChangeEvent } from 'react'
 import { editorStore } from './editor-store'
 import type { LayerData, LayerFit, LayerRole, SceneBand, SceneId } from '../data/schema'
 import { hhmmToMinutes, minutesToHHMM } from './time-format'
+import { AssetSwap } from './AssetSwap'
 
 const BANDS: SceneBand[] = ['background', 'mid', 'foreground']
 const FITS: LayerFit[] = ['none', 'width', 'cover', 'contain', 'stretch']
@@ -13,46 +13,24 @@ function layerLabel(layer: LayerData): string {
 
 /**
  * Per-scene layer stack: upload an image (→ a background backdrop), then set each
- * layer's band / fit / role and reorder or delete it. Image uploads are read as
- * data-URLs and stored in the document, so they survive export. Builtin (code)
+ * layer's band / fit / role and reorder, **swap its image**, or delete it. Image uploads are
+ * read as data-URLs and stored in the document, so they survive export. Builtin (code)
  * layers appear here too and can be rebanded / reordered / removed.
  */
 export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: LayerData[] }) {
-  const readSrc = (file: File, onLoad: (src: string) => void) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      let src = String(reader.result)
-      // Ensure Pixi detects an SVG from the data-URL mime even if the browser
-      // gave the file an empty/wrong type.
-      if (/\.svg$/i.test(file.name) && !src.startsWith('data:image/svg+xml')) {
-        src = src.replace(/^data:[^,;]*/, 'data:image/svg+xml')
-      }
-      onLoad(src)
-    }
-    reader.readAsDataURL(file)
-  }
-  const onUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (file) readSrc(file, (src) => editorStore.getState().addImageLayer(sceneId, src))
-  }
-  const onUploadAnim = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (file) readSrc(file, (src) => editorStore.getState().addAnimatedLayer(sceneId, src))
-  }
-
   return (
     <div className="layer-list">
       <div className="editor__toolbar">
-        <label className="editor__import">
-          + Image
-          <input type="file" accept="image/*,.svg" hidden onChange={onUpload} />
-        </label>
-        <label className="editor__import">
-          + Animated
-          <input type="file" accept="image/*,.svg" hidden onChange={onUploadAnim} />
-        </label>
+        <AssetSwap
+          accept="image/*,.svg"
+          label="+ Image"
+          onPick={(src) => editorStore.getState().addImageLayer(sceneId, src)}
+        />
+        <AssetSwap
+          accept="image/*,.svg"
+          label="+ Animated"
+          onPick={(src) => editorStore.getState().addAnimatedLayer(sceneId, src)}
+        />
       </div>
       {layers.length === 0 && <p className="layer-list__empty">No layers yet — upload an image.</p>}
       <ul className="layer-list__items">
@@ -178,6 +156,14 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                 />
                 shadow
               </label>
+              {(layer.kind === 'image' || layer.kind === 'animated') && (
+                <AssetSwap
+                  accept="image/*,.svg"
+                  label="⇄ Swap"
+                  title="Replace this layer's image (keeps its band / fit / position)"
+                  onPick={(src) => editorStore.getState().setLayerSrc(sceneId, i, src)}
+                />
+              )}
             </div>
             {layer.kind === 'animated' && (
               <div className="layer-row__anim">

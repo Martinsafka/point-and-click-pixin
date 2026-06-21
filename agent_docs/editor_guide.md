@@ -143,6 +143,9 @@ painters, listed in paint order.
   animated layer (animated background / prop). Set its **frame grid** (w / h / cols /
   frames / fps) on the layer row. Placed / `when`-gated / draggable like an image — so a
   flag can swap a static **or** animated asset (two layers gated by opposite flags).
+- **⇄ Swap** — on each image / animated layer row, replace that layer's source file **in place**
+  (keeps its band / fit / position). Every uploaded asset in the editor has this **swap** control
+  (sounds, item icons, cursors, screens, character atlases, …) — replacing keeps ids + references.
 
 Each layer row:
 
@@ -599,8 +602,8 @@ cursor**; over the game UI the normal pointer returns.
 
 Upload audio clips **once** here (stored as data-URLs in the document) and reference them
 by name everywhere — ambient, footstep, the `playSound` effect, NPC voice, inspect audio,
-pickup / transition SFX. **+ Sound** uploads; edit the **name**; **Test** plays it; **✕**
-removes it. Anywhere a sound is used you pick from this list (no re-uploading, no
+pickup / transition SFX. **+ Sound** uploads; edit the **name**; **Test** plays it; **⇄ Swap**
+replaces the clip in place (keeping its id + every reference to it); **✕** removes it. Anywhere a sound is used you pick from this list (no re-uploading, no
 duplication). The **built-in procedural sounds** (Ambient drone, Pickup blip, Scene
 transition, Footstep, Rain loop) are seeded here too — rename or **✕** them, or upload
 replacements. _(Older documents with inline sounds are migrated into this library
