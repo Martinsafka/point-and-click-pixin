@@ -182,6 +182,11 @@ Each layer row:
 **`width`** strip up/down. The cursor hints which (move / ↕). Drag resumes from
 where the layer currently sits.
 
+**Scale (`none`-fit):** each `none`-fit image / animated layer gets a **scale %** slider — size a
+prop from **10–300 %** of its source resolution without re-uploading (handy when a render comes in
+too big / small for the scene). It updates live; on a **mid**-band prop it multiplies on top of the
+perspective (Walkable depth) scale.
+
 **Parallax:** in a scrolling scene, give background / foreground layers a scroll rate
 below 1 to sit "farther" — a distant skyline barely moves while the near ground tracks
 the character. It only shows in the **game** (the editor preview is at rest), and a

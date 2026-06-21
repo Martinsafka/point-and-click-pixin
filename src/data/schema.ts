@@ -578,6 +578,9 @@ export type LayerData =
        *  peaks as the game clock advances — e.g. four lit variants of a backdrop at 360 / 720 /
        *  1080 / 0 glide morning→afternoon→evening→night→morning. (image / animated only.) */
       timeFadeAt?: number
+      /** `none`-fit only: manual size multiplier (1 = natural size). Composes with the mid-band
+       *  depth scale — lets a prop be sized to the scene independent of its source resolution. */
+      scale?: number
     }
   | {
       kind: 'builtin'
@@ -617,6 +620,8 @@ export type LayerData =
       castShadow?: boolean
       /** Time-of-day crossfade peak, minutes past midnight (M13d) — see the `image` variant. */
       timeFadeAt?: number
+      /** `none`-fit manual size multiplier (1 = natural) — see the `image` variant. */
+      scale?: number
     }
 
 /**

@@ -153,7 +153,7 @@ function resolvePolygon(frac: readonly number[], { width, height }: Size): numbe
 /** Size + place an `image` layer's sprite per its `fit` (default 'none'). */
 function fitImageSprite(
   sprite: Sprite,
-  layer: { fit?: LayerFit; xFrac?: number; yFrac?: number },
+  layer: { fit?: LayerFit; xFrac?: number; yFrac?: number; scale?: number },
   screen: Size,
 ): void {
   const fit = layer.fit ?? 'none'
@@ -179,9 +179,17 @@ function fitImageSprite(
     sprite.position.set(screen.width / 2, (layer.yFrac ?? 0.5) * screen.height)
     return
   }
-  // 'none' — natural size, centered on (xFrac, yFrac).
+  // 'none' — natural size × optional manual `scale`, centered on (xFrac, yFrac).
   sprite.anchor.set(0.5, 0.5)
+  sprite.scale.set(layer.scale ?? 1)
   sprite.position.set((layer.xFrac ?? 0.5) * screen.width, (layer.yFrac ?? 0.5) * screen.height)
+}
+
+/** The manual size multiplier for a `none`-fit image / animated layer (1 otherwise). */
+function layerScaleFor(layer: LayerData): number {
+  return (layer.kind === 'image' || layer.kind === 'animated') && (layer.fit ?? 'none') === 'none'
+    ? (layer.scale ?? 1)
+    : 1
 }
 
 async function buildLayer(layer: LayerData, screen: Size): Promise<Container> {
@@ -463,7 +471,7 @@ export async function mountScene(
     if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
       const anchorY = layer.anchorYFrac * design.height
       display.zIndex = anchorY
-      display.scale.set(depthScaleAt(anchorY, depthScale))
+      display.scale.set(depthScaleAt(anchorY, depthScale) * layerScaleFor(layer))
     }
     if (layer.when) {
       const when = layer.when
@@ -555,6 +563,21 @@ export async function mountScene(
     b.display.zIndex = 2
   }
   applyTimeFade(store.getState().clockMinutes ?? 0)
+
+  // Re-apply each `none`-fit layer's manual scale live — the editor calls this from `applyLive`
+  // so the scale slider updates with no re-mount (mid layers compose with the depth scale).
+  const reapplyLayerScales = (sc: SceneData): void => {
+    for (let i = 0; i < sc.layers.length; i += 1) {
+      const l = sc.layers[i]
+      const d = layerDisplays[i]
+      if (!d) continue
+      if (l.band === 'mid' && l.anchorYFrac !== undefined) {
+        d.scale.set(depthScaleAt(l.anchorYFrac * design.height, depthScale) * layerScaleFor(l))
+      } else if ((l.kind === 'image' || l.kind === 'animated') && (l.fit ?? 'none') === 'none') {
+        d.scale.set(layerScaleFor(l))
+      }
+    }
+  }
 
   // M10 10c fog: an animated noise fog/cloud layer. Built after the layers so the back layer
   // can slot **behind a chosen layer** (`fog.backLayer`) inside its band; else a world overlay
@@ -1541,6 +1564,8 @@ export async function mountScene(
         lastCharScale = cs
         for (const a of actors.values()) a.setCharScale(cs)
       }
+      // Layer manual scale (none-fit props) — re-applied live so the slider has no re-mount flash.
+      reapplyLayerScales(sc)
       // NPC walk speed (per cast def).
       const ch = castHash(castNow)
       if (ch !== lastCastHash) {

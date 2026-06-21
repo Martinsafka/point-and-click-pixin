@@ -23,6 +23,23 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-21 — Editor: per-layer scale % for none-fit props
+**What:** A **scale %** slider on each `none`-fit image / animated layer (10–300 %) — resize a prop
+to fit the scene without re-uploading or re-exporting, independent of its source resolution. (The
+user uploads props at fit `none`, where the native size needn't match the scene's viewport fit.)
+**How:**
+- **Schema:** `scale?: number` (multiplier, 1 = natural) on the image + animated `LayerData`,
+  honoured only for `fit: none`.
+- **Engine** (`scene.ts`): `fitImageSprite` applies it in the `none` branch; a `layerScaleFor` helper
+  gates it to none-fit image/animated; the mid-band depth scale **composes** with it
+  (`depthScaleAt × scale`). Re-applied live from `applyLive` (`reapplyLayerScales`) so the slider has
+  no re-mount flash (mirrors `characterScale`).
+- **Editor** (`LayerList` + `editor-store`): a `Slider` (scale %) per none-fit layer →
+  `setLayerScale` (live, no re-mount).
+- **Verified:** typecheck + lint clean; visual test — the street grate at `scale 2.0` renders ~2×
+  (before / after screenshots).
+**Follow-ups:** none.
+
 ### 2026-06-21 — Editor: swap any uploaded asset in place (shared AssetSwap)
 **What:** Every uploaded asset in the editor (scene layers, sounds, item icons, cursors, the
 transition art, screen backgrounds / logos / buttons, character atlases) now has a **⇄ Swap**

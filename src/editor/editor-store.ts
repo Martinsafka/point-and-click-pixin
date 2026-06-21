@@ -87,6 +87,8 @@ interface EditorStore {
   addAnimatedLayer(id: SceneId, src: string): void
   /** Swap an image / animated layer's source in place (keeps its band / fit / position). */
   setLayerSrc(id: SceneId, index: number, src: string): void
+  /** `none`-fit layer size multiplier (1 = natural). Live (no re-mount). */
+  setLayerScale(id: SceneId, index: number, scale: number): void
   /** Patch an animated layer's frame grid / fps (M12.5 #8). */
   setLayerAnim(
     id: SceneId,
@@ -407,6 +409,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
           i === index && (l.kind === 'image' || l.kind === 'animated') ? { ...l, src } : l,
         ),
       ),
+    setLayerScale: (id, index, scale) =>
+      mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, scale } : l)), false),
     addAnimatedLayer: (id, src) =>
       mapLayers(id, (ls) => [
         ...ls,

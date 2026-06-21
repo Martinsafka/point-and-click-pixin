@@ -2,6 +2,7 @@ import { editorStore } from './editor-store'
 import type { LayerData, LayerFit, LayerRole, SceneBand, SceneId } from '../data/schema'
 import { hhmmToMinutes, minutesToHHMM } from './time-format'
 import { AssetSwap } from './AssetSwap'
+import { Slider } from './Slider'
 
 const BANDS: SceneBand[] = ['background', 'mid', 'foreground']
 const FITS: LayerFit[] = ['none', 'width', 'cover', 'contain', 'stretch']
@@ -193,6 +194,19 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                 ))}
               </div>
             )}
+            {(layer.kind === 'image' || layer.kind === 'animated') &&
+              (layer.fit ?? 'none') === 'none' && (
+                <div className="layer-row__anim">
+                  <Slider
+                    label="scale %"
+                    value={Math.round((layer.scale ?? 1) * 100)}
+                    min={10}
+                    max={300}
+                    step={5}
+                    onChange={(v) => editorStore.getState().setLayerScale(sceneId, i, v / 100)}
+                  />
+                </div>
+              )}
           </li>
         ))}
       </ul>
