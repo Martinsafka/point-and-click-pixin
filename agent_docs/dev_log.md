@@ -23,6 +23,39 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-24 — Spawn points: per-source `from` for transition spawns
+**What:** A `transition` spawn point can now bind to a **source scene** (`SpawnPoint.from?: SceneId`),
+so one scene spawns the player at **different ends per entry** (street: left when arriving from the
+tavern, right from the tower). A **from scene** picker (with **(any)** fallback) shows on player/all
+transition points in `SceneSpawns`; the row shows `· from <name>`.
+**Why:** A `transition` spawn previously applied to *every* arrival, so a scene with two doors couldn't
+place the player correctly per door.
+**How:** `createSceneHost.show` passes `fromScene` (the scene being left, `shownId` before reassign;
+undefined at game start) into `mountScene`. Player-spawn resolution prefers a point whose `from` ===
+`fromScene`, else a `from`-less point, then `scene.spawn` (`player` target beats `all`). Store
+`setSpawnFrom`; `SceneSpawns` gained `sceneIds` (names via the store). The editor preview has no source
+(fresh host), so it shows the `(any)` / default spot — per-source spawns are verified in ▶ Test in
+game. typecheck + lint clean; HMR clean.
+**Follow-ups:** Could let the editor preview simulate "arriving from X" to position visually; for now
+the ◎ markers show where each lands.
+
+### 2026-06-23 — Editor: per-layer `when` (visibility gate) — disappear-after-pickup
+**What:** Each layer row in the **Layers** panel now has a **when** `ConditionEditor` (the same widget
+interactables / NPCs use). `LayerData.when` was already engine-supported (reactive visibility,
+`scene.ts`) but the editor exposed **no** control for it — so a prop that vanishes after pickup
+(`when = not flag picked:<id>`) was only doable by hand-editing game.json. Now it's no-code.
+**Why:** The dev hit exactly this (a cat / hook that should disappear when taken) and "couldn't find
+it in the editor" — because it genuinely wasn't there; layers were the only gated element type
+missing a `when` UI.
+**How:** Store `setLayerWhen` — **no** `revision` bump (the doc carries the gate → export → in-game
+mount registers it via `conditional.push`; the authoring preview keeps the prop visible). Re-mounting
+would rebuild the Pixi world on every keystroke of the flag name, so the preview just doesn't live-hide
+— matches "preview shows, Test-in-game hides". `LayerList` gained `items` + `sceneIds` props (for the
+ConditionEditor) wired from `Editor`. CSS `.layer-row__when`. Docs: editor_guide (layer table + a
+"Disappear after pickup" recipe). typecheck + lint clean; HMR clean.
+**Follow-ups:** None — fills a long-standing gap. (Note: `editor_guide` previously implied layers were
+`when`-gateable in the UI; now that's actually true.)
+
 ### 2026-06-23 — Authored walk-to points for hotspots + NPCs
 **What:** An optional **walk-to point** (a fixed floor spot) on each interactable (4 click kinds) and
 each NPC placement: when set, clicking the thing walks the player to that exact point and **faces the

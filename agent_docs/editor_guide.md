@@ -171,8 +171,17 @@ Each layer row:
 | **parallax** | _(background / foreground)_ scroll rate: 1 = with the world, <1 = farther / slower, 0 = locked, >1 = nearer. |
 | **shadow**   | _(props)_ cast a soft **contact (blob) shadow** at the layer's base (M13c). |
 | **peak HH:MM** | _(images / animated)_ time-of-day **crossfade** peak — see below (M13d).  |
+| **when**   | a **Condition** gating the layer's **visibility** (default "(always)"). Re-evaluated live, so a flag shows / hides the prop. See **Disappear after pickup** below. |
 | **↑ / ↓**  | reorder within the band (paint order).                                       |
 | **✕**      | delete the layer.                                                            |
+
+**Disappear after pickup (a prop that vanishes when taken):** the **pickable** hotspot only hides
+**itself** + gives the item — the prop's **image layer** is separate, so gate the layer's **when**.
+On pickup the engine auto-sets the flag **`picked:<id>`** (`<id>` = the pickable's id), so set the
+layer's **when** to **`not` → `flag` → `picked:<id>`** (leave "on" checked): the layer shows while the
+flag is unset and vanishes once the item is taken. (e.g. a `cat` pickable → the cat layer's `when` =
+`not flag picked:cat`.) The editor preview always shows the prop (you're not playing); it hides in
+**▶ Test in game** after you pick it up.
 
 **Fit modes:**
 
@@ -302,13 +311,18 @@ preview to position it, and set **who** spawns there — the **player**, a speci
 For **player** / **all** points there's also a **spawns on** trigger:
 
 - **scene transition** (default) — used when the player **arrives via a scene change** (an exit /
-  `goTo`).
+  `goTo`). Pick a **from scene** to bind it to a specific source — so one scene can spawn the player
+  at **different ends per entry** (e.g. the street puts the player on the **left** when arriving from
+  the tavern, on the **right** when arriving from the tower: two `transition` points, one `from`
+  tavern, one `from` tower). **(any)** = the fallback used for sources without their own point. A
+  `from`-matched point wins over an `(any)` one.
 - **game start (once)** — the player's **starting position when the game begins**. Only **one**
   spawn point in the whole game can be this: assigning it here demotes any previous game-start point
   back to *scene transition*. If no game-start point exists, the start scene uses its default spawn.
 
-(The trigger is player-only — NPCs ignore it. The editor preview always shows the *transition*
-position. A point with no trigger set counts as *scene transition*.)
+(The trigger is player-only — NPCs ignore it. The editor preview shows the default / `(any)` position
+— exercise per-source spawns in **▶ Test in game**. A point with no trigger set counts as *scene
+transition*.)
 
 ### Audio
 

@@ -1,8 +1,17 @@
 import { editorStore } from './editor-store'
-import type { LayerData, LayerFit, LayerRole, SceneBand, SceneId } from '../data/schema'
+import type {
+  ItemDef,
+  ItemId,
+  LayerData,
+  LayerFit,
+  LayerRole,
+  SceneBand,
+  SceneId,
+} from '../data/schema'
 import { hhmmToMinutes, minutesToHHMM } from './time-format'
 import { AssetSwap } from './AssetSwap'
 import { Slider } from './Slider'
+import { ConditionEditor } from './ConditionEditor'
 
 const BANDS: SceneBand[] = ['background', 'mid', 'foreground']
 const FITS: LayerFit[] = ['none', 'width', 'cover', 'contain', 'stretch']
@@ -18,7 +27,17 @@ function layerLabel(layer: LayerData): string {
  * read as data-URLs and stored in the document, so they survive export. Builtin (code)
  * layers appear here too and can be rebanded / reordered / removed.
  */
-export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: LayerData[] }) {
+export function LayerList({
+  sceneId,
+  layers,
+  items,
+  sceneIds,
+}: {
+  sceneId: SceneId
+  layers: LayerData[]
+  items: Record<ItemId, ItemDef>
+  sceneIds: SceneId[]
+}) {
   return (
     <div className="layer-list">
       <div className="editor__toolbar">
@@ -224,6 +243,17 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                   />
                 </div>
               )}
+            <div className="layer-row__when">
+              <span className="layer-row__when-label" title="Show this layer only while the Condition holds — e.g. not flag picked:<id> hides a prop once it's taken.">
+                when
+              </span>
+              <ConditionEditor
+                condition={layer.when}
+                onChange={(c) => editorStore.getState().setLayerWhen(sceneId, i, c)}
+                items={items}
+                sceneIds={sceneIds}
+              />
+            </div>
           </li>
         ))}
       </ul>

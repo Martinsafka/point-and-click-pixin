@@ -112,6 +112,9 @@ export interface SceneOptions {
   /** True only for the **first** mount of a game session (the start scene). Picks a `start`
    *  spawn point over a `transition` one; set by `createSceneHost`, false for every transition. */
   isGameStart?: boolean
+  /** The scene the player is arriving **from** on a transition (set by `createSceneHost`; undefined
+   *  at game start). Lets a `transition` spawn point match a specific source scene. */
+  fromScene?: SceneId
 }
 
 /** The slice of the story store the engine needs: read state + react to it. */
@@ -815,13 +818,18 @@ export async function mountScene(
   const character = new Character(await createSpriteView(playerView), depthScale, nav, charScale)
   interactive.addChild(character.displayObject)
   // Player start: a spawn point matching how we entered — `start` at game start, else `transition`
-  // (an unset `on` counts as transition). Specific `player` point wins over `all`; else `scene.spawn`.
+  // (an unset `on` counts as transition). For a transition, prefer a point whose `from` is the scene
+  // we came from, else a `from`-less one; specific `player` beats `all`; else `scene.spawn`.
   const wantOn: 'start' | 'transition' = options.isGameStart ? 'start' : 'transition'
+  const fromScene = options.fromScene
   const spawnPts = scene.spawnPoints ?? []
+  const pickSpawn = (matchFrom: boolean) => {
+    const ok = (p: (typeof spawnPts)[number]) =>
+      (p.on ?? 'transition') === wantOn && (matchFrom ? p.from === fromScene : p.from === undefined)
+    return spawnPts.find((p) => p.target === 'player' && ok(p)) ?? spawnPts.find((p) => p.target === 'all' && ok(p))
+  }
   const playerSpawn =
-    (spawnPts.find((p) => p.target === 'player' && (p.on ?? 'transition') === wantOn) ??
-      spawnPts.find((p) => p.target === 'all' && (p.on ?? 'transition') === wantOn))?.at ??
-    scene.spawn
+    (fromScene !== undefined ? pickSpawn(true) : undefined)?.at ?? pickSpawn(false)?.at ?? scene.spawn
   character.setPosition(playerSpawn.xFrac * design.width, playerSpawn.yFrac * design.height)
   appearances.push({ id: 'player', char: character, base: playerView, variants: options.playerViews })
   appearanceIdx.set('player', -1)
@@ -1971,6 +1979,7 @@ export function createSceneHost(
   async function show(id: SceneId): Promise<void> {
     if (destroyed || id === shownId) return
     const isGameStart = firstMount
+    const fromScene = shownId // the scene we're leaving (undefined on the first mount)
     firstMount = false
     shownId = id
     if (current) await fadeTo(1) // fade out (the first scene is already washed)
@@ -1997,7 +2006,7 @@ export function createSceneHost(
       weatherPresets,
       lightingDefaults,
       // Seed routine NPCs at their global path progress so they resume mid-walk (B-lite).
-      { ...options, isGameStart, npcPathProgress: (npc) => routines.progressOf(npc) },
+      { ...options, isGameStart, fromScene, npcPathProgress: (npc) => routines.progressOf(npc) },
     )
     clearTimeout(spinTimer)
     spinner.visible = false

@@ -917,6 +917,10 @@ export interface SpawnPoint {
    *  point in the whole game may be `start`); `'transition'` (the default when unset) = the player
    *  arriving via a scene change. Ignored for NPC targets. */
   on?: 'start' | 'transition'
+  /** For a `transition` point: the scene the player must be **arriving from** for it to apply
+   *  (so one scene can spawn the player at different ends per entry). Unset = any source scene
+   *  (the fallback). A `from`-matched point wins over a `from`-less one. */
+  from?: SceneId
 }
 
 /** Soft contact ("blob") shadows under characters / opted-in props (M13c). Absent → on with

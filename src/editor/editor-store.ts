@@ -113,6 +113,10 @@ interface EditorStore {
   moveLayer(id: SceneId, index: number, dir: -1 | 1): void
   /** Rename a layer (its editor label). No `revision` bump — label only. */
   setLayerName(id: SceneId, index: number, name: string): void
+  /** Gate a layer's visibility on a Condition (undefined = always shown), e.g. `not flag
+   *  picked:<id>` hides a prop once it's taken. No `revision` bump — the saved gate runs in-game;
+   *  the authoring preview keeps the prop visible (re-evaluated on the next mount). */
+  setLayerWhen(id: SceneId, index: number, when: Condition | undefined): void
   setLayerBand(id: SceneId, index: number, band: SceneBand): void
   setLayerFit(id: SceneId, index: number, fit: LayerFit): void
   /** Opt a prop layer into a contact (blob) shadow (M13c). */
@@ -252,6 +256,8 @@ interface EditorStore {
   /** Set a spawn point's player trigger. Assigning `'start'` demotes any other `'start'` point in
    *  the whole game to `'transition'` (only one game-start point is allowed). */
   setSpawnTrigger(id: SceneId, index: number, on: 'start' | 'transition'): void
+  /** Set a transition spawn point's source scene (`from`), or undefined for any source. */
+  setSpawnFrom(id: SceneId, index: number, from: SceneId | undefined): void
   setSpawnPointPos(id: SceneId, index: number, xFrac: number, yFrac: number): void
   addDarkArea(id: SceneId): void
   removeDarkArea(id: SceneId, index: number): void
@@ -485,6 +491,11 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         (ls) => ls.map((l, i) => (i === index ? { ...l, name: name || undefined } : l)),
         false,
       ),
+    setLayerWhen: (id, index, when) =>
+      // No `revision` bump — the doc (→ export → game) carries the gate, and the authoring preview
+      // keeps showing the prop (it re-evaluates the gate on the next mount / in ▶ Test in game).
+      // Re-mounting here would rebuild the Pixi world on every keystroke of the flag name.
+      mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, when } : l)), false),
     setLayerBand: (id, index, band) =>
       // Moving a layer into the `mid` (gameplay) plane seeds a default sort line so it occludes
       // characters right away (and the editor's sort-line slider + guide have a value to show).
@@ -1039,6 +1050,16 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       }
       set({ doc: { ...doc, scenes }, revision: revision + 1 })
     },
+    setSpawnFrom: (id, index, from) =>
+      patchScene(
+        id,
+        {
+          spawnPoints: (get().doc.scenes[id].spawnPoints ?? []).map((p, i) =>
+            i === index ? { ...p, from } : p,
+          ),
+        },
+        true,
+      ),
     addEmitter: (id) => {
       const emitters = get().doc.scenes[id].emitters ?? []
       const taken = new Set(emitters.map((e) => e.id))

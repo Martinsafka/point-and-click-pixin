@@ -497,7 +497,14 @@ export function Editor() {
           </Section>
 
           <Section title={`Layers · ${scene ? scene.layers.length : 0}`}>
-            {scene && <LayerList sceneId={selectedId} layers={scene.layers} />}
+            {scene && (
+              <LayerList
+                sceneId={selectedId}
+                layers={scene.layers}
+                items={doc.items}
+                sceneIds={sceneIds}
+              />
+            )}
           </Section>
 
           <Section title={`Interactables · ${scene ? scene.interactables.length : 0}`}>
@@ -584,6 +591,7 @@ export function Editor() {
                 sceneId={selectedId}
                 spawnPoints={scene.spawnPoints ?? []}
                 cast={doc.npcs ?? {}}
+                sceneIds={sceneIds}
                 selected={selectedSpawn}
                 onSelect={(i) => {
                   setSelectedSpawn(i)
