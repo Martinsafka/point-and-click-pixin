@@ -136,6 +136,14 @@ interface EditorStore {
   setInteractableId(id: SceneId, index: number, value: string): void
   setInteractableItem(id: SceneId, index: number, item: ItemId): void
   setInteractableTo(id: SceneId, index: number, to: SceneId): void
+  /** Per-hotspot approach radius (px) — how far short of the click the player stops. */
+  setInteractableApproach(id: SceneId, index: number, radius: number | undefined): void
+  /** Per-hotspot authored walk-to point (design fractions), or undefined to clear it. */
+  setInteractableApproachAt(
+    id: SceneId,
+    index: number,
+    at: { xFrac: number; yFrac: number } | undefined,
+  ): void
   setTriggerBy(id: SceneId, index: number, by: 'player' | 'npc' | 'any'): void
   setTriggerOnce(id: SceneId, index: number, once: boolean): void
   setTriggerOn(id: SceneId, index: number, on: 'enter' | 'rest'): void
@@ -165,6 +173,12 @@ interface EditorStore {
   removeNpcPlacement(id: SceneId, index: number): void
   setNpcPlacementNpc(id: SceneId, index: number, npc: NpcId): void
   setNpcPlacementSpawn(id: SceneId, index: number, xFrac: number, yFrac: number): void
+  /** Per-placement authored walk-to point (design fractions), or undefined to clear it. */
+  setNpcPlacementApproachAt(
+    id: SceneId,
+    index: number,
+    at: { xFrac: number; yFrac: number } | undefined,
+  ): void
   setNpcPlacementWhen(id: SceneId, index: number, when: Condition | undefined): void
   /** Per-scene dialogue override for a placement (falls back to the cast `NpcDef.dialog`). */
   setNpcPlacementDialog(id: SceneId, index: number, dialog: DialogId | undefined): void
@@ -543,6 +557,18 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapInteractables(id, (its) =>
         its.map((it, i) => (i === index && it.kind === 'exit' ? { ...it, to } : it)),
       ),
+    setInteractableApproach: (id, index, radius) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) =>
+          i === index && it.kind !== 'trigger' ? { ...it, approachRadius: radius } : it,
+        ),
+      ),
+    setInteractableApproachAt: (id, index, at) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) =>
+          i === index && it.kind !== 'trigger' ? { ...it, approachAt: at } : it,
+        ),
+      ),
     setTriggerBy: (id, index, by) =>
       mapInteractables(id, (its) =>
         its.map((it, i) => (i === index && it.kind === 'trigger' ? { ...it, by } : it)),
@@ -710,6 +736,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, npc } : p))),
     setNpcPlacementSpawn: (id, index, xFrac, yFrac) =>
       mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, spawn: { xFrac, yFrac } } : p))),
+    setNpcPlacementApproachAt: (id, index, at) =>
+      mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, approachAt: at } : p))),
     setNpcPlacementWhen: (id, index, when) =>
       mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, when } : p))),
     setNpcPlacementDialog: (id, index, dialog) =>

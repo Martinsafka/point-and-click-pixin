@@ -836,7 +836,12 @@ export async function mountScene(
   // NPCs: characters placed in the scene. They share the nav-mesh + depth, Y-sort
   // with the player, and `when` gates presence. The actor registry addresses every
   // live character by id (`'player'` + cast ids) so engine effects resolve targets.
-  const npcs: { id: string; character: Character; interaction: NpcInteraction }[] = []
+  const npcs: {
+    id: string
+    character: Character
+    interaction: NpcInteraction
+    approachAt?: { x: number; y: number }
+  }[] = []
   const actors = new Map<string, Character>([['player', character]])
   // Re-issue a routine NPC's active path (re-arming its `onArrive` notify) — used after a
   // vision `approach` diverts the NPC to the player, so its routine doesn't stall on the
@@ -874,7 +879,17 @@ export async function mountScene(
       dialogWhen: def?.dialogWhen,
       inspect: def?.inspect,
     }
-    npcs.push({ id: placement.npc, character: npcChar, interaction })
+    npcs.push({
+      id: placement.npc,
+      character: npcChar,
+      interaction,
+      approachAt: placement.approachAt
+        ? {
+            x: placement.approachAt.xFrac * design.width,
+            y: placement.approachAt.yFrac * design.height,
+          }
+        : undefined,
+    })
     actors.set(placement.npc, npcChar)
     appearances.push({
       id: npcId,
@@ -1301,7 +1316,7 @@ export async function mountScene(
   // aren't interactive; a gated-off click falls through to a walk. (Suppressed in the
   // editor's live view, which authors over the world instead of playing it.)
   for (const n of gameplayInput ? npcs : []) {
-    const { character: npcChar, id, interaction } = n
+    const { character: npcChar, id, interaction, approachAt } = n
     if (!interaction.dialog && !interaction.inspect) continue
     npcChar.displayObject.eventMode = 'static'
     npcChar.displayObject.cursor = 'none' // keep the DOM cursor; the talk/look hotspot draws it
@@ -1312,8 +1327,13 @@ export async function mountScene(
       e.stopPropagation() // don't also walk to the raw click point
       const npcX = npcChar.displayObject.x
       const npcY = npcChar.displayObject.y
+      // An authored walk-to point wins (e.g. stand in front of a bar); else stop `approachGap` to
+      // the side of the NPC. Either way, face the NPC on arrival.
       const side = character.displayObject.x <= npcX ? -1 : 1
-      character.setTarget(npcX + side * TALK_GAP, npcY, () => {
+      const tx = approachAt ? approachAt.x : npcX + side * (cast[id]?.approachGap ?? TALK_GAP)
+      const ty = approachAt ? approachAt.y : npcY
+      character.setTarget(tx, ty, () => {
+        if (approachAt) character.faceToward(npcX, npcY)
         if (r.kind === 'dialog') {
           beginDialogue(r.dialog, { id, char: npcChar })
         } else {
@@ -1450,12 +1470,39 @@ export async function mountScene(
   // The game hides the native cursor (the DOM GameCursor draws the pointer). The editor's live
   // view has no GameCursor, so keep the native cursor there (else it vanishes over the canvas).
   app.stage.cursor = gameplayInput ? 'none' : 'default'
+  const radiusOf = (it: InteractableData): number =>
+    'approachRadius' in it ? (it.approachRadius ?? 0) : 0
+  const approachAtOf = (it: InteractableData): { xFrac: number; yFrac: number } | undefined =>
+    'approachAt' in it ? it.approachAt : undefined
+  // Walk-target for a hotspot click: stop its `approachRadius` px short of the click point (along
+  // the player→click line) so each hotspot controls how close the player gets. 0 = onto the click.
+  const approachPoint = (toX: number, toY: number, radius: number): { x: number; y: number } => {
+    if (radius <= 0) return { x: toX, y: toY }
+    const fromX = character.displayObject.x
+    const fromY = character.displayObject.y
+    const dx = toX - fromX
+    const dy = toY - fromY
+    const d = Math.hypot(dx, dy)
+    if (d <= radius) return { x: fromX, y: fromY } // already within the radius — don't move
+    return { x: fromX + (dx * (d - radius)) / d, y: fromY + (dy * (d - radius)) / d }
+  }
   const onTap = (event: FederatedPointerEvent) => {
     // Dialogue / a running cutscene capture input; the world isn't clickable.
     if (dialogueStore.getState().active || sequenceStore.getState().active) return
     const local = interactive.toLocal(event.global)
     const state = store.getState()
     const hit = pickInteractable(scene.interactables, local.x, local.y, design, state)
+    // Where the player actually walks: an authored walk-to point if set (then face the object),
+    // else stop the hotspot's approach radius short of the click.
+    const walkTo = hit ? approachAtOf(hit) : undefined
+    const aim = walkTo
+      ? { x: walkTo.xFrac * design.width, y: walkTo.yFrac * design.height }
+      : hit
+        ? approachPoint(local.x, local.y, radiusOf(hit))
+        : local
+    const faceObject = (): void => {
+      if (walkTo) character.faceToward(local.x, local.y)
+    }
     const selected = state.selectedItem
     if (selected) store.getState().select(null) // any click consumes the selection
     // "look at" flavour (inspect has its own `text`, handled below).
@@ -1467,7 +1514,15 @@ export async function mountScene(
     if (hit && selected) {
       const usageEffects = effectsForUse(hit, selected)
       if (usageEffects) {
-        character.setTarget(local.x, local.y, () => run(usageEffects), 'interact')
+        character.setTarget(
+          aim.x,
+          aim.y,
+          () => {
+            faceObject()
+            run(usageEffects)
+          },
+          'interact',
+        )
         return
       }
     }
@@ -1475,14 +1530,23 @@ export async function mountScene(
     // (text + optional voice), otherwise run its effects. Or just walk.
     if (hit && hit.kind === 'inspect') {
       const { text, audio } = hit
-      character.setTarget(local.x, local.y, () => {
+      character.setTarget(aim.x, aim.y, () => {
+        faceObject()
         if (text) store.getState().say(text)
         // Dynamic import keeps audio out of the editor preview's module graph.
         if (audio) void import('../audio/audio').then((m) => m.playSoundById(audio))
       })
     } else if (hit) {
       const effects = effectsFor(hit)
-      character.setTarget(local.x, local.y, () => run(effects), ONE_SHOT[hit.kind])
+      character.setTarget(
+        aim.x,
+        aim.y,
+        () => {
+          faceObject()
+          run(effects)
+        },
+        ONE_SHOT[hit.kind],
+      )
     } else {
       character.setTarget(local.x, local.y)
     }

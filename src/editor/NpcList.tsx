@@ -19,6 +19,8 @@ export function NpcList({
   onSelect,
   placeMode,
   onTogglePlace,
+  walkToMode,
+  onToggleWalkTo,
   drawPathIndex,
   onToggleDrawPath,
   items,
@@ -32,6 +34,8 @@ export function NpcList({
   onSelect: (i: number) => void
   placeMode: boolean
   onTogglePlace: () => void
+  walkToMode: boolean
+  onToggleWalkTo: () => void
   drawPathIndex: number | null
   onToggleDrawPath: (pathIdx: number) => void
   items: Record<ItemId, ItemDef>
@@ -141,6 +145,24 @@ export function NpcList({
             <span className="intr-form__note">
               spawn {sel.spawn.xFrac.toFixed(2)}, {sel.spawn.yFrac.toFixed(2)}
             </span>
+          </div>
+          <div className="editor__toolbar">
+            <button
+              type="button"
+              className={walkToMode ? 'editor__btn--active' : undefined}
+              title="A fixed floor spot the player walks to when talking to / looking at this NPC (then faces it) — overrides the NPC's approach gap. For an NPC behind a bar."
+              onClick={onToggleWalkTo}
+            >
+              {walkToMode ? 'Done' : sel.approachAt ? 'Move walk-to' : 'Place walk-to'}
+            </button>
+            {sel.approachAt && (
+              <button
+                type="button"
+                onClick={() => s().setNpcPlacementApproachAt(sceneId, selectedIndex, undefined)}
+              >
+                Clear
+              </button>
+            )}
           </div>
           <div className="intr-form__field intr-form__field--col">
             <span>paths (draw on the scene; routine nodes pick one)</span>

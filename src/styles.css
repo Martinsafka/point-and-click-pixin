@@ -1948,6 +1948,28 @@ body {
   background: #fff;
   box-shadow: 0 0 8px #56d364;
 }
+.approach-overlay__marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+.approach-overlay__dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #58a6ff;
+  border: 2px solid #0b0d12;
+  box-shadow: 0 0 6px rgba(88, 166, 255, 0.9);
+}
+.approach-overlay__label {
+  font-size: 9px;
+  color: #cfe3ff;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.95);
+}
 .dark-overlay__poly {
   fill: rgba(0, 0, 0, 0.45);
   stroke: #6c7a99;

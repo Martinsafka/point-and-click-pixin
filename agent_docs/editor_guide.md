@@ -246,6 +246,8 @@ The **selected object's form**:
 | **text**      | inspect        | What the protagonist says when clicked.                             |
 | **audio**     | inspect        | Optional uploaded voice clip played with the text.                  |
 | **look**      | pick / use / exit | "Look at" text shown on a plain click (no item selected).        |
+| **approach**  | pick / use / exit / inspect | Px the player stops **short of the click** when walking here (0 = onto the click). Per-hotspot — raise it so the player doesn't stand on top of the object. |
+| **walk-to**   | pick / use / exit / inspect | **Place point** → click the preview to set a **fixed floor spot** the player walks to (then faces the object). **Overrides approach** — for props the player can't reach directly (on a wall, behind a counter). **Clear** removes it (back to the radius). Shown as a blue marker. |
 | **by / once** | trigger        | Who fires it (player / npc / any) + whether it fires once a visit.   |
 | **when**      | all            | A Condition that gates it ("(always)" = no gate). See Conditions.   |
 | **effects**   | pick / use / exit / trigger | Effects run — on click, or on **enter** for a trigger.|
@@ -274,6 +276,10 @@ placement.
 - For the selected placement: pick **which npc** (from the cast), its **when** gate
   (present only while the Condition holds), and **Place** it — click the preview for its
   spawn.
+- **Place walk-to** — set a **fixed floor spot** the player walks to when talking to / looking
+  at this NPC (then faces it), **overriding** the NPC's approach gap. Use it for an NPC the player
+  can't reach directly — e.g. a barman **behind a bar**: drop the point in front of the counter so
+  the player stops there instead of walking around behind. **Clear** reverts to the gap.
 - **Paths** — a placement holds **several named paths**. **+ Path** adds one (an editable
   **name**; a fixed **id** the routine references — hover the name to see it). Per path:
   pick the **mode** (`once` stop / `loop` / `pingpong`), toggle **Draw** and click the
@@ -450,7 +456,9 @@ steps into darkness → a different atlas / clips). Each variant is a `when` + a
 `CharacterEditor` (same fields as the base).
 
 **NPCs (cast):** the global roster of characters. **+ NPC** creates one (a fixed id, an
-editable **name**, and a walk **speed** ×); place them into scenes from each scene's
+editable **name**, a walk **speed** ×, and an **approach gap** — the px the player stops beside
+this NPC when talking / looking, default 90, so the player doesn't overlap a bigger / smaller
+character); place them into scenes from each scene's
 **NPCs** section. **✕** removes a character and any placements of it. **Edit** opens the
 NPC modal — dialogue (+ gate), inspect, voice, **footsteps** (a library sound played while
 this NPC walks), vision (stealth — incl. **approach**: walk to the player on detection, then

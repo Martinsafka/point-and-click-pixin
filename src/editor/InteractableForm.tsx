@@ -14,6 +14,8 @@ interface Props {
   sceneIds: SceneId[]
   drawMode: boolean
   onToggleDraw: () => void
+  approachMode: boolean
+  onToggleApproach: () => void
 }
 
 /**
@@ -30,6 +32,8 @@ export function InteractableForm({
   sceneIds,
   drawMode,
   onToggleDraw,
+  approachMode,
+  onToggleApproach,
 }: Props) {
   const s = () => editorStore.getState()
   const doc = s().doc
@@ -147,6 +151,46 @@ export function InteractableForm({
             onChange={(e) => s().setInteractableExamine(sceneId, index, e.target.value)}
           />
         </label>
+      )}
+
+      {interactable.kind !== 'trigger' && (
+        <label className="intr-form__field">
+          <span>approach</span>
+          <input
+            type="number"
+            className="logic__in"
+            min="0"
+            step="10"
+            title="px the player stops short of the click point (0 = walk onto the click)"
+            value={interactable.approachRadius ?? 0}
+            onChange={(e) => {
+              const v = Number(e.target.value)
+              s().setInteractableApproach(sceneId, index, v > 0 ? v : undefined)
+            }}
+          />
+        </label>
+      )}
+
+      {interactable.kind !== 'trigger' && (
+        <div className="intr-form__field">
+          <span>walk-to</span>
+          <button
+            type="button"
+            className={approachMode ? 'editor__btn--active' : undefined}
+            title="A fixed floor spot the player walks to (then faces the object), overriding the approach radius — for props on a wall / behind a counter."
+            onClick={onToggleApproach}
+          >
+            {approachMode ? 'Done' : interactable.approachAt ? 'Move point' : 'Place point'}
+          </button>
+          {interactable.approachAt && (
+            <button
+              type="button"
+              onClick={() => s().setInteractableApproachAt(sceneId, index, undefined)}
+            >
+              Clear
+            </button>
+          )}
+        </div>
       )}
 
       <div className="intr-form__field intr-form__field--col">

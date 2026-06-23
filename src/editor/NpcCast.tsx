@@ -41,6 +41,17 @@ export function NpcCast({ npcs }: { npcs: GameDoc['npcs'] }) {
             value={npc.speed ?? 1}
             onChange={(e) => s().setNpcDefSpeed(npc.id, Math.max(0.1, Number(e.target.value) || 1))}
           />
+          <input
+            className="logic__in npc-cast__speed"
+            type="number"
+            min="0"
+            step="10"
+            title="approach gap — px the player stops beside when talking (default 90)"
+            value={npc.approachGap ?? 90}
+            onChange={(e) =>
+              s().patchNpcDef(npc.id, { approachGap: Math.max(0, Number(e.target.value) || 0) })
+            }
+          />
           <button type="button" onClick={() => setEditing(npc.id)}>
             Edit
           </button>

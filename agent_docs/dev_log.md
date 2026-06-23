@@ -23,6 +23,44 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-23 — Authored walk-to points for hotspots + NPCs
+**What:** An optional **walk-to point** (a fixed floor spot) on each interactable (4 click kinds) and
+each NPC placement: when set, clicking the thing walks the player to that exact point and **faces the
+object**, overriding the approach radius / gap. Solves props the player can't reach directly — a
+poster **on a wall**, a barman **behind a bar** — where the radius/gap give a side approach or send
+the player around the back.
+**Why:** Radius/gap are always relative to where the player comes from, so a wall poster always got a
+side approach and the bartender put the player behind the bar. The classic adventure fix is an
+authored walk-to spot (confirmed the direction with the dev via screenshots).
+**How:**
+- **Schema:** `InteractableData.approachAt?` (4 kinds) + `NpcPlacement.approachAt?` (design fractions).
+- **Engine** (`scene.ts`): `onTap` prefers `approachAt` over `approachPoint(click,radius)` and faces
+  the click on arrival; the NPC tap prefers the placement's `approachAt` over the side gap and faces
+  the NPC. The npc runtime list carries the px-resolved point.
+- **Store:** `setInteractableApproachAt` / `setNpcPlacementApproachAt` (undefined clears).
+- **Editor:** new `ApproachOverlay` (one blue marker + a click-catcher, reused for both), Draw modes
+  `approach` / `npcwalkto`, **Place / Move / Clear** buttons in `InteractableForm` + `NpcList`, a
+  hint line, and CSS. No re-mount (markers update live).
+**Follow-ups:** Marker isn't draggable (re-Place to move) — a drag handle would be nicer. The point is
+in scene fractions, so it tracks scene-width changes.
+
+### 2026-06-23 — Per-element approach distance (NPC gap + hotspot radius)
+**What:** How close the player walks to a thing is now per-element, not a global constant.
+- **NPC** — `NpcDef.approachGap?` (default 90) replaces the global `TALK_GAP` at the talk/look walk
+  (`scene.ts`). Edited as a number on each cast row (`NpcCast`, via `patchNpcDef`).
+- **Hotspot** — `InteractableData.approachRadius?` (px, on the 4 click kinds; default 0) makes the
+  player stop **short of the click point** along the player→click line. New `approachPoint` helper +
+  `radiusOf` in `onTap` apply it to item-use / inspect / effects walks (a plain floor click is
+  unaffected). Edited as an **approach** field in `InteractableForm`; store `setInteractableApproach`.
+**Why:** Previously NPCs all used one hard-coded 90 px gap and objects had no standoff at all — the
+player walked onto the exact click. The dev wanted to tune closeness per object / NPC.
+**How:** Chosen semantics (confirmed with the dev): the hotspot radius is measured **from the click**
+(stop-short), so you keep control of *where* and *how close* — and radius 0 = today's behaviour
+(backward-compatible; game.json unaffected). `approachPoint` returns the player's current spot if
+they're already within the radius (no awkward back-step). typecheck + lint clean; HMR clean.
+**Follow-ups:** Could add an editor gizmo to preview the radius; player doesn't explicitly face the
+object when it stops short already inside the radius (movement-facing covers the normal case).
+
 ### 2026-06-23 — Scene pickers show names + spawn-point trigger (start vs transition)
 **What:** Two editor requests.
 1. **Scene pickers show the (renamable) name** — exit **to** (`InteractableForm`) and the shared

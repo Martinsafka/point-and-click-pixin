@@ -649,6 +649,13 @@ export type InteractableData =
       examine?: string
       when?: Condition
       effects?: Effect[]
+      /** How far (design px) short of the click point the player stops when walking here
+       *  (0 / unset = walk onto the click). Per-hotspot approach distance. */
+      approachRadius?: number
+      /** Authored **walk-to point** (design fractions): a fixed floor spot the player walks to when
+       *  this is clicked, then faces it. Overrides `approachRadius` — for props the player can't
+       *  reach directly (on a wall, behind a counter). Unset = use the radius. */
+      approachAt?: { xFrac: number; yFrac: number }
     }
   | {
       kind: 'interact'
@@ -658,6 +665,10 @@ export type InteractableData =
       when?: Condition
       effects: Effect[]
       uses?: UseRule[]
+      /** Approach stop-short distance (px); see `pickable`. */
+      approachRadius?: number
+      /** Authored walk-to point (design fractions); see `pickable`. Overrides `approachRadius`. */
+      approachAt?: { xFrac: number; yFrac: number }
     }
   | {
       kind: 'exit'
@@ -668,6 +679,10 @@ export type InteractableData =
       when?: Condition
       effects?: Effect[]
       uses?: UseRule[]
+      /** Approach stop-short distance (px); see `pickable`. */
+      approachRadius?: number
+      /** Authored walk-to point (design fractions); see `pickable`. Overrides `approachRadius`. */
+      approachAt?: { xFrac: number; yFrac: number }
     }
   | {
       kind: 'inspect'
@@ -678,6 +693,10 @@ export type InteractableData =
       /** Optional voice clip (audio URL) played alongside the text. */
       audio?: string
       when?: Condition
+      /** Approach stop-short distance (px); see `pickable`. */
+      approachRadius?: number
+      /** Authored walk-to point (design fractions); see `pickable`. Overrides `approachRadius`. */
+      approachAt?: { xFrac: number; yFrac: number }
     }
   | {
       // A volume that runs `effects` when a character's feet ENTER it (not on a
@@ -760,6 +779,9 @@ export interface NpcDef {
   name?: string
   /** Walk-speed multiplier (default 1). */
   speed?: number
+  /** How far (design px) to the side the player stops when walking up to talk / look (default 90).
+   *  Per-NPC approach distance, so the player doesn't overlap a bigger / smaller character. */
+  approachGap?: number
   /** Default dialogue (id into `GameDoc.dialogs`), played when the NPC is talked to;
    *  a placement can override it per scene. */
   dialog?: DialogId
@@ -876,6 +898,10 @@ export interface NpcPlacement {
   paths?: NpcPath[]
   /** Per-scene dialogue override (id into `GameDoc.dialogs`); falls back to `NpcDef.dialog`. */
   dialog?: DialogId
+  /** Authored **walk-to point** (design fractions): a fixed floor spot the player walks to when
+   *  talking to / looking at this NPC, then faces it. Overrides the per-NPC `approachGap` — for an
+   *  NPC the player can't reach directly (behind a bar). Unset = use the gap. */
+  approachAt?: { xFrac: number; yFrac: number }
 }
 
 /**
