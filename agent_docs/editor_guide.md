@@ -90,8 +90,9 @@ selected scene, and the preview shows it).
 - **Delete** — removes the selected scene (always keeps at least one).
 - **↑ / ↓** (on each scene in the list) — reorder the scene in the list. Purely the list order
   (doesn't change ids, the **start** scene, or any references).
-- **name** — rename the selected scene. It's the label shown in the list / pickers only — the
-  scene's **id** (used by exits, `goTo`, routines) is unchanged.
+- **name** — rename the selected scene. It's the label shown in the list **and every scene picker**
+  (exit **to**, `goTo` / `moveNpc` effects, routines — each shows `name (id)`); the scene's **id**
+  (what those references actually store) is unchanged.
 - **width** — the scene's width in **design px** (its height is the project's
   reference height — see **Project → Display**, default 1080). A scene wider than the
   screen's aspect makes the game's **camera** scroll horizontally to follow the
@@ -290,8 +291,18 @@ placement.
 Fixed-shape markers (M12.5 #7) that say **where a character starts** in this scene, overriding
 the default spawn. **+ Spawn point** adds one (a ◎ dot); select it, hit **Place** and click the
 preview to position it, and set **who** spawns there — the **player**, a specific **NPC**, or
-**all**. A point assigned to a specific character wins over an **all** point. (Only affects the
-*initial* position when the scene is entered.)
+**all**. A point assigned to a specific character wins over an **all** point.
+
+For **player** / **all** points there's also a **spawns on** trigger:
+
+- **scene transition** (default) — used when the player **arrives via a scene change** (an exit /
+  `goTo`).
+- **game start (once)** — the player's **starting position when the game begins**. Only **one**
+  spawn point in the whole game can be this: assigning it here demotes any previous game-start point
+  back to *scene transition*. If no game-start point exists, the start scene uses its default spawn.
+
+(The trigger is player-only — NPCs ignore it. The editor preview always shows the *transition*
+position. A point with no trigger set counts as *scene transition*.)
 
 ### Audio
 

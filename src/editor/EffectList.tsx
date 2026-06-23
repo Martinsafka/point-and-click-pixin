@@ -38,7 +38,7 @@ export function SceneSelect({
     <select className="logic__sel" value={value} onChange={(e) => onChange(e.target.value)}>
       {sceneIds.map((id) => (
         <option key={id} value={id}>
-          {id}
+          {editorStore.getState().doc.scenes[id]?.name ?? id} ({id})
         </option>
       ))}
     </select>

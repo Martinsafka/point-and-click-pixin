@@ -887,6 +887,10 @@ export interface NpcPlacement {
 export interface SpawnPoint {
   at: { xFrac: number; yFrac: number }
   target: string
+  /** When this point applies to the **player**: `'start'` = the game's start position (only ONE
+   *  point in the whole game may be `start`); `'transition'` (the default when unset) = the player
+   *  arriving via a scene change. Ignored for NPC targets. */
+  on?: 'start' | 'transition'
 }
 
 /** Soft contact ("blob") shadows under characters / opted-in props (M13c). Absent → on with

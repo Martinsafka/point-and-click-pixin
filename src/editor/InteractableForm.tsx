@@ -75,7 +75,7 @@ export function InteractableForm({
           >
             {sceneIds.map((id) => (
               <option key={id} value={id}>
-                {id}
+                {doc.scenes[id]?.name ?? id} ({id})
               </option>
             ))}
           </select>

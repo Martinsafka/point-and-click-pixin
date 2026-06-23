@@ -45,6 +45,7 @@ export function SceneSpawns({
                 onClick={() => onSelect(i)}
               >
                 <span className="intr-row__kind">◎</span> {p.target}
+                {p.on === 'start' ? ' · start' : ''}
               </button>
               <button
                 type="button"
@@ -85,6 +86,26 @@ export function SceneSpawns({
               ))}
             </select>
           </div>
+          {(sp.target === 'player' || sp.target === 'all') && (
+            <div className="intr-form__field">
+              <span>spawns on</span>
+              <select
+                className="logic__in"
+                value={sp.on ?? 'transition'}
+                onChange={(e) =>
+                  s().setSpawnTrigger(sceneId, selected, e.target.value as 'start' | 'transition')
+                }
+              >
+                <option value="transition">scene transition</option>
+                <option value="start">game start (once)</option>
+              </select>
+            </div>
+          )}
+          {sp.on === 'start' && (
+            <p className="intr-form__note">
+              The game's start position — only one spawn point in the whole game can be this.
+            </p>
+          )}
           <p className="intr-form__note">Click Place, then click the preview to position it.</p>
         </div>
       )}

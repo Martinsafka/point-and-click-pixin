@@ -23,6 +23,27 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-23 — Scene pickers show names + spawn-point trigger (start vs transition)
+**What:** Two editor requests.
+1. **Scene pickers show the (renamable) name** — exit **to** (`InteractableForm`) and the shared
+   `SceneSelect` (goTo / moveNpc, `EffectList`) rendered the raw scene **id**; now they show
+   `name (id)` (matching `NpcEditor`). So renaming a scene is reflected everywhere you pick one.
+2. **Spawn-point trigger** — `SpawnPoint` gets `on?: 'start' | 'transition'`. A **player** / **all**
+   point now has a **spawns on** selector: *scene transition* (default) or *game start*. Only one
+   game-start point may exist in the whole game — `setSpawnTrigger` demotes any other `start` when
+   you assign one.
+**Why:** Default scene names are all "scene", so id-only pickers were hard to choose from; and the
+dev needed to control the player's start position separately from arrival-via-transition.
+**How (runtime):** `mountScene` gets `isGameStart?`; `createSceneHost` sets it true for the **first**
+mount of a *playing* host (`firstMount = options.gameplayInput ?? true`, consumed in `show`), false
+for every transition and for the whole editor preview (gameplayInput false). Player spawn resolves to
+a point matching the entry context (`(p.on ?? 'transition') === wantOn`, specific `player` > `all`),
+else `scene.spawn`. NPC spawn (`spawnAt`) is unchanged / trigger-agnostic. game.json has no spawn
+points yet, so no migration. typecheck + lint clean; HMR clean.
+**Follow-ups:** Game **restart** (retry) re-creates the host → first mount = game start again (correct).
+The `SceneSelect` reads the name via `editorStore.getState()` at render (fine — the editor re-renders
+on doc edits); could thread names as props if it's ever used outside the editor.
+
 ### 2026-06-23 — Editor: rename layers + rename / reorder scenes
 **What:** Three small editor authoring controls:
 - **Rename a layer** — `LayerData` gets an optional `name?` (all three kinds); the layer row's static

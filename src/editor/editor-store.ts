@@ -235,6 +235,9 @@ interface EditorStore {
   addSpawnPoint(id: SceneId): void
   removeSpawnPoint(id: SceneId, index: number): void
   setSpawnPoint(id: SceneId, index: number, patch: Partial<SpawnPoint>): void
+  /** Set a spawn point's player trigger. Assigning `'start'` demotes any other `'start'` point in
+   *  the whole game to `'transition'` (only one game-start point is allowed). */
+  setSpawnTrigger(id: SceneId, index: number, on: 'start' | 'transition'): void
   setSpawnPointPos(id: SceneId, index: number, xFrac: number, yFrac: number): void
   addDarkArea(id: SceneId): void
   removeDarkArea(id: SceneId, index: number): void
@@ -987,6 +990,27 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         },
         true,
       ),
+    setSpawnTrigger: (id, index, on) => {
+      const { doc, revision } = get()
+      const scenes: Record<SceneId, SceneData> = {}
+      for (const sid of Object.keys(doc.scenes)) {
+        const sc = doc.scenes[sid]
+        if (!sc.spawnPoints) {
+          scenes[sid] = sc
+          continue
+        }
+        scenes[sid] = {
+          ...sc,
+          spawnPoints: sc.spawnPoints.map((p, i) => {
+            if (sid === id && i === index) return { ...p, on }
+            // Demote any other `start` so only one game-start point exists.
+            if (on === 'start' && p.on === 'start') return { ...p, on: 'transition' as const }
+            return p
+          }),
+        }
+      }
+      set({ doc: { ...doc, scenes }, revision: revision + 1 })
+    },
     addEmitter: (id) => {
       const emitters = get().doc.scenes[id].emitters ?? []
       const taken = new Set(emitters.map((e) => e.id))

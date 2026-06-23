@@ -109,6 +109,9 @@ export interface SceneOptions {
   /** Conditional appearance variants for the player (M12.5 #3) — the scene swaps the player's
    *  view reactively when the matching variant changes. */
   playerViews?: CharacterAppearance[]
+  /** True only for the **first** mount of a game session (the start scene). Picks a `start`
+   *  spawn point over a `transition` one; set by `createSceneHost`, false for every transition. */
+  isGameStart?: boolean
 }
 
 /** The slice of the story store the engine needs: read state + react to it. */
@@ -804,14 +807,21 @@ export async function mountScene(
   const nav = buildNavigation(walkablePx, holesPx) // shared by the player + every NPC
   const charScale = scene.characterScale ?? 1
   // Spawn-point override (M12.5 #7): a character starts at its assigned point (specific id wins
-  // over `all`), else the scene / placement default.
+  // over `all`), else the scene / placement default. (NPCs are trigger-agnostic.)
   const spawnAt = (id: string): { xFrac: number; yFrac: number } | undefined => {
     const pts = scene.spawnPoints ?? []
     return pts.find((p) => p.target === id)?.at ?? pts.find((p) => p.target === 'all')?.at
   }
   const character = new Character(await createSpriteView(playerView), depthScale, nav, charScale)
   interactive.addChild(character.displayObject)
-  const playerSpawn = spawnAt('player') ?? scene.spawn
+  // Player start: a spawn point matching how we entered — `start` at game start, else `transition`
+  // (an unset `on` counts as transition). Specific `player` point wins over `all`; else `scene.spawn`.
+  const wantOn: 'start' | 'transition' = options.isGameStart ? 'start' : 'transition'
+  const spawnPts = scene.spawnPoints ?? []
+  const playerSpawn =
+    (spawnPts.find((p) => p.target === 'player' && (p.on ?? 'transition') === wantOn) ??
+      spawnPts.find((p) => p.target === 'all' && (p.on ?? 'transition') === wantOn))?.at ??
+    scene.spawn
   character.setPosition(playerSpawn.xFrac * design.width, playerSpawn.yFrac * design.height)
   appearances.push({ id: 'player', char: character, base: playerView, variants: options.playerViews })
   appearanceIdx.set('player', -1)
@@ -1747,6 +1757,9 @@ export function createSceneHost(
   let current: PreviewScene | undefined
   let destroyed = false
   let shownId: SceneId | undefined
+  // The first real mount of a *playing* host is the game start (picks a `start` spawn point).
+  // The editor's live view (gameplayInput false) is never a game start — it authors over scenes.
+  let firstMount = options.gameplayInput ?? true
 
   // Each NPC's start scene: its `home`, else the first scene it's placed in. The runtime
   // location (`StoryState.npcScene`) defaults to this; `moveNpc` / `despawnNpc` override it.
@@ -1893,6 +1906,8 @@ export function createSceneHost(
 
   async function show(id: SceneId): Promise<void> {
     if (destroyed || id === shownId) return
+    const isGameStart = firstMount
+    firstMount = false
     shownId = id
     if (current) await fadeTo(1) // fade out (the first scene is already washed)
     if (destroyed) return
@@ -1918,7 +1933,7 @@ export function createSceneHost(
       weatherPresets,
       lightingDefaults,
       // Seed routine NPCs at their global path progress so they resume mid-walk (B-lite).
-      { ...options, npcPathProgress: (npc) => routines.progressOf(npc) },
+      { ...options, isGameStart, npcPathProgress: (npc) => routines.progressOf(npc) },
     )
     clearTimeout(spinTimer)
     spinner.visible = false
