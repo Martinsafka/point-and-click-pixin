@@ -38,9 +38,14 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
         {layers.map((layer, i) => (
           <li key={i} className="layer-row">
             <div className="layer-row__head">
-              <span className="layer-row__label" title={layerLabel(layer)}>
-                {layerLabel(layer)}
-              </span>
+              <input
+                type="text"
+                className="layer-row__name"
+                value={layer.name ?? ''}
+                placeholder={layerLabel(layer)}
+                title="Layer name (editor label only)"
+                onChange={(e) => editorStore.getState().setLayerName(sceneId, i, e.target.value)}
+              />
               <div className="layer-row__btns">
                 <button
                   type="button"

@@ -88,6 +88,10 @@ selected scene, and the preview shows it).
 
 - **+ Scene** — adds a blank scene (a default floor walkable + a spawn point).
 - **Delete** — removes the selected scene (always keeps at least one).
+- **↑ / ↓** (on each scene in the list) — reorder the scene in the list. Purely the list order
+  (doesn't change ids, the **start** scene, or any references).
+- **name** — rename the selected scene. It's the label shown in the list / pickers only — the
+  scene's **id** (used by exits, `goTo`, routines) is unchanged.
 - **width** — the scene's width in **design px** (its height is the project's
   reference height — see **Project → Display**, default 1080). A scene wider than the
   screen's aspect makes the game's **camera** scroll horizontally to follow the
@@ -159,6 +163,7 @@ Each layer row:
 
 | Control    | What it does                                                                 |
 | ---------- | ---------------------------------------------------------------------------- |
+| **name**   | rename the layer (the row's label); blank falls back to the kind / builder name. Editor label only — the engine ignores it. |
 | **band**   | background / mid / foreground (paint order; mid is depth-sorted).            |
 | **fit**    | _(images)_ how it sizes to the screen — see the table below.                 |
 | **role**   | scenery / occluder / floor — a cosmetic label only (no visual effect; walk-behind occlusion is the **sort line** below). |

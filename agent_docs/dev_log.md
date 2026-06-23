@@ -23,6 +23,21 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-23 — Editor: rename layers + rename / reorder scenes
+**What:** Three small editor authoring controls:
+- **Rename a layer** — `LayerData` gets an optional `name?` (all three kinds); the layer row's static
+  label is now a text input (placeholder = the auto kind / builder label). Store: `setLayerName`.
+- **Rename a scene** — a **name** field in the Scenes panel edits the selected scene's `name`
+  (already in the schema). Store: `setSceneName`.
+- **Reorder scenes** — **↑ / ↓** on each scene row, mirroring the layer reorder. Store: `moveScene`
+  shuffles the `scenes` Record keys (`Object.fromEntries` over reordered `Object.keys`).
+**Why:** The developer wanted to label layers/scenes meaningfully and control scene order in the list.
+**How:** All three are **label / list-order only** → `patchScene(..., false)` / `mapLayers(..., false)`
+/ plain `set` with **no `revision` bump**, so nothing re-mounts the Pixi preview (no flash, inputs keep
+focus). Scene **id** is untouched (rename = display `name`), so exits / `goTo` / routines keep working;
+reorder doesn't touch `start` or references. CSS: `.layer-row__name`, `.editor__scene-row`,
+`.editor__scene-btns`. Docs: editor_guide (Scenes + layer-row table). typecheck + lint clean; HMR clean.
+
 ### 2026-06-23 — Sort line: decouple from size + editor-only yellow guide line
 **What:** Refined the new mid-layer sort line (same-day follow-up to the entry below). Three changes:
 1. **Decoupled size** — a mid layer's `anchorYFrac` now drives **only** the Y-sort zIndex, not the

@@ -699,6 +699,44 @@ body {
   border-color: #e8b552;
 }
 
+.editor__scene-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.editor__scene-row .editor__scene {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+
+.editor__scene-btns {
+  display: flex;
+  gap: 2px;
+}
+
+.editor__scene-btns button {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: rgba(20, 26, 38, 0.85);
+  border: 1px solid #2a3650;
+  border-radius: 5px;
+  color: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.editor__scene-btns button:hover:not(:disabled) {
+  border-color: #45568a;
+}
+
+.editor__scene-btns button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .editor__hint {
   margin: 0;
   font-size: 11px;
@@ -751,6 +789,27 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.layer-row__name {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  background: rgba(20, 26, 38, 0.85);
+  border: 1px solid #1c2230;
+  border-radius: 5px;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+}
+
+.layer-row__name:focus {
+  outline: none;
+  border-color: #45568a;
+}
+
+.layer-row__name::placeholder {
+  opacity: 0.5;
 }
 
 .layer-row__btns {

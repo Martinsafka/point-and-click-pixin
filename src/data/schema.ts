@@ -564,6 +564,9 @@ export type LayerData =
   | {
       kind: 'image'
       band: SceneBand
+      /** Optional editor label shown in the layer list (falls back to the kind / builder name).
+       *  Cosmetic — the engine ignores it. */
+      name?: string
       /** Parallax scroll factor: 1 = moves with the world (default), <1 = farther /
        *  slower, 0 = locked to the viewport, >1 = nearer / faster. Background &
        *  foreground only (mid is the gameplay plane). */
@@ -590,6 +593,8 @@ export type LayerData =
   | {
       kind: 'builtin'
       band: SceneBand
+      /** Optional editor label (see the `image` variant). */
+      name?: string
       /** Parallax scroll factor (see the `image` variant). */
       parallax?: number
       builder: string
@@ -605,6 +610,8 @@ export type LayerData =
       // (so a flag can swap a static or animated asset for another).
       kind: 'animated'
       band: SceneBand
+      /** Optional editor label (see the `image` variant). */
+      name?: string
       parallax?: number
       /** Atlas image URL (a grid of equal frames). */
       src: string

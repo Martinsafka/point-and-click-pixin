@@ -64,6 +64,10 @@ interface EditorStore {
   selectScene(id: SceneId): void
   addScene(): void
   deleteScene(id: SceneId): void
+  /** Rename a scene (its display `name`). No `revision` bump — list label only. */
+  setSceneName(id: SceneId, name: string): void
+  /** Reorder a scene in the list (−1 up / +1 down) by shuffling the `scenes` keys. No bump. */
+  moveScene(id: SceneId, dir: -1 | 1): void
   setDoc(doc: GameDoc): void
   /** Replace a scene's walkable polygon (fractions). No `revision` bump. */
   setWalkable(id: SceneId, polygon: number[]): void
@@ -107,6 +111,8 @@ interface EditorStore {
   ): void
   removeLayer(id: SceneId, index: number): void
   moveLayer(id: SceneId, index: number, dir: -1 | 1): void
+  /** Rename a layer (its editor label). No `revision` bump — label only. */
+  setLayerName(id: SceneId, index: number, name: string): void
   setLayerBand(id: SceneId, index: number, band: SceneBand): void
   setLayerFit(id: SceneId, index: number, fit: LayerFit): void
   /** Opt a prop layer into a contact (blob) shadow (M13c). */
@@ -381,6 +387,17 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         revision: revision + 1,
       })
     },
+    setSceneName: (id, name) => patchScene(id, { name }, false),
+    moveScene: (id, dir) => {
+      const { doc } = get()
+      const ids = Object.keys(doc.scenes)
+      const i = ids.indexOf(id)
+      const j = i + dir
+      if (i < 0 || j < 0 || j >= ids.length) return
+      ;[ids[i], ids[j]] = [ids[j], ids[i]]
+      const scenes = Object.fromEntries(ids.map((k) => [k, doc.scenes[k]]))
+      set({ doc: { ...doc, scenes } })
+    },
     setDoc: (doc) => set({ doc, selectedSceneId: doc.start, revision: get().revision + 1 }),
     setWalkable: (id, polygon) => patchScene(id, { walkable: polygon }, false),
     addHole: (id) => patchScene(id, { holes: [...(get().doc.scenes[id].holes ?? []), []] }, false),
@@ -445,6 +462,12 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         ;[next[index], next[j]] = [next[j], next[index]]
         return next
       }),
+    setLayerName: (id, index, name) =>
+      mapLayers(
+        id,
+        (ls) => ls.map((l, i) => (i === index ? { ...l, name: name || undefined } : l)),
+        false,
+      ),
     setLayerBand: (id, index, band) =>
       // Moving a layer into the `mid` (gameplay) plane seeds a default sort line so it occludes
       // characters right away (and the editor's sort-line slider + guide have a value to show).

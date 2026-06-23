@@ -342,8 +342,8 @@ export function Editor() {
               </button>
             </div>
             <ul className="editor__scenes">
-              {sceneIds.map((id) => (
-                <li key={id}>
+              {sceneIds.map((id, idx) => (
+                <li key={id} className="editor__scene-row">
                   <button
                     type="button"
                     className={`editor__scene${id === selectedId ? ' editor__scene--active' : ''}`}
@@ -351,9 +351,36 @@ export function Editor() {
                   >
                     {doc.scenes[id].name}
                   </button>
+                  <div className="editor__scene-btns">
+                    <button
+                      type="button"
+                      title="Move up"
+                      disabled={idx === 0}
+                      onClick={() => editorStore.getState().moveScene(id, -1)}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      title="Move down"
+                      disabled={idx === sceneIds.length - 1}
+                      onClick={() => editorStore.getState().moveScene(id, 1)}
+                    >
+                      ↓
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
+            <div className="intr-form__field">
+              <span>name</span>
+              <input
+                className="logic__in"
+                type="text"
+                value={doc.scenes[selectedId].name}
+                onChange={(e) => editorStore.getState().setSceneName(selectedId, e.target.value)}
+              />
+            </div>
             <div className="intr-form__field">
               <span>width</span>
               <input
