@@ -19,7 +19,6 @@ import { sequenceStore } from '../state/sequence'
 import { createSpriteView } from '../entities/sprite-view'
 import { placeholderView } from '../entities/placeholder-atlas'
 import { resolveDepthScale, designSize, DEFAULT_REFERENCE_HEIGHT } from '../data/scene-config'
-import { depthScaleAt } from '../systems/depth'
 import { buildNavigation } from '../systems/navmesh'
 import { createAtmosphere } from './atmosphere'
 import { createWeatherSystem, type WeatherSystem } from './weather'
@@ -491,10 +490,12 @@ export async function mountScene(
     // clicks on the NPCs beneath it — their `pointertap` never fires. The editor's
     // makeLayerDraggable re-enables 'static' on positionable layers below, so dragging still works.
     display.eventMode = 'none'
+    // Mid layer: `anchorYFrac` is purely the **Y-sort line** against characters (feet below it →
+    // the character draws in front; above it → the prop draws in front). Size is independent —
+    // `fitImageSprite` / the builder already set it (scale % / fit) — so moving the sort line never
+    // resizes the prop.
     if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
-      const anchorY = layer.anchorYFrac * design.height
-      display.zIndex = anchorY
-      display.scale.set(depthScaleAt(anchorY, depthScale) * layerScaleFor(layer))
+      display.zIndex = layer.anchorYFrac * design.height
     }
     if (layer.when) {
       const when = layer.when
@@ -589,20 +590,53 @@ export async function mountScene(
   }
   applyTimeFade(store.getState().clockMinutes ?? 0)
 
-  // Re-apply each `none`-fit layer's manual scale live — the editor calls this from `applyLive`
-  // so the scale slider updates with no re-mount (mid layers compose with the depth scale).
+  // Re-apply each layer's live geometry — the editor calls this from `applyLive` so both the
+  // scale slider (none-fit props) and the mid-band **sort line** (anchorYFrac) update with no
+  // re-mount flash. The sort line only re-seats the Y-sort zIndex; size is independent (scale % /
+  // fit), so dragging the line never resizes the prop.
   const reapplyLayerScales = (sc: SceneData): void => {
     for (let i = 0; i < sc.layers.length; i += 1) {
       const l = sc.layers[i]
       const d = layerDisplays[i]
       if (!d) continue
-      if (l.band === 'mid' && l.anchorYFrac !== undefined) {
-        d.scale.set(depthScaleAt(l.anchorYFrac * design.height, depthScale) * layerScaleFor(l))
-      } else if ((l.kind === 'image' || l.kind === 'animated') && (l.fit ?? 'none') === 'none') {
+      if (l.band === 'mid' && l.anchorYFrac !== undefined) d.zIndex = l.anchorYFrac * design.height
+      if ((l.kind === 'image' || l.kind === 'animated') && (l.fit ?? 'none') === 'none') {
         d.scale.set(layerScaleFor(l))
       }
     }
   }
+
+  // Editor-only guide: a bright line at every mid layer's **sort line** (anchorYFrac) so the author
+  // can see the walk-in-front / walk-behind threshold. In `world` space (camera-transformed, above
+  // the bands, but ungraded so the colour grade doesn't tint it); shown only when `onLayerMove` is
+  // set (the editor) and redrawn from `applyLive` so it tracks the slider live. Off in the game.
+  const guideLayer = new Container()
+  guideLayer.zIndex = 50
+  guideLayer.eventMode = 'none'
+  guideLayer.visible = !!onLayerMove
+  const guideG = new Graphics()
+  guideLayer.addChild(guideG)
+  world.addChild(guideLayer)
+  // Widths are in design space (the fit camera shrinks the scene), so scale them to the scene
+  // height to stay visible at any preview size; a dark halo keeps the line readable on light art.
+  const guideW = Math.max(3, design.height * 0.005)
+  const pathSortGuides = (sc: SceneData): void => {
+    for (const l of sc.layers) {
+      if (l.band === 'mid' && l.anchorYFrac !== undefined) {
+        const y = l.anchorYFrac * design.height
+        guideG.moveTo(0, y).lineTo(design.width, y)
+      }
+    }
+  }
+  const redrawSortGuides = (sc: SceneData): void => {
+    if (!onLayerMove) return
+    guideG.clear()
+    pathSortGuides(sc)
+    guideG.stroke({ color: 0x000000, width: guideW + 4, alpha: 0.35 })
+    pathSortGuides(sc)
+    guideG.stroke({ color: 0xffd400, width: guideW, alpha: 0.95 })
+  }
+  redrawSortGuides(scene)
 
   // M10 10c fog: an animated noise fog/cloud layer. Built after the layers so the back layer
   // can slot **behind a chosen layer** (`fog.backLayer`) inside its band; else a world overlay
@@ -1591,8 +1625,10 @@ export async function mountScene(
         lastCharScale = cs
         for (const a of actors.values()) a.setCharScale(cs)
       }
-      // Layer manual scale (none-fit props) — re-applied live so the slider has no re-mount flash.
+      // Layer manual scale (none-fit props) + mid sort-line zIndex — re-applied live so the
+      // slider has no re-mount flash; redraw the editor sort-line guides to track it.
       reapplyLayerScales(sc)
+      redrawSortGuides(sc)
       // NPC walk speed (per cast def).
       const ch = castHash(castNow)
       if (ch !== lastCastHash) {

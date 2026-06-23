@@ -161,7 +161,7 @@ Each layer row:
 | ---------- | ---------------------------------------------------------------------------- |
 | **band**   | background / mid / foreground (paint order; mid is depth-sorted).            |
 | **fit**    | _(images)_ how it sizes to the screen — see the table below.                 |
-| **role**   | scenery / occluder / floor — metadata for now (drives future occlusion).     |
+| **role**   | scenery / occluder / floor — a cosmetic label only (no visual effect; walk-behind occlusion is the **sort line** below). |
 | **parallax** | _(background / foreground)_ scroll rate: 1 = with the world, <1 = farther / slower, 0 = locked, >1 = nearer. |
 | **shadow**   | _(props)_ cast a soft **contact (blob) shadow** at the layer's base (M13c). |
 | **peak HH:MM** | _(images / animated)_ time-of-day **crossfade** peak — see below (M13d).  |
@@ -184,8 +184,19 @@ where the layer currently sits.
 
 **Scale (`none`-fit):** each `none`-fit image / animated layer gets a **scale %** slider — size a
 prop from **10–300 %** of its source resolution without re-uploading (handy when a render comes in
-too big / small for the scene). It updates live; on a **mid**-band prop it multiplies on top of the
-perspective (Walkable depth) scale.
+too big / small for the scene). It updates live and is the **only** control that sizes the prop —
+independent of its sort line (below).
+
+**Sort line (`mid`) — walk in front of / behind a prop:** each **mid**-band layer gets a **sort
+line %** slider — the prop's **foot line** as a % of scene height (0 = top, 100 = bottom). It's the
+Y-sort threshold against characters: a character whose **feet are below** the line walks **in
+front** of the prop; **above** the line the prop draws **in front**. That's how a single prop (a
+lamppost, a table, a doorway) can be passed both in front of and behind. Moving a layer into the
+**mid** band **seeds a sort line automatically** (85 %), so it occludes right away — then tune it
+with the slider. The line is **purely** the occlusion threshold: it does **not** resize the prop
+(size is the **scale %** slider alone). In the **editor** a **yellow line** marks each prop's sort
+line and tracks the slider live — it's an authoring guide, so it does **not** appear in **▶ Test in
+game**. Updates live. _(The `role` field does **not** drive any of this — it's a cosmetic label.)_
 
 **Parallax:** in a scrolling scene, give background / foreground layers a scroll rate
 below 1 to sit "farther" — a distant skyline barely moves while the near ground tracks

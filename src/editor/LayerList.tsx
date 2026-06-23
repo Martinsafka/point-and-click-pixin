@@ -194,6 +194,18 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                 ))}
               </div>
             )}
+            {layer.band === 'mid' && (
+              <div className="layer-row__anim">
+                <Slider
+                  label="sort line %"
+                  value={Math.round((layer.anchorYFrac ?? 0.85) * 100)}
+                  min={0}
+                  max={100}
+                  step={1}
+                  onChange={(v) => editorStore.getState().setLayerAnchorY(sceneId, i, v / 100)}
+                />
+              </div>
+            )}
             {(layer.kind === 'image' || layer.kind === 'animated') &&
               (layer.fit ?? 'none') === 'none' && (
                 <div className="layer-row__anim">
@@ -202,7 +214,7 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                     value={Math.round((layer.scale ?? 1) * 100)}
                     min={10}
                     max={300}
-                    step={5}
+                    step={1}
                     onChange={(v) => editorStore.getState().setLayerScale(sceneId, i, v / 100)}
                   />
                 </div>

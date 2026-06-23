@@ -89,6 +89,10 @@ interface EditorStore {
   setLayerSrc(id: SceneId, index: number, src: string): void
   /** `none`-fit layer size multiplier (1 = natural). Live (no re-mount). */
   setLayerScale(id: SceneId, index: number, scale: number): void
+  /** A `mid`-band layer's occlusion **sort line** (anchorYFrac, 0..1 of scene height): the foot
+   *  line where the prop sorts against characters (above it the prop draws in front, below it the
+   *  character does) and takes the scene's depth scale. Live (no re-mount). */
+  setLayerAnchorY(id: SceneId, index: number, anchorYFrac: number): void
   /** Patch an animated layer's frame grid / fps (M12.5 #8). */
   setLayerAnim(
     id: SceneId,
@@ -411,6 +415,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       ),
     setLayerScale: (id, index, scale) =>
       mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, scale } : l)), false),
+    setLayerAnchorY: (id, index, anchorYFrac) =>
+      mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, anchorYFrac } : l)), false),
     addAnimatedLayer: (id, src) =>
       mapLayers(id, (ls) => [
         ...ls,
@@ -440,7 +446,19 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         return next
       }),
     setLayerBand: (id, index, band) =>
-      mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, band } : l))),
+      // Moving a layer into the `mid` (gameplay) plane seeds a default sort line so it occludes
+      // characters right away (and the editor's sort-line slider + guide have a value to show).
+      mapLayers(id, (ls) =>
+        ls.map((l, i) =>
+          i === index
+            ? {
+                ...l,
+                band,
+                ...(band === 'mid' && l.anchorYFrac === undefined ? { anchorYFrac: 0.85 } : {}),
+              }
+            : l,
+        ),
+      ),
     setLayerFit: (id, index, fit) =>
       mapLayers(id, (ls) =>
         ls.map((l, i) =>

@@ -23,6 +23,55 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-23 — Sort line: decouple from size + editor-only yellow guide line
+**What:** Refined the new mid-layer sort line (same-day follow-up to the entry below). Three changes:
+1. **Decoupled size** — a mid layer's `anchorYFrac` now drives **only** the Y-sort zIndex, not the
+   perspective depth scale. Dragging the sort line no longer resizes the prop; size is the **scale %**
+   slider / fit alone. (`src/engine/scene.ts`: dropped `depthScaleAt(anchorY) * layerScaleFor` from
+   both the mount path and `reapplyLayerScales`; removed the now-unused `depthScaleAt` import.)
+2. **Editor-only yellow guide** — a bright line (`0xffd400`) at every mid layer's sort line, in
+   `world` space (camera-transformed, above the bands, ungraded), drawn by `redrawSortGuides` and
+   redrawn from `applyLive` so it tracks the slider live. Gated on `onLayerMove` (editor authoring
+   view) → hidden in **▶ Test in game** (the real `GameCanvas` doesn't pass `onLayerMove`).
+3. **Auto-seed** — moving a layer into the **mid** band seeds `anchorYFrac = 0.85` if unset
+   (`setLayerBand`), so mid ⟺ has a sort line ⟺ slider + guide + occlusion are all consistent.
+**Why:** The user expected the sort line to set *only* the walk-in-front/behind threshold and to be
+*visible*. The depth-scale coupling (pre-existing for mid props) surprised them by resizing the prop,
+and a numeric slider with no on-canvas feedback was hard to place.
+**How:** `world` (not `graded`) hosts the guide so the colour grade doesn't tint it; one `Graphics`
+cleared + restroked per redraw. Decoupling drops the perspective auto-size for mid props — fine per
+the user (the street/room demo lamps don't matter). typecheck + lint clean; HMR clean.
+**Follow-ups:** A drag-the-line handle on the yellow guide (instead of only the slider) would be the
+next ergonomic win. `role` (scenery/occluder/floor) is still pure metadata.
+
+### 2026-06-23 — Editor: per-layer "sort line %" slider (anchorYFrac) for mid props
+**What:** A **sort line %** slider on every **mid**-band layer (`src/editor/LayerList.tsx`) that sets
+`anchorYFrac` (0–100 % of scene height) — the prop's foot line that drives walk-in-front / walk-behind
+Y-sort against characters. New store action `setLayerAnchorY` (`src/editor/editor-store.ts`); engine
+`reapplyLayerScales` now re-seats the mid layer's **zIndex** (not just scale) on `applyLive`
+(`src/engine/scene.ts`) so the line moves live with no re-mount. Docs: `editor_guide.md` (new "Sort
+line" section + corrected the `role` row).
+**Why:** The occlusion behaviour (character in front below the foot line, prop in front above it) was
+only settable by hand-editing `anchorYFrac` in scene data — the no-code editor had **no** control for
+it. Users (reasonably) reached for the `role: occluder` dropdown, which is **cosmetic and does
+nothing**; the real mechanism is `band: mid` + `anchorYFrac`.
+**How:** Mirrored the existing `scale %` slider exactly: `mapLayers(..., false)` (no revision bump →
+`applyLive` path), live re-apply via the extended `reapplyLayerScales`. The slider shows for all mid
+layer kinds incl. `builtin`; default display 85 % when unset (committing on drag activates occlusion +
+the depth scale). typecheck + lint clean; HMR clean. Note: prettier `--check` flags these files, but
+they're already flagged at HEAD (repo isn't kept prettier-clean) — left formatting untouched to avoid
+churn.
+**Follow-ups:** `role` (scenery/occluder/floor) is now pure metadata — could be removed, or wired to
+something, later. A drag-the-line handle in the preview would beat a numeric slider for placing the
+foot line visually.
+
+### 2026-06-23 — Per-layer scale slider: step 5 → 1
+**What:** The **scale %** slider on none-fit image/animated layers (`src/editor/LayerList.tsx`) now
+steps by **1 %** instead of 5 %.
+**Why:** 5 % increments were too coarse to size a prop precisely to the scene.
+**How:** One-line change `step={5}` → `step={1}`; range (10–300 %) and the `v / 100` → `setLayerScale`
+wiring are unchanged.
+
 ### 2026-06-21 — Colour grade: tint (colour cast) + slider UI for every param
 **What:** Added a **tint** to `ColorGrade` — a colour **cast** (`tint` hex + `tintStrength` 0..1)
 that a hue rotation can't paint onto near-grey pixels (e.g. a blue night over a stone statue). Also
