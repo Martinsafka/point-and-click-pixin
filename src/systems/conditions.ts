@@ -103,6 +103,8 @@ export function applyEffect(state: StoryState, effect: Effect): StoryState {
         : { ...state, inventory: [...state.inventory, effect.item] }
     case 'takeItem':
       return { ...state, inventory: state.inventory.filter((i) => i !== effect.item) }
+    case 'setClock':
+      return { ...state, clockMinutes: effect.minutes }
     case 'goTo':
       return {
         ...state,

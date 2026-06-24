@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { AnimClip, ViewDescriptor } from '../data/schema'
 import { AssetSwap } from './AssetSwap'
+import { FramesUpload } from './FramesUpload'
 import { SoundSelect } from './SoundSelect'
 
 function parseFrames(text: string): number[] {
@@ -116,6 +117,17 @@ export function CharacterEditor({
           accept="image/*,.svg"
           label="⇄ Swap atlas"
           onPick={(atlas) => onChange({ atlas })}
+        />
+        <FramesUpload
+          label="+ Frames"
+          onPack={(a) =>
+            onChange({
+              atlas: a.src,
+              frameWidth: a.frameWidth,
+              frameHeight: a.frameHeight,
+              columns: a.columns,
+            })
+          }
         />
         <button type="button" onClick={onRemove}>
           Remove

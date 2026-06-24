@@ -160,6 +160,9 @@ export type Effect =
   | { kind: 'giveItem'; item: ItemId }
   | { kind: 'takeItem'; item: ItemId }
   | { kind: 'goTo'; scene: SceneId }
+  // Set the game **clock** to a time-of-day (minutes past midnight, 0..1439) — e.g. a "wait until
+  // evening" choice jumps to 1140. Needs `GameDoc.clock`; the day-cycle visuals follow.
+  | { kind: 'setClock'; minutes: number }
   // Show a full-screen end screen (M11): `gameOver` (retry / title) or `endGame`
   // (end → credits → final → title).
   | { kind: 'gameOver' }

@@ -23,6 +23,28 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-24 — Frames→atlas in character editor, `setClock` effect, Claude player atlas
+**What:** Three asks while finishing the demo.
+1. **`+ Frames` in the character editor** (`CharacterEditor`, used by player **and** NPC) — stitch
+   individual frame images into the character atlas (reuses `FramesUpload` / `pack-frames`), then map
+   them in **Clips**.
+2. **`setClock` effect** — `{ kind: 'setClock'; minutes }` (schema + `applyEffect` in
+   `conditions.ts` sets `clockMinutes`; `EffectList` picker + a time input). For a "wait until …"
+   dialogue choice. The story store already had `setClock`; this exposes it as an effect.
+3. **Claude player atlas** (content) — stitched the PixelLab `Claude_the_tramp` export (5 base
+   directions × idle rotation + 6-frame walk = 35 frames, 92×92, 7-wide, one direction per row;
+   engine mirrors the W-side) into an atlas + 10 clips (`idle.{S,SE,E,NE,N}`, `walk.…`), anchor
+   0.5 / 0.88 (computed from the idle feet). Merged into the dev's **exported draft** (`game(8).json`)
+   → `~/Desktop/game_claude.json` to **Import** (the live editor runs an IndexedDB draft 3 days ahead
+   of `content/game.json`, so editing the repo file would've lost work). Also added a **wait-time**
+   dialog (Claude; choices morning 360 / afternoon 720 / evening 960 / "radši nečekat").
+**How:** Stitching via a one-off Pillow script (no ImageMagick/canvas/sharp installed). `setClock`
+jumps the clock; the day-cycle visuals follow. typecheck + lint clean.
+**Follow-ups:** For the evening to **last** (3 beer runs), the dev wants a long/static clock — set
+`dayLengthSec` low→0 (manual time) and drive it with the wait dialog (currently 35 s/day). The
+wait dialog needs wiring to a trigger/interactable (`startDialog` → `wait-time`). `content/game.json`
+left untouched (stale vs the draft — the dev re-exports to commit).
+
 ### 2026-06-24 — Fix: animated layer drag position wasn't saved
 **What:** Dragging an **animated** layer in the preview moved it live but never persisted — on the
 next mount it snapped back to its original spot.

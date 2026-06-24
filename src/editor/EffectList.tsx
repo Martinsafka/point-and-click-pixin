@@ -1,6 +1,7 @@
 import type { Effect, ItemDef, ItemId, SceneId } from '../data/schema'
 import { editorStore } from './editor-store'
 import { SoundSelect } from './SoundSelect'
+import { minutesToHHMM, hhmmToMinutes } from './time-format'
 
 /** Item picker reused across the logic editors (effects, conditions, uses). */
 export function ItemSelect({
@@ -77,6 +78,7 @@ const EFFECT_KINDS: Effect['kind'][] = [
   'giveItem',
   'takeItem',
   'goTo',
+  'setClock',
   'gameOver',
   'endGame',
   'startDialog',
@@ -100,6 +102,8 @@ function defaultEffect(kind: Effect['kind'], sceneIds: SceneId[], itemIds: ItemI
       return { kind: 'takeItem', item: itemIds[0] ?? '' }
     case 'goTo':
       return { kind: 'goTo', scene: sceneIds[0] ?? '' }
+    case 'setClock':
+      return { kind: 'setClock', minutes: 1140 } // 19:00 (evening) by default
     case 'gameOver':
       return { kind: 'gameOver' }
     case 'endGame':
@@ -175,6 +179,18 @@ function EffectFields({
           value={effect.scene}
           sceneIds={sceneIds}
           onChange={(scene) => onChange({ ...effect, scene })}
+        />
+      )
+    case 'setClock':
+      return (
+        <input
+          type="time"
+          className="logic__in"
+          title="Set the game clock to this time of day"
+          value={minutesToHHMM(effect.minutes)}
+          onChange={(e) =>
+            onChange({ ...effect, minutes: hhmmToMinutes(e.target.value) ?? effect.minutes })
+          }
         />
       )
     case 'startDialog':

@@ -456,8 +456,11 @@ placeholder figure.
 
 - **Create from placeholder** — start a character from the placeholder's atlas +
   clips, ready to customise; **Remove** reverts to the placeholder.
-- **Change atlas** — upload a sprite-sheet (PNG); it's stored in the document. The
+- **Change atlas** — upload a ready sprite-sheet (PNG); it's stored in the document. The
   preview overlays the frame **index numbers**.
+- **+ Frames** — _no sheet?_ upload the **individual frame images** (player **or** NPC) and the
+  editor **stitches** them into the atlas + fills in **frame size / cols** (same packer as the
+  animated-layer `+ Frames`, ordered by file name). Then map them in **Clips**.
 - **frame / cols** — the frame size (W × H) and how many columns the sheet has.
 - **anchor** — the sprite origin (0..1); feet at the bottom = `1` for anchor-Y.
 - **Clips** — name each animation + list its frame indices (+ fps, loop):
@@ -822,6 +825,7 @@ Effects run in order, from an interactable / trigger / dialogue node / cutscene 
 | `giveItem`      | add an item to the inventory (state).                                          |
 | `takeItem`      | remove an item (state).                                                        |
 | `goTo`          | switch to a scene (state).                                                     |
+| `setClock`      | set the game **clock** to a time of day (state) — e.g. a dialogue "wait until evening" choice jumps to 16:00. Needs a clock; the day-cycle visuals follow. |
 | `moveNpc`       | move a cast NPC to another scene — its runtime location (state).               |
 | `despawnNpc`    | remove an NPC from play (state).                                               |
 | `gameOver`      | show the **Game over** screen (Retry / Title) (state, M11).                    |
