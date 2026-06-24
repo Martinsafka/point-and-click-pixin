@@ -623,6 +623,9 @@ export type LayerData =
       frames: number
       /** Playback speed (frames per second), default 8. */
       fps?: number
+      /** Loop the animation (default true). False = play once on mount, then hold the last frame
+       *  (a one-shot — e.g. a door swinging open, a flash). */
+      loop?: boolean
       xFrac?: number
       yFrac?: number
       anchorYFrac?: number

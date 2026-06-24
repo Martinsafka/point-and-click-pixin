@@ -235,7 +235,7 @@ async function buildLayer(layer: LayerData, screen: Size): Promise<Container> {
     }
     const sprite = new AnimatedSprite(frames.length ? frames : [Texture.WHITE])
     sprite.animationSpeed = (layer.fps ?? 8) / 60
-    sprite.loop = true
+    sprite.loop = layer.loop ?? true // false = one-shot: plays once, holds the last frame
     sprite.play()
     fitImageSprite(sprite, layer, screen)
     return sprite

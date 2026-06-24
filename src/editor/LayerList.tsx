@@ -10,6 +10,7 @@ import type {
 } from '../data/schema'
 import { hhmmToMinutes, minutesToHHMM } from './time-format'
 import { AssetSwap } from './AssetSwap'
+import { FramesUpload } from './FramesUpload'
 import { Slider } from './Slider'
 import { ConditionEditor } from './ConditionEditor'
 
@@ -50,6 +51,9 @@ export function LayerList({
           accept="image/*,.svg"
           label="+ Animated"
           onPick={(src) => editorStore.getState().addAnimatedLayer(sceneId, src)}
+        />
+        <FramesUpload
+          onPack={(atlas) => editorStore.getState().addAnimatedLayer(sceneId, atlas.src, atlas)}
         />
       </div>
       {layers.length === 0 && <p className="layer-list__empty">No layers yet — upload an image.</p>}
@@ -216,6 +220,20 @@ export function LayerList({
                     />
                   </label>
                 ))}
+                <label className="logic__chk" title="Loop the animation (off = play once, then hold the last frame)">
+                  <input
+                    type="checkbox"
+                    checked={layer.loop ?? true}
+                    onChange={(e) =>
+                      editorStore.getState().setLayerAnim(sceneId, i, { loop: e.target.checked })
+                    }
+                  />
+                  loop
+                </label>
+                <FramesUpload
+                  label="↻ Frames"
+                  onPack={(atlas) => editorStore.getState().setLayerAtlas(sceneId, i, atlas)}
+                />
               </div>
             )}
             {layer.band === 'mid' && (

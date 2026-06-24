@@ -23,6 +23,41 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-24 — Fix: animated layer drag position wasn't saved
+**What:** Dragging an **animated** layer in the preview moved it live but never persisted — on the
+next mount it snapped back to its original spot.
+**Why:** `setLayerPos` (editor-store) only wrote `xFrac/yFrac` for `l.kind === 'image'`; animated
+layers are draggable (the engine arms the drag for both kinds) but the drop was a no-op for them.
+**How:** Persist the position for `image` **and** `animated` layers. `fitImageSprite` already
+positions both from `xFrac/yFrac` (none-fit free, width-fit Y), so no engine change needed. typecheck
++ lint clean; HMR clean.
+
+### 2026-06-24 — Animated layer: `loop` toggle (one-shot playback)
+**What:** `LayerData` (animated) gets `loop?: boolean` (default true). Off = the `AnimatedSprite`
+plays **once** on mount and holds the last frame — for a one-shot (door opening, a flash). A **loop**
+checkbox sits with the frame-grid controls on the animated layer row.
+**How:** `scene.ts` `sprite.loop = layer.loop ?? true`; `setLayerAnim`'s patch type gained `loop`
+(the impl already spreads the patch); checkbox via `setLayerAnim(..., { loop })` — re-mounts so the
+sprite restarts with the new mode. typecheck + lint clean; HMR clean.
+**Follow-ups:** A one-shot holds its last frame; hiding it afterwards is a separate concern (gate the
+layer's `when`, or a future `onComplete` → setFlag hook).
+
+### 2026-06-24 — Editor: stitch individual frames into an animated-layer atlas (`+ Frames`)
+**What:** A developer can now upload **individual frame images** and the editor packs them into one
+sprite-sheet (atlas) + computes the frame grid — no external sheet-maker needed. **+ Frames** (Layers
+toolbar) creates an animated layer from the frames; **↻ Frames** on an animated row re-stitches in
+place.
+**Why:** Building an animated layer required a hand-made atlas (a grid of equal frames); the dev asked
+for either an online tool or in-editor stitching. In-editor is nicer (no round-trip).
+**How:** New `pack-frames.ts` — browser `canvas`: sort files by name (numeric-aware), cell = max
+frame w/h (smaller frames centred), near-square grid (`cols = ceil(sqrt(n))`) drawn left→right /
+top→bottom exactly how the engine slices, `imageSmoothingEnabled=false` for crisp pixels, `toDataURL`
+PNG stored inline. `FramesUpload` (multi-file picker → `packFrames` → callback). Store: `setLayerAtlas`
+(replace atlas+grid) + `addAnimatedLayer(id, src, grid?)` now takes an optional grid. typecheck + lint
+clean; HMR clean.
+**Follow-ups:** Frames assumed equal-ish size (centred if not); no per-frame trim / tight-packing. fps
+stays at its default / current value — tune on the row.
+
 ### 2026-06-24 — Spawn points: per-source `from` for transition spawns
 **What:** A `transition` spawn point can now bind to a **source scene** (`SpawnPoint.from?: SceneId`),
 so one scene spawns the player at **different ends per entry** (street: left when arriving from the

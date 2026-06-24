@@ -50,6 +50,7 @@ import type {
 } from '../data/schema'
 import { gameDoc } from '../data/game'
 import { placeholderView } from '../entities/placeholder-atlas'
+import type { Atlas } from './pack-frames'
 
 /**
  * The editor's working copy of the `GameDoc` — a mutable clone of the authored
@@ -87,8 +88,11 @@ interface EditorStore {
   setTransition(patch: Partial<TransitionConfig>): void
   /** Append an uploaded image as a full-screen background layer (a backdrop). */
   addImageLayer(id: SceneId, src: string): void
-  /** Add an animated (atlas) scene layer (M12.5 #8). */
-  addAnimatedLayer(id: SceneId, src: string): void
+  /** Add an animated (atlas) scene layer (M12.5 #8). With `grid` (from stitched frames) the layer
+   *  uses that frame size / columns / count; without it, the 64×64 ×4 defaults. */
+  addAnimatedLayer(id: SceneId, src: string, grid?: Omit<Atlas, 'src'>): void
+  /** Replace an animated layer's whole atlas + frame grid in place (e.g. re-stitched frames). */
+  setLayerAtlas(id: SceneId, index: number, atlas: Atlas): void
   /** Swap an image / animated layer's source in place (keeps its band / fit / position). */
   setLayerSrc(id: SceneId, index: number, src: string): void
   /** `none`-fit layer size multiplier (1 = natural). Live (no re-mount). */
@@ -97,7 +101,7 @@ interface EditorStore {
    *  line where the prop sorts against characters (above it the prop draws in front, below it the
    *  character does) and takes the scene's depth scale. Live (no re-mount). */
   setLayerAnchorY(id: SceneId, index: number, anchorYFrac: number): void
-  /** Patch an animated layer's frame grid / fps (M12.5 #8). */
+  /** Patch an animated layer's frame grid / fps / loop (M12.5 #8). */
   setLayerAnim(
     id: SceneId,
     index: number,
@@ -107,6 +111,7 @@ interface EditorStore {
       columns: number
       frames: number
       fps: number
+      loop: boolean
     }>,
   ): void
   removeLayer(id: SceneId, index: number): void
@@ -457,21 +462,25 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, scale } : l)), false),
     setLayerAnchorY: (id, index, anchorYFrac) =>
       mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, anchorYFrac } : l)), false),
-    addAnimatedLayer: (id, src) =>
+    addAnimatedLayer: (id, src, grid) =>
       mapLayers(id, (ls) => [
         ...ls,
         {
           kind: 'animated',
           band: 'foreground',
           src,
-          frameWidth: 64,
-          frameHeight: 64,
-          columns: 4,
-          frames: 4,
+          frameWidth: grid?.frameWidth ?? 64,
+          frameHeight: grid?.frameHeight ?? 64,
+          columns: grid?.columns ?? 4,
+          frames: grid?.frames ?? 4,
           fps: 8,
           fit: 'none',
         },
       ]),
+    setLayerAtlas: (id, index, atlas) =>
+      mapLayers(id, (ls) =>
+        ls.map((l, i) => (i === index && l.kind === 'animated' ? { ...l, ...atlas } : l)),
+      ),
     setLayerAnim: (id, index, patch) =>
       mapLayers(id, (ls) =>
         ls.map((l, i) => (i === index && l.kind === 'animated' ? { ...l, ...patch } : l)),
@@ -530,7 +539,12 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setLayerPos: (id, index, xFrac, yFrac) =>
       mapLayers(
         id,
-        (ls) => ls.map((l, i) => (i === index && l.kind === 'image' ? { ...l, xFrac, yFrac } : l)),
+        (ls) =>
+          ls.map((l, i) =>
+            i === index && (l.kind === 'image' || l.kind === 'animated')
+              ? { ...l, xFrac, yFrac }
+              : l,
+          ),
         false,
       ),
     addInteractable: (id, kind) => {

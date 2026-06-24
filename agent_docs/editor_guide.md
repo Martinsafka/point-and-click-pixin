@@ -152,10 +152,15 @@ painters, listed in paint order.
 
 - **+ Image** — upload an SVG or PNG. It's added as a full-screen background
   backdrop and stored **inside the document** (a data-URL), so it survives Export.
-- **+ Animated** (M12.5) — upload an **atlas** (a grid of equal frames) → a looping
+- **+ Animated** (M12.5) — upload a ready-made **atlas** (a grid of equal frames) → a looping
   animated layer (animated background / prop). Set its **frame grid** (w / h / cols /
-  frames / fps) on the layer row. Placed / `when`-gated / draggable like an image — so a
+  frames / fps) on the layer row, and toggle **loop** (off = play **once** on mount, then hold the
+  last frame — a one-shot like a door opening). Placed / `when`-gated / draggable like an image — so a
   flag can swap a static **or** animated asset (two layers gated by opposite flags).
+- **+ Frames** — _no sheet? upload the **individual frame images** instead._ The editor **stitches**
+  them into one atlas (sorted by **file name** — `frame_1`, `frame_2`, … numeric-aware; smaller
+  frames centred; pixel-art-crisp) and fills in the frame grid for you. On an existing animated row,
+  **↻ Frames** re-stitches a new set in place (keeps band / position / fps / gate).
 - **⇄ Swap** — on each image / animated layer row, replace that layer's source file **in place**
   (keeps its band / fit / position). Every uploaded asset in the editor has this **swap** control
   (sounds, item icons, cursors, screens, character atlases, …) — replacing keeps ids + references.
