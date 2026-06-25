@@ -1,6 +1,6 @@
 {
   "name": "pixin",
-  "private": true,
+  "private": false,
   "version": "0.1.0",
   "description": "A data-driven point-and-click adventure engine + no-code visual editor (PixiJS v8).",
   "license": "MIT",
