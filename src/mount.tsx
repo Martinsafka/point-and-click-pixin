@@ -21,10 +21,10 @@ export interface GameHandle {
  * Renders the full screen flow (loading → title → play → end / credits). The document is seeded
  * (built-in sounds + weather presets, like the editor's runtime) and published as the active
  * document, so **one game runs per page**. `react`, `react-dom` and `pixi.js` are peer deps the
- * host provides, and the stylesheet must be loaded once: `import 'pixin/styles.css'`.
+ * host provides, and the stylesheet must be loaded once: `import '@theideaguards/pixin/styles.css'`.
  *
- *   import { mountGame } from 'pixin'
- *   import 'pixin/styles.css'
+ *   import { mountGame } from '@theideaguards/pixin'
+ *   import '@theideaguards/pixin/styles.css'
  *   const game = mountGame(myDoc, document.getElementById('game')!)
  *   // …later: game.destroy()
  */

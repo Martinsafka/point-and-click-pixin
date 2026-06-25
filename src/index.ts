@@ -8,7 +8,8 @@
  * - **Editor draft** — `loadDraft()` (dev-only): the editor's IndexedDB working copy, so a host
  *   can play the draft over its committed `game.json` during the edit → test loop.
  *
- * The editor itself is at `pixin/editor`. Load the stylesheet once: `import 'pixin/styles.css'`.
+ * The editor itself is at `@theideaguards/pixin/editor`. Load the stylesheet once:
+ * `import '@theideaguards/pixin/styles.css'`.
  */
 export * from './data/schema'
 export { mountGame, type GameHandle } from './mount'

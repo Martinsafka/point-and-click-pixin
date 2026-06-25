@@ -2,7 +2,7 @@
 /**
  * `create-pixin` — scaffold a Pixin game project.
  *
- *   npx create-pixin <project-name> [--template clean|demo]
+ *   npm create @theideaguards/pixin <project-name> [--template clean|demo]
  *
  * `clean` is the base project (a blank game + the editor wired up); `demo` overlays the
  * "Magický polibek" demo, whose art/audio load from the hosted Pages deployment (CDN refs),
@@ -20,7 +20,7 @@ const tplIdx = argv.indexOf('--template')
 const template = tplIdx !== -1 ? argv[tplIdx + 1] : 'clean'
 
 if (!name) {
-  console.error('Usage: npx create-pixin <project-name> [--template clean|demo]')
+  console.error('Usage: npm create @theideaguards/pixin <project-name> [--template clean|demo]')
   process.exit(1)
 }
 if (template !== 'clean' && template !== 'demo') {

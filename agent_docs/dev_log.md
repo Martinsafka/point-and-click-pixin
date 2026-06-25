@@ -23,6 +23,18 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-25 — M13d: scope the packages (`@theideaguards/pixin`)
+**What:** npm rejected the unscoped name `pixin` at publish (403 — "too similar to pinia / pecin", its
+typosquatting protection), so **scoped both packages**: `@theideaguards/pixin` (lib) +
+`@theideaguards/create-pixin` (scaffolder, run via `npm create @theideaguards/pixin`). Added
+`publishConfig.access=public` (scoped packages default to restricted). Updated the scaffolder's clean
+template (`package.json` dep + `main.tsx` imports) and the JSDoc / CLI usage strings to the scoped name.
+**Why:** to publish — scoped names are exempt from the similarity block.
+**How:** mechanical rename, **no API change** (the `exports` map is unchanged; only the package name).
+typecheck + lint + lib build green; no bare `pixin` refs remain. _Publishing note:_ the account's 2FA is
+WebAuthn/biometric (no TOTP), so `--otp` is impossible — a **granular/automation npm token** (Publish +
+bypass 2FA) in `~/.npmrc` is the way.
+
 ### 2026-06-25 — M13d commit 6: scaffolder `create-pixin` (clean + demo)
 **What:** New `create-pixin/` package (separate, `bin: create-pixin`) — `npx create-pixin <name>
 [--template clean|demo]`. The `index.mjs` CLI copies a template + fills the project name. **clean** = a
