@@ -23,6 +23,20 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-25 — M13d: `pixin` npm package — commit 1 (build scaffolding)
+**What:** Started packaging on branch `feat/npm-package` (**single-package** layout, chosen with the user
+over a pnpm monorepo). Commit 1: `src/index.ts` public entry (GameDoc schema types + `createPixiApp`),
+`vite.lib.config.ts` (ESM lib build via `vite-plugin-dts`, peer deps external), `package.json`
+`name: "pixin"` + `exports`/`module`/`types`/`files` + `build:lib` script, `.gitignore` `dist-lib`.
+**Why:** make `pixin` a buildable, publishable package. Fully additive — no app/runtime change.
+**How:** `pnpm build:lib` → `dist-lib/index.js` (0.34 kB) + `index.d.ts` (exposes `GameDoc` + `createPixiApp`).
+typecheck + the app build (`pnpm build`) stay green. **Plan (single package):** c1 scaffolding (done) →
+c2 decouple the active doc from the bundled demo (`audio.ts`/stores via a settable holder) so the engine is
+demo-free → c3 export the full engine + **`mountGame(doc, container)`** embedding API → c4 GameDoc JSON
+Schema + validate → c5 versioning/migrations → c6 scaffolder + CI.
+**Follow-ups:** `vite-plugin-dts include:['src']` emits the whole `src/` d.ts tree into `dist-lib` — prune to
+the entry's graph (or `rollupTypes`) before publish. peerDependencies restructuring deferred to publish-prep.
+
 ### 2026-06-25 — IDE (WebStorm) commit-time warnings triage
 **What:** Cleaned the only two **real** warnings — in `src/ui/theideaguards-logo.svg`: removed the unused
 `xmlns:xlink` namespace and self-closed the empty-body `<path></path>` (→ `<path … />`). Verified the SVG
