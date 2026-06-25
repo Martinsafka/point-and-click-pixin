@@ -3,6 +3,7 @@ import { ambientUri, footstepUri } from './sounds'
 import { BUILTIN_SOUND_IDS } from './builtin-sounds'
 import { storyStore } from '../state/story'
 import { gameDoc } from '../data/game'
+import { assetUrl } from '../data/asset-url'
 import type { SoundAsset, SoundConfig } from '../data/schema'
 
 /**
@@ -50,11 +51,13 @@ export function playSoundById(id: string | undefined): void {
   if (src) playClip(src)
 }
 
-/** Derive a Howler `format` from a `data:audio/<x>` mime (so it can decode data-URIs). */
+/** Derive a Howler `format` from a `data:audio/<x>` mime or a file extension (so it can
+ *  decode both inline data-URIs and externalized `assets/baked/audio/<hash>.mp3` paths). */
 function formatFor(src: string): string[] | undefined {
-  const mime = /^data:audio\/([a-z0-9]+)/i.exec(src)?.[1]?.toLowerCase()
-  const format = mime === 'mpeg' ? 'mp3' : mime
-  return format ? [format] : undefined
+  const raw = /^data:audio\/([a-z0-9]+)/i.exec(src)?.[1] ?? /\.([a-z0-9]+)(?:[?#]|$)/.exec(src)?.[1]
+  const fmt = raw?.toLowerCase()
+  if (!fmt) return undefined
+  return [fmt === 'mpeg' ? 'mp3' : fmt]
 }
 
 /**
@@ -65,7 +68,7 @@ const clips = new Map<string, Howl>()
 export function playClip(src: string): void {
   let howl = clips.get(src)
   if (!howl) {
-    howl = new Howl({ src: [src], format: formatFor(src), volume: 0.8 })
+    howl = new Howl({ src: [assetUrl(src)], format: formatFor(src), volume: 0.8 })
     clips.set(src, howl)
   }
   howl.stop()
@@ -101,7 +104,9 @@ export function setAmbient(channel: string, src: string | null, volume = 0.4): v
   c.howl?.stop()
   c.howl?.unload()
   c.src = src
-  c.howl = src ? new Howl({ src: [src], format: formatFor(src), loop: true, volume }) : null
+  c.howl = src
+    ? new Howl({ src: [assetUrl(src)], format: formatFor(src), loop: true, volume })
+    : null
   if (c.howl && unlocked) c.howl.play()
 }
 
@@ -146,7 +151,7 @@ export function setFootstepSound(id: string, src: string | null, volume = 0.5): 
   }
   c.howl?.unload()
   c.src = src
-  c.howl = src ? new Howl({ src: [src], format: formatFor(src), volume }) : null
+  c.howl = src ? new Howl({ src: [assetUrl(src)], format: formatFor(src), volume }) : null
   syncFootChannel(c)
 }
 

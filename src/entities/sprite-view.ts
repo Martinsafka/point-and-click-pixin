@@ -2,6 +2,7 @@ import { AnimatedSprite, Assets, Container, Rectangle, Texture } from 'pixi.js'
 import type { CharacterView } from './character-view'
 import type { Facing, MoveState } from '../systems/movement'
 import type { ViewDescriptor } from '../data/schema'
+import { assetUrl } from '../data/asset-url'
 
 /** Each facing → the base direction whose clips it uses (W-side mirrors E-side). */
 const BASE_FACING: Record<Facing, Facing> = {
@@ -25,7 +26,7 @@ const MIRRORED: ReadonlySet<Facing> = new Set<Facing>(['W', 'SW', 'NW'])
  * (`sprite.scale.x`), independent of the depth scale logic applies to `container`.
  */
 export async function createSpriteView(desc: ViewDescriptor): Promise<CharacterView> {
-  const sheet = await Assets.load<Texture>(desc.atlas)
+  const sheet = await Assets.load<Texture>(assetUrl(desc.atlas))
   const source = sheet.source
   const cols = desc.columns
   const frameTexture = (i: number): Texture =>

@@ -25,3 +25,8 @@ pnpm-debug.log*
 
 # demo build scaffolding (content/game.json is the source of truth)
 tools/
+
+# raw editor exports — drop your `Export` game.json in export/, then run `pnpm assets`
+# (writes the lean content/game.json + public/assets/baked/). Ignore contents, keep the folder.
+/export/*
+!/export/README.md

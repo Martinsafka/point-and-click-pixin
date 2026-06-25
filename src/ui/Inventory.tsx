@@ -1,6 +1,7 @@
 import { useStory } from './use-story'
 import { storyStore } from '../state/story'
 import { gameDoc } from '../data/game'
+import { assetUrl } from '../data/asset-url'
 import { resolveExamine } from '../systems/examine'
 import { checkCondition, type StoryState } from '../systems/conditions'
 import { itemAction } from '../engine/item-action'
@@ -68,7 +69,7 @@ export function Inventory() {
             onClick={() => onSlot(id)}
           >
             {def?.icon ? (
-              <img className="inventory__icon" src={def.icon} alt={def?.name ?? id} />
+              <img className="inventory__icon" src={assetUrl(def.icon)} alt={def?.name ?? id} />
             ) : (
               <span className="inventory__label">{def?.name ?? id}</span>
             )}

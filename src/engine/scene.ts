@@ -11,6 +11,7 @@ import {
   type Ticker,
 } from 'pixi.js'
 import { Character } from '../entities/character'
+import { assetUrl } from '../data/asset-url'
 import { cameraOffset } from './camera'
 import { runEffects } from './effects'
 import { sceneHit } from './hotspots'
@@ -209,14 +210,14 @@ function lerpHex(a: string | undefined, b: string | undefined, t: number): strin
 
 async function buildLayer(layer: LayerData, screen: Size): Promise<Container> {
   if (layer.kind === 'image') {
-    const texture = await Assets.load(layer.src)
+    const texture = await Assets.load(assetUrl(layer.src))
     const sprite = new Sprite(texture)
     fitImageSprite(sprite, layer, screen)
     return sprite
   }
   if (layer.kind === 'animated') {
     // A looping AnimatedSprite sliced from the atlas grid (M12.5 #8).
-    const sheet = await Assets.load<Texture>(layer.src)
+    const sheet = await Assets.load<Texture>(assetUrl(layer.src))
     const source = sheet.source
     const cols = Math.max(1, layer.columns)
     const frames: Texture[] = []
@@ -336,7 +337,10 @@ function startNpcPath(
     }
     if (i < segLen.length) {
       const t = segLen[i] > 0 ? remain / segLen[i] : 0
-      npc.setPosition(pts[i].x + (pts[i + 1].x - pts[i].x) * t, pts[i].y + (pts[i + 1].y - pts[i].y) * t)
+      npc.setPosition(
+        pts[i].x + (pts[i + 1].x - pts[i].x) * t,
+        pts[i].y + (pts[i + 1].y - pts[i].y) * t,
+      )
       idx = i + 1
       npc.setTarget(pts[idx].x, pts[idx].y, advance)
       return
@@ -441,7 +445,11 @@ export async function mountScene(
     weatherScene.weather?.find((w) => !w.when || checkCondition(st, w.when))?.preset ?? null
   const applyWeatherAmbient = (): void => {
     const amb = (weatherId ? weatherPresetsRef[weatherId] : undefined)?.ambient
-    audioMod?.setAmbient('weather', amb ? (audioMod.resolveSrc(amb.sound) ?? null) : null, amb?.volume ?? 0.4)
+    audioMod?.setAmbient(
+      'weather',
+      amb ? (audioMod.resolveSrc(amb.sound) ?? null) : null,
+      amb?.volume ?? 0.4,
+    )
   }
   const syncWeather = (st: StoryState): void => {
     const id = activeWeatherId(st)
@@ -674,7 +682,12 @@ export async function mountScene(
   // Time-of-day global grade (M13d): one ColorMatrixFilter on the `graded` subtree — tints props /
   // characters / foreground but NOT the peak `backdrop` layers (those are the lit reference). Its
   // matrix re-interpolates between `colorGradeByTime` keyframes each clock-minute (+ World scrub).
-  const timeGradeFilter = makeColorGradeFilter({ brightness: 1, contrast: 1, saturation: 1, hue: 0 })
+  const timeGradeFilter = makeColorGradeFilter({
+    brightness: 1,
+    contrast: 1,
+    saturation: 1,
+    hue: 0,
+  })
   const applyTimeGrade = (now: number): void => {
     const kf = gradeScene.colorGradeByTime
     if (!kf || kf.length === 0) return
@@ -743,7 +756,10 @@ export async function mountScene(
     for (const e of emitterEntries) e.system.destroy()
     emitterEntries.length = 0
     for (const em of emitterScene.emitters ?? []) {
-      emitterEntries.push({ system: createEmitterSystem(atmosphere.layers.emitters, em, design), when: em.when })
+      emitterEntries.push({
+        system: createEmitterSystem(atmosphere.layers.emitters, em, design),
+        when: em.when,
+      })
     }
     refreshEmitterVisibility(store.getState())
   }
@@ -826,12 +842,22 @@ export async function mountScene(
   const pickSpawn = (matchFrom: boolean) => {
     const ok = (p: (typeof spawnPts)[number]) =>
       (p.on ?? 'transition') === wantOn && (matchFrom ? p.from === fromScene : p.from === undefined)
-    return spawnPts.find((p) => p.target === 'player' && ok(p)) ?? spawnPts.find((p) => p.target === 'all' && ok(p))
+    return (
+      spawnPts.find((p) => p.target === 'player' && ok(p)) ??
+      spawnPts.find((p) => p.target === 'all' && ok(p))
+    )
   }
   const playerSpawn =
-    (fromScene !== undefined ? pickSpawn(true) : undefined)?.at ?? pickSpawn(false)?.at ?? scene.spawn
+    (fromScene !== undefined ? pickSpawn(true) : undefined)?.at ??
+    pickSpawn(false)?.at ??
+    scene.spawn
   character.setPosition(playerSpawn.xFrac * design.width, playerSpawn.yFrac * design.height)
-  appearances.push({ id: 'player', char: character, base: playerView, variants: options.playerViews })
+  appearances.push({
+    id: 'player',
+    char: character,
+    base: playerView,
+    variants: options.playerViews,
+  })
   appearanceIdx.set('player', -1)
   shadows?.add({
     sample: () => ({
@@ -1196,7 +1222,8 @@ export async function mountScene(
   // Plays a Sequence's steps in order over the scene's actors + camera; input is blocked
   // (sequenceStore.active) and the whole thing is skippable. Skipping fast-forwards: the
   // current await resolves, then remaining steps apply only their instant parts (effects
-  // run, moves/cameras snap, anims/dialog/waits are dropped) so the world lands correctly.
+  // run, moves/cameras snap, anims/waits are dropped; dialogs fast-forward so their flag
+  // effects still run) so the world lands correctly.
   const RELEASE_MS = 350
   let cutsceneRunning = false
   let skipping = false
@@ -1269,8 +1296,13 @@ export async function mountScene(
       }
       case 'dialog': {
         const dialog = dialogs[step.dialog]
-        if (!dialog || skipping) return
-        await new Promise<void>((resolve) => beginDialogue(dialog, undefined, resolve))
+        if (!dialog) return
+        // When already skipping, fast-forward the dialog (begin → skip) so its flag-setting
+        // effects still run instead of being dropped; the promise resolves on its end.
+        await new Promise<void>((resolve) => {
+          beginDialogue(dialog, undefined, resolve)
+          if (skipping) dialogueStore.getState().skip()
+        })
         return
       }
       case 'camera': {
@@ -1571,8 +1603,7 @@ export async function mountScene(
       if (torn) return
       audioMod = m
       const a = scene.ambient
-      const ambient =
-        a && (!a.when || checkCondition(store.getState(), a.when)) ? a : audio.ambient
+      const ambient = a && (!a.when || checkCondition(store.getState(), a.when)) ? a : audio.ambient
       m.applySceneAudio({ ambient, footstep: audio.footstep, footstepsOff: audio.footstepsOff })
       applyWeatherAmbient() // the active weather's loop (resolved now the module is ready)
       for (const n of footstepNpcs) {
@@ -1606,7 +1637,10 @@ export async function mountScene(
     }
     audioMod?.setFootstepsMoving('player', character.isMoving())
     for (const n of footstepNpcs)
-      audioMod?.setFootstepsMoving(n.id, n.character.displayObject.visible && n.character.isMoving())
+      audioMod?.setFootstepsMoving(
+        n.id,
+        n.character.displayObject.visible && n.character.isMoving(),
+      )
   }
   app.ticker.add(onTick)
 
@@ -1924,7 +1958,7 @@ export function createSceneHost(
   // Optional transition art, centred + covering the viewport (placed each tick).
   let art: Sprite | undefined
   if (transition?.image) {
-    void Assets.load(transition.image).then((tex) => {
+    void Assets.load(assetUrl(transition.image)).then((tex) => {
       if (destroyed) return
       art = new Sprite(tex)
       art.anchor.set(0.5)

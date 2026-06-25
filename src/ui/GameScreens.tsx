@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { CreditsScreenConfig, LoadingScreenConfig, TextScreenConfig } from '../data/schema'
 import { screenBg } from './screen-bg'
+import creatorLogo from './theideaguards-logo.svg'
 
 const textStyle = (c: { size: number; color: string; align: string } | undefined): CSSProperties =>
   c
@@ -143,10 +144,8 @@ export function FinalScreen({ onDone }: { onDone: () => void }) {
   }, [])
   return (
     <div className="screen screen--final" onClick={onDone}>
-      {/* RELEASE: replace this block with the creator's <img src="/creator-logo.svg" />. */}
-      <div className="final__logo">
-        made with <strong>⬢ pixin</strong>
-      </div>
+      {/* The creator's logo — hardcoded brand mark, swapped in at release. */}
+      <img className="final__logo" src={creatorLogo} alt="The Idea Guards" />
       <p className="final__hint">click to continue</p>
     </div>
   )

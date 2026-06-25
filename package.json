@@ -11,7 +11,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:pages": "pnpm build && node scripts/assemble-site.mjs",
+    "assets": "node scripts/build-assets.mjs",
     "preview": "vite preview",
+    "preview:site": "node scripts/preview-site.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -40,6 +43,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "prettier": "^3.8.4",
+    "sharp": "^0.35.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.0",
     "vite": "^8.0.16"

@@ -68,7 +68,7 @@ export function DialogueBox() {
         title="Skip conversation"
         onClick={(e) => {
           e.stopPropagation()
-          dialogueStore.getState().end()
+          dialogueStore.getState().skip()
         }}
       >
         Skip ⏭

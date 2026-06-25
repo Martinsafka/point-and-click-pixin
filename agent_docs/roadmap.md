@@ -728,6 +728,10 @@ editing `game.json`:
 - [ ] **UI theming** — let the author design the UI **chrome**: inventory / dialogue / loading bar
       + icon — border + background colour, opacity, border width, the dialogue **skip** icon — or
       upload an SVG/PNG per UI element. (M11 shipped only font + the full-screen screens.) _(#19.)_
+- [ ] **Live screen editing in the editor** — show **all game screens** (loading / title / game-over /
+      end / credits / final) in the editor and edit them **live, like a scene** (WYSIWYG over the
+      rendered screen), instead of today's forms-only Project → Screens section. Builds on M11 screens
+      + the ME live-editor model.
 - [ ] **Checkpoints** — auto / explicit save points. _(#13.)_
 - [ ] **Highlight usable objects** — an optional outline / pulse on pickable / interactable
       hotspots (discoverability; the context cursor already hints them). _(#15.)_

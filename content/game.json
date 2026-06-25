@@ -9,69 +9,173 @@
       "depth": {
         "yNearFrac": 0.96,
         "yFarFrac": 0.7,
-        "scaleNear": 1.0,
-        "scaleFar": 0.62
+        "scaleNear": 1,
+        "scaleFar": 0.62,
+        "stops": [
+          {
+            "yFrac": 0.5,
+            "scale": 0.62
+          },
+          {
+            "yFrac": 0.96,
+            "scale": 1
+          }
+        ]
       },
       "spawn": {
         "xFrac": 0.66,
         "yFrac": 0.9
       },
       "walkable": [
-        0.05,
-        0.7,
-        0.95,
-        0.7,
-        0.95,
-        0.965,
-        0.05,
-        0.965
+        0.028,
+        0.793,
+        0.182,
+        0.749,
+        0.236,
+        0.745,
+        0.254,
+        0.732,
+        0.257,
+        0.681,
+        0.285,
+        0.665,
+        0.295,
+        0.684,
+        0.303,
+        0.713,
+        0.382,
+        0.734,
+        0.407,
+        0.714,
+        0.471,
+        0.736,
+        0.509,
+        0.751,
+        0.559,
+        0.747,
+        0.592,
+        0.742,
+        0.692,
+        0.704,
+        0.637,
+        0.691,
+        0.498,
+        0.694,
+        0.424,
+        0.676,
+        0.404,
+        0.661,
+        0.47,
+        0.629,
+        0.507,
+        0.62,
+        0.674,
+        0.651,
+        0.672,
+        0.666,
+        0.726,
+        0.682,
+        0.762,
+        0.671,
+        0.834,
+        0.709,
+        0.838,
+        0.732,
+        0.858,
+        0.74,
+        0.858,
+        0.774,
+        0.879,
+        0.796,
+        0.916,
+        0.815,
+        0.75,
+        0.944,
+        0.687,
+        0.982,
+        0.029,
+        0.98
       ],
       "layers": [
         {
           "kind": "image",
           "band": "background",
-          "src": "/assets/bg/tavern.png",
+          "src": "assets/baked/img/f2ab2120dd0700e3.webp",
           "fit": "stretch",
-          "parallax": 1.0
+          "parallax": 1,
+          "timeFadeAt": 360
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "/assets/item/hook.png",
-          "fit": "none",
-          "xFrac": 0.33,
-          "yFrac": 0.54,
-          "when": {
-            "kind": "not",
-            "of": {
-              "kind": "hasItem",
-              "item": "hook"
-            }
-          }
+          "src": "assets/baked/img/4f3c3052036ad9be.webp",
+          "fit": "stretch",
+          "timeFadeAt": 720
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "/assets/prop/poster.png",
-          "fit": "none",
-          "xFrac": 0.605,
-          "yFrac": 0.36
+          "src": "assets/baked/img/37d92f93c70c0faa.webp",
+          "fit": "stretch",
+          "timeFadeAt": 1080
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "/assets/prop/cellar.png",
+          "src": "assets/baked/img/692fb0768539d090.webp",
+          "fit": "stretch",
+          "timeFadeAt": 0
+        },
+        {
+          "kind": "image",
+          "band": "mid",
+          "src": "assets/baked/img/9e224447e45372b7.webp",
           "fit": "none",
-          "xFrac": 0.5,
-          "yFrac": 0.86
+          "xFrac": 0.5106765184381779,
+          "yFrac": 0.6475054229934923,
+          "scale": 1.01,
+          "anchorYFrac": 0.7
+        },
+        {
+          "kind": "image",
+          "band": "mid",
+          "src": "assets/baked/img/cb98fba8c513028c.webp",
+          "fit": "none",
+          "scale": 0.52,
+          "xFrac": 0.39872559652928413,
+          "yFrac": 0.7662689804772236,
+          "role": "occluder",
+          "anchorYFrac": 0.86
+        },
+        {
+          "kind": "image",
+          "band": "foreground",
+          "src": "assets/baked/img/99002b039f5ac53e.webp",
+          "fit": "none",
+          "xFrac": 0.801382863340564,
+          "yFrac": 0.8958785249457701,
+          "role": "occluder"
+        },
+        {
+          "kind": "image",
+          "band": "foreground",
+          "src": "assets/baked/img/73ebc6031310a544.webp",
+          "fit": "none",
+          "scale": 0.52,
+          "xFrac": 0.15011523861171358,
+          "yFrac": 0.8790672451193059
         }
       ],
       "npcs": [
         {
           "npc": "keeper",
           "spawn": {
-            "xFrac": 0.24,
-            "yFrac": 0.9
+            "xFrac": 0.53,
+            "yFrac": 0.676
+          },
+          "approachAt": {
+            "xFrac": 0.592,
+            "yFrac": 0.762
           }
         }
       ],
@@ -80,14 +184,14 @@
           "kind": "trigger",
           "id": "intro-trigger",
           "hitArea": [
-            0.05,
-            0.7,
-            0.95,
-            0.7,
-            0.95,
-            0.965,
-            0.05,
-            0.965
+            0.038,
+            0.785,
+            0.042,
+            0.97,
+            0.98,
+            0.971,
+            0.969,
+            0.759
           ],
           "effects": [
             {
@@ -111,14 +215,14 @@
           "id": "take-fork",
           "item": "hook",
           "hitArea": [
-            0.26,
-            0.43,
-            0.4,
-            0.43,
-            0.4,
-            0.63,
-            0.26,
-            0.63
+            0.471,
+            0.57,
+            0.471,
+            0.601,
+            0.501,
+            0.604,
+            0.496,
+            0.568
           ],
           "examine": "Stará ohnutá vidlička na pultu. Tak akorát na hák.",
           "when": {
@@ -133,14 +237,14 @@
           "kind": "interact",
           "id": "poster",
           "hitArea": [
-            0.54,
-            0.25,
-            0.67,
-            0.25,
-            0.67,
-            0.48,
-            0.54,
-            0.48
+            0.153,
+            0.492,
+            0.158,
+            0.577,
+            0.193,
+            0.57,
+            0.191,
+            0.491
           ],
           "effects": [
             {
@@ -152,20 +256,25 @@
               "text": "Vyhláška: kdo probudí spící princeznu, dostane půl království! Půl království pro mě, Clauda. To zní jako plán."
             }
           ],
-          "examine": "Královská vyhláška přibitá na prkně."
+          "examine": "Královská vyhláška přibitá na prkně.",
+          "approachRadius": 250,
+          "approachAt": {
+            "xFrac": 0.191,
+            "yFrac": 0.766
+          }
         },
         {
           "kind": "interact",
           "id": "cellar",
           "hitArea": [
-            0.42,
-            0.8,
-            0.58,
-            0.8,
-            0.58,
-            0.93,
-            0.42,
-            0.93
+            0.78,
+            0.394,
+            0.779,
+            0.682,
+            0.849,
+            0.705,
+            0.858,
+            0.396
           ],
           "effects": [
             {
@@ -173,7 +282,7 @@
               "text": "Z poklopu se ozývá cupitání. Krysy. Tam dolů bez kočky nelezu."
             }
           ],
-          "examine": "Poklop do sklepa.",
+          "examine": "Dveře do sklepa.",
           "uses": [
             {
               "item": "cat",
@@ -205,14 +314,14 @@
           "kind": "interact",
           "id": "cellar-clear",
           "hitArea": [
-            0.42,
-            0.8,
-            0.58,
-            0.8,
-            0.58,
-            0.93,
-            0.42,
-            0.93
+            0.779,
+            0.392,
+            0.778,
+            0.682,
+            0.851,
+            0.707,
+            0.859,
+            0.396
           ],
           "effects": [
             {
@@ -220,7 +329,7 @@
               "text": "Zdola se ozývá jen spokojené předení. Hodná kočka."
             }
           ],
-          "examine": "Poklop do sklepa - teď bez krys.",
+          "examine": "Sklep je teď bez krys.",
           "when": {
             "kind": "flag",
             "flag": "rats-cleared"
@@ -229,40 +338,89 @@
         {
           "kind": "exit",
           "id": "to-street",
-          "to": "street",
+          "to": "scene",
           "hitArea": [
-            0.9,
-            0.5,
-            0.995,
-            0.5,
-            0.995,
-            0.96,
-            0.9,
-            0.96
+            0.046,
+            0.399,
+            0.051,
+            0.773,
+            0.15,
+            0.756,
+            0.146,
+            0.395
           ],
           "examine": "Dveře ven na ulici."
+        },
+        {
+          "kind": "interact",
+          "id": "rest",
+          "hitArea": [
+            0.414,
+            0.634,
+            0.457,
+            0.642,
+            0.482,
+            0.687,
+            0.479,
+            0.918,
+            0.429,
+            0.922,
+            0.363,
+            0.913,
+            0.319,
+            0.88,
+            0.309,
+            0.755,
+            0.377,
+            0.727,
+            0.41,
+            0.739
+          ],
+          "effects": [
+            {
+              "kind": "startDialog",
+              "dialog": "wait-time"
+            }
+          ],
+          "uses": [],
+          "examine": "Můj oblíbený stůl. U pár piv tu čas uteče raz dva.",
+          "approachAt": {
+            "xFrac": 0.486,
+            "yFrac": 0.836
+          }
         }
       ],
       "ambientLight": {
-        "color": "#ffcf9a",
-        "intensity": 0.82
+        "color": "#c5a277",
+        "intensity": 0.8
       },
       "lights": [
         {
           "id": "hearth",
-          "x": 0.135,
-          "y": 0.6,
+          "x": 0.36,
+          "y": 0.201,
           "radius": 0.28,
           "color": "#ff9a3c",
           "intensity": 1.3,
           "flicker": 0.45
+        },
+        {
+          "id": "light",
+          "x": 0.921,
+          "y": 0.756,
+          "radius": 0.18,
+          "color": "#ff6117",
+          "intensity": 1.45,
+          "flicker": 0.15,
+          "scaleY": 0.8,
+          "rotation": 27
         }
       ],
       "emitters": [
         {
           "id": "embers",
-          "x": 0.135,
-          "y": 0.6,
+          "x": 0.93,
+          "y": 0.757,
           "rate": 8,
           "life": 1.8,
           "color": "#ffb24a",
@@ -278,100 +436,618 @@
           "blend": "add"
         }
       ],
-      "vignette": {
-        "intensity": 0.28,
-        "size": 0.72,
-        "color": "#000000"
+      "characterScale": 4,
+      "holes": [
+        [
+          0.315,
+          0.864,
+          0.416,
+          0.802,
+          0.466,
+          0.812,
+          0.46,
+          0.835,
+          0.443,
+          0.873,
+          0.48,
+          0.871,
+          0.482,
+          0.935,
+          0.427,
+          0.932,
+          0.423,
+          0.898,
+          0.371,
+          0.926,
+          0.314,
+          0.887,
+          0.314,
+          0.864
+        ]
+      ],
+      "spawnPoints": [
+        {
+          "at": {
+            "xFrac": 0.372,
+            "yFrac": 0.781
+          },
+          "target": "player",
+          "on": "start"
+        },
+        {
+          "at": {
+            "xFrac": 0.115,
+            "yFrac": 0.781
+          },
+          "target": "player"
+        }
+      ],
+      "shadows": {
+        "opacity": 0.52
+      }
+    },
+    "scene": {
+      "id": "scene",
+      "name": "Ulice",
+      "layers": [
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "assets/baked/img/e598d9ba2fc874fa.webp",
+          "fit": "stretch",
+          "timeFadeAt": 360
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "assets/baked/img/6051813c5c3ce5c3.webp",
+          "fit": "stretch",
+          "timeFadeAt": 720
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "assets/baked/img/29be4a8955304ce2.webp",
+          "fit": "stretch",
+          "timeFadeAt": 1080
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "assets/baked/img/388cbf67a42055b8.webp",
+          "fit": "stretch",
+          "timeFadeAt": 0
+        },
+        {
+          "kind": "image",
+          "band": "foreground",
+          "src": "assets/baked/img/edf0da29dc49a155.webp",
+          "fit": "none",
+          "name": "Wall",
+          "scale": 0.57,
+          "xFrac": 0.7137426900584795,
+          "yFrac": 0.8831578947368419
+        },
+        {
+          "kind": "image",
+          "band": "foreground",
+          "src": "assets/baked/img/b34fba36cec61d64.webp",
+          "fit": "none",
+          "name": "Klacek",
+          "scale": 0.17,
+          "xFrac": 0.24707602339181262,
+          "yFrac": 0.9042105263157895,
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "picked:stick"
+            }
+          }
+        }
+      ],
+      "walkable": [
+        0.188,
+        0.823,
+        0.191,
+        0.89,
+        0.254,
+        0.997,
+        0.996,
+        0.998,
+        0.995,
+        0.734,
+        0.88,
+        0.739,
+        0.801,
+        0.689,
+        0.622,
+        0.702,
+        0.581,
+        0.643,
+        0.56,
+        0.6,
+        0.473,
+        0.595,
+        0.457,
+        0.631,
+        0.441,
+        0.647,
+        0.385,
+        0.642,
+        0.377,
+        0.702,
+        0.371,
+        0.73,
+        0.36,
+        0.775,
+        0.305,
+        0.821
+      ],
+      "interactables": [
+        {
+          "kind": "exit",
+          "id": "to-tavern",
+          "to": "tavern",
+          "hitArea": [
+            0.359,
+            0.437,
+            0.358,
+            0.767,
+            0.298,
+            0.82,
+            0.199,
+            0.803,
+            0.185,
+            0.809,
+            0.176,
+            0.361
+          ],
+          "examine": "Do hospody"
+        },
+        {
+          "kind": "interact",
+          "id": "grate",
+          "hitArea": [
+            0.595,
+            0.743,
+            0.605,
+            0.779,
+            0.711,
+            0.771,
+            0.692,
+            0.739
+          ],
+          "effects": [
+            {
+              "kind": "say",
+              "text": "Skrz mříž dole něco probleskuje. Rukou nedosáhnu. Kdybych tak měl svojí udici."
+            }
+          ],
+          "examine": "Odtoková stoka",
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "fished-charm"
+            }
+          },
+          "uses": [
+            {
+              "item": "hook",
+              "effects": [
+                {
+                  "kind": "giveItem",
+                  "item": "charm"
+                },
+                {
+                  "kind": "setFlag",
+                  "flag": "fished-charm"
+                },
+                {
+                  "kind": "say",
+                  "text": "Takle se rybaří! Amulet je na háčku!"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "interact",
+          "id": "grate-empty",
+          "hitArea": [
+            0.594,
+            0.74,
+            0.604,
+            0.781,
+            0.713,
+            0.772,
+            0.693,
+            0.736
+          ],
+          "effects": [
+            {
+              "kind": "say",
+              "text": "Prázdný kanál, další amulet už asi neulovím."
+            }
+          ],
+          "examine": "Odtoková stoka",
+          "when": {
+            "kind": "flag",
+            "flag": "fished-charm"
+          }
+        },
+        {
+          "kind": "exit",
+          "id": "to-market",
+          "to": "street",
+          "hitArea": [
+            0.941,
+            0.367,
+            0.946,
+            0.984,
+            0.995,
+            0.991,
+            0.995,
+            0.398
+          ],
+          "examine": "Cesta na tržnici"
+        },
+        {
+          "kind": "pickable",
+          "id": "stick",
+          "item": "item",
+          "hitArea": [
+            0.213,
+            0.841,
+            0.233,
+            0.828,
+            0.284,
+            0.956,
+            0.264,
+            0.981
+          ],
+          "examine": "To je klacek!"
+        }
+      ],
+      "depth": {
+        "yNearFrac": 0.95,
+        "yFarFrac": 0.6,
+        "scaleNear": 1,
+        "scaleFar": 0.7,
+        "stops": [
+          {
+            "yFrac": 0.6,
+            "scale": 0.25
+          },
+          {
+            "yFrac": 0.95,
+            "scale": 1.3
+          }
+        ]
       },
-      "characterScale": 3.0
+      "spawn": {
+        "xFrac": 0.5,
+        "yFrac": 0.85
+      },
+      "width": 2592,
+      "characterScale": 4,
+      "colorGradeByTime": [
+        {
+          "at": 360,
+          "grade": {
+            "brightness": 1,
+            "contrast": 1.02,
+            "saturation": 1.1,
+            "hue": -16,
+            "tintStrength": 0.4,
+            "tint": "#ffbb00"
+          }
+        },
+        {
+          "at": 720,
+          "grade": {
+            "brightness": 1,
+            "contrast": 1,
+            "saturation": 0.8,
+            "hue": 0
+          }
+        },
+        {
+          "at": 1080,
+          "grade": {
+            "brightness": 0.92,
+            "contrast": 1.06,
+            "saturation": 1.04,
+            "hue": -10,
+            "tintStrength": 0.32,
+            "tint": "#6a78ff"
+          }
+        },
+        {
+          "at": 0,
+          "grade": {
+            "brightness": 0.34,
+            "contrast": 1.26,
+            "saturation": 0.58,
+            "hue": -22,
+            "tint": "#3800ff",
+            "tintStrength": 0.7
+          }
+        }
+      ],
+      "spawnPoints": [
+        {
+          "at": {
+            "xFrac": 0.344,
+            "yFrac": 0.796
+          },
+          "target": "player",
+          "from": "tavern"
+        },
+        {
+          "at": {
+            "xFrac": 0.94,
+            "yFrac": 0.775
+          },
+          "target": "player",
+          "from": "street"
+        }
+      ],
+      "shadows": {
+        "opacity": 0.52
+      },
+      "lights": [
+        {
+          "id": "light",
+          "x": 0.396,
+          "y": 0.501,
+          "radius": 0.3,
+          "color": "#ffa200",
+          "intensity": 0.7,
+          "when": {
+            "kind": "timeOfDay",
+            "from": 1080,
+            "to": 360
+          },
+          "flicker": 0.15
+        },
+        {
+          "id": "light-2",
+          "x": 0.862,
+          "y": 0.389,
+          "radius": 0.3,
+          "color": "#ff9500",
+          "intensity": 0.7,
+          "flicker": 0.15,
+          "when": {
+            "kind": "timeOfDay",
+            "from": 1080,
+            "to": 360
+          }
+        },
+        {
+          "id": "light-3",
+          "x": 0.089,
+          "y": 0.228,
+          "radius": 0.3,
+          "color": "#ff9f00",
+          "intensity": 0.7,
+          "flicker": 0.15,
+          "when": {
+            "kind": "timeOfDay",
+            "from": 1080,
+            "to": 360
+          }
+        }
+      ],
+      "emitters": [
+        {
+          "id": "smoke",
+          "x": 0.638,
+          "y": 0.574,
+          "rate": 14,
+          "life": 3.2,
+          "color": "#c6cddd",
+          "alpha": 0.32,
+          "size": 6,
+          "grow": 18,
+          "shape": "round",
+          "angle": -29,
+          "spread": 16,
+          "speed": 26,
+          "gravity": -6,
+          "spawnRadius": 4,
+          "blend": "normal"
+        }
+      ]
     },
     "street": {
       "id": "street",
-      "name": "Ulice",
-      "width": 4000,
+      "name": "Market",
+      "width": 2592,
       "depth": {
         "yNearFrac": 0.96,
         "yFarFrac": 0.66,
-        "scaleNear": 1.0,
-        "scaleFar": 0.55
+        "scaleNear": 1,
+        "scaleFar": 0.55,
+        "stops": [
+          {
+            "yFrac": 0.65,
+            "scale": 0.2
+          },
+          {
+            "yFrac": 0.96,
+            "scale": 1.3
+          }
+        ]
       },
       "spawn": {
         "xFrac": 0.07,
         "yFrac": 0.9
       },
       "walkable": [
-        0.01,
-        0.66,
-        0.99,
-        0.66,
-        0.99,
-        0.975,
-        0.01,
-        0.975
+        0.004,
+        0.817,
+        0.288,
+        0.82,
+        0.305,
+        0.812,
+        0.305,
+        0.784,
+        0.305,
+        0.739,
+        0.306,
+        0.704,
+        0.32,
+        0.698,
+        0.33,
+        0.667,
+        0.357,
+        0.657,
+        0.411,
+        0.652,
+        0.429,
+        0.652,
+        0.435,
+        0.674,
+        0.459,
+        0.681,
+        0.483,
+        0.68,
+        0.489,
+        0.681,
+        0.491,
+        0.709,
+        0.515,
+        0.719,
+        0.551,
+        0.715,
+        0.602,
+        0.722,
+        0.627,
+        0.729,
+        0.639,
+        0.729,
+        0.664,
+        0.727,
+        0.706,
+        0.709,
+        0.73,
+        0.704,
+        0.758,
+        0.692,
+        0.812,
+        0.702,
+        0.811,
+        0.769,
+        0.811,
+        0.793,
+        0.86,
+        0.81,
+        0.899,
+        0.826,
+        0.938,
+        0.835,
+        0.996,
+        0.834,
+        0.996,
+        0.984,
+        0.004,
+        0.991
       ],
       "layers": [
         {
           "kind": "image",
           "band": "background",
-          "src": "/assets/bg/street-sky.png",
+          "src": "assets/baked/img/7984221d5793697b.webp",
           "fit": "stretch",
-          "parallax": 0.4
+          "timeFadeAt": 360
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "/assets/bg/street-houses-wide.png",
+          "src": "assets/baked/img/d8974d9718bba934.webp",
           "fit": "stretch",
-          "parallax": 0.85
+          "timeFadeAt": 720
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "/assets/bg/street-ground.png",
+          "src": "assets/baked/img/9155243c100a873d.webp",
           "fit": "stretch",
-          "parallax": 1.0
+          "timeFadeAt": 1080
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "/assets/prop/stall.png",
-          "fit": "none",
-          "xFrac": 0.55,
-          "yFrac": 0.72
+          "src": "assets/baked/img/b864b2a6585a491a.webp",
+          "fit": "stretch",
+          "timeFadeAt": 0
         },
         {
-          "kind": "animated",
-          "band": "background",
-          "src": "/assets/anim/fountain.png",
-          "frameWidth": 200,
-          "frameHeight": 200,
-          "columns": 7,
-          "frames": 7,
-          "fps": 8,
+          "kind": "image",
+          "band": "mid",
+          "src": "assets/baked/img/b6c75797fa598c13.webp",
           "fit": "none",
-          "xFrac": 0.79,
-          "yFrac": 0.72
+          "anchorYFrac": 0.85,
+          "role": "occluder",
+          "scale": 0.57,
+          "xFrac": 0.6011695906432749,
+          "yFrac": 0.589122807017544
+        },
+        {
+          "kind": "image",
+          "band": "foreground",
+          "src": "assets/baked/img/2e60e843d68c2406.webp",
+          "fit": "none",
+          "xFrac": 0.8470760233918131,
+          "yFrac": 0.5000000000000001,
+          "scale": 0.56
+        },
+        {
+          "kind": "image",
+          "band": "foreground",
+          "src": "assets/baked/img/741b5b8e6d57ded4.webp",
+          "fit": "width",
+          "xFrac": 0.5,
+          "yFrac": 0.9035087719298245
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "/assets/prop/grate.png",
+          "src": "assets/baked/img/72790d5eab29f036.webp",
           "fit": "none",
-          "xFrac": 0.25,
-          "yFrac": 0.87
-        },
-        {
-          "kind": "image",
-          "band": "background",
-          "src": "/assets/prop/cat.png",
-          "fit": "none",
-          "xFrac": 0.325,
-          "yFrac": 0.85,
+          "anchorYFrac": 0.85,
+          "scale": 0.3,
+          "xFrac": 0.24152046783625733,
+          "yFrac": 0.8059649122807017,
           "when": {
             "kind": "not",
             "of": {
               "kind": "flag",
-              "flag": "got-cat"
+              "flag": "picked:rope"
+            }
+          }
+        },
+        {
+          "kind": "animated",
+          "band": "foreground",
+          "src": "assets/baked/img/dc4a58515d5883f2.webp",
+          "frameWidth": 56,
+          "frameHeight": 56,
+          "columns": 3,
+          "frames": 9,
+          "fps": 8,
+          "fit": "none",
+          "scale": 2.93,
+          "xFrac": 0.2766081871345029,
+          "yFrac": 0.4929824561403509,
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "hasItem",
+              "item": "cat"
             }
           }
         }
@@ -380,8 +1056,8 @@
         {
           "npc": "vendor",
           "spawn": {
-            "xFrac": 0.49,
-            "yFrac": 0.9
+            "xFrac": 0.846,
+            "yFrac": 0.75
           }
         },
         {
@@ -410,96 +1086,24 @@
         {
           "npc": "drunk",
           "spawn": {
-            "xFrac": 0.83,
-            "yFrac": 0.92
+            "xFrac": 0.415,
+            "yFrac": 0.82
           }
         }
       ],
       "interactables": [
         {
           "kind": "interact",
-          "id": "grate",
-          "hitArea": [
-            0.22,
-            0.82,
-            0.28,
-            0.82,
-            0.28,
-            0.9,
-            0.22,
-            0.9
-          ],
-          "effects": [
-            {
-              "kind": "say",
-              "text": "Skrz mříž dole něco probleskuje. Rukou nedosáhnu - ale hákem snad jo."
-            }
-          ],
-          "examine": "Rezavá mříž v dlažbě.",
-          "uses": [
-            {
-              "item": "hook",
-              "effects": [
-                {
-                  "kind": "giveItem",
-                  "item": "charm"
-                },
-                {
-                  "kind": "setFlag",
-                  "flag": "fished-charm"
-                },
-                {
-                  "kind": "say",
-                  "text": "Cvak! Hák zabral. Vytáhl jsem nějaký třpytivý amulet."
-                }
-              ]
-            }
-          ],
-          "when": {
-            "kind": "not",
-            "of": {
-              "kind": "flag",
-              "flag": "fished-charm"
-            }
-          }
-        },
-        {
-          "kind": "interact",
-          "id": "grate-empty",
-          "hitArea": [
-            0.22,
-            0.82,
-            0.28,
-            0.82,
-            0.28,
-            0.9,
-            0.22,
-            0.9
-          ],
-          "effects": [
-            {
-              "kind": "say",
-              "text": "Prázdná mříž. Nic dalšího tam dole nesvítí."
-            }
-          ],
-          "examine": "Rezavá mříž v dlažbě.",
-          "when": {
-            "kind": "flag",
-            "flag": "fished-charm"
-          }
-        },
-        {
-          "kind": "interact",
           "id": "cat",
           "hitArea": [
-            0.3,
-            0.84,
-            0.35,
-            0.84,
-            0.35,
-            0.93,
-            0.3,
-            0.93
+            0.251,
+            0.459,
+            0.253,
+            0.541,
+            0.31,
+            0.534,
+            0.305,
+            0.452
           ],
           "effects": [
             {
@@ -537,12 +1141,16 @@
               "kind": "flag",
               "flag": "got-cat"
             }
+          },
+          "approachAt": {
+            "xFrac": 0.314,
+            "yFrac": 0.796
           }
         },
         {
           "kind": "exit",
-          "id": "to-tavern",
-          "to": "tavern",
+          "id": "to-street",
+          "to": "scene",
           "hitArea": [
             0.002,
             0.45,
@@ -553,65 +1161,78 @@
             0.002,
             0.96
           ],
-          "examine": "Zpátky do hospody."
+          "examine": "Ulice u hospody"
         },
         {
           "kind": "exit",
           "id": "to-tower",
           "to": "tower",
           "hitArea": [
-            0.96,
-            0.45,
-            0.998,
-            0.45,
-            0.998,
-            0.96,
-            0.96,
-            0.96
+            0.728,
+            0.695,
+            0.725,
+            0.595,
+            0.721,
+            0.529,
+            0.72,
+            0.455,
+            0.722,
+            0.367,
+            0.728,
+            0.281,
+            0.735,
+            0.236,
+            0.75,
+            0.179,
+            0.77,
+            0.129,
+            0.781,
+            0.107,
+            0.835,
+            0.115,
+            0.848,
+            0.156,
+            0.857,
+            0.263,
+            0.858,
+            0.34,
+            0.815,
+            0.367,
+            0.815,
+            0.701
           ],
-          "examine": "Cesta k věži."
+          "examine": "Cesta k věži.",
+          "approachAt": {
+            "xFrac": 0.773,
+            "yFrac": 0.727
+          }
+        },
+        {
+          "kind": "pickable",
+          "id": "rope",
+          "item": "item-4",
+          "hitArea": [
+            0.211,
+            0.767,
+            0.21,
+            0.835,
+            0.268,
+            0.841,
+            0.267,
+            0.775
+          ],
+          "examine": "Hele provaz, ten by se mohl hodit."
         }
       ],
       "ambientLight": {
         "color": "#eaf0f5",
-        "intensity": 1.0
-      },
-      "fog": {
-        "color": "#c8d2d8",
-        "parallaxX": 6,
-        "parallaxY": 0,
-        "seed": 7,
-        "scaleX": 1.0,
-        "scaleY": 0.6,
-        "scale": 150,
-        "opacity": 0.1,
-        "backZ": 8,
-        "frontOpacity": 0.05,
-        "frontZ": 26
+        "intensity": 1
       },
       "emitters": [
         {
-          "id": "mist",
-          "x": 0.787,
-          "y": 0.62,
-          "rate": 14,
-          "life": 1.6,
-          "color": "#dceaf0",
-          "alpha": 0.4,
-          "size": 5,
-          "grow": 3,
-          "shape": "round",
-          "angle": -90,
-          "spread": 45,
-          "speed": 22,
-          "gravity": 20,
-          "spawnRadius": 12,
-          "blend": "add"
-        },
-        {
           "id": "smoke",
-          "x": 0.42,
-          "y": 0.3,
+          "x": 0.358,
+          "y": 0.296,
           "rate": 6,
           "life": 3.6,
           "color": "#9aa0a4",
@@ -632,23 +1253,25 @@
         "size": 0.74,
         "color": "#000000"
       },
-      "characterScale": 3.0,
+      "characterScale": 4,
       "colorGradeByTime": [
         {
           "at": 360,
           "grade": {
-            "brightness": 1.05,
-            "contrast": 1.0,
-            "saturation": 1.0,
-            "hue": -6
+            "brightness": 1,
+            "contrast": 1.02,
+            "saturation": 1.1,
+            "hue": -16,
+            "tint": "#ffba1a",
+            "tintStrength": 0.4
           }
         },
         {
           "at": 720,
           "grade": {
-            "brightness": 1.0,
-            "contrast": 1.0,
-            "saturation": 1.0,
+            "brightness": 1,
+            "contrast": 1,
+            "saturation": 1,
             "hue": 0
           }
         },
@@ -657,17 +1280,127 @@
           "grade": {
             "brightness": 0.92,
             "contrast": 1.06,
-            "saturation": 1.12,
-            "hue": 20
+            "saturation": 1.04,
+            "hue": -10,
+            "tintStrength": 0.32,
+            "tint": "#6a78ff"
           }
         },
         {
           "at": 0,
           "grade": {
-            "brightness": 0.58,
-            "contrast": 1.06,
-            "saturation": 0.78,
-            "hue": -22
+            "brightness": 0.34,
+            "contrast": 1.26,
+            "saturation": 0.58,
+            "hue": -22,
+            "tint": "#3800ff",
+            "tintStrength": 0.7
+          }
+        }
+      ],
+      "holes": [
+        [
+          0.418,
+          0.798,
+          0.418,
+          0.865,
+          0.44,
+          0.885,
+          0.467,
+          0.893,
+          0.499,
+          0.897,
+          0.53,
+          0.899,
+          0.564,
+          0.893,
+          0.6,
+          0.893,
+          0.637,
+          0.897,
+          0.665,
+          0.892,
+          0.694,
+          0.886,
+          0.705,
+          0.876,
+          0.741,
+          0.889,
+          0.755,
+          0.883,
+          0.758,
+          0.88,
+          0.759,
+          0.842,
+          0.758,
+          0.831,
+          0.712,
+          0.823,
+          0.696,
+          0.816,
+          0.689,
+          0.791
+        ]
+      ],
+      "spawnPoints": [
+        {
+          "at": {
+            "xFrac": 0.775,
+            "yFrac": 0.715
+          },
+          "target": "player",
+          "from": "tower"
+        },
+        {
+          "at": {
+            "xFrac": 0.057,
+            "yFrac": 0.845
+          },
+          "target": "player",
+          "from": "scene"
+        }
+      ],
+      "lights": [
+        {
+          "id": "light",
+          "x": 0.304,
+          "y": 0.421,
+          "radius": 0.31,
+          "color": "#ffb000",
+          "intensity": 0.85,
+          "flicker": 0.15,
+          "when": {
+            "kind": "timeOfDay",
+            "from": 1080,
+            "to": 360
+          }
+        },
+        {
+          "id": "light-2",
+          "x": 0.481,
+          "y": 0.581,
+          "radius": 0.09,
+          "color": "#ffa500",
+          "intensity": 1,
+          "flicker": 0.15,
+          "when": {
+            "kind": "timeOfDay",
+            "from": 1080,
+            "to": 360
+          }
+        },
+        {
+          "id": "light-3",
+          "x": 0.829,
+          "y": 0.562,
+          "radius": 0.21,
+          "color": "#ff9c00",
+          "intensity": 1,
+          "flicker": 0.15,
+          "when": {
+            "kind": "timeOfDay",
+            "from": 1080,
+            "to": 360
           }
         }
       ]
@@ -675,11 +1408,11 @@
     "tower": {
       "id": "tower",
       "name": "Věž (venku)",
-      "width": 1920,
+      "width": 2592,
       "depth": {
         "yNearFrac": 0.96,
         "yFarFrac": 0.72,
-        "scaleNear": 1.0,
+        "scaleNear": 1,
         "scaleFar": 0.62
       },
       "spawn": {
@@ -687,30 +1420,91 @@
         "yFrac": 0.9
       },
       "walkable": [
-        0.08,
-        0.72,
-        0.92,
-        0.72,
-        0.92,
-        0.965,
-        0.08,
-        0.965
+        0.005,
+        0.821,
+        0.255,
+        0.815,
+        0.41,
+        0.81,
+        0.493,
+        0.8,
+        0.522,
+        0.824,
+        0.534,
+        0.842,
+        0.643,
+        0.834,
+        0.786,
+        0.905,
+        0.793,
+        0.962,
+        0.571,
+        0.989,
+        0.005,
+        0.989
       ],
       "layers": [
         {
           "kind": "image",
           "band": "background",
-          "src": "/assets/bg/tower.png",
+          "src": "assets/baked/img/1903b0b6cf4120e1.webp",
           "fit": "stretch",
-          "parallax": 1.0
+          "timeFadeAt": 360
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "assets/baked/img/aa8ffe88cb71421b.webp",
+          "fit": "stretch",
+          "timeFadeAt": 720
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "assets/baked/img/6ec045e92226b2a5.webp",
+          "fit": "stretch",
+          "timeFadeAt": 1080
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "assets/baked/img/1a4d32ae55347211.webp",
+          "fit": "stretch",
+          "timeFadeAt": 0
+        },
+        {
+          "kind": "animated",
+          "band": "background",
+          "src": "assets/baked/img/0e9e148c58526923.webp",
+          "frameWidth": 92,
+          "frameHeight": 92,
+          "columns": 3,
+          "frames": 9,
+          "fps": 8,
+          "fit": "none",
+          "when": {
+            "kind": "flag",
+            "flag": "guard-asleep"
+          },
+          "loop": false,
+          "scale": 3,
+          "xFrac": 0.5628654970760233,
+          "yFrac": 0.7540350877192983
         }
       ],
       "npcs": [
         {
           "npc": "guard",
           "spawn": {
-            "xFrac": 0.3,
-            "yFrac": 0.9
+            "xFrac": 0.557,
+            "yFrac": 0.844
+          },
+          "when": {
+            "kind": "not",
+            "of": {
+              "kind": "flag",
+              "flag": "guard-asleep"
+            }
           }
         }
       ],
@@ -736,33 +1530,67 @@
           "id": "to-tower-room",
           "to": "tower-room",
           "hitArea": [
-            0.4,
-            0.42,
-            0.6,
-            0.42,
-            0.6,
-            0.9,
-            0.4,
-            0.9
+            0.687,
+            0.158,
+            0.662,
+            0.298,
+            0.659,
+            0.376,
+            0.66,
+            0.546,
+            0.665,
+            0.779,
+            0.666,
+            0.843,
+            0.749,
+            0.881,
+            0.747,
+            0.577,
+            0.748,
+            0.396,
+            0.747,
+            0.305,
+            0.736,
+            0.2,
+            0.719,
+            0.126,
+            0.696,
+            0.081
           ],
           "examine": "Dveře do věže.",
           "when": {
             "kind": "flag",
             "flag": "guard-asleep"
+          },
+          "approachAt": {
+            "xFrac": 0.686,
+            "yFrac": 0.866
           }
         },
         {
           "kind": "interact",
           "id": "tower-locked",
           "hitArea": [
-            0.4,
-            0.42,
-            0.6,
-            0.42,
-            0.6,
-            0.9,
-            0.4,
-            0.9
+            0.696,
+            0.08,
+            0.675,
+            0.189,
+            0.663,
+            0.295,
+            0.66,
+            0.439,
+            0.666,
+            0.841,
+            0.75,
+            0.881,
+            0.75,
+            0.351,
+            0.743,
+            0.255,
+            0.739,
+            0.2,
+            0.723,
+            0.129
           ],
           "effects": [
             {
@@ -778,47 +1606,47 @@
               "flag": "guard-asleep"
             }
           }
+        },
+        {
+          "kind": "pickable",
+          "id": "hrebik",
+          "item": "item-2",
+          "hitArea": [
+            0.125,
+            0.657,
+            0.127,
+            0.805,
+            0.238,
+            0.807,
+            0.235,
+            0.665
+          ],
+          "examine": "Hromada harampádí... ááá hele hřebík!",
+          "approachAt": {
+            "xFrac": 0.213,
+            "yFrac": 0.83
+          }
         }
       ],
-      "ambientLight": {
-        "color": "#dfe6f2",
-        "intensity": 0.95
-      },
-      "fog": {
-        "color": "#cdd6dc",
-        "parallaxX": 5,
-        "parallaxY": 0,
-        "seed": 11,
-        "scaleX": 1.0,
-        "scaleY": 0.6,
-        "scale": 150,
-        "opacity": 0.1,
-        "backZ": 8,
-        "frontOpacity": 0.05,
-        "frontZ": 26
-      },
-      "vignette": {
-        "intensity": 0.26,
-        "size": 0.72,
-        "color": "#000000"
-      },
-      "characterScale": 3.0,
+      "characterScale": 4,
       "colorGradeByTime": [
         {
           "at": 360,
           "grade": {
-            "brightness": 1.05,
-            "contrast": 1.0,
-            "saturation": 1.0,
-            "hue": -6
+            "brightness": 1,
+            "contrast": 1.02,
+            "saturation": 1.1,
+            "hue": -16,
+            "tint": "#ffad00",
+            "tintStrength": 0.4
           }
         },
         {
           "at": 720,
           "grade": {
-            "brightness": 1.0,
-            "contrast": 1.0,
-            "saturation": 1.0,
+            "brightness": 1,
+            "contrast": 1,
+            "saturation": 1,
             "hue": 0
           }
         },
@@ -827,17 +1655,69 @@
           "grade": {
             "brightness": 0.92,
             "contrast": 1.06,
-            "saturation": 1.12,
-            "hue": 20
+            "saturation": 1.04,
+            "hue": -10,
+            "tintStrength": 0.32,
+            "tint": "#6a78ff"
           }
         },
         {
           "at": 0,
           "grade": {
-            "brightness": 0.58,
-            "contrast": 1.06,
-            "saturation": 0.78,
-            "hue": -22
+            "brightness": 0.34,
+            "contrast": 1.26,
+            "saturation": 0.58,
+            "hue": -22,
+            "tint": "#4000ff",
+            "tintStrength": 0.7
+          }
+        }
+      ],
+      "spawnPoints": [
+        {
+          "at": {
+            "xFrac": 0.064,
+            "yFrac": 0.899
+          },
+          "target": "player",
+          "from": "street"
+        },
+        {
+          "at": {
+            "xFrac": 0.696,
+            "yFrac": 0.864
+          },
+          "target": "player",
+          "from": "tower-room"
+        }
+      ],
+      "lights": [
+        {
+          "id": "light",
+          "x": 0.622,
+          "y": 0.508,
+          "radius": 0.36,
+          "color": "#ffa302",
+          "intensity": 1,
+          "flicker": 0.15,
+          "when": {
+            "kind": "timeOfDay",
+            "from": 1080,
+            "to": 360
+          }
+        },
+        {
+          "id": "light-2",
+          "x": 0.722,
+          "y": 0.496,
+          "radius": 0.34,
+          "color": "#ffa500",
+          "intensity": 1.25,
+          "flicker": 0.15,
+          "when": {
+            "kind": "timeOfDay",
+            "from": 1080,
+            "to": 360
           }
         }
       ]
@@ -849,52 +1729,130 @@
       "depth": {
         "yNearFrac": 0.96,
         "yFarFrac": 0.74,
-        "scaleNear": 1.0,
-        "scaleFar": 0.64
+        "scaleNear": 1,
+        "scaleFar": 0.64,
+        "stops": [
+          {
+            "yFrac": 0.65,
+            "scale": 0.85
+          },
+          {
+            "yFrac": 0.96,
+            "scale": 1
+          }
+        ]
       },
       "spawn": {
         "xFrac": 0.25,
         "yFrac": 0.9
       },
       "walkable": [
-        0.12,
+        0.995,
+        0.762,
+        0.975,
+        0.743,
+        0.806,
+        0.695,
+        0.785,
+        0.695,
+        0.742,
+        0.704,
+        0.685,
+        0.717,
+        0.649,
+        0.728,
+        0.595,
         0.74,
-        0.88,
-        0.74,
-        0.88,
-        0.965,
-        0.12,
-        0.965
+        0.571,
+        0.775,
+        0.459,
+        0.85,
+        0.452,
+        0.879,
+        0.419,
+        0.894,
+        0.387,
+        0.902,
+        0.313,
+        0.834,
+        0.216,
+        0.834,
+        0.129,
+        0.932,
+        0.114,
+        0.982,
+        0.997,
+        0.993
       ],
       "layers": [
         {
+          "kind": "image",
+          "band": "background",
+          "src": "assets/baked/img/363d7ba375e6054f.webp",
+          "fit": "stretch",
+          "timeFadeAt": 360
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "assets/baked/img/213bb88725ea26bf.webp",
+          "fit": "stretch",
+          "timeFadeAt": 720
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "assets/baked/img/f141c13bedefff29.webp",
+          "fit": "stretch",
+          "timeFadeAt": 1080
+        },
+        {
+          "kind": "image",
+          "band": "background",
+          "src": "assets/baked/img/9c6365d8f721df68.webp",
+          "fit": "stretch",
+          "timeFadeAt": 0
+        },
+        {
           "kind": "animated",
           "band": "background",
-          "src": "/assets/anim/room-asleep.png",
-          "frameWidth": 256,
-          "frameHeight": 256,
-          "columns": 7,
-          "frames": 7,
-          "fps": 6,
-          "fit": "stretch",
+          "src": "assets/baked/img/d36f3d59dc8d3226.webp",
+          "frameWidth": 176,
+          "frameHeight": 176,
+          "columns": 2,
+          "frames": 3,
+          "fps": 3,
+          "fit": "none",
+          "scale": 2.1,
           "when": {
             "kind": "not",
             "of": {
               "kind": "flag",
               "flag": "princess-awake"
             }
-          }
+          },
+          "loop": true,
+          "xFrac": 0.4789520065075922,
+          "yFrac": 0.6860086767895879
         },
         {
-          "kind": "image",
+          "kind": "animated",
           "band": "background",
-          "src": "/assets/bg/room-awake.png",
-          "fit": "stretch",
-          "parallax": 1.0,
+          "src": "assets/baked/img/59556ae544ab6301.webp",
+          "frameWidth": 176,
+          "frameHeight": 176,
+          "columns": 4,
+          "frames": 11,
+          "fps": 8,
+          "fit": "none",
+          "xFrac": 0.4789520065075923,
+          "yFrac": 0.686008676789588,
+          "scale": 2.1,
           "when": {
             "kind": "flag",
             "flag": "princess-awake"
-          }
+          },
+          "loop": false
         }
       ],
       "interactables": [
@@ -902,14 +1860,26 @@
           "kind": "interact",
           "id": "princess",
           "hitArea": [
-            0.18,
-            0.45,
-            0.52,
-            0.45,
-            0.52,
-            0.85,
-            0.18,
-            0.85
+            0.443,
+            0.849,
+            0.567,
+            0.773,
+            0.57,
+            0.672,
+            0.562,
+            0.618,
+            0.538,
+            0.597,
+            0.509,
+            0.59,
+            0.489,
+            0.588,
+            0.351,
+            0.629,
+            0.343,
+            0.665,
+            0.343,
+            0.714
           ],
           "effects": [
             {
@@ -924,6 +1894,10 @@
               "kind": "flag",
               "flag": "princess-awake"
             }
+          },
+          "approachAt": {
+            "xFrac": 0.548,
+            "yFrac": 0.797
           }
         },
         {
@@ -931,48 +1905,96 @@
           "id": "to-tower",
           "to": "tower",
           "hitArea": [
-            0.002,
-            0.5,
-            0.07,
-            0.5,
-            0.07,
-            0.96,
-            0.002,
-            0.96
+            0.999,
+            0.589,
+            0.925,
+            0.59,
+            0.915,
+            0.988,
+            0.999,
+            0.991
           ],
-          "examine": "Dolů po schodech."
+          "examine": "Dolů po schodech.",
+          "approachAt": {
+            "xFrac": 0.905,
+            "yFrac": 0.936
+          }
         }
       ],
-      "ambientLight": {
-        "color": "#b9c2e8",
-        "intensity": 0.72
-      },
       "lights": [
         {
           "id": "candle",
-          "x": 0.5,
-          "y": 0.55,
+          "x": 0.606,
+          "y": 0.498,
           "radius": 0.32,
           "color": "#ffd9a0",
           "intensity": 0.95,
           "flicker": 0.18
         }
       ],
-      "vignette": {
-        "intensity": 0.36,
-        "size": 0.66,
-        "color": "#000000"
-      },
-      "characterScale": 3.0
+      "characterScale": 3.7,
+      "spawnPoints": [
+        {
+          "at": {
+            "xFrac": 0.904,
+            "yFrac": 0.914
+          },
+          "target": "player"
+        }
+      ],
+      "colorGradeByTime": [
+        {
+          "at": 360,
+          "grade": {
+            "brightness": 1,
+            "contrast": 1.02,
+            "saturation": 1.1,
+            "hue": -16,
+            "tint": "#ffb200",
+            "tintStrength": 0.4
+          }
+        },
+        {
+          "at": 720,
+          "grade": {
+            "brightness": 1,
+            "contrast": 1,
+            "saturation": 1,
+            "hue": 0
+          }
+        },
+        {
+          "at": 1080,
+          "grade": {
+            "brightness": 0.92,
+            "contrast": 1.06,
+            "saturation": 1.04,
+            "hue": -10,
+            "tintStrength": 0.32,
+            "tint": "#6a78ff"
+          }
+        },
+        {
+          "at": 0,
+          "grade": {
+            "brightness": 0.72,
+            "contrast": 1.26,
+            "saturation": 0.58,
+            "hue": -22,
+            "tint": "#4700ff",
+            "tintStrength": 0.4
+          }
+        }
+      ]
     },
     "daycycle": {
       "id": "daycycle",
       "name": "Ukázka: denní cyklus",
-      "width": 1920,
+      "width": 2592,
       "depth": {
         "yNearFrac": 0.96,
         "yFarFrac": 0.7,
-        "scaleNear": 1.0,
+        "scaleNear": 1,
         "scaleFar": 0.62
       },
       "spawn": {
@@ -993,34 +2015,60 @@
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiNiOWM2ZGEiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9Ijk2MCIgeT0iNDk2IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9Ijg0IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UsOBTk88L3RleHQ+PHRleHQgeD0iOTYwIiB5PSI2MTUiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNDYiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4wNjowMDwvdGV4dD48L3N2Zz4=",
+          "src": "assets/baked/img/ea5c8ff5e8eae4f3.webp",
           "fit": "stretch",
-          "parallax": 1.0,
+          "parallax": 1,
           "timeFadeAt": 360
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiNlZmU2YzIiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9Ijk2MCIgeT0iNDk2IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9Ijg0IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+T0RQT0xFRE5FPC90ZXh0Pjx0ZXh0IHg9Ijk2MCIgeT0iNjE1IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjQ2IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+MTI6MDA8L3RleHQ+PC9zdmc+",
+          "src": "assets/baked/img/c3a33b0c757cac5a.webp",
           "fit": "stretch",
-          "parallax": 1.0,
+          "parallax": 1,
           "timeFadeAt": 720
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiNlMGEyNGEiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9Ijk2MCIgeT0iNDk2IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9Ijg0IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+VkXEjEVSPC90ZXh0Pjx0ZXh0IHg9Ijk2MCIgeT0iNjE1IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjQ2IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+MTg6MDA8L3RleHQ+PC9zdmc+",
+          "src": "assets/baked/img/c01ce159581981e2.webp",
           "fit": "stretch",
-          "parallax": 1.0,
+          "parallax": 1,
           "timeFadeAt": 1080
         },
         {
           "kind": "image",
           "band": "background",
-          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxOTIwIiBoZWlnaHQ9IjEwODAiIGZpbGw9IiMyMjJhNDQiIG9wYWNpdHk9IjEuMCIvPjx0ZXh0IHg9Ijk2MCIgeT0iNDk2IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9Ijg0IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Tk9DPC90ZXh0Pjx0ZXh0IHg9Ijk2MCIgeT0iNjE1IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjQ2IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+MDA6MDA8L3RleHQ+PC9zdmc+",
+          "src": "assets/baked/img/ead1809a9c7e7c5f.webp",
           "fit": "stretch",
-          "parallax": 1.0,
+          "parallax": 1,
           "timeFadeAt": 0
+        },
+        {
+          "kind": "image",
+          "band": "mid",
+          "src": "assets/baked/img/b6c75797fa598c13.webp",
+          "fit": "none",
+          "xFrac": 0.6099415204678362,
+          "yFrac": 0.5919298245614036,
+          "scale": 0.55
+        },
+        {
+          "kind": "image",
+          "band": "foreground",
+          "src": "assets/baked/img/2e60e843d68c2406.webp",
+          "fit": "none",
+          "scale": 0.55,
+          "xFrac": 0.8523391812865498,
+          "yFrac": 0.49017543859649126
+        },
+        {
+          "kind": "image",
+          "band": "foreground",
+          "src": "assets/baked/img/741b5b8e6d57ded4.webp",
+          "fit": "width",
+          "xFrac": 0.5,
+          "yFrac": 0.9042105263157892
         }
       ],
       "interactables": [
@@ -1029,35 +2077,37 @@
           "id": "to-tavern",
           "to": "tavern",
           "hitArea": [
-            0.0,
+            0,
             0.5,
             0.06,
             0.5,
             0.06,
             0.96,
-            0.0,
+            0,
             0.96
           ],
           "examine": "Zpět do hry."
         }
       ],
-      "characterScale": 3.0,
+      "characterScale": 3,
       "colorGradeByTime": [
         {
           "at": 360,
           "grade": {
-            "brightness": 1.05,
-            "contrast": 1.0,
-            "saturation": 1.0,
-            "hue": -6
+            "brightness": 1,
+            "contrast": 1.02,
+            "saturation": 1.1,
+            "hue": -16,
+            "tintStrength": 0.4,
+            "tint": "#ffc022"
           }
         },
         {
           "at": 720,
           "grade": {
-            "brightness": 1.0,
-            "contrast": 1.0,
-            "saturation": 1.0,
+            "brightness": 1,
+            "contrast": 1,
+            "saturation": 1,
             "hue": 0
           }
         },
@@ -1066,17 +2116,21 @@
           "grade": {
             "brightness": 0.92,
             "contrast": 1.06,
-            "saturation": 1.12,
-            "hue": 20
+            "saturation": 1.04,
+            "hue": -10,
+            "tintStrength": 0.32,
+            "tint": "#6a78ff"
           }
         },
         {
           "at": 0,
           "grade": {
-            "brightness": 0.58,
-            "contrast": 1.06,
-            "saturation": 0.78,
-            "hue": -22
+            "brightness": 0.34,
+            "contrast": 1.26,
+            "saturation": 0.58,
+            "hue": -22,
+            "tintStrength": 0.7,
+            "tint": "#3901ff"
           }
         }
       ]
@@ -1085,9 +2139,9 @@
   "items": {
     "hook": {
       "id": "hook",
-      "name": "Hák",
-      "examine": "Ohnutý drát na klacku. Šlo by s tím něco lovit.",
-      "icon": "/assets/item/hook.png"
+      "name": "Udice",
+      "examine": "Udice, s tím bych mohl něco ulovit...",
+      "icon": "assets/baked/img/f83e3a009872de32.webp"
     },
     "charm": {
       "id": "charm",
@@ -1143,12 +2197,36 @@
         }
       ],
       "icon": "/assets/item/onion.png"
+    },
+    "item": {
+      "id": "item",
+      "name": "Klacek",
+      "examine": "Hmm... Klacek",
+      "icon": "assets/baked/img/b34fba36cec61d64.webp"
+    },
+    "item-2": {
+      "id": "item-2",
+      "name": "Hřebík",
+      "examine": "Ten hřebík by šel ohnout",
+      "icon": "assets/baked/img/60f96d213356ddd1.webp"
+    },
+    "item-3": {
+      "id": "item-3",
+      "name": "Klacek s provazem",
+      "examine": "Klacek a provat... To by se mohlo hodit",
+      "icon": "assets/baked/img/089ce233c00fefb7.webp"
+    },
+    "item-4": {
+      "id": "item-4",
+      "name": "Provaz",
+      "examine": "Provaz bych mohl k něčemu přivázat... Nebo něco svázat",
+      "icon": "assets/baked/img/72790d5eab29f036.webp"
     }
   },
   "initialFlags": {},
   "clock": {
-    "dayLengthSec": 180,
-    "startMinutes": 600
+    "dayLengthSec": 1000,
+    "startMinutes": 360
   },
   "rules": [
     {
@@ -1175,7 +2253,7 @@
             "of": {
               "kind": "timeOfDay",
               "from": 960,
-              "to": 1380
+              "to": 300
             }
           },
           {
@@ -1245,7 +2323,8 @@
             "loop": true
           }
         }
-      }
+      },
+      "approachGap": 180
     },
     "vendor": {
       "id": "vendor",
@@ -1342,7 +2421,8 @@
               13
             ],
             "fps": 10,
-            "loop": true
+            "loop": true,
+            "sound": "sfx-footstep"
           },
           "walk.E": {
             "frames": [
@@ -1354,7 +2434,8 @@
               19
             ],
             "fps": 10,
-            "loop": true
+            "loop": true,
+            "sound": "sfx-footstep"
           }
         }
       }
@@ -1475,7 +2556,7 @@
         },
         "offer": {
           "speaker": "keeper",
-          "text": "Á, nová tvář. Poslyš, trhane - mám ve sklepě krysy. Vyžeň je a piva ti naleju, kolik uneseš.",
+          "text": "Á, tak už ses probral z kocoviny? Poslyš, trhane - mám ve sklepě krysy. Vyžeň je a piva ti naleju, kolik uneseš.",
           "choices": [
             {
               "text": "Beru ten kšeft.",
@@ -1498,7 +2579,7 @@
         },
         "dealdone": {
           "speaker": "keeper",
-          "text": "Platí. Sklep je tamhle pod poklopem. Žádné krysy - a teče pivo."
+          "text": "Platí. Sklep je tamhle u baru za dveřmi. Žádné krysy - a teče pivo."
         },
         "nochance": {
           "speaker": "keeper",
@@ -1701,7 +2782,7 @@
                     "of": {
                       "kind": "timeOfDay",
                       "from": 960,
-                      "to": 1380
+                      "to": 300
                     }
                   }
                 ]
@@ -2008,6 +3089,47 @@
           ]
         }
       }
+    },
+    "wait-time": {
+      "start": "ask",
+      "nodes": {
+        "ask": {
+          "speaker": "Claude",
+          "text": "Na co si počkám?",
+          "choices": [
+            {
+              "text": "Počkat do rána",
+              "effects": [
+                {
+                  "kind": "setClock",
+                  "minutes": 360
+                }
+              ]
+            },
+            {
+              "text": "Počkat do odpoledne",
+              "effects": [
+                {
+                  "kind": "setClock",
+                  "minutes": 720
+                }
+              ]
+            },
+            {
+              "text": "Počkat do večera",
+              "effects": [
+                {
+                  "kind": "setClock",
+                  "minutes": 960
+                }
+              ]
+            },
+            {
+              "text": "Radši nečekat"
+            }
+          ]
+        }
+      }
     }
   },
   "sequences": {
@@ -2094,7 +3216,8 @@
     }
   },
   "ambient": {
-    "sound": "sfx-ambient"
+    "sound": "sound",
+    "volume": 0.4
   },
   "footstep": {
     "sound": "sfx-footstep"
@@ -2108,34 +3231,38 @@
   "screens": {
     "loading": {
       "bg": {
-        "image": "/assets/bg/tavern.png"
+        "image": "assets/baked/img/6ef289098db9dead.webp"
       },
       "minMs": 2000
     },
     "title": {
       "bg": {
-        "image": "/assets/bg/title.png"
+        "image": "assets/baked/img/6ef289098db9dead.webp"
       },
-      "heading": "Magický polibek",
-      "headingColor": "#f4d58d",
+      "heading": "The Magic Kiss",
+      "headingColor": "#dd002f",
       "headingSize": 64,
-      "tagline": "Pohádková komedie o jednom cibulovém polibku.",
-      "buttonColor": "#e8dcc0",
+      "buttonColor": "#e5e2df",
       "newGame": {
-        "text": "Nová hra"
+        "text": "Nová hra",
+        "mode": "image",
+        "image": "assets/baked/img/049c2e8ca2dfe846.webp"
       },
       "continue": {
-        "text": "Pokračovat"
-      }
+        "text": "Pokračovat",
+        "mode": "image",
+        "image": "assets/baked/img/59795cf879f8005c.webp"
+      },
+      "logo": "assets/baked/img/d2bad89b030d5782.webp"
     },
     "end": {
       "bg": {
-        "image": "/assets/bg/room-awake.png"
+        "image": "assets/baked/img/fda3096f1cac8131.webp"
       },
-      "size": 30,
-      "color": "#f4d58d",
+      "size": 36,
+      "color": "#fffae7",
       "align": "center",
-      "text": "Konec.\n\nA žili spolu šťastně až do smrti -\nteda hlavně co se týče zásob mátových bonbónů."
+      "text": "Konec.\n\nPrincezna se probudila. Trhan dostal facku. A žili spolu šťastně až do smrti... v oddělených komnatách."
     },
     "credits": {
       "bg": {
@@ -2145,16 +3272,16 @@
       "size": 26,
       "color": "#e6ebf2",
       "align": "center",
-      "text": "Magický polibek\n\n— Director —\nsabe\n\n— a všechny ostatní role —\nArt: sabe\nKód: sabe\nDesign: sabe\nHudba: sabe\nScénář: sabe\nCibule: sabe\n\nV hlavní roli: Claude\n\nVytvořeno v editoru Pixin\n\nDíky, žes to dohrál!"
+      "text": "The Magic Kiss\n\n— Director —\nPierre the Puree\n\n— a všechny ostatní role —\nArt: Pierre the Puree - vytvořeno pomocí UE 5.7 a pixellab.ai\nKód: Claude code\nDesign: Clade & Pierre the Puree\nHudba: Music from #Uppbeat:\nhttps://uppbeat.io/t/kevin-macleod/simon-says-dont-50-cents\nScénář: Claude & Pierre the Puree\nCibule: Claude\n\nV hlavní roli: Claude\n\nVytvořeno v editoru Pixin Builder - jádro pixijs.com\n\nDíky, žes to dohrál!"
     }
   },
   "player": {
-    "atlas": "/assets/char/claude.png",
+    "atlas": "assets/baked/img/be50aa1da9adb9aa.webp",
     "frameWidth": 92,
     "frameHeight": 92,
-    "columns": 20,
+    "columns": 10,
     "anchorX": 0.5,
-    "anchorY": 0.88,
+    "anchorY": 0.891,
     "clips": {
       "idle.S": {
         "frames": [
@@ -2166,29 +3293,29 @@
         "fps": 5,
         "loop": true
       },
-      "idle.E": {
+      "walk.S": {
         "frames": [
           4,
           5,
           6,
-          7
+          7,
+          8,
+          9
         ],
-        "fps": 5,
+        "fps": 10,
         "loop": true
       },
-      "walk.S": {
+      "idle.SE": {
         "frames": [
-          8,
-          9,
           10,
           11,
           12,
           13
         ],
-        "fps": 10,
+        "fps": 5,
         "loop": true
       },
-      "walk.E": {
+      "walk.SE": {
         "frames": [
           14,
           15,
@@ -2199,8 +3326,169 @@
         ],
         "fps": 10,
         "loop": true
+      },
+      "idle.E": {
+        "frames": [
+          20,
+          21,
+          22,
+          23
+        ],
+        "fps": 5,
+        "loop": true
+      },
+      "walk.E": {
+        "frames": [
+          24,
+          25,
+          26,
+          27,
+          28,
+          29
+        ],
+        "fps": 10,
+        "loop": true,
+        "sound": "sfx-footstep"
+      },
+      "idle.NE": {
+        "frames": [
+          30,
+          31,
+          32,
+          33
+        ],
+        "fps": 5,
+        "loop": true
+      },
+      "walk.NE": {
+        "frames": [
+          34,
+          35,
+          36,
+          37,
+          38,
+          39
+        ],
+        "fps": 10,
+        "loop": true,
+        "sound": "sfx-footstep"
+      },
+      "idle.N": {
+        "frames": [
+          40,
+          41,
+          42,
+          43
+        ],
+        "fps": 5,
+        "loop": true
+      },
+      "walk.N": {
+        "frames": [
+          44,
+          45,
+          46,
+          47,
+          48,
+          49
+        ],
+        "fps": 10,
+        "loop": true,
+        "sound": "sfx-footstep"
       }
     }
   },
-  "font": "Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif"
+  "font": "Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif",
+  "sounds": {
+    "sfx-ambient": {
+      "id": "sfx-ambient",
+      "name": "Ambient drone",
+      "src": "assets/baked/audio/a49b9c6073e89ec8.wav"
+    },
+    "sfx-pickup": {
+      "id": "sfx-pickup",
+      "name": "Pickup blip",
+      "src": "assets/baked/audio/9af19aef3a5bcbe6.wav"
+    },
+    "sfx-transition": {
+      "id": "sfx-transition",
+      "name": "Scene transition",
+      "src": "assets/baked/audio/2a251a6a4dfb85fc.wav"
+    },
+    "sfx-footstep": {
+      "id": "sfx-footstep",
+      "name": "Footstep",
+      "src": "assets/baked/audio/6f2ab42bf65f62b4.wav"
+    },
+    "sfx-rain": {
+      "id": "sfx-rain",
+      "name": "Rain loop",
+      "src": "assets/baked/audio/557d1c8c963f70ca.wav"
+    },
+    "sound": {
+      "id": "sound",
+      "name": "Song",
+      "src": "assets/baked/audio/78a340672bf09a03.mp3"
+    }
+  },
+  "weatherPresets": {
+    "rain": {
+      "id": "rain",
+      "name": "Rain",
+      "count": 480,
+      "color": "#a9c2e0",
+      "alpha": 0.5,
+      "size": 26,
+      "shape": "streak",
+      "angle": 78,
+      "speed": 950,
+      "sway": 0,
+      "swayFreq": 0,
+      "blend": "normal",
+      "ambient": {
+        "sound": "sfx-rain",
+        "volume": 0.45
+      }
+    },
+    "snow": {
+      "id": "snow",
+      "name": "Snow",
+      "count": 280,
+      "color": "#ffffff",
+      "alpha": 0.9,
+      "size": 6,
+      "shape": "round",
+      "angle": 90,
+      "speed": 90,
+      "sway": 42,
+      "swayFreq": 0.4,
+      "blend": "add"
+    },
+    "dust": {
+      "id": "dust",
+      "name": "Dust",
+      "count": 160,
+      "color": "#d8c79a",
+      "alpha": 0.32,
+      "size": 4,
+      "shape": "round",
+      "angle": 100,
+      "speed": 34,
+      "sway": 30,
+      "swayFreq": 0.25,
+      "blend": "add"
+    }
+  },
+  "recipes": [
+    {
+      "a": "item",
+      "b": "item-4",
+      "output": "item-3"
+    },
+    {
+      "a": "item-3",
+      "b": "item-2",
+      "output": "hook"
+    }
+  ]
 }
