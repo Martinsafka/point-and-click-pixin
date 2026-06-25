@@ -5,30 +5,43 @@ no code** — in a visual in-browser editor — then ship them to the web. The w
 serializable `GameDoc` (a single `game.json`), so the engine, the editor, and your content all
 sit on the same typed schema.
 
-Dark, flat-vector "Röki-style" look; geometric placeholders are a valid shippable style, so you
-can build the whole game before any art exists and swap real assets in as a data change.
-
-> **Status:** the **editor is feature-complete (v1)**. Open-source packaging (an `npx` scaffolder,
-> published packages, a demo game + site) is in progress — see [the roadmap](agent_docs/roadmap.md).
+> **Status:** the editor is **feature-complete (v1)** and **published** — `@theideaguards/pixin`
+> (engine + editor) + `@theideaguards/create-pixin` (scaffolder). A demo game is live on
+> [GitHub Pages](https://martinsafka.github.io/point-and-click-pixin/). See
+> [the roadmap](agent_docs/roadmap.md).
 
 ## Quick start
 
+Scaffold a project (the editor + engine, wired up):
+
 ```bash
-pnpm install
-pnpm dev            # play the demo game at http://localhost:5173/
-# open http://localhost:5173/?edit to launch the editor (dev-only)
+npm create @theideaguards/pixin my-game
+#   add  -- --template demo  for the sample game ("Magický polibek")
+cd my-game
+npm install
+npm run dev          # play at http://localhost:5173/
+#   open  ?edit  to launch the visual editor (dev-only)
 ```
 
-- **`pnpm dev`** — run the game / editor with hot reload.
-- **`pnpm build`** — typecheck + production build (the editor is stripped from the player build).
-- **`pnpm typecheck` · `pnpm lint`** — the green bar.
+Author in the editor — it saves to an IndexedDB draft, and **▶ Test in game** plays it. When you're
+happy, **Export** the document and run `npm run assets` to bake the embedded art/audio into
+`public/assets/` and write a lean `content/game.json` to commit.
 
-The editor saves your work into `content/game.json` (via its **Export**); the game loads that
-over the built-in demo when present.
+Or embed the engine in an existing app:
 
-📖 **Full walkthrough → [`agent_docs/editor_guide.md`](agent_docs/editor_guide.md)** (every panel,
-control, and the edit → test → publish loop). 🎨 Asset formats are in its **Preparing assets**
-section.
+```bash
+npm install @theideaguards/pixin
+```
+
+```ts
+import { mountGame } from '@theideaguards/pixin'
+import '@theideaguards/pixin/styles.css'
+
+mountGame(myGameDoc, document.getElementById('root')!)
+```
+
+📖 **Full walkthrough → [editor guide](agent_docs/editor_guide.md)** (every panel, control, and the
+edit → test → publish loop). 🎨 Asset formats are in its **Preparing assets** section.
 
 ## What the editor can do
 
@@ -73,8 +86,8 @@ This repo is set up for AI-assisted development:
 
 - **[`AGENTS.md`](AGENTS.md)** + `agent_docs/` — project context, architecture, conventions, and a
   running dev log for coding agents.
-- **Pixin authoring skills** _(coming in M13b)_ — Claude Code skills that turn "I want mechanic X"
-  into the exact editor steps or a `game.json` snippet.
+- **Pixin authoring skills** — bundled Claude Code skills (`pixin-gamedoc`, `pixin-editor`,
+  `pixin-recipes`) that turn "I want mechanic X" into the exact editor steps or a `game.json` snippet.
 - **PixiJS skills** — for any rendering work, install the official **[PixiJS](https://pixijs.com)**
   Claude Code skills (v8); they're the first-class path for the renderer this engine is built on.
 
@@ -82,6 +95,17 @@ This repo is set up for AI-assisted development:
 
 [PixiJS v8](https://pixijs.com) (renderer) · React (DOM/UI overlay) · Zustand (discrete state) ·
 Howler (audio) · TypeScript (strict) · Vite + pnpm.
+
+## Develop this repo
+
+```bash
+pnpm install
+pnpm dev            # the bundled demo + the editor (?edit)
+pnpm build          # typecheck + production build (the editor is stripped from the player build)
+pnpm lint           # the green bar
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Docs
 

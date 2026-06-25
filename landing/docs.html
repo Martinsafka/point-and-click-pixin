@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pixin Builder — Editor documentation</title>
+    <style>
+      :root {
+        --bg: #0e0f14;
+        --panel: #161824;
+        --ink: #e8e6df;
+        --muted: #9aa0b0;
+        --accent: #c9a24b;
+        --line: #242838;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          16px/1.65 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: rgba(14, 15, 20, 0.92);
+        backdrop-filter: blur(6px);
+        border-bottom: 1px solid var(--line);
+        padding: 0.8rem 5vw;
+        display: flex;
+        gap: 0.8rem;
+        align-items: center;
+        font-size: 0.95rem;
+      }
+      .topbar a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .topbar .sep {
+        color: var(--muted);
+      }
+      main {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 2.5rem 5vw 6rem;
+      }
+      .doc h1 {
+        font-size: 2rem;
+        margin: 0 0 1rem;
+      }
+      .doc h2 {
+        font-size: 1.5rem;
+        margin: 2.4rem 0 0.8rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1px solid var(--line);
+      }
+      .doc h3 {
+        font-size: 1.2rem;
+        margin: 1.6rem 0 0.6rem;
+      }
+      .doc h4 {
+        font-size: 1.02rem;
+        margin: 1.2rem 0 0.5rem;
+      }
+      .doc p,
+      .doc li {
+        color: #d6d4cc;
+      }
+      .doc a {
+        color: var(--accent);
+      }
+      .doc code {
+        background: rgba(201, 162, 75, 0.14);
+        color: #e7c87e;
+        padding: 0.1em 0.4em;
+        border-radius: 6px;
+        font-size: 0.92em;
+      }
+      .doc pre {
+        background: #0a0b10;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+      .doc pre code {
+        background: none;
+        color: var(--ink);
+        padding: 0;
+      }
+      .doc blockquote {
+        border-left: 3px solid var(--accent);
+        margin: 1rem 0;
+        padding: 0.2rem 0 0.2rem 1rem;
+        color: var(--muted);
+      }
+      .doc table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1rem 0;
+        font-size: 0.94rem;
+      }
+      .doc th,
+      .doc td {
+        border: 1px solid var(--line);
+        padding: 0.5rem 0.7rem;
+        text-align: left;
+      }
+      .doc th {
+        background: var(--panel);
+      }
+      .doc img {
+        max-width: 100%;
+      }
+      .doc hr {
+        border: none;
+        border-top: 1px solid var(--line);
+        margin: 2rem 0;
+      }
+      .loading {
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <a href="./">← Pixin Builder</a><span class="sep">·</span>
+      <strong>Editor documentation</strong><span class="sep">·</span>
+      <a href="./play/">Play the demo</a>
+    </div>
+    <main>
+      <article id="doc" class="doc"><p class="loading">Loading the editor guide…</p></article>
+    </main>
+    <script type="module">
+      import { marked } from 'https://cdn.jsdelivr.net/npm/marked@14/lib/marked.esm.js'
+      const el = document.getElementById('doc')
+      try {
+        const md = await (await fetch('./editor_guide.md')).text()
+        el.innerHTML = marked.parse(md)
+      } catch {
+        el.innerHTML =
+          '<p>Couldn’t load the docs here — read the ' +
+          '<a href="https://github.com/Martinsafka/point-and-click-pixin/blob/main/agent_docs/editor_guide.md">editor guide on GitHub</a>.</p>'
+      }
+    </script>
+  </body>
+</html>

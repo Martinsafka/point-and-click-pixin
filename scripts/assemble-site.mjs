@@ -19,5 +19,7 @@ for (const entry of await readdir(DIST)) {
   if (entry !== 'play') await rm(`${DIST}/${entry}`, { recursive: true, force: true })
 }
 await cp('landing', DIST, { recursive: true })
+// The editor guide, rendered client-side by landing/docs.html.
+await cp('agent_docs/editor_guide.md', `${DIST}/editor_guide.md`)
 await writeFile(`${DIST}/.nojekyll`, '')
-console.log('✓ site assembled: landing → dist/, game → dist/play/')
+console.log('✓ site assembled: landing + docs → dist/, game → dist/play/')

@@ -23,7 +23,20 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
-### 2026-06-25 — M13d: scope the packages (`@theideaguards/pixin`)
+### 2026-06-25 — README + landing: npm install + in-site docs page (pixin 0.1.1)
+**What:** **README** — dropped the Röki / geometric-placeholder framing; Quick Start now leads with
+`npm create @theideaguards/pixin` + `npm install @theideaguards/pixin` (+ a `mountGame` snippet), with a
+"Develop this repo" section for the pnpm flow, and the status / skills lines updated to "published".
+**Landing** — an **Install** section (above the Claude-skills banner) with the npm commands + npm/GitHub
+links, a **Documentation** button in the hero, and a new **`landing/docs.html`** that renders
+`agent_docs/editor_guide.md` client-side (marked.js, dark theme matching the site). `assemble-site.mjs`
+now copies the guide into `dist/`. Bumped `@theideaguards/pixin` → **0.1.1** (the README ships in the
+package) and republished.
+**Why:** the README/landing still described the pre-publish reality (clone + `pnpm install`); now they
+reflect the published packages and give an in-site editor-docs page.
+**How:** `docs.html` fetches `./editor_guide.md` (copied to the deploy by `assemble-site`). Verified via
+`build:pages` + a faithful serve — landing / docs.html / editor_guide.md all 200, Install section +
+Documentation button present. The Pages site redeploys on push to main.
 **What:** npm rejected the unscoped name `pixin` at publish (403 — "too similar to pinia / pecin", its
 typosquatting protection), so **scoped both packages**: `@theideaguards/pixin` (lib) +
 `@theideaguards/create-pixin` (scaffolder, run via `npm create @theideaguards/pixin`). Added

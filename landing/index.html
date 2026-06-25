@@ -113,6 +113,65 @@
         font-size: 0.92em;
       }
 
+      /* Secondary hero button + install section */
+      .cta-secondary {
+        display: inline-block;
+        margin-left: 0.5rem;
+        padding: 0.9rem 1.7rem;
+        border-radius: 999px;
+        text-decoration: none;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        background: var(--panel);
+        transition: border-color 0.12s ease;
+      }
+      .cta-secondary:hover {
+        border-color: var(--accent);
+      }
+      .install {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 1.6rem 1.8rem;
+        margin: 1rem 0 1.5rem;
+      }
+      .install h2 {
+        margin: 0 0 0.4rem;
+        font-size: 1.3rem;
+      }
+      .install p {
+        color: var(--muted);
+        margin: 0.9rem 0 0.4rem;
+      }
+      .install pre {
+        margin: 0;
+        background: #0a0b10;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 0.9rem 1.1rem;
+        overflow-x: auto;
+      }
+      .install pre code {
+        background: none;
+        color: var(--ink);
+        padding: 0;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+      .install pre .c {
+        color: var(--muted);
+      }
+      .install-links {
+        margin-top: 1.2rem !important;
+      }
+      .install-links a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .install-links a:hover {
+        text-decoration: underline;
+      }
+
       /* Feature grid */
       .features-title {
         text-align: center;
@@ -175,9 +234,27 @@
         serializable data document, played by a PixiJS&nbsp;v8 engine that runs without the editor.
       </p>
       <a class="cta" href="./play/">▶ Play the demo</a>
+      <a class="cta-secondary" href="./docs.html">📖 Documentation</a>
     </header>
 
     <div class="wrap">
+      <section class="install">
+        <h2>📦 Install</h2>
+        <p>Scaffold a project — the editor and engine, wired up:</p>
+        <pre><code>npm create @theideaguards/pixin my-game
+cd my-game &amp;&amp; npm install &amp;&amp; npm run dev   <span class="c"># open ?edit for the editor</span></code></pre>
+        <p>
+          Add <code>-- --template demo</code> for this demo game — or embed the engine in your own
+          app:
+        </p>
+        <pre><code>npm install @theideaguards/pixin</code></pre>
+        <p class="install-links">
+          <a href="https://www.npmjs.com/package/@theideaguards/pixin">npm&nbsp;↗</a> ·
+          <a href="./docs.html">📖&nbsp;Editor documentation</a> ·
+          <a href="https://github.com/Martinsafka/point-and-click-pixin">GitHub&nbsp;↗</a>
+        </p>
+      </section>
+
       <section class="skills">
         <h2>🤖 Ships with Claude Code skills</h2>
         <p>
