@@ -2,9 +2,9 @@ import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 
 // Library build for the publishable `pixin` package — separate from the app / GitHub Pages
-// build (vite.config.ts). Bundles `src/index.ts` as ESM and emits `.d.ts`; peer deps stay
-// external so the consumer dedupes their own copy of React / PixiJS / etc.
-//   pnpm build:lib   → dist-lib/index.js + dist-lib/index.d.ts
+// build (vite.config.ts). Two ESM entries (the engine + `mountGame`, and the dev-only editor)
+// with `.d.ts`; peer deps stay external so the consumer dedupes their own React / PixiJS / etc.
+//   pnpm build:lib   → dist-lib/{index,editor}.js + .d.ts (+ index.css)
 const EXTERNAL = [
   'pixi.js',
   'react',
@@ -25,9 +25,12 @@ export default defineConfig({
     outDir: 'dist-lib',
     emptyOutDir: true,
     lib: {
-      entry: 'src/index.ts',
+      entry: {
+        index: 'src/index.ts',
+        editor: 'src/editor-entry.tsx',
+      },
       formats: ['es'],
-      fileName: 'index',
+      fileName: (_format, name) => `${name}.js`,
     },
     rollupOptions: {
       external: EXTERNAL,

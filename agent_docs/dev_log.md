@@ -23,6 +23,20 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-25 — M13d commit 4: editor export (`pixin/editor`)
+**What:** Exposed the visual editor as a second package entry. `src/editor-entry.tsx` —
+`mountEditor(container): EditorHandle` + re-exports `Editor`. Rerouted `editor-store.ts` from
+`data/game` → `data/active-doc` (its initial doc was `structuredClone(gameDoc)`), so the editor is
+**demo-free** too. `vite.lib.config.ts` → multi-entry (`index` + `editor`); `package.json` adds the
+`./editor` export (and `./styles.css` → `pixin.css`, which multi-entry renamed the CSS file to).
+**Why:** the package is primarily for developers to get the **no-code editor** —
+`import { mountEditor } from 'pixin/editor'`.
+**How:** the editor lazy-loads after boot, so reading the active doc (set by the app's `data/game` / a
+consumer's `setActiveDoc`, else the empty default = a blank editor) is safe. Build:
+`dist-lib/{index,editor}.js` + a shared `doc-draft` chunk + `pixin.css`; `editor.js` 220 kB (gzip 42,
+React Flow external) — verified demo-free. typecheck + lint + app build green.
+**Follow-ups:** c5 publish-prep (peerDeps incl. `@xyflow/react`, dts pruning, metadata), then c6 scaffolder.
+
 ### 2026-06-25 — M13d commit 3: engine export + `mountGame` embedding API
 **What:** `src/mount.tsx` — `mountGame(doc, container): GameHandle`: seeds the doc (built-in sounds +
 weather presets), publishes it (`setActiveDoc` + `setSoundLibrary`), renders the full `App`

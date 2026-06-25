@@ -48,7 +48,7 @@ import type {
   WeatherId,
   WeatherPreset,
 } from '../data/schema'
-import { gameDoc } from '../data/game'
+import { gameDoc } from '../data/active-doc'
 import { placeholderView } from '../entities/placeholder-atlas'
 import type { Atlas } from './pack-frames'
 
@@ -590,9 +590,7 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       ),
     setInteractableApproachAt: (id, index, at) =>
       mapInteractables(id, (its) =>
-        its.map((it, i) =>
-          i === index && it.kind !== 'trigger' ? { ...it, approachAt: at } : it,
-        ),
+        its.map((it, i) => (i === index && it.kind !== 'trigger' ? { ...it, approachAt: at } : it)),
       ),
     setTriggerBy: (id, index, by) =>
       mapInteractables(id, (its) =>
@@ -786,7 +784,10 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapNpcs(id, (ps) =>
         ps.map((p, i) =>
           i === index
-            ? { ...p, paths: (p.paths ?? []).map((pa, j) => (j === pathIdx ? { ...pa, name } : pa)) }
+            ? {
+                ...p,
+                paths: (p.paths ?? []).map((pa, j) => (j === pathIdx ? { ...pa, name } : pa)),
+              }
             : p,
         ),
       ),
@@ -794,7 +795,10 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapNpcs(id, (ps) =>
         ps.map((p, i) =>
           i === index
-            ? { ...p, paths: (p.paths ?? []).map((pa, j) => (j === pathIdx ? { ...pa, mode } : pa)) }
+            ? {
+                ...p,
+                paths: (p.paths ?? []).map((pa, j) => (j === pathIdx ? { ...pa, mode } : pa)),
+              }
             : p,
         ),
       ),
@@ -946,7 +950,11 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     },
     addSceneWeather: (id) => {
       const first = Object.keys(get().doc.weatherPresets ?? {})[0] ?? ''
-      patchScene(id, { weather: [...(get().doc.scenes[id].weather ?? []), { preset: first }] }, false)
+      patchScene(
+        id,
+        { weather: [...(get().doc.scenes[id].weather ?? []), { preset: first }] },
+        false,
+      )
     },
     removeSceneWeather: (id, index) =>
       patchScene(
@@ -993,17 +1001,29 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       )
     },
     removeLight: (id, index) =>
-      patchScene(id, { lights: (get().doc.scenes[id].lights ?? []).filter((_, i) => i !== index) }, false),
+      patchScene(
+        id,
+        { lights: (get().doc.scenes[id].lights ?? []).filter((_, i) => i !== index) },
+        false,
+      ),
     setLight: (id, index, patch) =>
       patchScene(
         id,
-        { lights: (get().doc.scenes[id].lights ?? []).map((l, i) => (i === index ? { ...l, ...patch } : l)) },
+        {
+          lights: (get().doc.scenes[id].lights ?? []).map((l, i) =>
+            i === index ? { ...l, ...patch } : l,
+          ),
+        },
         false,
       ),
     setLightPos: (id, index, x, y) =>
       patchScene(
         id,
-        { lights: (get().doc.scenes[id].lights ?? []).map((l, i) => (i === index ? { ...l, x, y } : l)) },
+        {
+          lights: (get().doc.scenes[id].lights ?? []).map((l, i) =>
+            i === index ? { ...l, x, y } : l,
+          ),
+        },
         false,
       ),
     addSpawnPoint: (id) =>
@@ -1136,24 +1156,39 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       ),
     setSceneFog: (id, fog) => patchScene(id, { fog }, false),
     setSceneColorGrade: (id, colorGrade) => patchScene(id, { colorGrade }, false),
-    setSceneColorGradeByTime: (id, colorGradeByTime) =>
-      patchScene(id, { colorGradeByTime }, false),
+    setSceneColorGradeByTime: (id, colorGradeByTime) => patchScene(id, { colorGradeByTime }, false),
     setSceneVignette: (id, vignette) => patchScene(id, { vignette }, false),
     setSceneLightning: (id, lightning) => patchScene(id, { lightning }, false),
     addDarkArea: (id) =>
-      patchScene(id, { darkAreas: [...(get().doc.scenes[id].darkAreas ?? []), { polygon: [] }] }, false),
+      patchScene(
+        id,
+        { darkAreas: [...(get().doc.scenes[id].darkAreas ?? []), { polygon: [] }] },
+        false,
+      ),
     removeDarkArea: (id, index) =>
-      patchScene(id, { darkAreas: (get().doc.scenes[id].darkAreas ?? []).filter((_, i) => i !== index) }, false),
+      patchScene(
+        id,
+        { darkAreas: (get().doc.scenes[id].darkAreas ?? []).filter((_, i) => i !== index) },
+        false,
+      ),
     setDarkAreaPolygon: (id, index, polygon) =>
       patchScene(
         id,
-        { darkAreas: (get().doc.scenes[id].darkAreas ?? []).map((a, i) => (i === index ? { ...a, polygon } : a)) },
+        {
+          darkAreas: (get().doc.scenes[id].darkAreas ?? []).map((a, i) =>
+            i === index ? { ...a, polygon } : a,
+          ),
+        },
         false,
       ),
     setDarkAreaFeather: (id, index, feather) =>
       patchScene(
         id,
-        { darkAreas: (get().doc.scenes[id].darkAreas ?? []).map((a, i) => (i === index ? { ...a, feather } : a)) },
+        {
+          darkAreas: (get().doc.scenes[id].darkAreas ?? []).map((a, i) =>
+            i === index ? { ...a, feather } : a,
+          ),
+        },
         false,
       ),
     setDocAmbientLight: (ambient) => patchDoc({ ambientLight: ambient }),

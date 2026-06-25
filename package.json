@@ -10,7 +10,11 @@
       "types": "./dist-lib/index.d.ts",
       "import": "./dist-lib/index.js"
     },
-    "./styles.css": "./dist-lib/index.css"
+    "./editor": {
+      "types": "./dist-lib/editor-entry.d.ts",
+      "import": "./dist-lib/editor.js"
+    },
+    "./styles.css": "./dist-lib/pixin.css"
   },
   "module": "./dist-lib/index.js",
   "types": "./dist-lib/index.d.ts",
