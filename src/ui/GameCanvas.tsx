@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { Application } from 'pixi.js'
 import { createPixiApp } from '../engine/app'
 import { createSceneHost, type SceneHost } from '../engine/scene'
-import { gameDoc } from '../data/game'
+import { gameDoc } from '../data/active-doc'
 import { storyStore } from '../state/story'
 
 /**

@@ -23,6 +23,24 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-25 — M13d commit 2: decouple the active doc from the demo
+**What:** New `src/data/active-doc.ts` — a settable `gameDoc` holder (live binding + safe empty default) +
+`setActiveDoc`. Rerouted the engine-reachable + UI readers (`audio.ts`, `state/story.ts`,
+`App`/`Inventory`/`GameCursor`/`GameCanvas`) from `data/game.ts` → `data/active-doc.ts`. `data/game.ts`
+keeps the demo/draft resolution (top-level await) and now **publishes** it via `setActiveDoc(resolved)` +
+`setSoundLibrary(resolved.sounds)`, and re-exports `gameDoc` for the dev-only editor store. `main.tsx`
+imports `./data/game` as a side-effect (its TLA gates render). `editor-store.ts` unchanged.
+**Why:** make the engine **demo-free** — importing the engine no longer transitively pulls in
+`data/game.ts` (the `import.meta.glob` demo + scene code), the prerequisite for exporting the full engine
++ a `mountGame(doc, …)` embedding API in the lib (commit 3).
+**How:** the empty default doc (`{ start:'', scenes:{}, items:{}, initialFlags:{} }`) makes the two
+module-init reads safe (the story store creation + the sound-library capture) before `setActiveDoc` runs;
+`game.ts`'s TLA still gates the standalone render via `main.tsx`'s side-effect import, so the demo is
+published before `App` renders. Verified: `engine`/`audio`/`state` no longer import `data/game` (grep ∅);
+typecheck + app build + lib build + lint + prettier green.
+**Follow-ups:** browser smoke-test still pending (build is green but the runtime audio + doc-load want an
+eyeball — the branch is isolated, not deployed). Next: commit 3 exports the engine + `mountGame`.
+
 ### 2026-06-25 — M13d: `pixin` npm package — commit 1 (build scaffolding)
 **What:** Started packaging on branch `feat/npm-package` (**single-package** layout, chosen with the user
 over a pnpm monorepo). Commit 1: `src/index.ts` public entry (GameDoc schema types + `createPixiApp`),

@@ -1,6 +1,6 @@
 import { useStory } from './use-story'
 import { storyStore } from '../state/story'
-import { gameDoc } from '../data/game'
+import { gameDoc } from '../data/active-doc'
 import { assetUrl } from '../data/asset-url'
 import { resolveExamine } from '../systems/examine'
 import { checkCondition, type StoryState } from '../systems/conditions'

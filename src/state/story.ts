@@ -7,7 +7,7 @@ import {
   type StoryStore,
 } from '../systems/conditions'
 import { findRecipe } from '../systems/recipes'
-import { gameDoc } from '../data/game'
+import { gameDoc } from '../data/active-doc'
 
 export type { StoryStore }
 

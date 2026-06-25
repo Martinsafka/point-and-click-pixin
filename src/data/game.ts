@@ -6,6 +6,8 @@ import { migrateSounds } from './migrate-sounds'
 import { seedBuiltinSounds } from './seed-sounds'
 import { seedWeatherPresets } from './weather-presets'
 import { BUILTIN_SOUND_IDS } from '../audio/builtin-sounds'
+import { setActiveDoc } from './active-doc'
+import { setSoundLibrary } from '../audio/audio'
 
 /**
  * The built-in demo (street + room), assembled in code. Importing the scene
@@ -53,6 +55,13 @@ export const bakedGameDoc: GameDoc = publishedDoc ?? demoGameDoc
  * (IndexedDB), so this module top-level `await`s it; importers (stores, App) resolve
  * once the draft is read. Top-level await is supported by the `esnext` build target.
  */
-export const gameDoc: GameDoc = seedWeatherPresets(
+// The standalone app's active document: resolve the editor draft (dev) / baked demo, then publish
+// it to the shared holder + sound library. The engine + UI read `gameDoc` from `./active-doc`
+// (demo-free); the `mountGame` embedding API sets a consumer's doc the same way.
+const resolved: GameDoc = seedWeatherPresets(
   seedBuiltinSounds(migrateSounds((await loadDocDraft()) ?? bakedGameDoc)),
 )
+setActiveDoc(resolved)
+setSoundLibrary(resolved.sounds)
+
+export { gameDoc } from './active-doc'

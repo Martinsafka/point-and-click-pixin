@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { App } from './ui/App'
 import { isEditMode } from './editor/edit-mode'
 import './styles.css'
+// Side-effect: resolve the editor draft / baked demo and publish it (active-doc) before render.
+import './data/game'
 
 // The editor is dev-only and lazy-loaded, so it (and heavy editor-only deps like React
 // Flow) is code-split into its own chunk — the player build never fetches it. (This entry

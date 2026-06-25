@@ -5,7 +5,7 @@ import { cameraOffset } from '../engine/camera'
 import { sceneHit } from '../engine/hotspots'
 import { designSize } from '../data/scene-config'
 import { storyStore } from '../state/story'
-import { gameDoc } from '../data/game'
+import { gameDoc } from '../data/active-doc'
 import { assetUrl } from '../data/asset-url'
 import type { CursorKind } from '../data/schema'
 

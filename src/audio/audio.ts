@@ -2,7 +2,7 @@ import { Howl, Howler } from 'howler'
 import { ambientUri, footstepUri } from './sounds'
 import { BUILTIN_SOUND_IDS } from './builtin-sounds'
 import { storyStore } from '../state/story'
-import { gameDoc } from '../data/game'
+import { gameDoc } from '../data/active-doc'
 import { assetUrl } from '../data/asset-url'
 import type { SoundAsset, SoundConfig } from '../data/schema'
 
