@@ -24,6 +24,8 @@ export default defineConfig({
     target: 'esnext',
     outDir: 'dist-lib',
     emptyOutDir: true,
+    // Don't copy public/ (the demo's baked art/audio) into the library output.
+    copyPublicDir: false,
     lib: {
       entry: {
         index: 'src/index.ts',

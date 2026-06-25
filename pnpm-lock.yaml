@@ -8,24 +8,12 @@ importers:
 
   .:
     dependencies:
-      '@xyflow/react':
-        specifier: ^12.11.0
-        version: 12.11.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       earcut:
         specifier: ^3.0.2
         version: 3.0.2
       howler:
         specifier: ^2.2.4
         version: 2.2.4
-      pixi.js:
-        specifier: ^8.19.0
-        version: 8.19.0
-      react:
-        specifier: ^19.2.7
-        version: 19.2.7
-      react-dom:
-        specifier: ^19.2.7
-        version: 19.2.7(react@19.2.7)
       zustand:
         specifier: ^5.0.14
         version: 5.0.14(@types/react@19.2.17)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))
@@ -48,6 +36,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.0.2
         version: 6.0.2(vite@8.0.16)
+      '@xyflow/react':
+        specifier: ^12.11.0
+        version: 12.11.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       eslint:
         specifier: ^10.5.0
         version: 10.5.0
@@ -63,9 +54,18 @@ importers:
       globals:
         specifier: ^17.6.0
         version: 17.6.0
+      pixi.js:
+        specifier: ^8.19.0
+        version: 8.19.0
       prettier:
         specifier: ^3.8.4
         version: 3.8.4
+      react:
+        specifier: ^19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ^19.2.7
+        version: 19.2.7(react@19.2.7)
       sharp:
         specifier: ^0.35.2
         version: 0.35.2

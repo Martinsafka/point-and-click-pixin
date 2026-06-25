@@ -23,6 +23,22 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-25 — M13d commit 5: publish-prep
+**What:** `package.json` for publishing: framework deps → **peerDependencies** (`react`/`react-dom`
+`^18||^19`, `pixi.js` `^8`, `@xyflow/react` `^12` **optional** — editor-only); internal deps
+(`earcut`/`howler`/`zustand`) stay `dependencies`; the peers are also in `devDependencies` for the repo
+build. Metadata (repository / homepage / bugs / keywords / author), `version` 0.1.0, `prepublishOnly`.
+**Critical fix:** `copyPublicDir: false` in `vite.lib.config.ts` — the lib build was copying `public/`
+(the demo's baked art + the 27 MB MP3) into `dist-lib`, so `npm pack` shipped a **30 MB+** package. Now
+**163 kB** (587 kB unpacked).
+**Why:** make `pixin` actually publishable — consumers dedupe React/PixiJS, the editor's React Flow is
+opt-in, and the tarball is the engine + editor + types, **not** the demo.
+**How:** `npm pack --dry-run` verified the contents (no `dist-lib/assets`). typecheck + app build + lib
+build green; `pixin` is **free on npm**. `private: true` kept — to publish: set `private:false`, then
+`npm publish` (runs `prepublishOnly` → `build:lib`).
+**Follow-ups:** prune the dts tree (140 files — all of `src/`'s types ship; limit to the public API or use
+`rollupTypes`). c6: scaffolder `create-pixin` (clean / demo) — the demo lives there, not in the package.
+
 ### 2026-06-25 — M13d commit 4: editor export (`pixin/editor`)
 **What:** Exposed the visual editor as a second package entry. `src/editor-entry.tsx` —
 `mountEditor(container): EditorHandle` + re-exports `Editor`. Rerouted `editor-store.ts` from

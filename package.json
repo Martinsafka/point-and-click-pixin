@@ -1,9 +1,27 @@
 {
   "name": "pixin",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A data-driven point-and-click adventure engine + no-code visual editor (PixiJS v8).",
   "license": "MIT",
+  "author": "Martin Šafka",
+  "homepage": "https://martinsafka.github.io/point-and-click-pixin/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Martinsafka/point-and-click-pixin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Martinsafka/point-and-click-pixin/issues"
+  },
+  "keywords": [
+    "point-and-click",
+    "adventure",
+    "game-engine",
+    "pixijs",
+    "editor",
+    "no-code",
+    "react"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -29,6 +47,7 @@
     "build": "tsc --noEmit && vite build",
     "build:pages": "pnpm build && node scripts/assemble-site.mjs",
     "build:lib": "vite build --config vite.lib.config.ts",
+    "prepublishOnly": "pnpm build:lib",
     "assets": "node scripts/build-assets.mjs",
     "preview": "vite preview",
     "preview:site": "node scripts/preview-site.mjs",
@@ -39,13 +58,20 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@xyflow/react": "^12.11.0",
     "earcut": "^3.0.2",
     "howler": "^2.2.4",
-    "pixi.js": "^8.19.0",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
     "zustand": "^5.0.14"
+  },
+  "peerDependencies": {
+    "@xyflow/react": "^12.0.0",
+    "pixi.js": "^8.0.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@xyflow/react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -54,12 +80,16 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
+    "@xyflow/react": "^12.11.0",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "pixi.js": "^8.19.0",
     "prettier": "^3.8.4",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "sharp": "^0.35.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.0",
