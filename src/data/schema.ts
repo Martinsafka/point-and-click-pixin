@@ -160,6 +160,9 @@ export type Effect =
   | { kind: 'giveItem'; item: ItemId }
   | { kind: 'takeItem'; item: ItemId }
   | { kind: 'goTo'; scene: SceneId }
+  // Set the game **clock** to a time-of-day (minutes past midnight, 0..1439) — e.g. a "wait until
+  // evening" choice jumps to 1140. Needs `GameDoc.clock`; the day-cycle visuals follow.
+  | { kind: 'setClock'; minutes: number }
   // Show a full-screen end screen (M11): `gameOver` (retry / title) or `endGame`
   // (end → credits → final → title).
   | { kind: 'gameOver' }
@@ -390,6 +393,11 @@ export interface ColorGrade {
   saturation: number
   /** Hue rotation in degrees (0 = unchanged). */
   hue: number
+  /** Optional colour cast (hex), e.g. a blue night. Multiplies the image toward this colour;
+   *  `tintStrength` (0..1) sets how far (0 = none). Adds a warm / cool cast a hue rotation can't
+   *  paint onto near-grey pixels (M13d). */
+  tint?: string
+  tintStrength?: number
 }
 
 /** A **vignette** (M10 10d) — a soft darkened frame, screen-space. */
@@ -559,6 +567,9 @@ export type LayerData =
   | {
       kind: 'image'
       band: SceneBand
+      /** Optional editor label shown in the layer list (falls back to the kind / builder name).
+       *  Cosmetic — the engine ignores it. */
+      name?: string
       /** Parallax scroll factor: 1 = moves with the world (default), <1 = farther /
        *  slower, 0 = locked to the viewport, >1 = nearer / faster. Background &
        *  foreground only (mid is the gameplay plane). */
@@ -573,10 +584,20 @@ export type LayerData =
       /** Cast a soft contact (blob) shadow at this prop's base (M13c). For discrete props,
        *  not full-bleed backdrops. */
       castShadow?: boolean
+      /** Time-of-day crossfade (M13d): the clock time (minutes past midnight) at which this layer
+       *  is fully opaque. Layers that set `timeFadeAt` cross-dissolve between their two nearest
+       *  peaks as the game clock advances — e.g. four lit variants of a backdrop at 360 / 720 /
+       *  1080 / 0 glide morning→afternoon→evening→night→morning. (image / animated only.) */
+      timeFadeAt?: number
+      /** `none`-fit only: manual size multiplier (1 = natural size). Composes with the mid-band
+       *  depth scale — lets a prop be sized to the scene independent of its source resolution. */
+      scale?: number
     }
   | {
       kind: 'builtin'
       band: SceneBand
+      /** Optional editor label (see the `image` variant). */
+      name?: string
       /** Parallax scroll factor (see the `image` variant). */
       parallax?: number
       builder: string
@@ -592,6 +613,8 @@ export type LayerData =
       // (so a flag can swap a static or animated asset for another).
       kind: 'animated'
       band: SceneBand
+      /** Optional editor label (see the `image` variant). */
+      name?: string
       parallax?: number
       /** Atlas image URL (a grid of equal frames). */
       src: string
@@ -603,6 +626,9 @@ export type LayerData =
       frames: number
       /** Playback speed (frames per second), default 8. */
       fps?: number
+      /** Loop the animation (default true). False = play once on mount, then hold the last frame
+       *  (a one-shot — e.g. a door swinging open, a flash). */
+      loop?: boolean
       xFrac?: number
       yFrac?: number
       anchorYFrac?: number
@@ -610,6 +636,10 @@ export type LayerData =
       fit?: LayerFit
       when?: Condition
       castShadow?: boolean
+      /** Time-of-day crossfade peak, minutes past midnight (M13d) — see the `image` variant. */
+      timeFadeAt?: number
+      /** `none`-fit manual size multiplier (1 = natural) — see the `image` variant. */
+      scale?: number
     }
 
 /**
@@ -625,6 +655,13 @@ export type InteractableData =
       examine?: string
       when?: Condition
       effects?: Effect[]
+      /** How far (design px) short of the click point the player stops when walking here
+       *  (0 / unset = walk onto the click). Per-hotspot approach distance. */
+      approachRadius?: number
+      /** Authored **walk-to point** (design fractions): a fixed floor spot the player walks to when
+       *  this is clicked, then faces it. Overrides `approachRadius` — for props the player can't
+       *  reach directly (on a wall, behind a counter). Unset = use the radius. */
+      approachAt?: { xFrac: number; yFrac: number }
     }
   | {
       kind: 'interact'
@@ -634,6 +671,10 @@ export type InteractableData =
       when?: Condition
       effects: Effect[]
       uses?: UseRule[]
+      /** Approach stop-short distance (px); see `pickable`. */
+      approachRadius?: number
+      /** Authored walk-to point (design fractions); see `pickable`. Overrides `approachRadius`. */
+      approachAt?: { xFrac: number; yFrac: number }
     }
   | {
       kind: 'exit'
@@ -644,6 +685,10 @@ export type InteractableData =
       when?: Condition
       effects?: Effect[]
       uses?: UseRule[]
+      /** Approach stop-short distance (px); see `pickable`. */
+      approachRadius?: number
+      /** Authored walk-to point (design fractions); see `pickable`. Overrides `approachRadius`. */
+      approachAt?: { xFrac: number; yFrac: number }
     }
   | {
       kind: 'inspect'
@@ -654,6 +699,10 @@ export type InteractableData =
       /** Optional voice clip (audio URL) played alongside the text. */
       audio?: string
       when?: Condition
+      /** Approach stop-short distance (px); see `pickable`. */
+      approachRadius?: number
+      /** Authored walk-to point (design fractions); see `pickable`. Overrides `approachRadius`. */
+      approachAt?: { xFrac: number; yFrac: number }
     }
   | {
       // A volume that runs `effects` when a character's feet ENTER it (not on a
@@ -736,6 +785,9 @@ export interface NpcDef {
   name?: string
   /** Walk-speed multiplier (default 1). */
   speed?: number
+  /** How far (design px) to the side the player stops when walking up to talk / look (default 90).
+   *  Per-NPC approach distance, so the player doesn't overlap a bigger / smaller character. */
+  approachGap?: number
   /** Default dialogue (id into `GameDoc.dialogs`), played when the NPC is talked to;
    *  a placement can override it per scene. */
   dialog?: DialogId
@@ -852,6 +904,10 @@ export interface NpcPlacement {
   paths?: NpcPath[]
   /** Per-scene dialogue override (id into `GameDoc.dialogs`); falls back to `NpcDef.dialog`. */
   dialog?: DialogId
+  /** Authored **walk-to point** (design fractions): a fixed floor spot the player walks to when
+   *  talking to / looking at this NPC, then faces it. Overrides the per-NPC `approachGap` — for an
+   *  NPC the player can't reach directly (behind a bar). Unset = use the gap. */
+  approachAt?: { xFrac: number; yFrac: number }
 }
 
 /**
@@ -863,6 +919,14 @@ export interface NpcPlacement {
 export interface SpawnPoint {
   at: { xFrac: number; yFrac: number }
   target: string
+  /** When this point applies to the **player**: `'start'` = the game's start position (only ONE
+   *  point in the whole game may be `start`); `'transition'` (the default when unset) = the player
+   *  arriving via a scene change. Ignored for NPC targets. */
+  on?: 'start' | 'transition'
+  /** For a `transition` point: the scene the player must be **arriving from** for it to apply
+   *  (so one scene can spawn the player at different ends per entry). Unset = any source scene
+   *  (the fallback). A `from`-matched point wins over a `from`-less one. */
+  from?: SceneId
 }
 
 /** Soft contact ("blob") shadows under characters / opted-in props (M13c). Absent → on with
@@ -904,6 +968,11 @@ export interface SceneData {
   fog?: FogConfig
   /** Colour grade over the scene art (M10 10d). */
   colorGrade?: ColorGrade
+  /** Time-of-day grade keyframes (M13d): the global grade interpolates between these over the game
+   *  clock (each `at` = minutes past midnight), tinting the **whole** scene — backdrop, props and
+   *  characters together — so one neutral asset set matches the time of day. Overrides `colorGrade`
+   *  when set; pair with `timeFadeAt` backdrop layers for a full day cycle. */
+  colorGradeByTime?: { at: number; grade: ColorGrade }[]
   /** Vignette — darkened edges (M10 10d). */
   vignette?: Vignette
   /** Lightning flashes + thunder (M10 10d). */

@@ -699,6 +699,44 @@ body {
   border-color: #e8b552;
 }
 
+.editor__scene-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.editor__scene-row .editor__scene {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+
+.editor__scene-btns {
+  display: flex;
+  gap: 2px;
+}
+
+.editor__scene-btns button {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: rgba(20, 26, 38, 0.85);
+  border: 1px solid #2a3650;
+  border-radius: 5px;
+  color: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.editor__scene-btns button:hover:not(:disabled) {
+  border-color: #45568a;
+}
+
+.editor__scene-btns button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .editor__hint {
   margin: 0;
   font-size: 11px;
@@ -753,6 +791,27 @@ body {
   text-overflow: ellipsis;
 }
 
+.layer-row__name {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  background: rgba(20, 26, 38, 0.85);
+  border: 1px solid #1c2230;
+  border-radius: 5px;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+}
+
+.layer-row__name:focus {
+  outline: none;
+  border-color: #45568a;
+}
+
+.layer-row__name::placeholder {
+  opacity: 0.5;
+}
+
 .layer-row__btns {
   display: flex;
   gap: 2px;
@@ -782,6 +841,18 @@ body {
 .layer-row__controls {
   display: flex;
   gap: 4px;
+}
+
+.layer-row__when {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.layer-row__when-label {
+  font-size: 11px;
+  opacity: 0.6;
+  padding-top: 4px;
 }
 
 .layer-row__controls select {
@@ -1889,10 +1960,48 @@ body {
   background: #fff;
   box-shadow: 0 0 8px #56d364;
 }
+.approach-overlay__marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+.approach-overlay__dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #58a6ff;
+  border: 2px solid #0b0d12;
+  box-shadow: 0 0 6px rgba(88, 166, 255, 0.9);
+}
+.approach-overlay__label {
+  font-size: 9px;
+  color: #cfe3ff;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.95);
+}
 .dark-overlay__poly {
   fill: rgba(0, 0, 0, 0.45);
   stroke: #6c7a99;
   stroke-width: 0.004;
   stroke-dasharray: 0.01 0.008;
   vector-effect: non-scaling-stroke;
+}
+
+/* Day-cycle grade keyframe (M13d) — a separated stack of grade sliders per time-of-day. */
+.grade-kf {
+  border-top: 1px solid #2a3650;
+  padding-top: 6px;
+  margin-top: 6px;
+}
+.grade-kf__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.grade-kf__head .logic__in {
+  flex: 1;
 }

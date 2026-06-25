@@ -70,9 +70,11 @@ ride the scene's on-screen rect (so the letterbox around a non-matching-aspect w
 fine).
 
 **World window.** A `World` launcher entry opens controls that drive the **running** world to
-a state you want to author against: **jump scene**, **set / clear flags** (it lists the flags
-used anywhere in the doc, plus an input to add a new one), **give / take items**, and **Reset
-world**. Use it to reveal gated content while authoring: e.g. to see a light that's gated on
+a state you want to author against: **jump scene**, **scrub the time of day** (a `time · HH:MM`
+slider — shown only when the doc has a **clock**; previews `timeOfDay` gates, layer **peak**
+crossfades and the **day-cycle grade** live), **set / clear flags** (it lists the flags used
+anywhere in the doc, plus an input to add a new one), **give / take items**, and **Reset world**.
+Use it to reveal gated content while authoring: e.g. to see a light that's gated on
 `hasItem flashlight`, **Give** the flashlight and it appears.
 
 ---
@@ -86,10 +88,23 @@ selected scene, and the preview shows it).
 
 - **+ Scene** — adds a blank scene (a default floor walkable + a spawn point).
 - **Delete** — removes the selected scene (always keeps at least one).
+- **↑ / ↓** (on each scene in the list) — reorder the scene in the list. Purely the list order
+  (doesn't change ids, the **start** scene, or any references).
+- **name** — rename the selected scene. It's the label shown in the list **and every scene picker**
+  (exit **to**, `goTo` / `moveNpc` effects, routines — each shows `name (id)`); the scene's **id**
+  (what those references actually store) is unchanged.
 - **width** — the scene's width in **design px** (its height is the project's
   reference height — see **Project → Display**, default 1080). A scene wider than the
   screen's aspect makes the game's **camera** scroll horizontally to follow the
   character; the readout shows the aspect (e.g. `2.20:1`) and whether it scrolls.
+  - _Scrolling backdrop that always fills the viewport height:_ the camera fits the
+    **reference height** to the screen and scrolls the width, so set the scene width to match the
+    image's aspect **at that height** —
+    **`width = referenceHeight × (imageWidth ÷ imageHeight)`**. E.g. a **4612×1922** render at the
+    default **1080**: `1080 × 4612 ÷ 1922 ≈ 2592` → set width `2592`, then give the layer
+    `fit: cover`. It fills the height on any window and scrolls across the whole image; only the
+    visible width per screen varies (gameplay fractions stay fixed). _(Only an ultrawide viewport
+    past the scene's own aspect — here `2.4:1` — would letterbox the sides instead of scrolling.)_
 - **characters** — a per-scene **size multiplier** (%) for the player and NPCs, for
   scenes drawn from a closer or different angle. It rides on top of the perspective
   (Walkable depth), not instead of it; the preview **rescales live as you drag** (no
@@ -137,22 +152,41 @@ painters, listed in paint order.
 
 - **+ Image** — upload an SVG or PNG. It's added as a full-screen background
   backdrop and stored **inside the document** (a data-URL), so it survives Export.
-- **+ Animated** (M12.5) — upload an **atlas** (a grid of equal frames) → a looping
+- **+ Animated** (M12.5) — upload a ready-made **atlas** (a grid of equal frames) → a looping
   animated layer (animated background / prop). Set its **frame grid** (w / h / cols /
-  frames / fps) on the layer row. Placed / `when`-gated / draggable like an image — so a
+  frames / fps) on the layer row, and toggle **loop** (off = play **once** on mount, then hold the
+  last frame — a one-shot like a door opening). Placed / `when`-gated / draggable like an image — so a
   flag can swap a static **or** animated asset (two layers gated by opposite flags).
+- **+ Frames** — _no sheet? upload the **individual frame images** instead._ The editor **stitches**
+  them into one atlas (sorted by **file name** — `frame_1`, `frame_2`, … numeric-aware; smaller
+  frames centred; pixel-art-crisp) and fills in the frame grid for you. On an existing animated row,
+  **↻ Frames** re-stitches a new set in place (keeps band / position / fps / gate).
+- **⇄ Swap** — on each image / animated layer row, replace that layer's source file **in place**
+  (keeps its band / fit / position). Every uploaded asset in the editor has this **swap** control
+  (sounds, item icons, cursors, screens, character atlases, …) — replacing keeps ids + references.
 
 Each layer row:
 
 | Control    | What it does                                                                 |
 | ---------- | ---------------------------------------------------------------------------- |
+| **name**   | rename the layer (the row's label); blank falls back to the kind / builder name. Editor label only — the engine ignores it. |
 | **band**   | background / mid / foreground (paint order; mid is depth-sorted).            |
 | **fit**    | _(images)_ how it sizes to the screen — see the table below.                 |
-| **role**   | scenery / occluder / floor — metadata for now (drives future occlusion).     |
+| **role**   | scenery / occluder / floor — a cosmetic label only (no visual effect; walk-behind occlusion is the **sort line** below). |
 | **parallax** | _(background / foreground)_ scroll rate: 1 = with the world, <1 = farther / slower, 0 = locked, >1 = nearer. |
 | **shadow**   | _(props)_ cast a soft **contact (blob) shadow** at the layer's base (M13c). |
+| **peak HH:MM** | _(images / animated)_ time-of-day **crossfade** peak — see below (M13d).  |
+| **when**   | a **Condition** gating the layer's **visibility** (default "(always)"). Re-evaluated live, so a flag shows / hides the prop. See **Disappear after pickup** below. |
 | **↑ / ↓**  | reorder within the band (paint order).                                       |
 | **✕**      | delete the layer.                                                            |
+
+**Disappear after pickup (a prop that vanishes when taken):** the **pickable** hotspot only hides
+**itself** + gives the item — the prop's **image layer** is separate, so gate the layer's **when**.
+On pickup the engine auto-sets the flag **`picked:<id>`** (`<id>` = the pickable's id), so set the
+layer's **when** to **`not` → `flag` → `picked:<id>`** (leave "on" checked): the layer shows while the
+flag is unset and vanishes once the item is taken. (e.g. a `cat` pickable → the cat layer's `when` =
+`not flag picked:cat`.) The editor preview always shows the prop (you're not playing); it hides in
+**▶ Test in game** after you pick it up.
 
 **Fit modes:**
 
@@ -168,11 +202,38 @@ Each layer row:
 **`width`** strip up/down. The cursor hints which (move / ↕). Drag resumes from
 where the layer currently sits.
 
+**Scale (`none`-fit):** each `none`-fit image / animated layer gets a **scale %** slider — size a
+prop from **10–300 %** of its source resolution without re-uploading (handy when a render comes in
+too big / small for the scene). It updates live and is the **only** control that sizes the prop —
+independent of its sort line (below).
+
+**Sort line (`mid`) — walk in front of / behind a prop:** each **mid**-band layer gets a **sort
+line %** slider — the prop's **foot line** as a % of scene height (0 = top, 100 = bottom). It's the
+Y-sort threshold against characters: a character whose **feet are below** the line walks **in
+front** of the prop; **above** the line the prop draws **in front**. That's how a single prop (a
+lamppost, a table, a doorway) can be passed both in front of and behind. Moving a layer into the
+**mid** band **seeds a sort line automatically** (85 %), so it occludes right away — then tune it
+with the slider. The line is **purely** the occlusion threshold: it does **not** resize the prop
+(size is the **scale %** slider alone). In the **editor** a **yellow line** marks each prop's sort
+line and tracks the slider live — it's an authoring guide, so it does **not** appear in **▶ Test in
+game**. Updates live. _(The `role` field does **not** drive any of this — it's a cosmetic label.)_
+
 **Parallax:** in a scrolling scene, give background / foreground layers a scroll rate
 below 1 to sit "farther" — a distant skyline barely moves while the near ground tracks
 the character. It only shows in the **game** (the editor preview is at rest), and a
 slow layer should be **wider than the scene** so its edge doesn't appear as you scroll.
 The **mid** band (the gameplay plane) is always 1.
+
+**Time-of-day crossfade (peak HH:MM):** give two or more layers a **peak** time and they
+**cross-dissolve** as the game **clock** advances — each is fully opaque at its peak and blends
+(smoothstep) into its neighbours between peaks. Stack e.g. four lit variants of the same backdrop at
+**06:00 / 12:00 / 18:00 / 00:00** and the scene glides morning → afternoon → evening → night →
+morning (the loop wraps over midnight; the fading-in layer is auto-ordered on top so there's no
+gap). Needs the scene's **clock** running; in the editor, scrub the **World** time to preview the
+blend live. Ideal for the same scene rendered under four lightings (e.g. exported from a 3D tool).
+Leave **peak** blank for a normal static layer. Layers with a peak are the lit reference, so the
+**day-cycle grade** (Grade & FX) never tints them — it tints everything else to blend in. _See the
+**`daycycle`** demo scene for a worked example._
 
 ### Interactables · _N_
 
@@ -199,6 +260,8 @@ The **selected object's form**:
 | **text**      | inspect        | What the protagonist says when clicked.                             |
 | **audio**     | inspect        | Optional uploaded voice clip played with the text.                  |
 | **look**      | pick / use / exit | "Look at" text shown on a plain click (no item selected).        |
+| **approach**  | pick / use / exit / inspect | Px the player stops **short of the click** when walking here (0 = onto the click). Per-hotspot — raise it so the player doesn't stand on top of the object. |
+| **walk-to**   | pick / use / exit / inspect | **Place point** → click the preview to set a **fixed floor spot** the player walks to (then faces the object). **Overrides approach** — for props the player can't reach directly (on a wall, behind a counter). **Clear** removes it (back to the radius). Shown as a blue marker. |
 | **by / once** | trigger        | Who fires it (player / npc / any) + whether it fires once a visit.   |
 | **when**      | all            | A Condition that gates it ("(always)" = no gate). See Conditions.   |
 | **effects**   | pick / use / exit / trigger | Effects run — on click, or on **enter** for a trigger.|
@@ -227,6 +290,10 @@ placement.
 - For the selected placement: pick **which npc** (from the cast), its **when** gate
   (present only while the Condition holds), and **Place** it — click the preview for its
   spawn.
+- **Place walk-to** — set a **fixed floor spot** the player walks to when talking to / looking
+  at this NPC (then faces it), **overriding** the NPC's approach gap. Use it for an NPC the player
+  can't reach directly — e.g. a barman **behind a bar**: drop the point in front of the counter so
+  the player stops there instead of walking around behind. **Clear** reverts to the gap.
 - **Paths** — a placement holds **several named paths**. **+ Path** adds one (an editable
   **name**; a fixed **id** the routine references — hover the name to see it). Per path:
   pick the **mode** (`once` stop / `loop` / `pingpong`), toggle **Draw** and click the
@@ -244,8 +311,23 @@ placement.
 Fixed-shape markers (M12.5 #7) that say **where a character starts** in this scene, overriding
 the default spawn. **+ Spawn point** adds one (a ◎ dot); select it, hit **Place** and click the
 preview to position it, and set **who** spawns there — the **player**, a specific **NPC**, or
-**all**. A point assigned to a specific character wins over an **all** point. (Only affects the
-*initial* position when the scene is entered.)
+**all**. A point assigned to a specific character wins over an **all** point.
+
+For **player** / **all** points there's also a **spawns on** trigger:
+
+- **scene transition** (default) — used when the player **arrives via a scene change** (an exit /
+  `goTo`). Pick a **from scene** to bind it to a specific source — so one scene can spawn the player
+  at **different ends per entry** (e.g. the street puts the player on the **left** when arriving from
+  the tavern, on the **right** when arriving from the tower: two `transition` points, one `from`
+  tavern, one `from` tower). **(any)** = the fallback used for sources without their own point. A
+  `from`-matched point wins over an `(any)` one.
+- **game start (once)** — the player's **starting position when the game begins**. Only **one**
+  spawn point in the whole game can be this: assigning it here demotes any previous game-start point
+  back to *scene transition*. If no game-start point exists, the start scene uses its default spawn.
+
+(The trigger is player-only — NPCs ignore it. The editor preview shows the default / `(any)` position
+— exercise per-source spawns in **▶ Test in game**. A point with no trigger set counts as *scene
+transition*.)
 
 ### Audio
 
@@ -314,8 +396,17 @@ Renders **live** as you tune.
 
 The scene's mood pass (M10 10d) — three toggles, all live:
 
-- **colour grade** — a tone filter over the scene art: **brightness / contrast / saturation**
-  (1 = unchanged) and **hue°**.
+- **colour grade** — a tone filter over the scene art (sliders): **brightness / contrast /
+  saturation** (1 = unchanged), **hue°**, and a **tint** — a colour **cast** (pick a colour +
+  **strength** 0..1) that a hue rotation can't add to near-grey pixels (e.g. a blue night).
+- **day-cycle grade (time keyframes)** (M13d) — a colour grade that **interpolates over the game
+  clock**, tinting props / characters / foreground so they **blend into the backdrop** at each time
+  of day. Layers with a **peak** are the lit reference and are **not** graded (so the crossfading
+  backdrops stay exactly as authored). Add **keyframes** — each a **HH:MM** + the same grade sliders
+  (incl. **tint**); the grade smoothly blends between them across the day and loops over midnight.
+  Scrub the **World**
+  time to preview it live. Overrides the static colour grade. Pair with **per-layer peak** backdrop
+  crossfades (Layers panel) for a full day cycle — see the **`daycycle`** demo scene.
 - **vignette** — a soft darkened frame: **colour**, **intensity**, **size** (how far in the
   dark reaches).
 - **lightning + thunder** — a screen flash on a random interval: flash **colour** +
@@ -365,8 +456,11 @@ placeholder figure.
 
 - **Create from placeholder** — start a character from the placeholder's atlas +
   clips, ready to customise; **Remove** reverts to the placeholder.
-- **Change atlas** — upload a sprite-sheet (PNG); it's stored in the document. The
+- **Change atlas** — upload a ready sprite-sheet (PNG); it's stored in the document. The
   preview overlays the frame **index numbers**.
+- **+ Frames** — _no sheet?_ upload the **individual frame images** (player **or** NPC) and the
+  editor **stitches** them into the atlas + fills in **frame size / cols** (same packer as the
+  animated-layer `+ Frames`, ordered by file name). Then map them in **Clips**.
 - **frame / cols** — the frame size (W × H) and how many columns the sheet has.
 - **anchor** — the sprite origin (0..1); feet at the bottom = `1` for anchor-Y.
 - **Clips** — name each animation + list its frame indices (+ fps, loop):
@@ -384,7 +478,9 @@ steps into darkness → a different atlas / clips). Each variant is a `when` + a
 `CharacterEditor` (same fields as the base).
 
 **NPCs (cast):** the global roster of characters. **+ NPC** creates one (a fixed id, an
-editable **name**, and a walk **speed** ×); place them into scenes from each scene's
+editable **name**, a walk **speed** ×, and an **approach gap** — the px the player stops beside
+this NPC when talking / looking, default 90, so the player doesn't overlap a bigger / smaller
+character); place them into scenes from each scene's
 **NPCs** section. **✕** removes a character and any placements of it. **Edit** opens the
 NPC modal — dialogue (+ gate), inspect, voice, **footsteps** (a library sound played while
 this NPC walks), vision (stealth — incl. **approach**: walk to the player on detection, then
@@ -580,8 +676,8 @@ cursor**; over the game UI the normal pointer returns.
 
 Upload audio clips **once** here (stored as data-URLs in the document) and reference them
 by name everywhere — ambient, footstep, the `playSound` effect, NPC voice, inspect audio,
-pickup / transition SFX. **+ Sound** uploads; edit the **name**; **Test** plays it; **✕**
-removes it. Anywhere a sound is used you pick from this list (no re-uploading, no
+pickup / transition SFX. **+ Sound** uploads; edit the **name**; **Test** plays it; **⇄ Swap**
+replaces the clip in place (keeping its id + every reference to it); **✕** removes it. Anywhere a sound is used you pick from this list (no re-uploading, no
 duplication). The **built-in procedural sounds** (Ambient drone, Pickup blip, Scene
 transition, Footstep, Rain loop) are seeded here too — rename or **✕** them, or upload
 replacements. _(Older documents with inline sounds are migrated into this library
@@ -729,6 +825,7 @@ Effects run in order, from an interactable / trigger / dialogue node / cutscene 
 | `giveItem`      | add an item to the inventory (state).                                          |
 | `takeItem`      | remove an item (state).                                                        |
 | `goTo`          | switch to a scene (state).                                                     |
+| `setClock`      | set the game **clock** to a time of day (state) — e.g. a dialogue "wait until evening" choice jumps to 16:00. Needs a clock; the day-cycle visuals follow. |
 | `moveNpc`       | move a cast NPC to another scene — its runtime location (state).               |
 | `despawnNpc`    | remove an NPC from play (state).                                               |
 | `gameOver`      | show the **Game over** screen (Retry / Title) (state, M11).                    |

@@ -39,6 +39,7 @@ import { LightingDefaults } from './LightingDefaults'
 import { LightOverlay } from './LightOverlay'
 import { SceneSpawns } from './SceneSpawns'
 import { SpawnOverlay } from './SpawnOverlay'
+import { ApproachOverlay } from './ApproachOverlay'
 import { SceneShadows } from './SceneShadows'
 import { EmitterOverlay } from './EmitterOverlay'
 import { ConditionEditor } from './ConditionEditor'
@@ -93,6 +94,8 @@ type Draw =
   | 'darkarea'
   | 'emitter'
   | 'spawn'
+  | 'approach'
+  | 'npcwalkto'
   | null
 
 function round(n: number): number {
@@ -287,6 +290,26 @@ export function Editor() {
       editorStore.getState().setSpawnPointPos(selectedId, selectedSpawn, round(xFrac), round(yFrac))
     }
   }
+  const placeInteractableApproach = (xFrac: number, yFrac: number) => {
+    if (selectedInteractable !== null) {
+      editorStore
+        .getState()
+        .setInteractableApproachAt(selectedId, selectedInteractable, {
+          xFrac: round(xFrac),
+          yFrac: round(yFrac),
+        })
+    }
+  }
+  const placeNpcApproach = (xFrac: number, yFrac: number) => {
+    if (selectedNpc !== null) {
+      editorStore
+        .getState()
+        .setNpcPlacementApproachAt(selectedId, selectedNpc, {
+          xFrac: round(xFrac),
+          yFrac: round(yFrac),
+        })
+    }
+  }
   const addDarkAreaPoint = (xFrac: number, yFrac: number) => {
     if (selectedDarkArea !== null) {
       const area = scene?.darkAreas?.[selectedDarkArea]
@@ -342,8 +365,8 @@ export function Editor() {
               </button>
             </div>
             <ul className="editor__scenes">
-              {sceneIds.map((id) => (
-                <li key={id}>
+              {sceneIds.map((id, idx) => (
+                <li key={id} className="editor__scene-row">
                   <button
                     type="button"
                     className={`editor__scene${id === selectedId ? ' editor__scene--active' : ''}`}
@@ -351,9 +374,36 @@ export function Editor() {
                   >
                     {doc.scenes[id].name}
                   </button>
+                  <div className="editor__scene-btns">
+                    <button
+                      type="button"
+                      title="Move up"
+                      disabled={idx === 0}
+                      onClick={() => editorStore.getState().moveScene(id, -1)}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      title="Move down"
+                      disabled={idx === sceneIds.length - 1}
+                      onClick={() => editorStore.getState().moveScene(id, 1)}
+                    >
+                      ↓
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
+            <div className="intr-form__field">
+              <span>name</span>
+              <input
+                className="logic__in"
+                type="text"
+                value={doc.scenes[selectedId].name}
+                onChange={(e) => editorStore.getState().setSceneName(selectedId, e.target.value)}
+              />
+            </div>
             <div className="intr-form__field">
               <span>width</span>
               <input
@@ -447,7 +497,14 @@ export function Editor() {
           </Section>
 
           <Section title={`Layers · ${scene ? scene.layers.length : 0}`}>
-            {scene && <LayerList sceneId={selectedId} layers={scene.layers} />}
+            {scene && (
+              <LayerList
+                sceneId={selectedId}
+                layers={scene.layers}
+                items={doc.items}
+                sceneIds={sceneIds}
+              />
+            )}
           </Section>
 
           <Section title={`Interactables · ${scene ? scene.interactables.length : 0}`}>
@@ -501,6 +558,8 @@ export function Editor() {
                 sceneIds={sceneIds}
                 drawMode={draw === 'hitarea'}
                 onToggleDraw={() => toggle('hitarea')}
+                approachMode={draw === 'approach'}
+                onToggleApproach={() => toggle('approach')}
               />
             )}
           </Section>
@@ -516,6 +575,8 @@ export function Editor() {
                 onSelect={selectNpc}
                 placeMode={draw === 'npc'}
                 onTogglePlace={() => toggle('npc')}
+                walkToMode={draw === 'npcwalkto'}
+                onToggleWalkTo={() => toggle('npcwalkto')}
                 drawPathIndex={draw === 'npcpath' ? drawPathIndex : null}
                 onToggleDrawPath={toggleDrawPath}
                 items={doc.items}
@@ -530,6 +591,7 @@ export function Editor() {
                 sceneId={selectedId}
                 spawnPoints={scene.spawnPoints ?? []}
                 cast={doc.npcs ?? {}}
+                sceneIds={sceneIds}
                 selected={selectedSpawn}
                 onSelect={(i) => {
                   setSelectedSpawn(i)
@@ -636,6 +698,7 @@ export function Editor() {
               <SceneGrade
                 sceneId={selectedId}
                 colorGrade={scene.colorGrade}
+                colorGradeByTime={scene.colorGradeByTime}
                 vignette={scene.vignette}
                 lightning={scene.lightning}
                 items={doc.items}
@@ -660,6 +723,8 @@ export function Editor() {
                       ? 'Click in the preview to position the emitter.'
                       : draw === 'spawn'
                         ? 'Click in the preview to position the spawn point.'
+                        : draw === 'approach' || draw === 'npcwalkto'
+                        ? 'Click in the preview to set the walk-to point (where the player stands to interact).'
                         : draw === 'darkarea'
                         ? 'Click in the preview to add dark-area points.'
                         : `Click in the preview to add ${
@@ -908,6 +973,20 @@ export function Editor() {
                 selected={selectedSpawn}
                 placeMode={draw === 'spawn'}
                 onPlace={placeSpawn}
+              />
+              <ApproachOverlay
+                at={
+                  selInteractable && 'approachAt' in selInteractable
+                    ? selInteractable.approachAt
+                    : undefined
+                }
+                placeMode={draw === 'approach'}
+                onPlace={placeInteractableApproach}
+              />
+              <ApproachOverlay
+                at={selectedNpc !== null ? scene.npcs?.[selectedNpc]?.approachAt : undefined}
+                placeMode={draw === 'npcwalkto'}
+                onPlace={placeNpcApproach}
               />
             </SceneViewport>
           </div>

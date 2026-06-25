@@ -19,13 +19,12 @@ import { sequenceStore } from '../state/sequence'
 import { createSpriteView } from '../entities/sprite-view'
 import { placeholderView } from '../entities/placeholder-atlas'
 import { resolveDepthScale, designSize, DEFAULT_REFERENCE_HEIGHT } from '../data/scene-config'
-import { depthScaleAt } from '../systems/depth'
 import { buildNavigation } from '../systems/navmesh'
 import { createAtmosphere } from './atmosphere'
 import { createWeatherSystem, type WeatherSystem } from './weather'
 import { createEmitterSystem, type EmitterSystem } from './emitters'
 import { createFog, type FogBackInto, type FogSystem } from './fog'
-import { gradeActive, makeColorGradeFilter } from './colorgrade'
+import { gradeActive, makeColorGradeFilter, setColorGrade } from './colorgrade'
 import { createVignette, type VignetteSystem } from './vignette'
 import { createLightning, type LightningSystem } from './lightning'
 import { createLighting, type Lighting } from './lighting'
@@ -110,6 +109,12 @@ export interface SceneOptions {
   /** Conditional appearance variants for the player (M12.5 #3) — the scene swaps the player's
    *  view reactively when the matching variant changes. */
   playerViews?: CharacterAppearance[]
+  /** True only for the **first** mount of a game session (the start scene). Picks a `start`
+   *  spawn point over a `transition` one; set by `createSceneHost`, false for every transition. */
+  isGameStart?: boolean
+  /** The scene the player is arriving **from** on a transition (set by `createSceneHost`; undefined
+   *  at game start). Lets a `transition` spawn point match a specific source scene. */
+  fromScene?: SceneId
 }
 
 /** The slice of the story store the engine needs: read state + react to it. */
@@ -153,7 +158,7 @@ function resolvePolygon(frac: readonly number[], { width, height }: Size): numbe
 /** Size + place an `image` layer's sprite per its `fit` (default 'none'). */
 function fitImageSprite(
   sprite: Sprite,
-  layer: { fit?: LayerFit; xFrac?: number; yFrac?: number },
+  layer: { fit?: LayerFit; xFrac?: number; yFrac?: number; scale?: number },
   screen: Size,
 ): void {
   const fit = layer.fit ?? 'none'
@@ -179,9 +184,27 @@ function fitImageSprite(
     sprite.position.set(screen.width / 2, (layer.yFrac ?? 0.5) * screen.height)
     return
   }
-  // 'none' — natural size, centered on (xFrac, yFrac).
+  // 'none' — natural size × optional manual `scale`, centered on (xFrac, yFrac).
   sprite.anchor.set(0.5, 0.5)
+  sprite.scale.set(layer.scale ?? 1)
   sprite.position.set((layer.xFrac ?? 0.5) * screen.width, (layer.yFrac ?? 0.5) * screen.height)
+}
+
+/** The manual size multiplier for a `none`-fit image / animated layer (1 otherwise). */
+function layerScaleFor(layer: LayerData): number {
+  return (layer.kind === 'image' || layer.kind === 'animated') && (layer.fit ?? 'none') === 'none'
+    ? (layer.scale ?? 1)
+    : 1
+}
+
+/** Lerp two `#rrggbb` colours (either may be undefined → falls back to the other). M13d tint. */
+function lerpHex(a: string | undefined, b: string | undefined, t: number): string | undefined {
+  if (!a && !b) return undefined
+  const pa = parseInt((a ?? (b as string)).slice(1), 16)
+  const pb = parseInt((b ?? (a as string)).slice(1), 16)
+  const mix = (sh: number): number =>
+    Math.round(((pa >> sh) & 255) + (((pb >> sh) & 255) - ((pa >> sh) & 255)) * t)
+  return '#' + ((1 << 24) | (mix(16) << 16) | (mix(8) << 8) | mix(0)).toString(16).slice(1)
 }
 
 async function buildLayer(layer: LayerData, screen: Size): Promise<Container> {
@@ -212,7 +235,7 @@ async function buildLayer(layer: LayerData, screen: Size): Promise<Container> {
     }
     const sprite = new AnimatedSprite(frames.length ? frames : [Texture.WHITE])
     sprite.animationSpeed = (layer.fps ?? 8) / 60
-    sprite.loop = true
+    sprite.loop = layer.loop ?? true // false = one-shot: plays once, holds the last frame
     sprite.play()
     fitImageSprite(sprite, layer, screen)
     return sprite
@@ -361,6 +384,19 @@ export async function mountScene(
   const world = new Container()
   world.sortableChildren = true
   app.stage.addChild(world)
+  // Two camera-transformed subtrees under the world (M13d). `backdrop` holds the `timeFadeAt`
+  // (peak) layers: already lit per time-of-day, they are the colour-grade *reference*, so they sit
+  // behind everything and are NEVER graded. `graded` holds the rest (bands, shadows, world-space
+  // atmosphere) and carries the grade filter — tinting props / characters to blend into the
+  // untouched backdrop.
+  const backdrop = new Container()
+  backdrop.zIndex = -100
+  backdrop.sortableChildren = true // the crossfade z-orders the peak layers among themselves
+  backdrop.eventMode = 'none'
+  const graded = new Container()
+  graded.zIndex = 0
+  graded.sortableChildren = true
+  world.addChild(backdrop, graded)
   const background = new Container()
   background.zIndex = 0
   const interactive = new Container()
@@ -368,13 +404,13 @@ export async function mountScene(
   interactive.sortableChildren = true // Y-sort by feet Y happens in here
   const foreground = new Container()
   foreground.zIndex = 20
-  world.addChild(background, interactive, foreground)
+  graded.addChild(background, interactive, foreground)
   // Contact (blob) shadows (M13c): a ground-plane pass between the background and the characters,
   // so every shadow is under every entity. On by default; `scene.shadows.disabled` turns it off.
   const shadowLayer = new Container()
   shadowLayer.zIndex = 5 // above background (0), below interactive (10)
   shadowLayer.eventMode = 'none'
-  world.addChild(shadowLayer)
+  graded.addChild(shadowLayer)
   const shadows = scene.shadows?.disabled ? null : createShadowSystem(shadowLayer, scene.shadows)
   // World-space speech bubbles (M12.5 #6 / #18) — the engine runs the typewriter + tracks each
   // character's feet; the DOM overlay (ui/SpeechBubbles) renders them (Pixi Text clipped lines).
@@ -382,7 +418,7 @@ export async function mountScene(
 
   // M10 atmosphere/lighting compositing stack (weather / lighting / fog / polish render
   // into its slots; subsystems register per-frame updaters, ticked below).
-  const atmosphere = createAtmosphere(world, app.stage)
+  const atmosphere = createAtmosphere(graded, app.stage)
 
   // Audio module, dynamic-imported below (kept out of the editor preview's graph); declared
   // here so the weather block can drive its `'weather'` ambient channel once loaded.
@@ -447,15 +483,25 @@ export async function mountScene(
   const parallaxLayers: { display: Container; baseX: number; baseY: number; p: number }[] = []
   // Each layer's display, indexed by scene-layer index — fog can slot its back layer behind one.
   const layerDisplays: Container[] = []
+  // Time-of-day crossfade (M13d): background layers that cross-dissolve over the game clock, each
+  // peaking at its `timeFadeAt` (minutes past midnight). The two bracketing keyframes blend.
+  const fadeLayers: { display: Container; at: number }[] = []
 
   for (let i = 0; i < scene.layers.length; i += 1) {
     const layer = scene.layers[i]
     const display = await buildLayer(layer, design)
     layerDisplays[i] = display
+    // Scenery never captures pointer input: NPCs (mid) + the stage (interactables / walk) handle
+    // clicks. Without this a full-screen foreground layer (e.g. a dusk/weather overlay) intercepts
+    // clicks on the NPCs beneath it — their `pointertap` never fires. The editor's
+    // makeLayerDraggable re-enables 'static' on positionable layers below, so dragging still works.
+    display.eventMode = 'none'
+    // Mid layer: `anchorYFrac` is purely the **Y-sort line** against characters (feet below it →
+    // the character draws in front; above it → the prop draws in front). Size is independent —
+    // `fitImageSprite` / the builder already set it (scale % / fit) — so moving the sort line never
+    // resizes the prop.
     if (layer.band === 'mid' && layer.anchorYFrac !== undefined) {
-      const anchorY = layer.anchorYFrac * design.height
-      display.zIndex = anchorY
-      display.scale.set(depthScaleAt(anchorY, depthScale))
+      display.zIndex = layer.anchorYFrac * design.height
     }
     if (layer.when) {
       const when = layer.when
@@ -483,7 +529,12 @@ export async function mountScene(
         })
       }
     }
-    bandFor(layer.band).addChild(display)
+    if ((layer.kind === 'image' || layer.kind === 'animated') && layer.timeFadeAt !== undefined) {
+      backdrop.addChild(display) // peak / time-fade layer: ungraded lit reference (M13d)
+      fadeLayers.push({ display, at: layer.timeFadeAt })
+    } else {
+      bandFor(layer.band).addChild(display)
+    }
     // Opt-in prop shadow (M13c) — a blob at the layer's base (bottom-centre of its bounds).
     if (layer.castShadow) {
       const d = display
@@ -492,6 +543,106 @@ export async function mountScene(
       })
     }
   }
+
+  // Time-of-day crossfade (M13d): the `timeFadeAt` background layers + the `colorGradeByTime` global
+  // grade both blend (smoothstep) between their two bracketing day-cycle keyframes over the game
+  // clock; the fading-in layer is z-ordered above the base so the midnight wrap has no gap.
+  const smoothstep = (x: number): number => {
+    const t = Math.min(1, Math.max(0, x))
+    return t * t * (3 - 2 * t)
+  }
+  // The two day-cycle keyframes bracketing `now` (a 24h ring) + the smoothstep blend fraction.
+  const timeBracket = <T extends { at: number }>(
+    items: T[],
+    now: number,
+  ): { a: T; b: T; f: number } => {
+    const s = [...items].sort((x, y) => x.at - y.at)
+    const n = s.length
+    let bi = -1
+    for (let k = 0; k < n; k += 1) if (s[k].at <= now) bi = k
+    let a: T
+    let b: T
+    let aAt: number
+    let bAt: number
+    if (bi === -1) {
+      a = s[n - 1] // before the first keyframe — wrap in from the previous day
+      aAt = s[n - 1].at - 1440
+      b = s[0]
+      bAt = s[0].at
+    } else {
+      a = s[bi]
+      aAt = s[bi].at
+      b = s[(bi + 1) % n]
+      bAt = bi + 1 < n ? s[bi + 1].at : s[0].at + 1440
+    }
+    const span = bAt - aAt
+    return { a, b, f: span > 0 ? smoothstep((now - aAt) / span) : 0 }
+  }
+  const applyTimeFade = (now: number): void => {
+    if (fadeLayers.length === 0) return
+    if (fadeLayers.length === 1) {
+      fadeLayers[0].display.alpha = 1
+      return
+    }
+    for (const l of fadeLayers) {
+      l.display.alpha = 0
+      l.display.zIndex = 0
+    }
+    const { a, b, f } = timeBracket(fadeLayers, now)
+    a.display.alpha = 1
+    a.display.zIndex = 1
+    b.display.alpha = f
+    b.display.zIndex = 2
+  }
+  applyTimeFade(store.getState().clockMinutes ?? 0)
+
+  // Re-apply each layer's live geometry — the editor calls this from `applyLive` so both the
+  // scale slider (none-fit props) and the mid-band **sort line** (anchorYFrac) update with no
+  // re-mount flash. The sort line only re-seats the Y-sort zIndex; size is independent (scale % /
+  // fit), so dragging the line never resizes the prop.
+  const reapplyLayerScales = (sc: SceneData): void => {
+    for (let i = 0; i < sc.layers.length; i += 1) {
+      const l = sc.layers[i]
+      const d = layerDisplays[i]
+      if (!d) continue
+      if (l.band === 'mid' && l.anchorYFrac !== undefined) d.zIndex = l.anchorYFrac * design.height
+      if ((l.kind === 'image' || l.kind === 'animated') && (l.fit ?? 'none') === 'none') {
+        d.scale.set(layerScaleFor(l))
+      }
+    }
+  }
+
+  // Editor-only guide: a bright line at every mid layer's **sort line** (anchorYFrac) so the author
+  // can see the walk-in-front / walk-behind threshold. In `world` space (camera-transformed, above
+  // the bands, but ungraded so the colour grade doesn't tint it); shown only when `onLayerMove` is
+  // set (the editor) and redrawn from `applyLive` so it tracks the slider live. Off in the game.
+  const guideLayer = new Container()
+  guideLayer.zIndex = 50
+  guideLayer.eventMode = 'none'
+  guideLayer.visible = !!onLayerMove
+  const guideG = new Graphics()
+  guideLayer.addChild(guideG)
+  world.addChild(guideLayer)
+  // Widths are in design space (the fit camera shrinks the scene), so scale them to the scene
+  // height to stay visible at any preview size; a dark halo keeps the line readable on light art.
+  const guideW = Math.max(3, design.height * 0.005)
+  const pathSortGuides = (sc: SceneData): void => {
+    for (const l of sc.layers) {
+      if (l.band === 'mid' && l.anchorYFrac !== undefined) {
+        const y = l.anchorYFrac * design.height
+        guideG.moveTo(0, y).lineTo(design.width, y)
+      }
+    }
+  }
+  const redrawSortGuides = (sc: SceneData): void => {
+    if (!onLayerMove) return
+    guideG.clear()
+    pathSortGuides(sc)
+    guideG.stroke({ color: 0x000000, width: guideW + 4, alpha: 0.35 })
+    pathSortGuides(sc)
+    guideG.stroke({ color: 0xffd400, width: guideW, alpha: 0.95 })
+  }
+  redrawSortGuides(scene)
 
   // M10 10c fog: an animated noise fog/cloud layer. Built after the layers so the back layer
   // can slot **behind a chosen layer** (`fog.backLayer`) inside its band; else a world overlay
@@ -511,18 +662,45 @@ export async function mountScene(
         ? { parent: d.parent, zIndex: (d.zIndex ?? 0) - 0.001 } // sort just behind the layer
         : { parent: d.parent, index: d.parent.getChildIndex(d) } // insert before it in order
     }
-    fogSystem = createFog(world, fog, design, backInto)
+    fogSystem = createFog(graded, fog, design, backInto)
   }
   buildFog()
   atmosphere.onUpdate((dt) => fogSystem?.update(dt))
 
   // M10 10d colour grade + vignette + lightning. `gradeScene` is the live scene for all three
-  // (rebuilt together by applyLive). Grade is a world filter; vignette + lightning are
+  // (rebuilt together by applyLive). Grade filters the `graded` subtree; vignette + lightning are
   // screen-space (screenFx slot).
   let gradeScene = scene
+  // Time-of-day global grade (M13d): one ColorMatrixFilter on the `graded` subtree — tints props /
+  // characters / foreground but NOT the peak `backdrop` layers (those are the lit reference). Its
+  // matrix re-interpolates between `colorGradeByTime` keyframes each clock-minute (+ World scrub).
+  const timeGradeFilter = makeColorGradeFilter({ brightness: 1, contrast: 1, saturation: 1, hue: 0 })
+  const applyTimeGrade = (now: number): void => {
+    const kf = gradeScene.colorGradeByTime
+    if (!kf || kf.length === 0) return
+    if (kf.length === 1) {
+      setColorGrade(timeGradeFilter, kf[0].grade)
+      return
+    }
+    const { a, b, f } = timeBracket(kf, now)
+    const mix = (x: number, y: number): number => x + (y - x) * f
+    setColorGrade(timeGradeFilter, {
+      brightness: mix(a.grade.brightness, b.grade.brightness),
+      contrast: mix(a.grade.contrast, b.grade.contrast),
+      saturation: mix(a.grade.saturation, b.grade.saturation),
+      hue: mix(a.grade.hue, b.grade.hue),
+      tint: lerpHex(a.grade.tint, b.grade.tint, f),
+      tintStrength: mix(a.grade.tintStrength ?? 0, b.grade.tintStrength ?? 0),
+    })
+  }
   const buildColorGrade = (): void => {
+    if (gradeScene.colorGradeByTime?.length) {
+      applyTimeGrade(store.getState().clockMinutes ?? 0)
+      graded.filters = [timeGradeFilter]
+      return
+    }
     const g = gradeScene.colorGrade
-    world.filters = g && gradeActive(g) ? [makeColorGradeFilter(g)] : []
+    graded.filters = g && gradeActive(g) ? [makeColorGradeFilter(g)] : []
   }
   buildColorGrade()
 
@@ -617,6 +795,8 @@ export async function mountScene(
   const refreshVisibility = () => {
     const state = store.getState()
     for (const c of conditional) c.display.visible = c.show(state)
+    applyTimeFade(state.clockMinutes ?? 0) // time-of-day layer crossfade (M13d): per minute + scrub
+    applyTimeGrade(state.clockMinutes ?? 0) // time-of-day global grade (M13d)
     for (const sw of pathSwitchers) sw(state)
     refreshEmitterVisibility(state)
     syncWeather(state)
@@ -630,14 +810,26 @@ export async function mountScene(
   const nav = buildNavigation(walkablePx, holesPx) // shared by the player + every NPC
   const charScale = scene.characterScale ?? 1
   // Spawn-point override (M12.5 #7): a character starts at its assigned point (specific id wins
-  // over `all`), else the scene / placement default.
+  // over `all`), else the scene / placement default. (NPCs are trigger-agnostic.)
   const spawnAt = (id: string): { xFrac: number; yFrac: number } | undefined => {
     const pts = scene.spawnPoints ?? []
     return pts.find((p) => p.target === id)?.at ?? pts.find((p) => p.target === 'all')?.at
   }
   const character = new Character(await createSpriteView(playerView), depthScale, nav, charScale)
   interactive.addChild(character.displayObject)
-  const playerSpawn = spawnAt('player') ?? scene.spawn
+  // Player start: a spawn point matching how we entered — `start` at game start, else `transition`
+  // (an unset `on` counts as transition). For a transition, prefer a point whose `from` is the scene
+  // we came from, else a `from`-less one; specific `player` beats `all`; else `scene.spawn`.
+  const wantOn: 'start' | 'transition' = options.isGameStart ? 'start' : 'transition'
+  const fromScene = options.fromScene
+  const spawnPts = scene.spawnPoints ?? []
+  const pickSpawn = (matchFrom: boolean) => {
+    const ok = (p: (typeof spawnPts)[number]) =>
+      (p.on ?? 'transition') === wantOn && (matchFrom ? p.from === fromScene : p.from === undefined)
+    return spawnPts.find((p) => p.target === 'player' && ok(p)) ?? spawnPts.find((p) => p.target === 'all' && ok(p))
+  }
+  const playerSpawn =
+    (fromScene !== undefined ? pickSpawn(true) : undefined)?.at ?? pickSpawn(false)?.at ?? scene.spawn
   character.setPosition(playerSpawn.xFrac * design.width, playerSpawn.yFrac * design.height)
   appearances.push({ id: 'player', char: character, base: playerView, variants: options.playerViews })
   appearanceIdx.set('player', -1)
@@ -652,7 +844,12 @@ export async function mountScene(
   // NPCs: characters placed in the scene. They share the nav-mesh + depth, Y-sort
   // with the player, and `when` gates presence. The actor registry addresses every
   // live character by id (`'player'` + cast ids) so engine effects resolve targets.
-  const npcs: { id: string; character: Character; interaction: NpcInteraction }[] = []
+  const npcs: {
+    id: string
+    character: Character
+    interaction: NpcInteraction
+    approachAt?: { x: number; y: number }
+  }[] = []
   const actors = new Map<string, Character>([['player', character]])
   // Re-issue a routine NPC's active path (re-arming its `onArrive` notify) — used after a
   // vision `approach` diverts the NPC to the player, so its routine doesn't stall on the
@@ -690,7 +887,17 @@ export async function mountScene(
       dialogWhen: def?.dialogWhen,
       inspect: def?.inspect,
     }
-    npcs.push({ id: placement.npc, character: npcChar, interaction })
+    npcs.push({
+      id: placement.npc,
+      character: npcChar,
+      interaction,
+      approachAt: placement.approachAt
+        ? {
+            x: placement.approachAt.xFrac * design.width,
+            y: placement.approachAt.yFrac * design.height,
+          }
+        : undefined,
+    })
     actors.set(placement.npc, npcChar)
     appearances.push({
       id: npcId,
@@ -1117,7 +1324,7 @@ export async function mountScene(
   // aren't interactive; a gated-off click falls through to a walk. (Suppressed in the
   // editor's live view, which authors over the world instead of playing it.)
   for (const n of gameplayInput ? npcs : []) {
-    const { character: npcChar, id, interaction } = n
+    const { character: npcChar, id, interaction, approachAt } = n
     if (!interaction.dialog && !interaction.inspect) continue
     npcChar.displayObject.eventMode = 'static'
     npcChar.displayObject.cursor = 'none' // keep the DOM cursor; the talk/look hotspot draws it
@@ -1128,8 +1335,13 @@ export async function mountScene(
       e.stopPropagation() // don't also walk to the raw click point
       const npcX = npcChar.displayObject.x
       const npcY = npcChar.displayObject.y
+      // An authored walk-to point wins (e.g. stand in front of a bar); else stop `approachGap` to
+      // the side of the NPC. Either way, face the NPC on arrival.
       const side = character.displayObject.x <= npcX ? -1 : 1
-      character.setTarget(npcX + side * TALK_GAP, npcY, () => {
+      const tx = approachAt ? approachAt.x : npcX + side * (cast[id]?.approachGap ?? TALK_GAP)
+      const ty = approachAt ? approachAt.y : npcY
+      character.setTarget(tx, ty, () => {
+        if (approachAt) character.faceToward(npcX, npcY)
         if (r.kind === 'dialog') {
           beginDialogue(r.dialog, { id, char: npcChar })
         } else {
@@ -1266,12 +1478,39 @@ export async function mountScene(
   // The game hides the native cursor (the DOM GameCursor draws the pointer). The editor's live
   // view has no GameCursor, so keep the native cursor there (else it vanishes over the canvas).
   app.stage.cursor = gameplayInput ? 'none' : 'default'
+  const radiusOf = (it: InteractableData): number =>
+    'approachRadius' in it ? (it.approachRadius ?? 0) : 0
+  const approachAtOf = (it: InteractableData): { xFrac: number; yFrac: number } | undefined =>
+    'approachAt' in it ? it.approachAt : undefined
+  // Walk-target for a hotspot click: stop its `approachRadius` px short of the click point (along
+  // the player→click line) so each hotspot controls how close the player gets. 0 = onto the click.
+  const approachPoint = (toX: number, toY: number, radius: number): { x: number; y: number } => {
+    if (radius <= 0) return { x: toX, y: toY }
+    const fromX = character.displayObject.x
+    const fromY = character.displayObject.y
+    const dx = toX - fromX
+    const dy = toY - fromY
+    const d = Math.hypot(dx, dy)
+    if (d <= radius) return { x: fromX, y: fromY } // already within the radius — don't move
+    return { x: fromX + (dx * (d - radius)) / d, y: fromY + (dy * (d - radius)) / d }
+  }
   const onTap = (event: FederatedPointerEvent) => {
     // Dialogue / a running cutscene capture input; the world isn't clickable.
     if (dialogueStore.getState().active || sequenceStore.getState().active) return
     const local = interactive.toLocal(event.global)
     const state = store.getState()
     const hit = pickInteractable(scene.interactables, local.x, local.y, design, state)
+    // Where the player actually walks: an authored walk-to point if set (then face the object),
+    // else stop the hotspot's approach radius short of the click.
+    const walkTo = hit ? approachAtOf(hit) : undefined
+    const aim = walkTo
+      ? { x: walkTo.xFrac * design.width, y: walkTo.yFrac * design.height }
+      : hit
+        ? approachPoint(local.x, local.y, radiusOf(hit))
+        : local
+    const faceObject = (): void => {
+      if (walkTo) character.faceToward(local.x, local.y)
+    }
     const selected = state.selectedItem
     if (selected) store.getState().select(null) // any click consumes the selection
     // "look at" flavour (inspect has its own `text`, handled below).
@@ -1283,7 +1522,15 @@ export async function mountScene(
     if (hit && selected) {
       const usageEffects = effectsForUse(hit, selected)
       if (usageEffects) {
-        character.setTarget(local.x, local.y, () => run(usageEffects), 'interact')
+        character.setTarget(
+          aim.x,
+          aim.y,
+          () => {
+            faceObject()
+            run(usageEffects)
+          },
+          'interact',
+        )
         return
       }
     }
@@ -1291,14 +1538,23 @@ export async function mountScene(
     // (text + optional voice), otherwise run its effects. Or just walk.
     if (hit && hit.kind === 'inspect') {
       const { text, audio } = hit
-      character.setTarget(local.x, local.y, () => {
+      character.setTarget(aim.x, aim.y, () => {
+        faceObject()
         if (text) store.getState().say(text)
         // Dynamic import keeps audio out of the editor preview's module graph.
         if (audio) void import('../audio/audio').then((m) => m.playSoundById(audio))
       })
     } else if (hit) {
       const effects = effectsFor(hit)
-      character.setTarget(local.x, local.y, () => run(effects), ONE_SHOT[hit.kind])
+      character.setTarget(
+        aim.x,
+        aim.y,
+        () => {
+          faceObject()
+          run(effects)
+        },
+        ONE_SHOT[hit.kind],
+      )
     } else {
       character.setTarget(local.x, local.y)
     }
@@ -1372,6 +1628,7 @@ export async function mountScene(
       sc.fog,
       sc.emitters,
       sc.colorGrade,
+      sc.colorGradeByTime,
       sc.vignette,
       sc.lightning,
       a.ambientLight,
@@ -1450,6 +1707,10 @@ export async function mountScene(
         lastCharScale = cs
         for (const a of actors.values()) a.setCharScale(cs)
       }
+      // Layer manual scale (none-fit props) + mid sort-line zIndex — re-applied live so the
+      // slider has no re-mount flash; redraw the editor sort-line guides to track it.
+      reapplyLayerScales(sc)
+      redrawSortGuides(sc)
       // NPC walk speed (per cast def).
       const ch = castHash(castNow)
       if (ch !== lastCastHash) {
@@ -1568,6 +1829,9 @@ export function createSceneHost(
   let current: PreviewScene | undefined
   let destroyed = false
   let shownId: SceneId | undefined
+  // The first real mount of a *playing* host is the game start (picks a `start` spawn point).
+  // The editor's live view (gameplayInput false) is never a game start — it authors over scenes.
+  let firstMount = options.gameplayInput ?? true
 
   // Each NPC's start scene: its `home`, else the first scene it's placed in. The runtime
   // location (`StoryState.npcScene`) defaults to this; `moveNpc` / `despawnNpc` override it.
@@ -1714,6 +1978,9 @@ export function createSceneHost(
 
   async function show(id: SceneId): Promise<void> {
     if (destroyed || id === shownId) return
+    const isGameStart = firstMount
+    const fromScene = shownId // the scene we're leaving (undefined on the first mount)
+    firstMount = false
     shownId = id
     if (current) await fadeTo(1) // fade out (the first scene is already washed)
     if (destroyed) return
@@ -1739,7 +2006,7 @@ export function createSceneHost(
       weatherPresets,
       lightingDefaults,
       // Seed routine NPCs at their global path progress so they resume mid-walk (B-lite).
-      { ...options, npcPathProgress: (npc) => routines.progressOf(npc) },
+      { ...options, isGameStart, fromScene, npcPathProgress: (npc) => routines.progressOf(npc) },
     )
     clearTimeout(spinTimer)
     spinner.visible = false

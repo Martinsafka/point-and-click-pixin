@@ -33,7 +33,16 @@ controls are weak — so **cohesion comes from a locked style, not the prompt**.
 
 ### Style suffix (append to every prompt)
 
-> `cozy storybook fairy-tale pixel art, warm muted palette, soft shading, dark outline, flat even lighting, side view`
+> `detailed painterly storybook pixel art, muted earthy palette (warm browns and dusty reds against cool sage and teal), soft dithered shading, atmospheric depth, dark outline, flat even neutral lighting, side view`
+
+**Art-direction reference (user-provided).** The target look is **Octavi Navarro–style** narrative
+pixel art: richly detailed and painterly (not flat / minimal), a muted earthy palette with **warm
+interiors against cool exteriors**, soft dithering, strong atmospheric depth (layered mountains /
+haze / parallax), and small storytelling details everywhere. We adopt that **rendering style, not
+its fjord content** — our world stays the medieval fairy-tale (tavern / street / tower). Keep
+generating **neutral, even lighting** (the engine adds the morning↔dinner mood, fog, and grade) —
+the cinematic atmosphere comes from the engine's lighting + fog + colour-grade layered over
+neutral art, never baked into the sprite.
 
 ---
 

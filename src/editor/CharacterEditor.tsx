@@ -1,5 +1,7 @@
-import { useState, type ChangeEvent } from 'react'
+import { useState } from 'react'
 import type { AnimClip, ViewDescriptor } from '../data/schema'
+import { AssetSwap } from './AssetSwap'
+import { FramesUpload } from './FramesUpload'
 import { SoundSelect } from './SoundSelect'
 
 function parseFrames(text: string): number[] {
@@ -82,15 +84,6 @@ export function CharacterEditor({
     )
   }
 
-  const onAtlas = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => onChange({ atlas: String(reader.result) })
-    reader.readAsDataURL(file)
-  }
-
   const clips = view.clips
   const setClips = (next: Record<string, AnimClip>) => onChange({ clips: next })
   const renameClip = (oldName: string, newName: string) => {
@@ -120,10 +113,22 @@ export function CharacterEditor({
     <div className="char-editor">
       <AtlasPreview desc={view} />
       <div className="editor__toolbar">
-        <label className="editor__import">
-          Change atlas
-          <input type="file" accept="image/*,.svg" hidden onChange={onAtlas} />
-        </label>
+        <AssetSwap
+          accept="image/*,.svg"
+          label="⇄ Swap atlas"
+          onPick={(atlas) => onChange({ atlas })}
+        />
+        <FramesUpload
+          label="+ Frames"
+          onPack={(a) =>
+            onChange({
+              atlas: a.src,
+              frameWidth: a.frameWidth,
+              frameHeight: a.frameHeight,
+              columns: a.columns,
+            })
+          }
+        />
         <button type="button" onClick={onRemove}>
           Remove
         </button>

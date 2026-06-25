@@ -1,6 +1,18 @@
-import { type ChangeEvent } from 'react'
 import { editorStore } from './editor-store'
-import type { LayerData, LayerFit, LayerRole, SceneBand, SceneId } from '../data/schema'
+import type {
+  ItemDef,
+  ItemId,
+  LayerData,
+  LayerFit,
+  LayerRole,
+  SceneBand,
+  SceneId,
+} from '../data/schema'
+import { hhmmToMinutes, minutesToHHMM } from './time-format'
+import { AssetSwap } from './AssetSwap'
+import { FramesUpload } from './FramesUpload'
+import { Slider } from './Slider'
+import { ConditionEditor } from './ConditionEditor'
 
 const BANDS: SceneBand[] = ['background', 'mid', 'foreground']
 const FITS: LayerFit[] = ['none', 'width', 'cover', 'contain', 'stretch']
@@ -12,55 +24,51 @@ function layerLabel(layer: LayerData): string {
 
 /**
  * Per-scene layer stack: upload an image (→ a background backdrop), then set each
- * layer's band / fit / role and reorder or delete it. Image uploads are read as
- * data-URLs and stored in the document, so they survive export. Builtin (code)
+ * layer's band / fit / role and reorder, **swap its image**, or delete it. Image uploads are
+ * read as data-URLs and stored in the document, so they survive export. Builtin (code)
  * layers appear here too and can be rebanded / reordered / removed.
  */
-export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: LayerData[] }) {
-  const readSrc = (file: File, onLoad: (src: string) => void) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      let src = String(reader.result)
-      // Ensure Pixi detects an SVG from the data-URL mime even if the browser
-      // gave the file an empty/wrong type.
-      if (/\.svg$/i.test(file.name) && !src.startsWith('data:image/svg+xml')) {
-        src = src.replace(/^data:[^,;]*/, 'data:image/svg+xml')
-      }
-      onLoad(src)
-    }
-    reader.readAsDataURL(file)
-  }
-  const onUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (file) readSrc(file, (src) => editorStore.getState().addImageLayer(sceneId, src))
-  }
-  const onUploadAnim = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (file) readSrc(file, (src) => editorStore.getState().addAnimatedLayer(sceneId, src))
-  }
-
+export function LayerList({
+  sceneId,
+  layers,
+  items,
+  sceneIds,
+}: {
+  sceneId: SceneId
+  layers: LayerData[]
+  items: Record<ItemId, ItemDef>
+  sceneIds: SceneId[]
+}) {
   return (
     <div className="layer-list">
       <div className="editor__toolbar">
-        <label className="editor__import">
-          + Image
-          <input type="file" accept="image/*,.svg" hidden onChange={onUpload} />
-        </label>
-        <label className="editor__import">
-          + Animated
-          <input type="file" accept="image/*,.svg" hidden onChange={onUploadAnim} />
-        </label>
+        <AssetSwap
+          accept="image/*,.svg"
+          label="+ Image"
+          onPick={(src) => editorStore.getState().addImageLayer(sceneId, src)}
+        />
+        <AssetSwap
+          accept="image/*,.svg"
+          label="+ Animated"
+          onPick={(src) => editorStore.getState().addAnimatedLayer(sceneId, src)}
+        />
+        <FramesUpload
+          onPack={(atlas) => editorStore.getState().addAnimatedLayer(sceneId, atlas.src, atlas)}
+        />
       </div>
       {layers.length === 0 && <p className="layer-list__empty">No layers yet — upload an image.</p>}
       <ul className="layer-list__items">
         {layers.map((layer, i) => (
           <li key={i} className="layer-row">
             <div className="layer-row__head">
-              <span className="layer-row__label" title={layerLabel(layer)}>
-                {layerLabel(layer)}
-              </span>
+              <input
+                type="text"
+                className="layer-row__name"
+                value={layer.name ?? ''}
+                placeholder={layerLabel(layer)}
+                title="Layer name (editor label only)"
+                onChange={(e) => editorStore.getState().setLayerName(sceneId, i, e.target.value)}
+              />
               <div className="layer-row__btns">
                 <button
                   type="button"
@@ -116,6 +124,23 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                   ))}
                 </select>
               )}
+              {(layer.kind === 'image' || layer.kind === 'animated') && (
+                <input
+                  type="text"
+                  className="logic__in layer-row__parallax"
+                  title="Day-cycle peak time (HH:MM). Background layers that set a peak cross-dissolve over the game clock."
+                  placeholder="peak HH:MM"
+                  defaultValue={minutesToHHMM(layer.timeFadeAt)}
+                  onChange={(e) => {
+                    const v = e.target.value.trim()
+                    if (v === '') editorStore.getState().setLayerTimeFade(sceneId, i, undefined)
+                    else {
+                      const m = hhmmToMinutes(v)
+                      if (m !== undefined) editorStore.getState().setLayerTimeFade(sceneId, i, m)
+                    }
+                  }}
+                />
+              )}
               <select
                 value={layer.role ?? ''}
                 title="Role"
@@ -160,6 +185,14 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                 />
                 shadow
               </label>
+              {(layer.kind === 'image' || layer.kind === 'animated') && (
+                <AssetSwap
+                  accept="image/*,.svg"
+                  label="⇄ Swap"
+                  title="Replace this layer's image (keeps its band / fit / position)"
+                  onPick={(src) => editorStore.getState().setLayerSrc(sceneId, i, src)}
+                />
+              )}
             </div>
             {layer.kind === 'animated' && (
               <div className="layer-row__anim">
@@ -187,8 +220,58 @@ export function LayerList({ sceneId, layers }: { sceneId: SceneId; layers: Layer
                     />
                   </label>
                 ))}
+                <label className="logic__chk" title="Loop the animation (off = play once, then hold the last frame)">
+                  <input
+                    type="checkbox"
+                    checked={layer.loop ?? true}
+                    onChange={(e) =>
+                      editorStore.getState().setLayerAnim(sceneId, i, { loop: e.target.checked })
+                    }
+                  />
+                  loop
+                </label>
+                <FramesUpload
+                  label="↻ Frames"
+                  onPack={(atlas) => editorStore.getState().setLayerAtlas(sceneId, i, atlas)}
+                />
               </div>
             )}
+            {layer.band === 'mid' && (
+              <div className="layer-row__anim">
+                <Slider
+                  label="sort line %"
+                  value={Math.round((layer.anchorYFrac ?? 0.85) * 100)}
+                  min={0}
+                  max={100}
+                  step={1}
+                  onChange={(v) => editorStore.getState().setLayerAnchorY(sceneId, i, v / 100)}
+                />
+              </div>
+            )}
+            {(layer.kind === 'image' || layer.kind === 'animated') &&
+              (layer.fit ?? 'none') === 'none' && (
+                <div className="layer-row__anim">
+                  <Slider
+                    label="scale %"
+                    value={Math.round((layer.scale ?? 1) * 100)}
+                    min={10}
+                    max={300}
+                    step={1}
+                    onChange={(v) => editorStore.getState().setLayerScale(sceneId, i, v / 100)}
+                  />
+                </div>
+              )}
+            <div className="layer-row__when">
+              <span className="layer-row__when-label" title="Show this layer only while the Condition holds — e.g. not flag picked:<id> hides a prop once it's taken.">
+                when
+              </span>
+              <ConditionEditor
+                condition={layer.when}
+                onChange={(c) => editorStore.getState().setLayerWhen(sceneId, i, c)}
+                items={items}
+                sceneIds={sceneIds}
+              />
+            </div>
           </li>
         ))}
       </ul>

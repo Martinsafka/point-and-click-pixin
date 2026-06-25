@@ -734,6 +734,10 @@ editing `game.json`:
 - [ ] **Map + fast travel** — a scene-map UI with travel between visited / known scenes. _(#16.)_
 - [ ] **Journal / notes** — an in-game notes screen the story can append to. _(#17.)_
 - [ ] **Cutscene preview** — play / scrub a sequence in the editor without running the game. _(#20.)_
+- [ ] **Auto-fit scene width to a backdrop** — a Scene-tab button that sets `scene.width` from a
+      chosen background layer's aspect at the reference height (`width = referenceHeight × imgW ÷
+      imgH`), so a wide render scrolls **and** fills the viewport height with no manual maths.
+      _(Formula already documented in `editor_guide.md` → Scenes → width.)_
 
 - [ ] **Full persistent world simulation** (NPC routines + movement). _Shipped now: **B-lite**
       — routine progression is persistent off-scene (an `onArrive` edge completes by the path's

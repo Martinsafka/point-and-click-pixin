@@ -170,36 +170,36 @@ anywhere (dialogue, NPC presence, exits, rules).
       **Characters** auto (sample `displayObject` x/y/width). **Props** opt in via `LayerData.castShadow`.
       Per-scene `ShadowConfig {opacity, squash, scale, disabled}` (on by default). Editor: a Scene-tab
       **Shadows** section + a **shadow** checkbox per layer. No light direction (directional = V2).
-- [ ] **P0 — Scaffold.** Start a fresh `content/game.json` for this game (the old demo stays in git
+- [x] **P0 — Scaffold.** Start a fresh `content/game.json` for this game (the old demo stays in git
       history): `start`, three empty scenes (tavern / street / tower), `referenceHeight`, a basic
       walkable per scene, and the three exits wiring them together. _(Assets: none — geometric.)_
-- [ ] **P1 — Greybox layout.** Block out each scene with placeholder layers + walkable + holes;
+- [x] **P1 — Greybox layout.** Block out each scene with placeholder layers + walkable + holes;
       make the **street scroll** (`width`); place the rough zones (alley recess, market spot,
       fountain). Walk the loop tavern↔street↔tower. _(Assets: none.)_
-- [ ] **P2 — Items & pickups.** Define `hook` / `charm` / `fish` / `cat` / `beer`; the **fork→hook**
+- [x] **P2 — Items & pickups.** Define `hook` / `charm` / `fish` / `cat` / `beer`; the **fork→hook**
       pickup in the tavern; the **grate**, **cellar**, poster as interactables (hit-areas + examine).
-- [ ] **P3 — NPCs & dialogue.** Place the **4 cast NPCs**; dialogue trees: Tavernkeeper (deal +
+- [x] **P3 — NPCs & dialogue.** Place the **4 cast NPCs**; dialogue trees: Tavernkeeper (deal +
       the post-rats "free beer" quip), Fish vendor (charm→fish), **Onion seller** (sells onions; a
       morning patrol **path** + the "Cibule!" monologue), Guard (taunt + the beer-ladder).
-- [ ] **P4 — The favour chain.** Wire it: `hook` on grate → `charm`; `charm` to fish vendor →
+- [x] **P4 — The favour chain.** Wire it: `hook` on grate → `charm`; `charm` to fish vendor →
       `fish`; `fish` to cat → `cat`; `cat` on cellar → `rats-cleared` → `beer-unlocked` (a rule).
       Verify the chain can't be skipped / soft-locked.
-- [ ] **P5 — Guard, clock & tower gate.** The **clock** (Game logic → Clock); the beer-ladder
+- [x] **P5 — Guard, clock & tower gate.** The **clock** (Game logic → Clock); the beer-ladder
       dialogue (`beer1/2/3` → `guard-asleep`) gated `when timeOfDay dinner`; the tower door
       `when guard-asleep`; the **sober-up rule** (resets at end of dinner); the onion seller's
       morning `timeOfDay` gate; **lighting** swapped morning↔dinner. Tune `dayLengthSec` + the
       morning / dinner windows so the loop is brisk.
-- [ ] **P6 — Princess & ending.** The sleeping princess (sprite + click → one-option dialogue);
+- [x] **P6 — Princess & ending.** The sleeping princess (sprite + click → one-option dialogue);
       the **kiss cutscene** (fails); the **failed-attempts** beats (shake / slap / yell → funny
       sleep-mutters + the hint); the **`onion`** fetch + **eat** (`ate-onion`); the **onion-kiss**
       wake cutscene → `princess-awake` → the funny-warm ending dialogue → `endGame` → credits.
-- [ ] **P7 — Life & atmosphere.** Ambient "bush" townsfolk (idle + monologues); per-scene lighting
+- [x] **P7 — Life & atmosphere.** Ambient "bush" townsfolk (idle + monologues); per-scene lighting
       / fog / weather (warm tavern, moody alley, fountain mist, tower); SFX + ambient beds + music.
-- [ ] **P8 — Real-asset pass.** Swap greybox for real art scene-by-scene + character atlases (see
+- [x] **P8 — Real-asset pass.** Swap greybox for real art scene-by-scene + character atlases (see
       the **Asset checklist**); re-anchor / re-fit; tune.
-- [ ] **P9 — Framing.** Title / loading / credits screens, the **font**, scene transitions, the
+- [x] **P9 — Framing.** Title / loading / credits screens, the **font**, scene transitions, the
       end flow.
-- [ ] **P10 — Full playthrough & polish.** Play A→Z, fix soft-locks, balance pacing, finalize
+- [x] **P10 — Full playthrough & polish.** Play A→Z, fix soft-locks, balance pacing, finalize
       `content/game.json` + a short `content/README.md`. _(This is the M13c deliverable.)_
 
 ---
@@ -240,6 +240,20 @@ PixelLab): copy-paste prompts in [`demo-assets.md`](demo-assets.md).**
   props (opt-in). **Directional, light-driven** shadows (a single shadow away from the **dominant**
   light = sun + scene lights blended by intensity × distance) → **V2** (a meaningful way to make
   scene lights affect shadows without one-shadow-per-light noise).
+
+## Session additions (locked — build run)
+
+- **Hero name** — the tramp is **Claude** (used in dialogue, intro, examines, credits).
+- **Parallax backgrounds** — sky + nature composed as parallax bands (street + tower-exterior;
+  the tower room shows a landscape through its window).
+- **Animated assets** — dynamism in two layers: engine particles / light-flicker / fog drift
+  now, plus PixelLab `animate_object` sprite layers in P8 (fire, fountain water, swaying sign,
+  birds, breathing princess, cat-tail twitch).
+- **Sounds** — full **default-style** audio: per-scene ambient beds, footsteps, pickup,
+  transition, SFX (pour / gulp / snore / wake), per-NPC procedural voices. (PixelLab is image-only;
+  use the engine's built-in / procedural audio — real recordings are a later swap.)
+- **Credits** — the user is the **Director**; the alias **„sabe"** is credited on every other role
+  (art / code / design / sound / writing) — a one-person-show gag.
 
 ## Open questions
 

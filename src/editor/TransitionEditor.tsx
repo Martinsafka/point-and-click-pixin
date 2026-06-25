@@ -1,6 +1,6 @@
-import { type ChangeEvent } from 'react'
 import type { GameDoc } from '../data/schema'
 import { editorStore } from './editor-store'
+import { AssetSwap } from './AssetSwap'
 
 /**
  * Scene-swap transition (global): the colour the swap washes through, an optional
@@ -9,21 +9,6 @@ import { editorStore } from './editor-store'
  */
 export function TransitionEditor({ transition }: { transition: GameDoc['transition'] }) {
   const s = () => editorStore.getState()
-
-  const onUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      let src = String(reader.result)
-      if (/\.svg$/i.test(file.name) && !src.startsWith('data:image/svg+xml')) {
-        src = src.replace(/^data:[^,;]*/, 'data:image/svg+xml')
-      }
-      s().setTransition({ image: src })
-    }
-    reader.readAsDataURL(file)
-  }
 
   return (
     <div className="transition">
@@ -37,10 +22,11 @@ export function TransitionEditor({ transition }: { transition: GameDoc['transiti
       </div>
       <div className="intr-form__field">
         <span>art</span>
-        <label className="editor__import">
-          {transition?.image ? 'Change' : '+ Image'}
-          <input type="file" accept="image/*,.svg" hidden onChange={onUpload} />
-        </label>
+        <AssetSwap
+          accept="image/*,.svg"
+          label={transition?.image ? '⇄ Swap' : '+ Image'}
+          onPick={(src) => s().setTransition({ image: src })}
+        />
         {transition?.image && (
           <button
             type="button"

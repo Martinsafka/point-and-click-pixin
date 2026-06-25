@@ -50,6 +50,7 @@ import type {
 } from '../data/schema'
 import { gameDoc } from '../data/game'
 import { placeholderView } from '../entities/placeholder-atlas'
+import type { Atlas } from './pack-frames'
 
 /**
  * The editor's working copy of the `GameDoc` — a mutable clone of the authored
@@ -64,6 +65,10 @@ interface EditorStore {
   selectScene(id: SceneId): void
   addScene(): void
   deleteScene(id: SceneId): void
+  /** Rename a scene (its display `name`). No `revision` bump — list label only. */
+  setSceneName(id: SceneId, name: string): void
+  /** Reorder a scene in the list (−1 up / +1 down) by shuffling the `scenes` keys. No bump. */
+  moveScene(id: SceneId, dir: -1 | 1): void
   setDoc(doc: GameDoc): void
   /** Replace a scene's walkable polygon (fractions). No `revision` bump. */
   setWalkable(id: SceneId, polygon: number[]): void
@@ -83,9 +88,20 @@ interface EditorStore {
   setTransition(patch: Partial<TransitionConfig>): void
   /** Append an uploaded image as a full-screen background layer (a backdrop). */
   addImageLayer(id: SceneId, src: string): void
-  /** Add an animated (atlas) scene layer (M12.5 #8). */
-  addAnimatedLayer(id: SceneId, src: string): void
-  /** Patch an animated layer's frame grid / fps (M12.5 #8). */
+  /** Add an animated (atlas) scene layer (M12.5 #8). With `grid` (from stitched frames) the layer
+   *  uses that frame size / columns / count; without it, the 64×64 ×4 defaults. */
+  addAnimatedLayer(id: SceneId, src: string, grid?: Omit<Atlas, 'src'>): void
+  /** Replace an animated layer's whole atlas + frame grid in place (e.g. re-stitched frames). */
+  setLayerAtlas(id: SceneId, index: number, atlas: Atlas): void
+  /** Swap an image / animated layer's source in place (keeps its band / fit / position). */
+  setLayerSrc(id: SceneId, index: number, src: string): void
+  /** `none`-fit layer size multiplier (1 = natural). Live (no re-mount). */
+  setLayerScale(id: SceneId, index: number, scale: number): void
+  /** A `mid`-band layer's occlusion **sort line** (anchorYFrac, 0..1 of scene height): the foot
+   *  line where the prop sorts against characters (above it the prop draws in front, below it the
+   *  character does) and takes the scene's depth scale. Live (no re-mount). */
+  setLayerAnchorY(id: SceneId, index: number, anchorYFrac: number): void
+  /** Patch an animated layer's frame grid / fps / loop (M12.5 #8). */
   setLayerAnim(
     id: SceneId,
     index: number,
@@ -95,10 +111,17 @@ interface EditorStore {
       columns: number
       frames: number
       fps: number
+      loop: boolean
     }>,
   ): void
   removeLayer(id: SceneId, index: number): void
   moveLayer(id: SceneId, index: number, dir: -1 | 1): void
+  /** Rename a layer (its editor label). No `revision` bump — label only. */
+  setLayerName(id: SceneId, index: number, name: string): void
+  /** Gate a layer's visibility on a Condition (undefined = always shown), e.g. `not flag
+   *  picked:<id>` hides a prop once it's taken. No `revision` bump — the saved gate runs in-game;
+   *  the authoring preview keeps the prop visible (re-evaluated on the next mount). */
+  setLayerWhen(id: SceneId, index: number, when: Condition | undefined): void
   setLayerBand(id: SceneId, index: number, band: SceneBand): void
   setLayerFit(id: SceneId, index: number, fit: LayerFit): void
   /** Opt a prop layer into a contact (blob) shadow (M13c). */
@@ -108,6 +131,8 @@ interface EditorStore {
   /** Parallax scroll factor for a background / foreground layer. No `revision` bump
    *  (the preview doesn't scroll). */
   setLayerParallax(id: SceneId, index: number, parallax: number): void
+  /** Time-of-day crossfade peak (minutes past midnight; undefined clears it). M13d. */
+  setLayerTimeFade(id: SceneId, index: number, at: number | undefined): void
   /** Role is metadata (no visual change), so this doesn't bump `revision`. */
   setLayerRole(id: SceneId, index: number, role: LayerRole | undefined): void
   /** Set an image layer's position (dragged in the preview). No `revision` bump —
@@ -120,6 +145,14 @@ interface EditorStore {
   setInteractableId(id: SceneId, index: number, value: string): void
   setInteractableItem(id: SceneId, index: number, item: ItemId): void
   setInteractableTo(id: SceneId, index: number, to: SceneId): void
+  /** Per-hotspot approach radius (px) — how far short of the click the player stops. */
+  setInteractableApproach(id: SceneId, index: number, radius: number | undefined): void
+  /** Per-hotspot authored walk-to point (design fractions), or undefined to clear it. */
+  setInteractableApproachAt(
+    id: SceneId,
+    index: number,
+    at: { xFrac: number; yFrac: number } | undefined,
+  ): void
   setTriggerBy(id: SceneId, index: number, by: 'player' | 'npc' | 'any'): void
   setTriggerOnce(id: SceneId, index: number, once: boolean): void
   setTriggerOn(id: SceneId, index: number, on: 'enter' | 'rest'): void
@@ -149,6 +182,12 @@ interface EditorStore {
   removeNpcPlacement(id: SceneId, index: number): void
   setNpcPlacementNpc(id: SceneId, index: number, npc: NpcId): void
   setNpcPlacementSpawn(id: SceneId, index: number, xFrac: number, yFrac: number): void
+  /** Per-placement authored walk-to point (design fractions), or undefined to clear it. */
+  setNpcPlacementApproachAt(
+    id: SceneId,
+    index: number,
+    at: { xFrac: number; yFrac: number } | undefined,
+  ): void
   setNpcPlacementWhen(id: SceneId, index: number, when: Condition | undefined): void
   /** Per-scene dialogue override for a placement (falls back to the cast `NpcDef.dialog`). */
   setNpcPlacementDialog(id: SceneId, index: number, dialog: DialogId | undefined): void
@@ -199,6 +238,8 @@ interface EditorStore {
   addSound(src: string): void
   removeSound(id: SoundId): void
   setSoundName(id: SoundId, name: string): void
+  /** Swap a sound's audio source in place, keeping its id + name + every reference to it. */
+  setSoundSrc(id: SoundId, src: string): void
   // Weather presets (M10 10a) — the Atmosphere tab library + per-scene conditional weather.
   addWeatherPreset(): void
   removeWeatherPreset(id: WeatherId): void
@@ -217,6 +258,11 @@ interface EditorStore {
   addSpawnPoint(id: SceneId): void
   removeSpawnPoint(id: SceneId, index: number): void
   setSpawnPoint(id: SceneId, index: number, patch: Partial<SpawnPoint>): void
+  /** Set a spawn point's player trigger. Assigning `'start'` demotes any other `'start'` point in
+   *  the whole game to `'transition'` (only one game-start point is allowed). */
+  setSpawnTrigger(id: SceneId, index: number, on: 'start' | 'transition'): void
+  /** Set a transition spawn point's source scene (`from`), or undefined for any source. */
+  setSpawnFrom(id: SceneId, index: number, from: SceneId | undefined): void
   setSpawnPointPos(id: SceneId, index: number, xFrac: number, yFrac: number): void
   addDarkArea(id: SceneId): void
   removeDarkArea(id: SceneId, index: number): void
@@ -231,6 +277,8 @@ interface EditorStore {
   setSceneFog(id: SceneId, fog: FogConfig | undefined): void
   /** Colour grade / vignette / lightning for this scene (M10 10d); undefined removes each. */
   setSceneColorGrade(id: SceneId, grade: ColorGrade | undefined): void
+  /** Time-of-day grade keyframes (M13d); undefined removes the day cycle. */
+  setSceneColorGradeByTime(id: SceneId, kf: { at: number; grade: ColorGrade }[] | undefined): void
   setSceneVignette(id: SceneId, vignette: Vignette | undefined): void
   setSceneLightning(id: SceneId, lightning: LightningConfig | undefined): void
   setDocAmbientLight(ambient: AmbientLight | undefined): void
@@ -367,6 +415,17 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         revision: revision + 1,
       })
     },
+    setSceneName: (id, name) => patchScene(id, { name }, false),
+    moveScene: (id, dir) => {
+      const { doc } = get()
+      const ids = Object.keys(doc.scenes)
+      const i = ids.indexOf(id)
+      const j = i + dir
+      if (i < 0 || j < 0 || j >= ids.length) return
+      ;[ids[i], ids[j]] = [ids[j], ids[i]]
+      const scenes = Object.fromEntries(ids.map((k) => [k, doc.scenes[k]]))
+      set({ doc: { ...doc, scenes } })
+    },
     setDoc: (doc) => set({ doc, selectedSceneId: doc.start, revision: get().revision + 1 }),
     setWalkable: (id, polygon) => patchScene(id, { walkable: polygon }, false),
     addHole: (id) => patchScene(id, { holes: [...(get().doc.scenes[id].holes ?? []), []] }, false),
@@ -393,21 +452,35 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       patchScene(id, { depth: { ...get().doc.scenes[id].depth, stops } }, true),
     addImageLayer: (id, src) =>
       mapLayers(id, (ls) => [...ls, { kind: 'image', band: 'background', src, fit: 'cover' }]),
-    addAnimatedLayer: (id, src) =>
+    setLayerSrc: (id, index, src) =>
+      mapLayers(id, (ls) =>
+        ls.map((l, i) =>
+          i === index && (l.kind === 'image' || l.kind === 'animated') ? { ...l, src } : l,
+        ),
+      ),
+    setLayerScale: (id, index, scale) =>
+      mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, scale } : l)), false),
+    setLayerAnchorY: (id, index, anchorYFrac) =>
+      mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, anchorYFrac } : l)), false),
+    addAnimatedLayer: (id, src, grid) =>
       mapLayers(id, (ls) => [
         ...ls,
         {
           kind: 'animated',
           band: 'foreground',
           src,
-          frameWidth: 64,
-          frameHeight: 64,
-          columns: 4,
-          frames: 4,
+          frameWidth: grid?.frameWidth ?? 64,
+          frameHeight: grid?.frameHeight ?? 64,
+          columns: grid?.columns ?? 4,
+          frames: grid?.frames ?? 4,
           fps: 8,
           fit: 'none',
         },
       ]),
+    setLayerAtlas: (id, index, atlas) =>
+      mapLayers(id, (ls) =>
+        ls.map((l, i) => (i === index && l.kind === 'animated' ? { ...l, ...atlas } : l)),
+      ),
     setLayerAnim: (id, index, patch) =>
       mapLayers(id, (ls) =>
         ls.map((l, i) => (i === index && l.kind === 'animated' ? { ...l, ...patch } : l)),
@@ -421,8 +494,31 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         ;[next[index], next[j]] = [next[j], next[index]]
         return next
       }),
+    setLayerName: (id, index, name) =>
+      mapLayers(
+        id,
+        (ls) => ls.map((l, i) => (i === index ? { ...l, name: name || undefined } : l)),
+        false,
+      ),
+    setLayerWhen: (id, index, when) =>
+      // No `revision` bump — the doc (→ export → game) carries the gate, and the authoring preview
+      // keeps showing the prop (it re-evaluates the gate on the next mount / in ▶ Test in game).
+      // Re-mounting here would rebuild the Pixi world on every keystroke of the flag name.
+      mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, when } : l)), false),
     setLayerBand: (id, index, band) =>
-      mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, band } : l))),
+      // Moving a layer into the `mid` (gameplay) plane seeds a default sort line so it occludes
+      // characters right away (and the editor's sort-line slider + guide have a value to show).
+      mapLayers(id, (ls) =>
+        ls.map((l, i) =>
+          i === index
+            ? {
+                ...l,
+                band,
+                ...(band === 'mid' && l.anchorYFrac === undefined ? { anchorYFrac: 0.85 } : {}),
+              }
+            : l,
+        ),
+      ),
     setLayerFit: (id, index, fit) =>
       mapLayers(id, (ls) =>
         ls.map((l, i) =>
@@ -436,12 +532,19 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setSceneShadows: (id, shadows) => patchScene(id, { shadows }, true),
     setLayerParallax: (id, index, parallax) =>
       mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, parallax } : l)), false),
+    setLayerTimeFade: (id, index, at) =>
+      mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, timeFadeAt: at } : l))),
     setLayerRole: (id, index, role) =>
       mapLayers(id, (ls) => ls.map((l, i) => (i === index ? { ...l, role } : l)), false),
     setLayerPos: (id, index, xFrac, yFrac) =>
       mapLayers(
         id,
-        (ls) => ls.map((l, i) => (i === index && l.kind === 'image' ? { ...l, xFrac, yFrac } : l)),
+        (ls) =>
+          ls.map((l, i) =>
+            i === index && (l.kind === 'image' || l.kind === 'animated')
+              ? { ...l, xFrac, yFrac }
+              : l,
+          ),
         false,
       ),
     addInteractable: (id, kind) => {
@@ -478,6 +581,18 @@ export const editorStore = createStore<EditorStore>((set, get) => {
     setInteractableTo: (id, index, to) =>
       mapInteractables(id, (its) =>
         its.map((it, i) => (i === index && it.kind === 'exit' ? { ...it, to } : it)),
+      ),
+    setInteractableApproach: (id, index, radius) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) =>
+          i === index && it.kind !== 'trigger' ? { ...it, approachRadius: radius } : it,
+        ),
+      ),
+    setInteractableApproachAt: (id, index, at) =>
+      mapInteractables(id, (its) =>
+        its.map((it, i) =>
+          i === index && it.kind !== 'trigger' ? { ...it, approachAt: at } : it,
+        ),
       ),
     setTriggerBy: (id, index, by) =>
       mapInteractables(id, (its) =>
@@ -646,6 +761,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, npc } : p))),
     setNpcPlacementSpawn: (id, index, xFrac, yFrac) =>
       mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, spawn: { xFrac, yFrac } } : p))),
+    setNpcPlacementApproachAt: (id, index, at) =>
+      mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, approachAt: at } : p))),
     setNpcPlacementWhen: (id, index, when) =>
       mapNpcs(id, (ps) => ps.map((p, i) => (i === index ? { ...p, when } : p))),
     setNpcPlacementDialog: (id, index, dialog) =>
@@ -789,6 +906,11 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       if (!sounds[id]) return
       patchDoc({ sounds: { ...sounds, [id]: { ...sounds[id], name } } })
     },
+    setSoundSrc: (id, src) => {
+      const sounds = get().doc.sounds ?? {}
+      if (!sounds[id]) return
+      patchDoc({ sounds: { ...sounds, [id]: { ...sounds[id], src } } })
+    },
     addWeatherPreset: () => {
       const presets = get().doc.weatherPresets ?? {}
       const id = uniqueKey(presets, 'weather')
@@ -921,6 +1043,37 @@ export const editorStore = createStore<EditorStore>((set, get) => {
         },
         true,
       ),
+    setSpawnTrigger: (id, index, on) => {
+      const { doc, revision } = get()
+      const scenes: Record<SceneId, SceneData> = {}
+      for (const sid of Object.keys(doc.scenes)) {
+        const sc = doc.scenes[sid]
+        if (!sc.spawnPoints) {
+          scenes[sid] = sc
+          continue
+        }
+        scenes[sid] = {
+          ...sc,
+          spawnPoints: sc.spawnPoints.map((p, i) => {
+            if (sid === id && i === index) return { ...p, on }
+            // Demote any other `start` so only one game-start point exists.
+            if (on === 'start' && p.on === 'start') return { ...p, on: 'transition' as const }
+            return p
+          }),
+        }
+      }
+      set({ doc: { ...doc, scenes }, revision: revision + 1 })
+    },
+    setSpawnFrom: (id, index, from) =>
+      patchScene(
+        id,
+        {
+          spawnPoints: (get().doc.scenes[id].spawnPoints ?? []).map((p, i) =>
+            i === index ? { ...p, from } : p,
+          ),
+        },
+        true,
+      ),
     addEmitter: (id) => {
       const emitters = get().doc.scenes[id].emitters ?? []
       const taken = new Set(emitters.map((e) => e.id))
@@ -983,6 +1136,8 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       ),
     setSceneFog: (id, fog) => patchScene(id, { fog }, false),
     setSceneColorGrade: (id, colorGrade) => patchScene(id, { colorGrade }, false),
+    setSceneColorGradeByTime: (id, colorGradeByTime) =>
+      patchScene(id, { colorGradeByTime }, false),
     setSceneVignette: (id, vignette) => patchScene(id, { vignette }, false),
     setSceneLightning: (id, lightning) => patchScene(id, { lightning }, false),
     addDarkArea: (id) =>

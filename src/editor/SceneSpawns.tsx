@@ -11,6 +11,7 @@ export function SceneSpawns({
   sceneId,
   spawnPoints,
   cast,
+  sceneIds,
   selected,
   onSelect,
   placeMode,
@@ -19,12 +20,14 @@ export function SceneSpawns({
   sceneId: SceneId
   spawnPoints: SpawnPoint[]
   cast: Record<NpcId, NpcDef>
+  sceneIds: SceneId[]
   selected: number | null
   onSelect: (i: number) => void
   placeMode: boolean
   onTogglePlace: () => void
 }) {
   const s = () => editorStore.getState()
+  const sceneName = (id: SceneId) => s().doc.scenes[id]?.name ?? id
   const sp = selected !== null ? spawnPoints[selected] : undefined
 
   return (
@@ -45,6 +48,7 @@ export function SceneSpawns({
                 onClick={() => onSelect(i)}
               >
                 <span className="intr-row__kind">◎</span> {p.target}
+                {p.on === 'start' ? ' · start' : p.from ? ` · from ${sceneName(p.from)}` : ''}
               </button>
               <button
                 type="button"
@@ -85,6 +89,47 @@ export function SceneSpawns({
               ))}
             </select>
           </div>
+          {(sp.target === 'player' || sp.target === 'all') && (
+            <div className="intr-form__field">
+              <span>spawns on</span>
+              <select
+                className="logic__in"
+                value={sp.on ?? 'transition'}
+                onChange={(e) =>
+                  s().setSpawnTrigger(sceneId, selected, e.target.value as 'start' | 'transition')
+                }
+              >
+                <option value="transition">scene transition</option>
+                <option value="start">game start (once)</option>
+              </select>
+            </div>
+          )}
+          {(sp.target === 'player' || sp.target === 'all') &&
+            (sp.on ?? 'transition') === 'transition' && (
+              <div className="intr-form__field">
+                <span>from scene</span>
+                <select
+                  className="logic__in"
+                  value={sp.from ?? ''}
+                  title="Apply this spawn only when the player arrives from this scene ((any) = the fallback for other entries)."
+                  onChange={(e) => s().setSpawnFrom(sceneId, selected, e.target.value || undefined)}
+                >
+                  <option value="">(any)</option>
+                  {sceneIds
+                    .filter((id) => id !== sceneId)
+                    .map((id) => (
+                      <option key={id} value={id}>
+                        {sceneName(id)} ({id})
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+          {sp.on === 'start' && (
+            <p className="intr-form__note">
+              The game's start position — only one spawn point in the whole game can be this.
+            </p>
+          )}
           <p className="intr-form__note">Click Place, then click the preview to position it.</p>
         </div>
       )}

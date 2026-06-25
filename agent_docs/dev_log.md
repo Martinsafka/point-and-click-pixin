@@ -23,6 +23,610 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-24 — Frames→atlas in character editor, `setClock` effect, Claude player atlas
+**What:** Three asks while finishing the demo.
+1. **`+ Frames` in the character editor** (`CharacterEditor`, used by player **and** NPC) — stitch
+   individual frame images into the character atlas (reuses `FramesUpload` / `pack-frames`), then map
+   them in **Clips**.
+2. **`setClock` effect** — `{ kind: 'setClock'; minutes }` (schema + `applyEffect` in
+   `conditions.ts` sets `clockMinutes`; `EffectList` picker + a time input). For a "wait until …"
+   dialogue choice. The story store already had `setClock`; this exposes it as an effect.
+3. **Claude player atlas** (content) — stitched the PixelLab `Claude_the_tramp` export (5 base
+   directions × idle rotation + 6-frame walk = 35 frames, 92×92, 7-wide, one direction per row;
+   engine mirrors the W-side) into an atlas + 10 clips (`idle.{S,SE,E,NE,N}`, `walk.…`), anchor
+   0.5 / 0.88 (computed from the idle feet). Merged into the dev's **exported draft** (`game(8).json`)
+   → `~/Desktop/game_claude.json` to **Import** (the live editor runs an IndexedDB draft 3 days ahead
+   of `content/game.json`, so editing the repo file would've lost work). Also added a **wait-time**
+   dialog (Claude; choices morning 360 / afternoon 720 / evening 960 / "radši nečekat").
+**How:** Stitching via a one-off Pillow script (no ImageMagick/canvas/sharp installed). `setClock`
+jumps the clock; the day-cycle visuals follow. typecheck + lint clean.
+**Follow-ups:** For the evening to **last** (3 beer runs), the dev wants a long/static clock — set
+`dayLengthSec` low→0 (manual time) and drive it with the wait dialog (currently 35 s/day). The
+wait dialog needs wiring to a trigger/interactable (`startDialog` → `wait-time`). `content/game.json`
+left untouched (stale vs the draft — the dev re-exports to commit).
+
+### 2026-06-24 — Fix: animated layer drag position wasn't saved
+**What:** Dragging an **animated** layer in the preview moved it live but never persisted — on the
+next mount it snapped back to its original spot.
+**Why:** `setLayerPos` (editor-store) only wrote `xFrac/yFrac` for `l.kind === 'image'`; animated
+layers are draggable (the engine arms the drag for both kinds) but the drop was a no-op for them.
+**How:** Persist the position for `image` **and** `animated` layers. `fitImageSprite` already
+positions both from `xFrac/yFrac` (none-fit free, width-fit Y), so no engine change needed. typecheck
++ lint clean; HMR clean.
+
+### 2026-06-24 — Animated layer: `loop` toggle (one-shot playback)
+**What:** `LayerData` (animated) gets `loop?: boolean` (default true). Off = the `AnimatedSprite`
+plays **once** on mount and holds the last frame — for a one-shot (door opening, a flash). A **loop**
+checkbox sits with the frame-grid controls on the animated layer row.
+**How:** `scene.ts` `sprite.loop = layer.loop ?? true`; `setLayerAnim`'s patch type gained `loop`
+(the impl already spreads the patch); checkbox via `setLayerAnim(..., { loop })` — re-mounts so the
+sprite restarts with the new mode. typecheck + lint clean; HMR clean.
+**Follow-ups:** A one-shot holds its last frame; hiding it afterwards is a separate concern (gate the
+layer's `when`, or a future `onComplete` → setFlag hook).
+
+### 2026-06-24 — Editor: stitch individual frames into an animated-layer atlas (`+ Frames`)
+**What:** A developer can now upload **individual frame images** and the editor packs them into one
+sprite-sheet (atlas) + computes the frame grid — no external sheet-maker needed. **+ Frames** (Layers
+toolbar) creates an animated layer from the frames; **↻ Frames** on an animated row re-stitches in
+place.
+**Why:** Building an animated layer required a hand-made atlas (a grid of equal frames); the dev asked
+for either an online tool or in-editor stitching. In-editor is nicer (no round-trip).
+**How:** New `pack-frames.ts` — browser `canvas`: sort files by name (numeric-aware), cell = max
+frame w/h (smaller frames centred), near-square grid (`cols = ceil(sqrt(n))`) drawn left→right /
+top→bottom exactly how the engine slices, `imageSmoothingEnabled=false` for crisp pixels, `toDataURL`
+PNG stored inline. `FramesUpload` (multi-file picker → `packFrames` → callback). Store: `setLayerAtlas`
+(replace atlas+grid) + `addAnimatedLayer(id, src, grid?)` now takes an optional grid. typecheck + lint
+clean; HMR clean.
+**Follow-ups:** Frames assumed equal-ish size (centred if not); no per-frame trim / tight-packing. fps
+stays at its default / current value — tune on the row.
+
+### 2026-06-24 — Spawn points: per-source `from` for transition spawns
+**What:** A `transition` spawn point can now bind to a **source scene** (`SpawnPoint.from?: SceneId`),
+so one scene spawns the player at **different ends per entry** (street: left when arriving from the
+tavern, right from the tower). A **from scene** picker (with **(any)** fallback) shows on player/all
+transition points in `SceneSpawns`; the row shows `· from <name>`.
+**Why:** A `transition` spawn previously applied to *every* arrival, so a scene with two doors couldn't
+place the player correctly per door.
+**How:** `createSceneHost.show` passes `fromScene` (the scene being left, `shownId` before reassign;
+undefined at game start) into `mountScene`. Player-spawn resolution prefers a point whose `from` ===
+`fromScene`, else a `from`-less point, then `scene.spawn` (`player` target beats `all`). Store
+`setSpawnFrom`; `SceneSpawns` gained `sceneIds` (names via the store). The editor preview has no source
+(fresh host), so it shows the `(any)` / default spot — per-source spawns are verified in ▶ Test in
+game. typecheck + lint clean; HMR clean.
+**Follow-ups:** Could let the editor preview simulate "arriving from X" to position visually; for now
+the ◎ markers show where each lands.
+
+### 2026-06-23 — Editor: per-layer `when` (visibility gate) — disappear-after-pickup
+**What:** Each layer row in the **Layers** panel now has a **when** `ConditionEditor` (the same widget
+interactables / NPCs use). `LayerData.when` was already engine-supported (reactive visibility,
+`scene.ts`) but the editor exposed **no** control for it — so a prop that vanishes after pickup
+(`when = not flag picked:<id>`) was only doable by hand-editing game.json. Now it's no-code.
+**Why:** The dev hit exactly this (a cat / hook that should disappear when taken) and "couldn't find
+it in the editor" — because it genuinely wasn't there; layers were the only gated element type
+missing a `when` UI.
+**How:** Store `setLayerWhen` — **no** `revision` bump (the doc carries the gate → export → in-game
+mount registers it via `conditional.push`; the authoring preview keeps the prop visible). Re-mounting
+would rebuild the Pixi world on every keystroke of the flag name, so the preview just doesn't live-hide
+— matches "preview shows, Test-in-game hides". `LayerList` gained `items` + `sceneIds` props (for the
+ConditionEditor) wired from `Editor`. CSS `.layer-row__when`. Docs: editor_guide (layer table + a
+"Disappear after pickup" recipe). typecheck + lint clean; HMR clean.
+**Follow-ups:** None — fills a long-standing gap. (Note: `editor_guide` previously implied layers were
+`when`-gateable in the UI; now that's actually true.)
+
+### 2026-06-23 — Authored walk-to points for hotspots + NPCs
+**What:** An optional **walk-to point** (a fixed floor spot) on each interactable (4 click kinds) and
+each NPC placement: when set, clicking the thing walks the player to that exact point and **faces the
+object**, overriding the approach radius / gap. Solves props the player can't reach directly — a
+poster **on a wall**, a barman **behind a bar** — where the radius/gap give a side approach or send
+the player around the back.
+**Why:** Radius/gap are always relative to where the player comes from, so a wall poster always got a
+side approach and the bartender put the player behind the bar. The classic adventure fix is an
+authored walk-to spot (confirmed the direction with the dev via screenshots).
+**How:**
+- **Schema:** `InteractableData.approachAt?` (4 kinds) + `NpcPlacement.approachAt?` (design fractions).
+- **Engine** (`scene.ts`): `onTap` prefers `approachAt` over `approachPoint(click,radius)` and faces
+  the click on arrival; the NPC tap prefers the placement's `approachAt` over the side gap and faces
+  the NPC. The npc runtime list carries the px-resolved point.
+- **Store:** `setInteractableApproachAt` / `setNpcPlacementApproachAt` (undefined clears).
+- **Editor:** new `ApproachOverlay` (one blue marker + a click-catcher, reused for both), Draw modes
+  `approach` / `npcwalkto`, **Place / Move / Clear** buttons in `InteractableForm` + `NpcList`, a
+  hint line, and CSS. No re-mount (markers update live).
+**Follow-ups:** Marker isn't draggable (re-Place to move) — a drag handle would be nicer. The point is
+in scene fractions, so it tracks scene-width changes.
+
+### 2026-06-23 — Per-element approach distance (NPC gap + hotspot radius)
+**What:** How close the player walks to a thing is now per-element, not a global constant.
+- **NPC** — `NpcDef.approachGap?` (default 90) replaces the global `TALK_GAP` at the talk/look walk
+  (`scene.ts`). Edited as a number on each cast row (`NpcCast`, via `patchNpcDef`).
+- **Hotspot** — `InteractableData.approachRadius?` (px, on the 4 click kinds; default 0) makes the
+  player stop **short of the click point** along the player→click line. New `approachPoint` helper +
+  `radiusOf` in `onTap` apply it to item-use / inspect / effects walks (a plain floor click is
+  unaffected). Edited as an **approach** field in `InteractableForm`; store `setInteractableApproach`.
+**Why:** Previously NPCs all used one hard-coded 90 px gap and objects had no standoff at all — the
+player walked onto the exact click. The dev wanted to tune closeness per object / NPC.
+**How:** Chosen semantics (confirmed with the dev): the hotspot radius is measured **from the click**
+(stop-short), so you keep control of *where* and *how close* — and radius 0 = today's behaviour
+(backward-compatible; game.json unaffected). `approachPoint` returns the player's current spot if
+they're already within the radius (no awkward back-step). typecheck + lint clean; HMR clean.
+**Follow-ups:** Could add an editor gizmo to preview the radius; player doesn't explicitly face the
+object when it stops short already inside the radius (movement-facing covers the normal case).
+
+### 2026-06-23 — Scene pickers show names + spawn-point trigger (start vs transition)
+**What:** Two editor requests.
+1. **Scene pickers show the (renamable) name** — exit **to** (`InteractableForm`) and the shared
+   `SceneSelect` (goTo / moveNpc, `EffectList`) rendered the raw scene **id**; now they show
+   `name (id)` (matching `NpcEditor`). So renaming a scene is reflected everywhere you pick one.
+2. **Spawn-point trigger** — `SpawnPoint` gets `on?: 'start' | 'transition'`. A **player** / **all**
+   point now has a **spawns on** selector: *scene transition* (default) or *game start*. Only one
+   game-start point may exist in the whole game — `setSpawnTrigger` demotes any other `start` when
+   you assign one.
+**Why:** Default scene names are all "scene", so id-only pickers were hard to choose from; and the
+dev needed to control the player's start position separately from arrival-via-transition.
+**How (runtime):** `mountScene` gets `isGameStart?`; `createSceneHost` sets it true for the **first**
+mount of a *playing* host (`firstMount = options.gameplayInput ?? true`, consumed in `show`), false
+for every transition and for the whole editor preview (gameplayInput false). Player spawn resolves to
+a point matching the entry context (`(p.on ?? 'transition') === wantOn`, specific `player` > `all`),
+else `scene.spawn`. NPC spawn (`spawnAt`) is unchanged / trigger-agnostic. game.json has no spawn
+points yet, so no migration. typecheck + lint clean; HMR clean.
+**Follow-ups:** Game **restart** (retry) re-creates the host → first mount = game start again (correct).
+The `SceneSelect` reads the name via `editorStore.getState()` at render (fine — the editor re-renders
+on doc edits); could thread names as props if it's ever used outside the editor.
+
+### 2026-06-23 — Editor: rename layers + rename / reorder scenes
+**What:** Three small editor authoring controls:
+- **Rename a layer** — `LayerData` gets an optional `name?` (all three kinds); the layer row's static
+  label is now a text input (placeholder = the auto kind / builder label). Store: `setLayerName`.
+- **Rename a scene** — a **name** field in the Scenes panel edits the selected scene's `name`
+  (already in the schema). Store: `setSceneName`.
+- **Reorder scenes** — **↑ / ↓** on each scene row, mirroring the layer reorder. Store: `moveScene`
+  shuffles the `scenes` Record keys (`Object.fromEntries` over reordered `Object.keys`).
+**Why:** The developer wanted to label layers/scenes meaningfully and control scene order in the list.
+**How:** All three are **label / list-order only** → `patchScene(..., false)` / `mapLayers(..., false)`
+/ plain `set` with **no `revision` bump**, so nothing re-mounts the Pixi preview (no flash, inputs keep
+focus). Scene **id** is untouched (rename = display `name`), so exits / `goTo` / routines keep working;
+reorder doesn't touch `start` or references. CSS: `.layer-row__name`, `.editor__scene-row`,
+`.editor__scene-btns`. Docs: editor_guide (Scenes + layer-row table). typecheck + lint clean; HMR clean.
+
+### 2026-06-23 — Sort line: decouple from size + editor-only yellow guide line
+**What:** Refined the new mid-layer sort line (same-day follow-up to the entry below). Three changes:
+1. **Decoupled size** — a mid layer's `anchorYFrac` now drives **only** the Y-sort zIndex, not the
+   perspective depth scale. Dragging the sort line no longer resizes the prop; size is the **scale %**
+   slider / fit alone. (`src/engine/scene.ts`: dropped `depthScaleAt(anchorY) * layerScaleFor` from
+   both the mount path and `reapplyLayerScales`; removed the now-unused `depthScaleAt` import.)
+2. **Editor-only yellow guide** — a bright line (`0xffd400`) at every mid layer's sort line, in
+   `world` space (camera-transformed, above the bands, ungraded), drawn by `redrawSortGuides` and
+   redrawn from `applyLive` so it tracks the slider live. Gated on `onLayerMove` (editor authoring
+   view) → hidden in **▶ Test in game** (the real `GameCanvas` doesn't pass `onLayerMove`).
+3. **Auto-seed** — moving a layer into the **mid** band seeds `anchorYFrac = 0.85` if unset
+   (`setLayerBand`), so mid ⟺ has a sort line ⟺ slider + guide + occlusion are all consistent.
+**Why:** The user expected the sort line to set *only* the walk-in-front/behind threshold and to be
+*visible*. The depth-scale coupling (pre-existing for mid props) surprised them by resizing the prop,
+and a numeric slider with no on-canvas feedback was hard to place.
+**How:** `world` (not `graded`) hosts the guide so the colour grade doesn't tint it; one `Graphics`
+cleared + restroked per redraw. Decoupling drops the perspective auto-size for mid props — fine per
+the user (the street/room demo lamps don't matter). typecheck + lint clean; HMR clean.
+**Follow-ups:** A drag-the-line handle on the yellow guide (instead of only the slider) would be the
+next ergonomic win. `role` (scenery/occluder/floor) is still pure metadata.
+
+### 2026-06-23 — Editor: per-layer "sort line %" slider (anchorYFrac) for mid props
+**What:** A **sort line %** slider on every **mid**-band layer (`src/editor/LayerList.tsx`) that sets
+`anchorYFrac` (0–100 % of scene height) — the prop's foot line that drives walk-in-front / walk-behind
+Y-sort against characters. New store action `setLayerAnchorY` (`src/editor/editor-store.ts`); engine
+`reapplyLayerScales` now re-seats the mid layer's **zIndex** (not just scale) on `applyLive`
+(`src/engine/scene.ts`) so the line moves live with no re-mount. Docs: `editor_guide.md` (new "Sort
+line" section + corrected the `role` row).
+**Why:** The occlusion behaviour (character in front below the foot line, prop in front above it) was
+only settable by hand-editing `anchorYFrac` in scene data — the no-code editor had **no** control for
+it. Users (reasonably) reached for the `role: occluder` dropdown, which is **cosmetic and does
+nothing**; the real mechanism is `band: mid` + `anchorYFrac`.
+**How:** Mirrored the existing `scale %` slider exactly: `mapLayers(..., false)` (no revision bump →
+`applyLive` path), live re-apply via the extended `reapplyLayerScales`. The slider shows for all mid
+layer kinds incl. `builtin`; default display 85 % when unset (committing on drag activates occlusion +
+the depth scale). typecheck + lint clean; HMR clean. Note: prettier `--check` flags these files, but
+they're already flagged at HEAD (repo isn't kept prettier-clean) — left formatting untouched to avoid
+churn.
+**Follow-ups:** `role` (scenery/occluder/floor) is now pure metadata — could be removed, or wired to
+something, later. A drag-the-line handle in the preview would beat a numeric slider for placing the
+foot line visually.
+
+### 2026-06-23 — Per-layer scale slider: step 5 → 1
+**What:** The **scale %** slider on none-fit image/animated layers (`src/editor/LayerList.tsx`) now
+steps by **1 %** instead of 5 %.
+**Why:** 5 % increments were too coarse to size a prop precisely to the scene.
+**How:** One-line change `step={5}` → `step={1}`; range (10–300 %) and the `v / 100` → `setLayerScale`
+wiring are unchanged.
+
+### 2026-06-21 — Colour grade: tint (colour cast) + slider UI for every param
+**What:** Added a **tint** to `ColorGrade` — a colour **cast** (`tint` hex + `tintStrength` 0..1)
+that a hue rotation can't paint onto near-grey pixels (e.g. a blue night over a stone statue). Also
+reworked the grade UI: every param (brightness / contrast / saturation / hue / tint strength) is now
+a **slider on its own line**, shared by the static grade **and** each day-cycle keyframe (keyframes
+were a cramped inline number row before).
+**How:**
+- **Schema:** `ColorGrade.tint?: string` + `tintStrength?: number`.
+- **Engine** (`colorgrade.ts`): `setColorGrade` applies it via `ColorMatrixFilter.tint` (multiply),
+  the effective colour lerped white→tint by strength (0 = no-op); `gradeActive` counts a tint.
+  `scene.ts` `applyTimeGrade` interpolates the tint (RGB lerp, `lerpHex`) + strength across keyframes.
+- **Editor:** new shared **`GradeSliders`** component (the five sliders + a tint colour picker), used
+  by the static colour grade and each `colorGradeByTime` keyframe (one slider per line, in a
+  separated `.grade-kf` block).
+- **Verified:** typecheck + lint clean; engine — a blue tint turns the warm night street fully blue
+  (before / after); editor smoke — sliders + tint render, 0 console errors.
+**Follow-ups:** none.
+
+### 2026-06-21 — Fix: time-of-day grade must not touch the peak (timeFadeAt) backdrops
+**What:** The global `colorGradeByTime` was a filter on the whole `world`, so it also re-tinted the
+`timeFadeAt` crossfade backdrops — which are *already* lit per time (the grade's reference). That
+double-graded them, so props could never blend correctly into them. Now **peak layers are exempt**:
+the grade tints only everything else, to blend into the untouched backdrops.
+**How (`scene.ts`):** split the camera-transformed world into two subtrees — `backdrop` (ungraded,
+behind; holds every `timeFadeAt` layer) and `graded` (bands + shadows + world-space atmosphere +
+fog) which carries the grade filter. Routed peak layers to `backdrop`; moved the bands, shadow
+layer, `createAtmosphere`, `createFog` + the grade filter onto `graded`. The camera transforms the
+whole world, so peak layers still scroll / crossfade; lighting / weather / vignette are stage
+overlays, so they still cover the backdrop — peak layers skip **only** the colour grade.
+**Verified:** typecheck + lint clean; favour-chain regression passes; street night (no peak layers)
+still fully graded = no regression; daycycle with a saturation-0 grade keeps its backdrops fully
+coloured while the character desaturates = peak exemption confirmed.
+**Follow-ups:** none.
+
+### 2026-06-21 — Editor: per-layer scale % for none-fit props
+**What:** A **scale %** slider on each `none`-fit image / animated layer (10–300 %) — resize a prop
+to fit the scene without re-uploading or re-exporting, independent of its source resolution. (The
+user uploads props at fit `none`, where the native size needn't match the scene's viewport fit.)
+**How:**
+- **Schema:** `scale?: number` (multiplier, 1 = natural) on the image + animated `LayerData`,
+  honoured only for `fit: none`.
+- **Engine** (`scene.ts`): `fitImageSprite` applies it in the `none` branch; a `layerScaleFor` helper
+  gates it to none-fit image/animated; the mid-band depth scale **composes** with it
+  (`depthScaleAt × scale`). Re-applied live from `applyLive` (`reapplyLayerScales`) so the slider has
+  no re-mount flash (mirrors `characterScale`).
+- **Editor** (`LayerList` + `editor-store`): a `Slider` (scale %) per none-fit layer →
+  `setLayerScale` (live, no re-mount).
+- **Verified:** typecheck + lint clean; visual test — the street grate at `scale 2.0` renders ~2×
+  (before / after screenshots).
+**Follow-ups:** none.
+
+### 2026-06-21 — Editor: swap any uploaded asset in place (shared AssetSwap)
+**What:** Every uploaded asset in the editor (scene layers, sounds, item icons, cursors, the
+transition art, screen backgrounds / logos / buttons, character atlases) now has a **⇄ Swap**
+control that replaces its source file **in place** — keeping the asset's id + every reference to it.
+Before, only single-slot assets could be replaced (an unlabelled "Change"); **scene layers and
+sounds had no swap at all** — you had to delete + re-add, which for a sound *broke its id and every
+reference* (ambient / footstep / playSound / voice / inspect).
+**Why:** the user produces assets externally (UE5 renders, audio) and needs to drop in a new version
+without rewiring the doc.
+**How:**
+- New shared **`AssetSwap`** component (`src/editor/AssetSwap.tsx`) — one file-picker button + the
+  data-URL read with the SVG-mime fix; replaces ~6 duplicated `FileReader` handlers across panels.
+  `label` switches `+ Image` / `+ Sound` (empty slot) vs `⇄ Swap` (replace existing).
+- New store actions `setLayerSrc(scene, index, src)` + `setSoundSrc(id, src)` (in-place; keep id +
+  references). The single-slot setters (icon / cursor / transition / screens / atlas) already
+  replaced in place — just relabelled + routed through `AssetSwap` for consistency.
+- Wired `AssetSwap` into LayerList (per-layer swap + the add buttons), SoundList (per-sound swap),
+  ItemCatalogue, CursorEditor, TransitionEditor, ScreensEditor, CharacterEditor.
+- **Verified:** typecheck + lint clean; editor smoke test (Playwright, `tools/editor-smoke.mjs`) —
+  swap controls render in every panel (Scene / Items / Sounds / Project / Characters), 0 console
+  errors.
+**Follow-ups:** none.
+
+### 2026-06-20 — M13d+: global time-of-day colour grade (whole-scene day/night)
+**What:** Extended the day cycle to a **global grade** so the *whole* scene — backdrop, props **and
+characters** — matches the time of day from **one neutral asset set** (the user's worry: the
+4-render backdrop crossfade left props / NPCs in flat daylight). A scene can set **`colorGradeByTime`**
+(grade keyframes by clock minute); the engine interpolates the grade (brightness / contrast /
+saturation / hue, smoothstep, looping) and applies it as a **`world` filter** — which tints every
+band, incl. the mid (characters). Replaced the demo's old foreground **dusk overlay** on the street +
+tower with this grade, and gave the **`daycycle`** showcase both (layer crossfade + grade together).
+**Why:** opacity-crossfading 4 variants of *every* asset (props, NPCs, animations) is impractical;
+one global time-driven grade is the standard, cheap way to keep everything consistent.
+**How:**
+- **Schema:** `SceneData.colorGradeByTime?: { at, grade }[]`.
+- **Engine** (`scene.ts` + `colorgrade.ts`): a persistent `ColorMatrixFilter` on `world`;
+  `applyTimeGrade(now)` interpolates the bracketing keyframes (shared **`timeBracket`** helper with
+  the layer crossfade) and updates the matrix via the new `setColorGrade(filter, grade)`. Driven from
+  `refreshVisibility` (per clock-minute + World-scrub); added to the live `atmoHash` so editor edits
+  re-apply with no remount.
+- **Editor** (`SceneGrade` + `editor-store`): a **"day-cycle grade (time keyframes)"** section — add /
+  remove keyframes, each an `<input type=time>` + brightness / contrast / saturation / hue inputs →
+  `setSceneColorGradeByTime`.
+- **Verified:** typecheck + lint clean; favour-chain regression passes; previewed the street at noon
+  vs night — the **whole** scene (player + props + cat + houses) tints dark-blue at night.
+**Follow-ups:** none. (The build tool's old `dusk_overlay` helper is now unused.)
+
+### 2026-06-20 — M13d: time-of-day layer crossfade (clock-driven day cycle)
+**What:** New engine + editor feature (user request — they render 4 lit variants of a scene in UE5
+and want a gradual time blend). A background `image` / `animated` layer can set **`timeFadeAt`**
+(minutes past midnight = its peak opacity). Layers with a peak **cross-dissolve** over the game
+clock — fully opaque at the peak, blending (smoothstep) into the two nearest neighbours, looping
+over midnight. So 4 lit renders at 06:00 / 12:00 / 18:00 / 00:00 glide morning→afternoon→evening→
+night→morning. Added a showcase scene **`daycycle`** (4 full-scene colour layers) + the editor UI + docs.
+**Why:** opacity vs blend mode → **opacity** is correct (alpha cross-dissolves; blend modes *combine*
+pixels = double-bright, wrong for a transition). Explicit per-layer peak times (the user wanted
+control over uneven phases — short morning, long afternoon).
+**How:**
+- **Schema** (`data/schema.ts`): `timeFadeAt?: number` on the image + animated `LayerData`.
+- **Engine** (`engine/scene.ts`): collect the `timeFadeAt` layers; `applyTimeFade(now)` finds the two
+  bracketing keyframes (sorted ring), sets base α 1 + fading-in α smoothstep(f), and z-orders the
+  fading-in layer above the base so the **midnight wrap** composites with no gap
+  (`background.sortableChildren` enabled when fade layers exist). Driven from `refreshVisibility`
+  (the existing store subscription) → updates per clock-minute **and** on the editor's World-time
+  scrub. A fade spans the whole inter-peak interval, so per-minute steps read smooth.
+- **Editor** (`LayerList` + `editor-store`): a per-layer **"peak HH:MM"** input (uncontrolled;
+  commits on a valid time, clears when blank) → `setLayerTimeFade`; reuses the M12c HH:MM widget.
+- **Verified:** typecheck + lint clean; previewed `daycycle` at 3 times — distinct blended tints
+  (blue morning → gold afternoon with both labels overlapping mid-dissolve → dark-blue night).
+**Follow-ups:** none required. The crossfade is the **backdrop**; the cast isn't time-tinted —
+combine with the scene's `ambientLight` if you want the characters lit too.
+
+### 2026-06-18 — Fix: decorative scene layers were blocking pointer input
+**What:** A full-screen **foreground** layer (the demo's dinner dusk overlay) intercepted clicks on
+NPCs beneath it — the NPC's own `pointertap` never fired, so dialogues couldn't be triggered once the
+overlay showed (user report: "once the screen goes orange in the evening, can't talk to the tower
+guard / trigger things"). Fixed in `engine/scene.ts`: every scene layer's display is now
+`eventMode: 'none'`, so clicks pass through to NPCs (mid band) + the stage (interactables / walk).
+The editor's `makeLayerDraggable` still re-enables `'static'` on positionable (fit none / width)
+layers, so layer dragging is unaffected.
+**Why:** Decorative scenery should never capture input — only NPCs + the stage do. Affects **any**
+scene with a foreground / weather / overlay layer, not just this demo.
+**How / verified:** Reproduced headlessly (tower at dinner → guard click did nothing); after the fix
+the guard dialogue opens with the overlay on. Interactables (the stage `onTap` polygon test) always
+worked via event-bubbling — it was specifically **NPC sprite clicks** the overlay shadowed. Audio
+was healthy throughout (Howler `running`, ambient loops, footsteps + voice play) — the "sounds
+stopped" was the blocked interaction, not an audio fault. Favour-chain + keeper-dialogue regression
+passes, 0 console errors.
+
+### 2026-06-18 — Demo P11b: scene-object animations (fountain water + breathing princess)
+**What:** `animate_object` (v3) animations wired as `animated` layers — the street **fountain water**
+trickling, and the tower-room **sleeping princess breathing** (candle flickering too): the asleep
+bedroom is now an animated full-scene layer (gated `when not princess-awake`). `fetch_obj.py`
+composes the 7-frame object animations into single-row atlases; `build_demo.py` gained an
+`anim_layer` helper.
+**Verified**: both render clean frames (room preview + street shot), the chain passes, 0 console
+errors. The world now moves at every layer — characters breathe / walk, particles + fog drift, the
+fountain runs, the princess breathes.
+**Follow-ups (optional, low value):** a flickering-fire sprite (redundant with the ember particles +
+hearth flicker-light), flying birds, one-shot cutscene anims (kiss / eat / wake).
+
+### 2026-06-18 — Demo P11: character animations (idle + walk)
+**What:** Brought the cast to life (user-requested follow-up). Generated PixelLab **template
+animations** — **breathing-idle** for every character (south + east) + a **walk** cycle for the two
+movers (Claude + the onion-seller). `fetch_art.py` now downloads each character's export **zip** and
+assembles a single-row **animated atlas** (idle.S / idle.E [+ walk.S / walk.E]; W mirrors E),
+emitting `char/views.json` with multi-frame clips (idle 4f @5fps, walk 6f @10fps); `build_demo.py`
+reads views.json to set the player + NPC `view`s. Every character now breathes; Claude + the
+onion-seller walk.
+**Why:** P11 — the deferred animation pass; the world should move.
+**How:**
+- The public `…/characters/<id>/download` zip exposes a clean `rotations/` +
+  `animations/<name>/<dir>/frame_NNN.png` layout + `metadata.json` — simpler than per-animation
+  frame URLs. A robust direction fallback (missing dir → south anim → static rotation) handled the
+  quadruped cat's south-only idle.
+- The engine's `AnimatedSprite` view already plays multi-frame `state.facing` clips (walk falls back
+  to `idle.<dir>`), so this is **pure data — no engine change**.
+- **Verified** (Playwright): characters render clean single frames (atlas slicing correct); the full
+  chain + intro cutscene + NPC dialogue still pass, 0 console errors. Looping playback is core
+  engine behaviour (the multi-frame clips are present) — the motion is visible in play.
+**Follow-ups (optional):**
+- One-shot cutscene anims (kiss / eat / wake); guard drink / sleep states (`create_character_state`);
+  PixelLab `animate_object` scene anims (fountain water, a fire sprite, birds).
+
+### 2026-06-18 — Demo P10: full art verified + polish + README (M13c done)
+**What:** Eyeballed the last two scenes (tower + tower-room) via a start-override preview — both
+render beautifully (the tower door aligns with the guard + the to-room exit; the bedroom shows the
+sleeping princess on a canopy bed, moonlit window, chest, rug). Tweaked the princess hit-area to sit
+over the bed. **Confirmed NPC dialogue works** with the real sprites (clicking the keeper opens his
+rats-for-beer deal) — the last unverified interaction. Wrote `content/README.md` (pitch + how-to-play
++ spoiler walkthrough + credits) and ticked the roadmap phases. This is the M13c deliverable.
+**Why:** P10 — verify A→Z, no soft-locks, ship.
+**How:**
+- Every interaction type is now verified in-browser (Playwright, 0 console errors): intro cutscene,
+  NPC dialogue, pickable pickup, item-on-object `use`, exits / transitions, the favour chain; all
+  four scenes render with the real art.
+- Soft-lock trace clean: charm→fish→cat→rats→beer→guard→room→onion-kiss each has a path; the clock
+  recurs (morning + dinner), so the onion + the guard are always reachable again.
+- `tools/` (gitignored): `build_demo.py` (authors `content/game.json`), `fetch_art.py` /
+  `fetch_obj.py` (PixelLab → `public/assets/`), `verify.mjs` / `preview.mjs` (Playwright checks).
+**Follow-ups (optional polish):**
+- Full A→Z **manual playtest** of the time-of-day loop (3-beer guard ladder at dinner + onion at
+  morning + the onion-kiss ending) — verified piecewise + by logic, not in one automated run.
+- Character / cutscene **animations** (walk, breathing-idle, kiss / eat / wake) + PixelLab
+  `animate_object` scene anims (fire, fountain, birds).
+- The 3-beer re-drink after the guard sobers up is a touch grindy — tune if desired.
+
+### 2026-06-18 — Demo P9: framing (title / screens / font)
+**What:** A proper **title screen** — a composited dusk image (the PixelLab tower on a night→warm
+gradient) behind the gold serif **"Magický polibek"** heading + tagline + **Czech buttons** (Nová
+hra / Pokračovat). Screen backgrounds: loading = the tavern, end = the awake-princess bedroom. Set a
+storybook **serif font** (Georgia stack — full Czech diacritics, zero setup). Credits keep the
+"sabe directs everything" gag (Claude in the lead role). The scene-transition wash is already in place.
+**Why:** P9 — the framing so the demo presents as a finished title.
+**How:**
+- The title tower came back with its sky removed (object bg-removal), so `fetch_obj.py` composites it
+  onto a dusk gradient → `bg/title.png` (Pillow).
+- **Verified**: the title renders (tower + gold heading + Czech buttons); the chain regression passes.
+**Follow-ups:**
+- Credits / end screens are reached only via `endGame` — eyeball in the P10 playthrough.
+- Cutscene one-shot anims (kiss / eat / wake) still deferred with the character animations.
+
+### 2026-06-18 — Demo P8: real PixelLab art (characters, backgrounds, items, props)
+**What:** Generated + wired the full art pass via the PixelLab MCP. **7 characters** (Claude +
+keeper / vendor / onion / guard / drunk + a quadruped cat) → composed [south, east] atlases →
+ViewDescriptors (idle.S / idle.E, W mirrors E) on the player + NPCs. **Backgrounds** for every scene
+(tavern; tower; tower-room with an asleep↔awake bg swap on `princess-awake`; the wide street composed
+in Pillow from a mirror-alternated house row + sky gradient + ground strip). **6 item icons**
+(hook / charm / fish / beer / onion + the cat from its sprite). **Props** placed as layers (tavern:
+poster / cellar / fork-on-bar; street: stall / fountain / grate / alley-cat). Re-anchored the tavern
+interactables to the painted bar-left layout.
+**Why:** P8 — swap greybox for real art (the showcase). PixelLab proved strong at both characters
+**and** backgrounds; cohesion held from style words alone (no style-reference needed).
+**How:**
+- Gitignored tools: `fetch_art.py` (char rotations → atlases + feet-anchor detection), `fetch_obj.py`
+  (objects → trimmed icons / full bgs + the Pillow street compose + cat icon & prop). Assets land in
+  `public/assets/` (committed) + are referenced by URL from `game.json`.
+- Characters are **static directional stills** (idle.S front / idle.E profile, W mirrored) at
+  `characterScale` 3.0 — walk / one-shot **animations are a deferred follow-up**.
+- Backgrounds use `fit:'stretch'` (square PixelLab art → 16:9 scene; keeps the floor + composition;
+  `cover` would crop the floor). The wide street is parallax bands (sky 0.4 / houses 0.85 / ground 1).
+- **Verified** (Playwright): the full pickup → use → street chain + the intro cutscene pass with the
+  real art, 0 console errors; tavern + street eyeballed (cohesive, grounded, atmospheric).
+**Follow-ups:**
+- Eyeball + re-anchor **tower / tower-room** in the P10 playthrough (bg swaps wired, not yet seen).
+- Character **animations** + PixelLab `animate_object` scene anims (fire / fountain / birds) — polish.
+- The street mid-band is a touch sparse; could add dressing.
+
+### 2026-06-18 — Demo P7: atmosphere, dynamism & ambient life
+**What:** Added per-scene mood + motion (engine-driven, art-agnostic). **Tavern**: warm dim
+`ambientLight` + a flickering **hearth light** + a rising **ember** emitter + a vignette. **Street**:
+bright-day ambient + a light **fog** haze (atmospheric depth, like the reference) + **fountain-mist**
++ **chimney-smoke** emitters + a vignette + an ambient **drunk** townsfolk (idle, two cycling
+monologues + an inspect line). **Tower**: cool ambient + haze + vignette. **Tower-room**: dim cool
+"moonlit" ambient + a flickering **candle** + a heavier vignette.
+**Why:** P7 — make the world feel alive (the user asked for animated / dynamic assets) + the
+atmospheric depth of the art reference.
+**How:**
+- Dynamism without sprite atlases yet: engine **PointEmitter** particles (embers / mist / smoke),
+  **LightSource** `flicker` (hearth / candle), animated **fog** — all data. PixelLab `animate_object`
+  sprite layers (fire, fountain water, birds, breathing princess, cat tail) come in P8.
+- Atmosphere merged post-build (a clean block), tuned with the real art in P8 / P10.
+- **Sound** already matches / exceeds the **default project** — global ambient / footstep / pickup /
+  transition (P0) + per-NPC procedural voices (P3). Custom recorded SFX / music are the only gap
+  (PixelLab is image-only; a later upload swap).
+- **Verified** (Playwright): 0 console errors; the warm hearth glow + vignette + fog + smoke render;
+  the intro cutscene + favour-chain regression still pass.
+**Follow-ups:**
+- P8: the real PixelLab art pass — lock the style on a hero asset, then backgrounds (layered), 7
+  character atlases, 6 item icons, props; wire + re-tune lighting / fog to the painted art.
+
+### 2026-06-18 — Demo P6: princess, cutscenes & the ending
+**What:** Built the endgame + the two required cutscenes. An **intro cutscene** (a tavern `trigger`
+`when not saw-intro`, `once`) auto-plays at game start — a camera push-in + the narrator/Claude
+intro. The sleeping **princess** is a bed interactable → `startDialog princess`: the wake-puzzle
+offers a true-love's kiss (→ **kiss-fail** cutscene; she mumbles, nothing) + funny failed attempts
+(shake / slap / yell, one hinting "needs something stronger"). The **onion** is now an inventory
+`use` (eat → `ate-onion`, dragon breath); once eaten, the kiss option becomes the **onion-kiss**
+cutscene → `princess-awake` → the funny-warm Fiona-style **ending** dialogue → `endGame`. Added
+`GameDoc.sequences` (intro / kiss-fail / onion-kiss) + the `end` and `credits` screens (the "sabe
+directs everything" gag, Claude in the lead role).
+**Why:** P6 — the payoff: the wake puzzle, the comedy, and the A→Z finish.
+**How:**
+- Intro-once relies on trigger semantics: `t.active` is empty on mount, so a player spawned **inside**
+  an `enter` trigger fires it on frame 1; the `when not saw-intro` gate (the sequence sets the flag)
+  makes it once-per-game.
+- Kiss vs onion-kiss = two `when`-gated choices on the same princess node (on `ate-onion`).
+- Cutscenes use `camera {to,zoom}` + `dialog` + `effects` steps (no `anim` yet — real kiss / eat /
+  wake one-shots arrive with the P8 sprites).
+- **Verified** (Playwright): the intro auto-plays on start (narrator "Vypravěč" line + camera
+  push-in + Skip), 0 console errors; the favour-chain regression still passes. The full A→Z
+  wake/ending (needs the guard NPC + onion + dinner) is the **P10 manual playthrough**.
+**Follow-ups:**
+- P7: ambient townsfolk + per-scene lighting / fog / weather + the full sound pass + engine
+  particles (smoke / fountain mist / fire) for dynamism.
+- P8: real PixelLab art (incl. the princess sleeping / waking sprites + kiss / eat / wake one-shots).
+- P10: the full A→Z playthrough (the ending + the clock loop).
+
+### 2026-06-18 — Demo P5: clock, time-of-day gates & the tower gate
+**What:** Added the game **clock** (`dayLengthSec` 180, start 10:00) and gated the late game on
+time-of-day. The onion-seller's street placement + his "Cibule!" monologue are `when timeOfDay
+MORNING (05–13)`; the guard's "offer a beer" choice is `when all(hasItem beer, timeOfDay DINNER
+(16–23))`, with a `notyet` branch hinting to come back at dinner. A **sober-up rule** resets
+`guard-asleep` + `beer1/2/3` once dinner ends (the kiss-puzzle loop). The tower→tower-room door is
+`when guard-asleep` (else a "locked" interactable). A golden **dusk overlay** layer washes the
+outdoor scenes `when timeOfDay DINNER` — the visible morning↔dinner mood change.
+**Why:** P5 — the clock showcase + the time-gated guard/onion loop + the tower gate.
+**How:**
+- All gates use the engine `timeOfDay {from,to}` condition (the M13c prereq). Windows are module
+  constants (`MORNING` / `DINNER`) — tune in P10.
+- The dusk mood is a translucent gold foreground layer gated by `when` (cheap + visible); proper
+  per-time lighting / fog comes in P7.
+- **Verified**: builds clean, loads with 0 console errors, the favour-chain regression still passes.
+  Time-specific visuals span game-time, so they're confirmed in the P6 / P10 playthrough.
+**Follow-ups:**
+- P6: the sleeping princess + kiss cutscene (fails) + failed-attempt beats + onion eat + onion-kiss
+  wake cutscene + ending dialogue + `endGame` → credits.
+- P10: tune the clock windows + `dayLengthSec` for a brisk loop.
+
+### 2026-06-18 — Demo P4: the favour chain wired
+**What:** Wired the interdependent favour chain end-to-end. The alley **grate** `uses` hook →
+`charm` (+ `fished-charm`, with a "grate-empty" variant after); a new alley **cat** interactable
+`uses` fish → `cat` item (+ `got-cat`); the tavern **cellar** `uses` cat → `rats-cleared` (+ a
+"cellar-clear" variant); a global **rule** `rats-cleared → beer-unlocked`. The charm→fish trade is
+the vendor's P3 dialogue; the keeper pours beer once `rats-cleared`. Full chain: fork→hook →
+(grate) charm → (vendor) fish → (cat) cat → (cellar) rats-cleared → (keeper) beer.
+**Why:** P4 — make the puzzle chain actually playable, no skips / soft-locks.
+**How:**
+- Item-on-object steps are interactable `uses` (a `UseRule` has no `when`, so single-shot links use
+  a **gated pair**: the active interactable `when not <flag>` + an "empty/clear" variant `when <flag>`).
+- **Verified** (Playwright): pick up the fork → **Hák** in inventory; cross to the street; select Hák
+  and use it on the grate → **Amulet** obtained; 0 console errors. (The street scrolls, so the test
+  maps scene-x→viewport for the click.) The remaining links reuse the same proven patterns
+  (item-on-object `uses`; NPC trade dialogue) → full A→Z playthrough verified in P6.
+**Follow-ups:**
+- P5: clock + `timeOfDay` gates (guard drinkable at dinner; onion-seller mornings) + the sober-up
+  rule + the tower door `when guard-asleep` + morning↔dinner lighting.
+
+### 2026-06-18 — Demo P3: cast NPCs + dialogue trees
+**What:** Added the 4 cast NPCs to `GameDoc.npcs` — **Hospodský** (keeper), **Rybářka** (vendor),
+**Cibulář** (onion-seller), **Stráž** (guard) — each with a procedural voice, placed in their scenes
+(keeper at the bar, vendor + a roaming onion-seller with a market patrol path, guard at the tower
+door), and wrote their Czech comedy dialogue trees (`GameDoc.dialogs`): the keeper's rats-for-beer
+deal + post-rats "free beer + fishing-float quip", the vendor's charm→fish trade, the onion-seller's
+free-onion patter + "Cibule! Kupte si cibuli!" monologue, and the guard's taunt + the 3-rung
+**beer-ladder** (`beer1`/`beer2`/`beer3` → `guard-asleep`). Also did the promised **Czech-diacritics
+sweep** over all P0–P2 content strings. Hero = **Claude** (named in the poster proclamation).
+**Why:** P3 of the roadmap — the cast + the conversational logic the favour chain (P4) and the
+guard gate (P5) build on.
+**How:**
+- Dialogue uses the engine's `branch` routers for state-driven openings (keeper routes on
+  `rats-cleared` / `keeper-deal`; the guard's ladder routes on `beer1` / `beer2`). Trades are
+  `takeItem` + `giveItem` + `setFlag` choice effects. The beer choice is gated `when hasItem beer`
+  for now; the `timeOfDay dinner` gate + the onion-seller's morning gate land in P5 with the clock.
+- `tools/build_demo.py` now validates dialog `start` / `next` / `branch.to` / `choice.next` node refs
+  + npc↔dialog id refs at build time.
+- **Verified** (Playwright): loads with 0 console errors; the interaction→effect pipeline + Czech
+  diacritics render (clicking the poster shows its bubble); the tavern→street loop still works. NPC
+  dialogue uses the same proven `beginDialogue` pipeline; the headless click can't reliably hit the
+  thin greybox NPC sprite, so the **interactive NPC-dialogue click is deferred to the P6 playthrough**
+  (real sprites in P8 + the talk-cursor hotspot make it a non-issue in actual play).
+**Follow-ups:**
+- **P4 next:** wire the favour chain (hook→grate→charm; charm→vendor→fish; fish→cat→`cat`;
+  cat→cellar→`rats-cleared`→`beer-unlocked` rule) + the cat interactable in the alley.
+- P5: clock + `timeOfDay` gates + sober-up rule + tower-door gate + morning↔dinner lighting.
+
+### 2026-06-18 — Demo P0–P2: greybox scaffold + parallax layout + items/interactables (_Magický polibek_)
+**What:** Started the real demo build. Replaced the old street/room demo with a fresh
+`content/game.json` for **_Magický polibek_** — 4 scenes (tavern / street / tower-exterior /
+tower-room), walkable + depth + spawn + exits wiring the loop, **parallax greybox** backgrounds
+(inline base64-SVG `image` layers), the 6 items (hook / charm / fish / cat / beer / onion), and P2
+world objects: the **fork→hook** pickup, the **poster** (reads the proclamation + sets
+`read-poster`), the **cellar** (rats hint) and the alley **grate** (use-wiring deferred to P4).
+Title heading/tagline set. Authored by `tools/build_demo.py` (gitignored aid; `content/game.json`
+is the source of truth) + a reusable `tools/verify.mjs` (Playwright, isolated in gitignored `tools/`).
+**Why:** Execute the demo roadmap A→Z, mechanics-first / greybox so the loop is playable before the
+PixelLab art pass (P8). Art is a swappable layer.
+**How:**
+- **Greybox = inline base64 `image` SVG layers** (not code `builtin` painters): fully data-driven +
+  swappable for PixelLab PNGs in P8 by changing `src`. **Parallax** far layers (sky / hills /
+  buildings) are oversized + `fit:'none'` (centered) so slow parallax doesn't reveal edges on the
+  wide (4000px) street; ground / zone-overlay use `fit:'stretch'`. Confirmed `fitImageSprite` sizes
+  layers to the **scene design space**, not the viewport — so the wide street fills correctly.
+- **Verified in a real browser** (Playwright, clean context → baked doc, no IndexedDB draft): loads
+  with **0 console errors**; title → New game → **Hospoda**; click the door → **Ulice** (walking,
+  pathfinding, exits, transitions, wide-street parallax all working); player placeholder renders
+  (moved the tavern spawn off the foreground table).
+- **Art-direction locked** from the user's reference (Octavi Navarro–style detailed painterly pixel
+  art, muted earthy palette, warm interiors vs cool exteriors, atmospheric depth) → `demo-assets.md`
+  style suffix + note. **Session locks** in `demo-roadmap.md`: hero = **Claude**; parallax sky+nature;
+  animated assets (engine particles now + PixelLab anims in P8); full default-style sounds; credits =
+  Director (user) + „sabe" on all other roles.
+**Follow-ups:**
+- Diacritics: greybox examines / `say`s are ASCII; full Czech-diacritic sweep in the P3 content pass
+  (the title is already fixed).
+- HUD hint text is the engine English default — localize in P9.
+- tower / tower-room greybox not yet eyeballed (same mechanism as the verified scenes) — covered by
+  the P6 playthrough.
+- **Next (P3):** the 4 cast NPCs + dialogue trees.
+
 ### 2026-06-18 — Demo: agent to build it via skills + PixelLab MCP (decision recorded in demo-roadmap)
 **What:** Docs only. Decided the agent (Claude Code) will assemble the **whole demo itself** as a live test of the Pixin **skills** + **PixelLab via its MCP** for assets — recorded as a new **"Test skills and PixelLab"** section at the top of `demo-roadmap.md`. The user accepts the pixel art won't be polished (their review/tweak afterwards; art is a swappable layer). **Key operational note:** the PixelLab **MCP must be installed and the Claude Code session restarted** — MCP tools register at session start, so they won't appear mid-conversation; nothing is lost on restart (on disk + this dev log), resume from `demo-roadmap.md` (both engine prereqs ✅, next P0). Fallback = hand-authored SVG/geometric greybox if PixelLab is unavailable.
 **Why:** the user wants the demo done fast and to see the skills + PixelLab work in practice; the user's subscription is active and just needs the MCP added.
