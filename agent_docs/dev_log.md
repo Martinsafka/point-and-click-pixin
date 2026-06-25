@@ -23,6 +23,23 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-25 — M13d commit 3: engine export + `mountGame` embedding API
+**What:** `src/mount.tsx` — `mountGame(doc, container): GameHandle`: seeds the doc (built-in sounds +
+weather presets), publishes it (`setActiveDoc` + `setSoundLibrary`), renders the full `App`
+(loading → title → play) into a container, returns `{ destroy() }`. Expanded `src/index.ts` to export
+`mountGame` / `GameHandle` + `createPixiApp` + `createSceneHost` / `SceneHost` + `setActiveDoc` (alongside
+the GameDoc types). `package.json` adds the `./styles.css` export.
+**Why:** the headline of the `pixin` package — drop a playable game into the DOM from a `GameDoc`, with no
+app shell.
+**How:** because the engine is demo-free (commit 2), the lib build now bundles the engine + UI **without**
+the demo — verified (`streetScene` / `import.meta.glob` / demo strings all ∅ in `dist-lib/index.js`).
+Output: `dist-lib/index.js` 153 kB (gzip 53) + `dist-lib/index.css` 25 kB (the UI styles; consumer does
+`import 'pixin/styles.css'`). React / react-dom / pixi.js stay external (peers). typecheck + lint + app
+build green.
+**Follow-ups:** `mountGame` not yet exercised by a real consumer harness (runtime check). Remaining:
+peerDependencies + publish-prep, GameDoc JSON Schema + validate (c4), versioning/migrations (c5),
+scaffolder + CI (c6). dts still emits the whole `src/` tree into `dist-lib` — prune before publish.
+
 ### 2026-06-25 — M13d commit 2: decouple the active doc from the demo
 **What:** New `src/data/active-doc.ts` — a settable `gameDoc` holder (live binding + safe empty default) +
 `setActiveDoc`. Rerouted the engine-reachable + UI readers (`audio.ts`, `state/story.ts`,
