@@ -53,6 +53,9 @@ export interface DialogueStore extends DialogueState {
   choose(index: number): void
   /** End the conversation (runs the partner's resume via `onEnd`). */
   end(): void
+  /** Fast-forward the rest of the conversation, running each remaining line's effects
+   *  (so flags set by unseen lines still apply), stopping at a live choice or the end. */
+  skip(): void
 }
 
 const IDLE: DialogueState = {
@@ -151,6 +154,21 @@ export function createDialogueStore() {
       },
       end() {
         if (deps) finish()
+      },
+      skip() {
+        // Fast-forward through the remaining click-to-continue lines, applying each node's
+        // effects via `present`, until a live choice (the player must still pick) or the end.
+        // The current node's effects already ran when it was presented, so we continue from
+        // its `next` — so skipping no longer drops the flags those unseen lines would set.
+        for (let i = 0; i < MAX_HOPS; i += 1) {
+          const d = deps
+          if (!d || nodeId === null) return
+          const node = d.dialog.nodes[nodeId]
+          if (!node) return
+          if (node.choices?.some((c) => !c.when || d.check(c.when))) return
+          if (node.next) present(node.next, 0)
+          else return finish()
+        }
       },
     }
   })

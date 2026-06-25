@@ -6,6 +6,7 @@ import { sceneHit } from '../engine/hotspots'
 import { designSize } from '../data/scene-config'
 import { storyStore } from '../state/story'
 import { gameDoc } from '../data/game'
+import { assetUrl } from '../data/asset-url'
 import type { CursorKind } from '../data/schema'
 
 const EMOJI: Record<CursorKind, string> = {
@@ -81,7 +82,11 @@ export function GameCursor() {
       style={{ display: visible ? 'block' : 'none' }}
       aria-hidden
     >
-      {icon ? <img src={icon} alt="" /> : <span className="game-cursor__emoji">{EMOJI[kind]}</span>}
+      {icon ? (
+        <img src={assetUrl(icon)} alt="" />
+      ) : (
+        <span className="game-cursor__emoji">{EMOJI[kind]}</span>
+      )}
     </div>
   )
 }

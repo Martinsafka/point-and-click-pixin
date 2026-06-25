@@ -23,6 +23,110 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-25 — IDE (WebStorm) commit-time warnings triage
+**What:** Cleaned the only two **real** warnings — in `src/ui/theideaguards-logo.svg`: removed the unused
+`xmlns:xlink` namespace and self-closed the empty-body `<path></path>` (→ `<path … />`). Verified the SVG
+is still well-formed. The remaining warnings are **IDE false positives**, left as-is:
+- `.github/workflows/deploy.yml` — "Unresolved action reference" / "Undefined parameter" for
+  `actions/checkout@v4`, `pnpm/action-setup@v4`, `actions/setup-node@v4`, `actions/upload-pages-artifact@v3`,
+  `actions/deploy-pages@v4` (+ their `with:` params). WebStorm can't resolve **external** GitHub Actions
+  offline; the workflow is correct and runs on GitHub.
+- `src/styles.css` (lines 36 / 406 / 474) — "font-family does not have generic default" on
+  `font-family: var(--game-font)`. The generic fallback lives **inside** the variable
+  (`--game-font: …, sans-serif`), which the inspection can't see. **Pre-existing**, not from this work.
+**Why:** the user saw these in WebStorm's commit dialog and asked which are real.
+**How:** SVG-only edits; the Actions and the var-based font stacks are correct, so nothing else changed.
+**What:** New `dialogueStore.skip()` — fast-forwards the remaining click-to-continue lines, running each
+node's effects, stopping at a live choice or the end. The dialogue **Skip ⏭** button (`DialogueBox`) now
+calls `skip()` instead of `end()`. The cutscene runner (`scene.ts`) matches: its skip handler fast-forwards
+an active dialogue (`skip()` not `end()`), and a `dialog` step reached while skipping now **begins → skips**
+(effects run) instead of being dropped entirely.
+**Why:** skipping a conversation — via the button or a cutscene skip — closed it without running the
+effects of the lines you hadn't reached yet, so flags those lines set were silently lost (e.g. the
+post-kiss cutscene dialog left the story state broken). The cutscene runner already ran standalone
+`effects` *steps*; only **in-dialog** node effects were dropped.
+**How:** `skip()` walks `present(node.next)` from the current node (whose effects already ran) — `present`
+runs effects + follows branch / fall-through — until a node with a live (gated) choice (can't auto-pick) or
+the end. Player dialogues stop at choices; scripted, linear cutscene dialogs run to completion. typecheck +
+lint + prettier clean.
+**Follow-ups:** a forced cutscene skip that hits a dialog **choice** leaves the box up for the player to
+pick (the await resolves on their pick) — fine for linear cutscene dialogs; avoid choices in skippable
+cutscene dialogs.
+
+### 2026-06-25 — Landing page: Pixin Builder + full feature list + skills
+**What:** Rebuilt `landing/index.html` (the Pages root that links to the demo at `./play/`): branded
+**Pixin Builder**, a 12-card feature grid covering the whole editor (scenes/layers · interactions/items ·
+characters/animation · NPCs/dialogue · cross-scene routines · stealth · cutscenes · audio ·
+atmosphere/lighting · time/logic · screens/UI/saves · the live editor), and a highlighted **Claude Code
+skills** banner (`pixin-gamedoc` / `pixin-editor` / `pixin-recipes`).
+**Why:** the landing was a 3-bullet placeholder; the user wanted it to showcase every editor feature and
+advertise the bundled AI authoring skills.
+**How:** self-contained static HTML (inline CSS, dark theme), responsive auto-fill card grid; feature copy
+pulled from the roadmap. Verified via `build:pages` + a faithful static serve (Pixin Builder heading, demo
+link, skills, 12 cards all present). prettier clean.
+
+### 2026-06-25 — End-screen text shadow + V2 roadmap note
+**What:** Subtle `text-shadow` on `.screen__text` (the **End** "Konec." / **Game-over** `TextScreen` text)
+for legibility over the backdrop image. Roadmap **V2**: added "live screen editing in the editor — show
++ edit all screens like a scene".
+**Why:** the end-screen text sits on a background image and needed separation from it; screens are
+forms-only in the editor today, so a live/WYSIWYG screen editor is a noted V2 nice-to-have.
+**How:** one CSS rule (`0 2px 6px rgba(0, 0, 0, 0.6)`) on the class shared by the end + game-over screens;
+a V2 bullet under "UI theming". prettier clean.
+
+### 2026-06-25 — Creator logo on the final screen
+**What:** Replaced the hardcoded `made with ⬢ pixin` placeholder in `FinalScreen`
+(`src/ui/GameScreens.tsx`) with the creator's brand mark — `src/ui/theideaguards-logo.svg`, imported as
+a module so Vite hashes + base-prefixes it. Restyled `.final__logo` from text to an image
+(`max-width: 50%` / `max-height: 40vh`).
+**Why:** the post-credits screen is the non-editable, hardcoded author/brand slot (the `RELEASE:` TODO in
+the code); swapped the engine placeholder for the The Idea Guards logo before ship.
+**How:** SVG imported as a URL (typed via `vite/client`), so the build emits
+`dist/play/assets/theideaguards-logo-<hash>.svg` referenced at the correct `/point-and-click-pixin/play/`
+base — verified by build. typecheck / lint / prettier clean.
+**Follow-ups:** final screen background is near-black (`#06070b`); if the logo art is dark it may need a
+lighter backdrop or a logo with a light variant.
+
+### 2026-06-25 — Asset externalization pipeline + GitHub Pages deploy
+**What:**
+1. **`scripts/build-assets.mjs`** (`pnpm assets`) — reads a raw editor export from **`export/`** (a
+   gitignored staging folder), pulls every embedded `data:` blob out to
+   `public/assets/baked/{img,audio}/<sha1>.<ext>` (images → downscaled WebP via **sharp**, audio
+   passthrough), de-dupes by content hash, rewrites refs to relative paths, and writes the lean
+   `content/game.json`. Added `sharp` devDep.
+2. **`src/data/asset-url.ts`** (`assetUrl()`) — resolves a doc ref against `BASE_URL` (passes `data:`/
+   `blob:`/`http` through). Wired into every load site: `scene.ts` layers ×2 + transition image,
+   `sprite-view.ts` atlas, `audio.ts` 3 Howls, `Inventory.tsx` + `GameCursor.tsx` `<img>`. `formatFor`
+   now also derives the Howler format from a file extension (not just a data-URI mime).
+3. **`vite.config.ts`** — function form; `base` = `/point-and-click-pixin/play/` on build (dev stays
+   `/`), `build.outDir` = `dist/play`.
+4. **GitHub Pages** — `landing/index.html` (repo-site root, links `./play/`), `scripts/assemble-site.mjs`
+   + `pnpm build:pages` (build game into `dist/play` → copy landing to `dist/` → `.nojekyll`), and
+   `.github/workflows/deploy.yml` (Actions → `actions/deploy-pages`). Local preview via
+   **`pnpm preview:site`** (`scripts/preview-site.mjs`): `vite preview` mis-serves the nested
+   `outDir`+base (returns index.html for JS/asset requests → blank page — verified), so a tiny static
+   server mounts `dist/` under the `/point-and-click-pixin/` prefix exactly like Pages. Build itself is
+   correct (a faithful static server serves JS/webp/landing with the right content-types).
+
+**Why:** the editor bakes uploaded art/audio as base64 into the doc, so `content/game.json` had grown
+to **66 MB**. `import.meta.glob(eager)` inlines that into the JS bundle → brutal boot parse, VRAM and
+Web-Audio decode cost (the "market"/busy-scene jank), and it's too big to commit. Externalizing gives a
+**lean 75 KB** committable json + real asset files served normally. Plus: ship the demo on Pages (a
+sub-path host, hence `base`/`BASE_URL`) behind a landing page; the editor is already dev-only (lazy import
+in `main.tsx`, gated by `import.meta.env.DEV`), so it never reaches the player build.
+
+**How:** recursive walk replaces any `data:` string; images `sharp().resize({height:1620,withoutEnlargement}).webp({quality:80})`, audio kept as-is; refs become `assets/baked/…` resolved at runtime via `assetUrl`. Script is configurable (`--in/--out/--assets/--base/--max-height/--quality`) and idempotent. **Validated non-destructively** on the current 66 MB working copy (scratchpad in/out, real `content/game.json` + `public/` untouched): **69.5 MB → 75 KB** json, 45 images + 6 audio, 6 dupes, 39 MB on disk. typecheck + lint + prettier clean. (Decision: no new "Final export" editor button — option A, the dev uses the existing Export then runs `pnpm assets`.)
+
+**Follow-ups:**
+- Dev runs it for real: editor **Export** → `export/game.json` (gitignored staging) → `pnpm assets` →
+  commit the lean `content/game.json` + `public/assets/baked/`. Then enable Pages once (Settings → Pages
+  → Source = "GitHub Actions").
+- The 27 MB MP3 ("Song") is passthrough → still 27 MB on disk (under GitHub's 50 MB warn). Optional:
+  ffmpeg bitrate downsample and/or `html5:true` streaming for big tracks (skips Web-Audio full decode).
+- Image target tunable (1620px/WebP80 is a balance; `--max-height 1080` for more savings).
+- npm package (engine+editor as a library, demo optional) deferred to its own phase.
+- Separate perf win still open: `Assets.unload` on scene teardown so VRAM doesn't grow across scenes.
+
 ### 2026-06-24 — Frames→atlas in character editor, `setClock` effect, Claude player atlas
 **What:** Three asks while finishing the demo.
 1. **`+ Frames` in the character editor** (`CharacterEditor`, used by player **and** NPC) — stitch

@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pixin Builder — no-code point-and-click adventure editor</title>
+    <meta
+      name="description"
+      content="Pixin Builder — a no-code visual editor for 2D point-and-click adventures, built on PixiJS v8. Scenes, NPCs, dialogue, stealth, cutscenes, atmosphere, a live in-game editor, and Claude Code skills."
+    />
+    <style>
+      :root {
+        --bg: #0e0f14;
+        --panel: #161824;
+        --panel-2: #1b1e2c;
+        --ink: #e8e6df;
+        --muted: #9aa0b0;
+        --accent: #c9a24b;
+        --line: #242838;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: radial-gradient(120% 70% at 50% -10%, #1b1d2b 0%, var(--bg) 55%) fixed;
+        color: var(--ink);
+        font:
+          16px/1.6 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        padding: 0 0 8vh;
+      }
+      a {
+        color: var(--accent);
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 5vw;
+      }
+
+      /* Hero */
+      .hero {
+        text-align: center;
+        padding: 12vh 5vw 6vh;
+      }
+      .hero h1 {
+        font-size: clamp(2.6rem, 8vw, 4.6rem);
+        letter-spacing: 0.03em;
+        margin: 0 0 0.15em;
+      }
+      .hero h1 span {
+        color: var(--accent);
+      }
+      .hero .tag {
+        color: var(--muted);
+        font-size: clamp(1rem, 2.4vw, 1.25rem);
+        max-width: 60ch;
+        margin: 0 auto 2rem;
+      }
+      .cta {
+        display: inline-block;
+        background: var(--accent);
+        color: #1a1408;
+        font-weight: 700;
+        text-decoration: none;
+        padding: 0.9rem 2.2rem;
+        border-radius: 999px;
+        transition:
+          transform 0.12s ease,
+          box-shadow 0.12s ease;
+        box-shadow: 0 8px 30px rgba(201, 162, 75, 0.25);
+      }
+      .cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 36px rgba(201, 162, 75, 0.35);
+      }
+
+      /* Claude Code skills banner */
+      .skills {
+        background: linear-gradient(180deg, var(--panel-2), var(--panel));
+        border: 1px solid var(--accent);
+        border-radius: 16px;
+        padding: 1.6rem 1.8rem;
+        margin: 1rem 0 3rem;
+      }
+      .skills h2 {
+        margin: 0 0 0.4rem;
+        font-size: 1.3rem;
+      }
+      .skills > p {
+        color: var(--muted);
+        margin: 0 0 1rem;
+      }
+      .skills ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.6rem;
+      }
+      .skills li {
+        line-height: 1.5;
+      }
+      code {
+        background: rgba(201, 162, 75, 0.14);
+        color: #e7c87e;
+        padding: 0.1em 0.45em;
+        border-radius: 6px;
+        font-size: 0.92em;
+      }
+
+      /* Feature grid */
+      .features-title {
+        text-align: center;
+        font-size: 1.6rem;
+        margin: 0 0 1.6rem;
+      }
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 1rem;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 1.2rem 1.3rem;
+      }
+      .card h3 {
+        margin: 0 0 0.7rem;
+        font-size: 1.05rem;
+        color: var(--ink);
+      }
+      .card h3::before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        margin-right: 9px;
+        border-radius: 2px;
+        background: var(--accent);
+        transform: rotate(45deg);
+        vertical-align: middle;
+      }
+      .card ul {
+        margin: 0;
+        padding-left: 1.1rem;
+        color: var(--muted);
+        font-size: 0.94rem;
+        display: grid;
+        gap: 0.35rem;
+      }
+      .card strong {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      footer {
+        text-align: center;
+        color: var(--muted);
+        margin-top: 3rem;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <h1>Pixin <span>Builder</span></h1>
+      <p class="tag">
+        A no-code visual editor for 2D point-and-click adventures. The whole game is one
+        serializable data document, played by a PixiJS&nbsp;v8 engine that runs without the editor.
+      </p>
+      <a class="cta" href="./play/">▶ Play the demo</a>
+    </header>
+
+    <div class="wrap">
+      <section class="skills">
+        <h2>🤖 Ships with Claude Code skills</h2>
+        <p>
+          Clone the repo and an AI assistant can drive the editor and author your game with you:
+        </p>
+        <ul>
+          <li>
+            <code>pixin-gamedoc</code> — the <code>GameDoc</code> schema mental model; edit
+            <code>game.json</code> directly.
+          </li>
+          <li><code>pixin-editor</code> — “I want to make X” → the exact panel and steps.</li>
+          <li>
+            <code>pixin-recipes</code> — ready-made mechanic recipes: locked door, fetch quest,
+            stealth beat, branching dialogue, cutscene, conditional weather, global rules and more.
+          </li>
+        </ul>
+      </section>
+
+      <main>
+        <h2 class="features-title">Everything the editor can do</h2>
+        <div class="features">
+          <article class="card">
+            <h3>Scenes &amp; layers</h3>
+            <ul>
+              <li>Multi-scene worlds with fade <strong>transitions</strong></li>
+              <li>Image, animated &amp; procedural layers — place, reorder, parallax</li>
+              <li>Walkable areas + obstacle <strong>holes</strong>; depth scaling</li>
+              <li>Spawn points; follow / pillar-box <strong>camera</strong> per scene</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Interactions &amp; items</h3>
+            <ul>
+              <li>Hotspots: pickable, interact, exit, inspect, enter-<strong>triggers</strong></li>
+              <li>Inventory with <strong>combine recipes</strong> &amp; “use item on object”</li>
+              <li>Examine “look at” text (incl. state-dependent)</li>
+              <li>One <strong>condition / effect</strong> vocabulary gates everything</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Characters &amp; animation</h3>
+            <ul>
+              <li>Frame-by-frame atlases → <strong>AnimatedSprite</strong></li>
+              <li>8-direction walk cycles (mirrored), idle / pickup / interact / talk</li>
+              <li>Conditional <strong>appearance variants</strong> (swap by flag)</li>
+              <li>Stitch individual frames into an atlas in-editor</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>NPCs &amp; dialogue</h3>
+            <ul>
+              <li>Global cast placed per scene; movement paths (loop / pingpong)</li>
+              <li>Branching <strong>dialogue trees</strong> with conditional choices</li>
+              <li>Typewriter text + skip; per-NPC voice (gibberish or uploaded)</li>
+              <li>Ambient monologues &amp; world-space speech bubbles</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Cross-scene NPC routines</h3>
+            <ul>
+              <li>Per-NPC <strong>node-graph routine</strong> (React&nbsp;Flow)</li>
+              <li>Stations + timed / conditional transitions</li>
+              <li>Named scene paths by reference; a home scene</li>
+              <li>Persistent off-scene progression</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Stealth</h3>
+            <ul>
+              <li>NPC <strong>vision</strong>: range + cone + line-of-sight (holes occlude)</li>
+              <li>Crouch at cover; foreground occlusion hides the player</li>
+              <li>Player-approach detection — the NPC walks over and speaks</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Cutscenes</h3>
+            <ul>
+              <li>Scripted <strong>sequences</strong>: wait / move / anim / face / dialog</li>
+              <li>Camera focus + zoom override</li>
+              <li>Fully skippable; started by an effect or on scene entry</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Audio</h3>
+            <ul>
+              <li>Global <strong>Sounds library</strong> (reference by id)</li>
+              <li>Per-scene conditional ambient; per-walker footsteps</li>
+              <li>SFX, per-animation sound, voice while speaking</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Atmosphere &amp; lighting</h3>
+            <ul>
+              <li><strong>Weather</strong> presets (rain / snow / dust) with full sliders</li>
+              <li>Point emitters (smoke / embers); fog with back &amp; front layers</li>
+              <li>Ambient + local <strong>lights</strong> (sphere / cone, flicker)</li>
+              <li>Dark scenes + player torch &amp; mask; colour grade, vignette, lightning</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Time &amp; logic</h3>
+            <ul>
+              <li>Game <strong>clock</strong> &amp; time-of-day; time-window gating</li>
+              <li>Global <strong>rules engine</strong> (reactive <em>when → then</em>)</li>
+              <li>Auto-generated logic graph of the flag web</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Screens, UI &amp; saves</h3>
+            <ul>
+              <li>Editable loading / title / game-over / end / credits screens</li>
+              <li>Font picker; text-size &amp; volume settings</li>
+              <li>Save / load with a Continue slot</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>The live editor</h3>
+            <ul>
+              <li>Floating, multi-window editor over the <strong>live running world</strong></li>
+              <li>Tune lighting / weather / NPCs / camera in context — no reload</li>
+              <li>Jump scene, set flags, give items, scrub time while authoring</li>
+              <li>Export / import the whole game as one JSON document</li>
+            </ul>
+          </article>
+        </div>
+      </main>
+
+      <footer>
+        Built with PixiJS, React &amp; TypeScript ·
+        <a href="https://github.com/Martinsafka/point-and-click-pixin">Source on GitHub</a>
+      </footer>
+    </div>
+  </body>
+</html>

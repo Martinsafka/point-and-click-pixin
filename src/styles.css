@@ -496,6 +496,8 @@ body {
   margin: 0;
   white-space: pre-wrap;
   line-height: 1.4;
+  /* Soft shadow so the end / game-over text stays legible over a backdrop image. */
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 .screen__actions {
   display: flex;
@@ -568,8 +570,8 @@ body {
   background: #06070b;
 }
 .final__logo {
-  font-size: 26px;
-  letter-spacing: 0.04em;
+  max-width: 50%;
+  max-height: 40vh;
   opacity: 0.92;
 }
 .final__hint {
@@ -583,8 +585,6 @@ body {
   width: 100vw;
   height: 100vh;
 }
-
-
 
 .editor__title {
   margin: 0;
@@ -620,7 +620,6 @@ body {
   gap: 10px;
   margin-top: 8px;
 }
-
 
 .editor__toolbar {
   display: flex;
