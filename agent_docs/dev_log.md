@@ -23,6 +23,25 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-25 — M13d commit 6: scaffolder `create-pixin` (clean + demo)
+**What:** New `create-pixin/` package (separate, `bin: create-pixin`) — `npx create-pixin <name>
+[--template clean|demo]`. The `index.mjs` CLI copies a template + fills the project name. **clean** = a
+full starter (Vite + React + `pixin`; `src/main.tsx` mounts the game and the editor at `?edit`; a blank
+`content/game.json`; the `build-assets` externalization workflow). **demo** overlays the Magický polibek
+`content/game.json` whose art/audio are **absolute CDN URLs** to the hosted Pages deploy — so the scaffold
+stays ~80 kB (no 39 MB assets). Also added **`loadDraft`** to the `pixin` exports so the template's
+`main.tsx` plays the editor draft over the committed game in dev (the edit → test loop).
+**Why:** the package is primarily an **authoring tool** — `npx create-pixin` gives a developer a ready
+project with the no-code editor (and optionally the demo to learn from), which was the point of the whole
+package.
+**How:** clean is the base; demo overlays only its `game.json`. `_gitignore` → `.gitignore` on scaffold
+(npm strips a real .gitignore). CLI **verified end-to-end** (scratchpad): scaffolds clean + demo, `{{name}}`
+filled, `.gitignore` renamed, demo carries 59 CDN refs. Repo typecheck + lint + lib build green.
+**Follow-ups:** publish `create-pixin` + `pixin` to npm; the demo's CDN refs depend on the Pages deploy +
+asset hashes (regenerate `templates/demo/content/game.json` after a redeploy). **M13d (c1–c6) is
+functionally complete** — engine + `mountGame`, `pixin/editor`, publish-ready package, scaffolder with
+clean/demo. Optional polish: dts pruning, a consumer smoke-test, a README usage section.
+
 ### 2026-06-25 — M13d commit 5: publish-prep
 **What:** `package.json` for publishing: framework deps → **peerDependencies** (`react`/`react-dom`
 `^18||^19`, `pixi.js` `^8`, `@xyflow/react` `^12` **optional** — editor-only); internal deps

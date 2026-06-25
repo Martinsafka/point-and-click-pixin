@@ -1,0 +1,17 @@
+{
+  "name": "create-pixin",
+  "version": "0.1.0",
+  "description": "Scaffold a Pixin point-and-click game project (engine + no-code editor).",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "create-pixin": "index.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "templates"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

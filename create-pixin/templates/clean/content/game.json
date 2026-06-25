@@ -1,0 +1,16 @@
+{
+  "start": "scene1",
+  "referenceHeight": 1080,
+  "scenes": {
+    "scene1": {
+      "id": "scene1",
+      "name": "Scene 1",
+      "width": 1920,
+      "walkable": [0.08, 0.72, 0.92, 0.72, 0.92, 0.96, 0.08, 0.96],
+      "layers": [],
+      "interactables": []
+    }
+  },
+  "items": {},
+  "initialFlags": {}
+}
