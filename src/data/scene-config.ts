@@ -2,7 +2,13 @@ import type { DepthConfig } from './schema'
 import type { DepthScale } from '../systems/depth'
 
 /** Resolve a scene's fractional depth config to concrete pixel values. */
-export function resolveDepthScale(config: DepthConfig, screenHeight: number): DepthScale {
+export function resolveDepthScale(
+  config: DepthConfig | undefined,
+  screenHeight: number,
+): DepthScale {
+  // A scene may legitimately omit perspective (a flat scene, or a hand-written / imported document
+  // that predates the field) — fall back to a flat scale instead of crashing on `config.stops`.
+  if (!config) return { stops: [{ y: 0, scale: 1 }] }
   const raw =
     config.stops && config.stops.length >= 2
       ? config.stops

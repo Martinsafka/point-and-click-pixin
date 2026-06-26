@@ -7,6 +7,8 @@
       "name": "Scene 1",
       "width": 1920,
       "walkable": [0.08, 0.72, 0.92, 0.72, 0.92, 0.96, 0.08, 0.96],
+      "depth": { "yNearFrac": 0.95, "yFarFrac": 0.6, "scaleNear": 1, "scaleFar": 0.7 },
+      "spawn": { "xFrac": 0.5, "yFrac": 0.85 },
       "layers": [],
       "interactables": []
     }

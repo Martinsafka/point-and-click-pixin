@@ -23,6 +23,18 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-27 — Fix crash on a scene without `depth` (pixin 0.1.4 / create-pixin 0.1.2)
+**What:** `resolveDepthScale` now tolerates a scene with **no `depth`** (returns a flat scale instead of
+reading `config.stops` on `undefined`); the clean template's `scene1` gains the `depth` + `spawn` fields
+it was missing.
+**Why:** the schema types `SceneData.depth` as **required**, so the engine assumed it was always there;
+the clean template's hand-written scene omitted it → `TypeError: can't access property "stops"` crashed
+the editor _and_ game on any minimal scene (the demo's scenes all define depth, so it only surfaced on a
+fresh project). Reported from the gamejam.
+**How:** an engine guard (defense for hand-written / imported docs) + the template scene now matches
+`blankScene` (the editor's canonical minimal scene — id/name/layers/walkable/interactables + **depth +
+spawn**). Republish `@theideaguards/pixin` 0.1.4 + `@theideaguards/create-pixin` 0.1.2.
+
 ### 2026-06-27 — Editor: ignore empty drafts (pixin 0.1.3)
 **What:** `loadDocDraft` now treats a draft with **no scenes** as "no draft".
 **Why:** the IndexedDB draft is **per-origin** (e.g. `localhost:5173`), not per-project, and it takes
