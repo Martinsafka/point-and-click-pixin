@@ -31,6 +31,11 @@ export async function loadDocDraft(): Promise<GameDoc | null> {
         localStorage.removeItem(LEGACY_LS_KEY)
       }
     }
+    // A draft with no scenes is a stray/blank save — treat it as "no draft" so it can't shadow the
+    // committed content/game.json in the editor → game loop. The draft is per-origin (e.g.
+    // localhost:5173), so a single empty save would otherwise leave every fresh project on that
+    // origin loading an empty document (editor shows nothing; the game's start scene is missing).
+    if (doc && Object.keys(doc.scenes ?? {}).length === 0) doc = undefined
     present = !!doc
     return doc ?? null
   } catch {

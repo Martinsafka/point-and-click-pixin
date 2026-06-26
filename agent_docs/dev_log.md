@@ -23,6 +23,17 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-27 — Editor: ignore empty drafts (pixin 0.1.3)
+**What:** `loadDocDraft` now treats a draft with **no scenes** as "no draft".
+**Why:** the IndexedDB draft is **per-origin** (e.g. `localhost:5173`), not per-project, and it takes
+precedence over the committed `content/game.json` in both `mountEditor` and the game (template play
+branch). A pre-0.1.2 editor had saved an **empty** document there; on the same origin that blank draft
+then shadowed every fresh project — the editor opened with no scenes, and the game's New Game hung
+(start scene missing). Reported from the gamejam after 0.1.2.
+**How:** one guard in `loadDocDraft` (`scenes` empty → `undefined`) covers both consumers. Users on an
+older build can also clear it manually (browser IndexedDB / the editor's **Discard draft**, which now
+works since `hasDocDraft` is no longer DEV-gated). Republish `@theideaguards/pixin` 0.1.3.
+
 ### 2026-06-27 — Post-publish bugfixes: recipes + editor draft/seeding (pixin 0.1.2)
 
 Three bugs reported from a gamejam, all rooted in the active-doc decoupling / the library build:
