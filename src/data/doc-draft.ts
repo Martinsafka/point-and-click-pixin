@@ -16,10 +16,11 @@ const LEGACY_LS_KEY = 'pnc-doc-draft'
 
 let present = false
 
-/** Load the draft (dev only). Migrates a pre-existing localStorage draft into IndexedDB
- *  on first run, so an in-progress draft isn't lost by the storage switch. */
+/** Load the draft. **Callers gate on dev** (the editor → game loop is dev-only) — this must NOT
+ *  test `import.meta.env.DEV` itself: in the published library that constant is baked to the
+ *  library's build mode (`false`), which would make the draft write-only (saved, never read).
+ *  Migrates a pre-existing localStorage draft into IndexedDB on first run. */
 export async function loadDocDraft(): Promise<GameDoc | null> {
-  if (!import.meta.env.DEV) return null
   try {
     let doc = await idbGet<GameDoc>(DRAFT_STORE, KEY)
     if (!doc) {
@@ -47,7 +48,8 @@ export async function clearDocDraft(): Promise<void> {
   present = false
 }
 
-/** Synchronous best-effort (reflects the last load / save / clear) — for UI badges. */
+/** Synchronous best-effort (reflects the last load / save / clear) — for UI badges. Don't test
+ *  `import.meta.env.DEV` here — it's baked `false` in the published library (see loadDocDraft). */
 export function hasDocDraft(): boolean {
-  return import.meta.env.DEV && present
+  return present
 }

@@ -1,6 +1,6 @@
 {
   "name": "@theideaguards/create-pixin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Scaffold a Pixin point-and-click game project (engine + no-code editor).",
   "license": "MIT",
   "type": "module",

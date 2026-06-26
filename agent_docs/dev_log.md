@@ -23,6 +23,32 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-27 — Post-publish bugfixes: recipes + editor draft/seeding (pixin 0.1.2)
+
+Three bugs reported from a gamejam, all rooted in the active-doc decoupling / the library build:
+
+1. **Recipes (item combination) silently did nothing** — in the package _and_ locally in this repo.
+   `state/story.ts` builds the app `storyStore` at module load from `active-doc.gameDoc`, which is
+   still the empty default then (the real game is published later via `setActiveDoc`). `combine`
+   closed over that empty `doc`, so `findRecipe([], …)` always missed — and `load`/continue never
+   re-seeds it. **Fix:** `combine` reads the **live** `gameDoc` binding at call time (correct for new
+   game + continue, app + lib).
+2. **Editor draft never loaded in the package** (import JSON → edit → "the whole json is discarded").
+   `loadDocDraft` / `hasDocDraft` tested `import.meta.env.DEV`, which Vite bakes to `false` when the
+   **library** is built → the draft was write-only. **Fix:** drop the `import.meta.env.DEV` test from
+   the draft helpers; callers gate (`data/game.ts` on dev, the template on the _consumer's_ dev).
+3. **Editor opened empty in a clean package project** (no scenes → Scene/Item tab unusable).
+   `editor-store` initialises `doc: structuredClone(gameDoc)` at module load (empty active doc), and
+   `mountEditor` neither loaded a draft nor received the project's doc. **Fix:** `mountEditor(container,
+   initialDoc?)` is now **async** — resolves `draft ?? initialDoc`, seeds it (sounds/weather +
+   `setActiveDoc`) and `setDoc`s it into the editor store; the clean template passes its
+   `content/game.json`.
+
+**Impact:** republish `@theideaguards/pixin` 0.1.2 + `@theideaguards/create-pixin` 0.1.1; **redeploy the
+repo** — the live demo's recipes were broken by #1 too. typecheck + lint + lib build green. The
+`import.meta.env.*` lesson: in shared library code those constants bake the _library's_ build mode, not
+the consumer's — gate dev-only behaviour in the consumer. See [[npm-publish-workflow]].
+
 ### 2026-06-25 — README + landing: npm install + in-site docs page (pixin 0.1.1)
 **What:** **README** — dropped the Röki / geometric-placeholder framing; Quick Start now leads with
 `npm create @theideaguards/pixin` + `npm install @theideaguards/pixin` (+ a `mountGame` snippet), with a

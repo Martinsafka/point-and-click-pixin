@@ -41,7 +41,12 @@ export function createStoryStore(doc: GameDoc) {
     run: (effects) => set(applyEffects(get(), effects)),
     select: (item) => set({ selectedItem: item }),
     combine: (a, b) => {
-      const recipe = findRecipe(doc.recipes ?? [], a, b)
+      // Recipes resolve against the LIVE active document (data/active-doc), not the `doc`
+      // captured when this store was created. The app store is built at module load while the
+      // active doc is still the empty default (the real game is published later via
+      // setActiveDoc), so a captured `doc` would leave combine matching against zero recipes —
+      // and `load`/continue never re-seeds it. Reading the live binding fixes new + continue.
+      const recipe = findRecipe(gameDoc.recipes ?? [], a, b)
       if (!recipe) return false
       set(
         applyEffects({ ...get(), selectedItem: null }, [

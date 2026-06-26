@@ -59,7 +59,9 @@ export const bakedGameDoc: GameDoc = publishedDoc ?? demoGameDoc
 // it to the shared holder + sound library. The engine + UI read `gameDoc` from `./active-doc`
 // (demo-free); the `mountGame` embedding API sets a consumer's doc the same way.
 const resolved: GameDoc = seedWeatherPresets(
-  seedBuiltinSounds(migrateSounds((await loadDocDraft()) ?? bakedGameDoc)),
+  seedBuiltinSounds(
+    migrateSounds((import.meta.env.DEV ? await loadDocDraft() : null) ?? bakedGameDoc),
+  ),
 )
 setActiveDoc(resolved)
 setSoundLibrary(resolved.sounds)
