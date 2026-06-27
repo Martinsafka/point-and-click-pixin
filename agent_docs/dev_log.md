@@ -23,6 +23,18 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-06-27 — Editor never operates on an empty doc (pixin 0.1.5)
+**What:** the editor store now guarantees **≥1 scene + a valid `selectedSceneId`** (`withScene` helper,
+used in the initial state + `setDoc`).
+**Why:** `Editor.tsx` reads `doc.scenes[selectedSceneId].name` unguarded; a blank / imported doc — or the
+old template that never seeded the editor (`mountEditor(root)` with no doc) — left `selectedSceneId=''`
+→ `TypeError: can't access property "name"` → the **Scene tab went to a black screen**. Reported from the
+gamejam.
+**How:** `withScene(doc)` seeds a starter scene when there are none, and selects `start` (if it exists)
+else the first scene — one root fix instead of guarding every panel (per the user's "complete data, not
+guards everywhere"). Now even the old template can't crash the editor. Republish `@theideaguards/pixin`
+0.1.5.
+
 ### 2026-06-27 — Fix crash on a scene without `depth` (pixin 0.1.4 / create-pixin 0.1.2)
 **What:** `resolveDepthScale` now tolerates a scene with **no `depth`** (returns a flat scale instead of
 reading `config.stops` on `undefined`); the clean template's `scene1` gains the `depth` + `spawn` fields

@@ -303,6 +303,18 @@ function blankScene(id: SceneId): SceneData {
   }
 }
 
+/** A document guaranteed to have ≥1 scene and a valid selected id, so the editor panels never read
+ *  `doc.scenes[selectedSceneId]` as undefined. A blank or imported `game.json` without scenes (or a
+ *  `start` pointing at a missing scene) would otherwise crash the editor to a black screen; here it
+ *  gets a starter scene / the first available one instead. */
+function withScene(doc: GameDoc): { doc: GameDoc; selectedSceneId: SceneId } {
+  if (Object.keys(doc.scenes).length === 0) {
+    doc = { ...doc, scenes: { scene1: blankScene('scene1') }, start: doc.start || 'scene1' }
+  }
+  const selectedSceneId = doc.scenes[doc.start] ? doc.start : Object.keys(doc.scenes)[0]
+  return { doc, selectedSceneId }
+}
+
 function uniqueSceneId(doc: GameDoc, base: string): SceneId {
   if (!doc.scenes[base]) return base
   let n = 2
@@ -390,8 +402,7 @@ export const editorStore = createStore<EditorStore>((set, get) => {
   const patchDoc = (patch: Partial<GameDoc>) => set({ doc: { ...get().doc, ...patch } })
 
   return {
-    doc: structuredClone(gameDoc),
-    selectedSceneId: gameDoc.start,
+    ...withScene(structuredClone(gameDoc)),
     revision: 0,
     selectScene: (id) => set({ selectedSceneId: id }),
     addScene: () => {
@@ -426,7 +437,7 @@ export const editorStore = createStore<EditorStore>((set, get) => {
       const scenes = Object.fromEntries(ids.map((k) => [k, doc.scenes[k]]))
       set({ doc: { ...doc, scenes } })
     },
-    setDoc: (doc) => set({ doc, selectedSceneId: doc.start, revision: get().revision + 1 }),
+    setDoc: (doc) => set({ ...withScene(doc), revision: get().revision + 1 }),
     setWalkable: (id, polygon) => patchScene(id, { walkable: polygon }, false),
     addHole: (id) => patchScene(id, { holes: [...(get().doc.scenes[id].holes ?? []), []] }, false),
     setHole: (id, index, polygon) =>
