@@ -39,6 +39,33 @@ cutscenes, audio, atmosphere, theming) → packaging.
 
 ---
 
+### ▶ NEXT UP — M14: Pixin Script, phase 1  _(writing conventions + interim pipeline)_
+
+_Prioritized 2026-07-02 **ahead of all other remaining work** (M10/M11/M13 leftovers, V2,
+V2.1): the author is writing the saga's episode-1 screenplay **now**, so the writing
+conventions must exist first — everything written from here on should already be
+compilable. Full specs live in **V2.1 → Pixin Script / pixin-lint**; this milestone is
+their execution order, pulled forward._
+
+- [ ] **v1 writing conventions (the "Pixin Script" spec)** — finalize the plain-text
+      markup: the **CAST & PROPS registry** (item / NPC / scene / flag ids), dialog
+      syntax (`*` choice, `?` condition, `!` effects, `->` next), **whole-scene logic
+      blocks** (`PROP` / `TRIGGER` / `NPC` / `onEnter`, kind + gates + effects + uses —
+      **no spatial data**), named **markers** for cutscene positions. Deliverable: a
+      `pixin_script.md` spec with one fully-worked example scene, Google Docs-friendly
+      (the parser will normalize typography). The story can be written in it
+      immediately.
+- [ ] **Interim conversion workflow (zero code)** — until the compiler exists, Claude +
+      the `pixin-gamedoc` schema converts script chunks → `GameDoc` JSON on demand; the
+      first converted scenes double as the spec's acceptance tests.
+- [ ] **Then, in this order** (specs in V2.1): the deterministic **compiler +
+      merge-by-id** (script owns logic fields, editor owns spatial fields) →
+      **pixin-lint L1–L3** (references → narrative structure → progression / softlock
+      solver) → the editor's **"needs placement"** queue → CI **`pnpm lint:game`**.
+      Editor-hardening prereqs for episode-1 production remain `editor_analysis.md` §10.
+
+---
+
 ### M0 — Data-driven foundation  (backbone for everything)
 
 - [x] `GameDoc` / `SceneData` schema — typed, serializable (scenes, layers,
@@ -732,6 +759,13 @@ editing `game.json`:
       end / credits / final) in the editor and edit them **live, like a scene** (WYSIWYG over the
       rendered screen), instead of today's forms-only Project → Screens section. Builds on M11 screens
       + the ME live-editor model.
+- [ ] **Real-time collaborative editing (CRDT)** — multiple authors in one document at once
+      (option **C** of the 2026-07-02 versioning discussion, `editor_analysis.md` §8): back the
+      editor store with a CRDT (e.g. **Yjs**) + a sync layer / hosted editor, presence cursors,
+      per-entity conflict-free merging. **Prereq: solution A ships first** — the git-native split
+      format (per-scene/dialog files + content-hashed assets, editor **Publish** endpoint) and
+      `GameDoc` `docId`/`version` metadata — so the CRDT has a canonical document model to sync.
+      Only worth it once the editor is hosted / used by teams; until then git covers collaboration.
 - [ ] **Checkpoints** — auto / explicit save points. _(#13.)_
 - [ ] **Highlight usable objects** — an optional outline / pulse on pickable / interactable
       hotspots (discoverability; the context cursor already hints them). _(#15.)_
@@ -756,6 +790,247 @@ editing `game.json`:
       freeze, cutscenes, depth/Y-sort). **Only worth it when a feature actually reads off-scene
       positions** — a minimap, NPCs perceiving each other across scenes, or precise mid-path
       entry without the 1D approximation.
+
+### V2.1 — Saga production pipeline  _(episodic-series enablers — planned 2026-07-02)_
+
+Context: the author plans an **8-episode saga** (min 2–3 h gameplay each; ≈20–30 scenes,
+300–600 dialogue nodes, 80–150 flags per episode — **one `GameDoc` per episode**). Scenes
+are built in **Unreal Engine** and rendered to layers (~an afternoon per scene incl.
+cutouts). Design vocabulary that **already works today** (write it into the script, no
+engine work needed): NPC schedules as deduction (clock + routines + `timeOfDay` +
+`by: npc` triggers — stakeouts, tailing, overheard monologues, alibi timetables),
+deadlines (`timeOfDay` + rules), **evidence-as-items with deduction-as-recipes** +
+present-evidence dialogue gates (`hasItem` on choices), scene **state variants** via
+layer `when` gates (flooded / burned / repaired; past / present), light & weather puzzles
+(darkAreas + playerLight + gated lights / weather / lightning / UV-reveal layers),
+close-up investigation scenes (a second camera on the same set = a cheap scene).
+**Prereq for episode-1 production:** the hardening list in `editor_analysis.md` §10
+(autosave, undo, Problems panel / reference integrity, solution-A split format).
+
+**Logic vocabulary**
+
+- [ ] **Numeric counters** — a `counter` condition (`>=` / `<=` / `==`) + `addCounter` /
+      `setCounter` effects, persisted in story state / saves. Money, reputation, per-NPC
+      trust, "found 5 of 8 clues" — the highest-design-impact vocabulary addition; today
+      faked by flag explosions (`trust-1`, `trust-2`, …).
+- [ ] **Layer blend mode** — `LayerData.blend?: 'add'` (weather / emitters already have
+      one). Unlocks **baked per-light render passes** composited over the backdrop and
+      gated by `when` — lamp on/off states that look physically lit (bounce, shadows),
+      with editor lights reserved for dynamics (flicker, the player light).
+- [ ] **Conditional holes / walkable** — a `when` gate on `holes` entries (a flooded
+      alley closes a path); today faked with gated exits.
+- [ ] **`resetFlags` batch effect** _(optional)_ — cyclic-day loops (Majora-lite: the
+      day repeats, the player breaks the loop with knowledge) without enumerating
+      `setFlag false` per flag.
+
+**Pixin Script — screenplay-to-GameDoc compiler**  _(the writing side of the pipeline;
+the author writes the game's **logic layer** as plain text — the worst clicking in the
+editor — while art + atmosphere stay editor/UE work. **Phase 1 — the conventions + the
+interim workflow — is pulled forward to ▶ NEXT UP / M14** at the top of this file.)_
+
+- [ ] **The markup format** — a plain-text, Ink/Fountain-inspired language: a **CAST &
+      PROPS registry** up front (declares item / NPC / scene / flag ids — the contract),
+      dialogs (`*` choices, `?` condition, `!` effects, `->` next), and **whole scenes'
+      logic**: interactables (kind + id + effects / uses / `when` / exit targets),
+      triggers' effects, NPC placement wiring (dialog, `when`), scene `onEnter` —
+      everything **except spatial data** (no coordinates, no polygons, no layers).
+      Cutscene steps reference named **markers** placed in the editor. The parser
+      normalizes typography (smart quotes, dashes), so the script can live in **Google
+      Docs** — whose revision history / comments / live co-writing become the narrative
+      layer's versioning + collaboration for free (git / solution A keeps versioning the
+      editor-owned spatial JSON; the compiler stamps both revisions into `GameDoc`
+      metadata). The registry doubles as the natural string table if i18n happens.
+- [ ] **Compiler + merge-by-id** — emits `GameDoc` fragments and merges them into the
+      doc (solution-A split files): **the script owns logic fields, the editor owns
+      spatial fields** (hitArea, positions, layers, lights, atmosphere), merged per
+      entity by id — so re-compiling the script never destroys drawn polygons, and
+      redrawing a hit area never touches the logic.
+- [ ] **“Needs placement” queue in the editor** — entities declared by the script but
+      not yet placed arrive with placeholder hit areas / spawns + a to-do list (“5
+      hotspots to draw in `hospoda`”); the editor becomes the *spatial
+      materialization* step, not the logic-entry step.
+- [ ] Interim workflow (zero code, usable now): agree the conventions and write episode
+      1 in them; Claude + the `pixin-gamedoc` schema converts script chunks to JSON on
+      demand until the deterministic compiler exists.
+
+**pixin-lint — the game-logic linter (L1–L3)**  _(one analysis core, three consumers:
+the editor’s Problems panel, the script compiler, CI)_
+
+- [ ] **L1 — references** — dangling / empty ids (items, dialogs, scenes, sounds,
+      `picked:` flags), flags written-never-read / read-never-written — the
+      `findReferences` core from `editor_analysis.md` §2.2 / §7.1.
+- [ ] **L2 — narrative structure** — dialogs with no path to an end, unreachable nodes,
+      choices with empty text, cutscene steps referencing missing actors / markers.
+- [ ] **L3 — progression / softlock checker** — the “dead man walking” guard. Canonical
+      test case: the 48 h jam bug (the player crosses a one-way exit **without a key
+      item** → the game becomes unwinnable). Three passes, cheapest first:
+      **(a) fuzzing bots** — headless random / heuristic playthroughs over the pure
+      evaluator (`checkCondition` / `applyEffect` already run without Pixi) — finds
+      practical softlocks, unreached content, min-actions pacing;
+      **(b) static dependency graph** — walk backwards from `endGame`: an auto-derived
+      **puzzle dependency chart** (Ron Gilbert’s tool, generated instead of hand-drawn),
+      plus the named check *“requirement obtainable only before a one-way transition
+      that doesn’t gate on it”* with an **auto-suggested fix** (gate the exit with
+      `when: hasItem …`);
+      **(c) state-space solver** — BFS over abstract story states (flags / inventory /
+      scene / counters), exploiting the genre’s monotonicity (flags mostly false→true,
+      items accumulate), verifying **“from every reachable state the end stays
+      reachable”**, and emitting the **shortest repro trace** for any violation
+      (“hospoda → ulice → věž without `vidlicka` → stuck”). Non-monotonic spots
+      (`takeItem`, `setFlag false`, recipe consumption) are exactly where softlocks
+      live and get modeled precisely. Known limits: spatial / stealth / timing are
+      abstracted; deadline rules (timeOfDay + consequences) need special handling.
+- [ ] **CI integration** — `pnpm lint:game` over the split format: every commit is a
+      machine-verified **completable** game before it reaches main.
+
+**Episodic / saga features**
+
+- [ ] **Cross-episode state carry-over** — export the final flags / inventory at an
+      episode's end → seed the next episode's `initialFlags` (or a shared meta-save).
+      The **"series remembers"** mechanic: episode-2 choices change episode-5 renders,
+      routines and dialogue. Needs `GameDoc` `docId`/`version` metadata (analysis §8).
+- [ ] **Recap screen ("previously on…")** — episode-start lines gated by carried-over
+      flags; the key retention tool between episodes (Telltale lesson: completion decays
+      across a season — recap + cliffhangers + reliable cadence fight it).
+- [ ] **Save slots + autosave checkpoints** — required at 2–3 h per episode (extends V2
+      **Checkpoints** _(#13)_; today one manual slot, `slot0`).
+- [ ] **Per-line dialogue voiceover** — `DialogNode.audio?` (a library `SoundId`) beyond
+      the current per-NPC procedural voice blips.
+- [ ] **Shared cast across episodes** — import a character (view / clips / voice) from
+      another `GameDoc`, so the recurring cast isn't copy-pasted per episode (pairs with
+      the V2 **Global animation library** _(#10)_).
+- [ ] **Inventory UI at scale** — 50+ items (scrolling / grouping; the 48 h jam game
+      already carries 34).
+- [ ] **i18n decision before episode-1 content** — if the saga ever ships in more than
+      one language, the string layer (V2 **Localization**) must exist **before**
+      thousands of dialogue nodes are written; retrofitting is painful. Decide first,
+      then schedule.
+
+**UE render-pass pipeline (the "professional pipeline")**
+
+- [ ] **UE → Pixin scene importer** — Movie Render Queue EXR with **Cryptomatte
+      object-ID + depth passes**: per-object cutout PNGs from isolated / holdout renders
+      (full pixels behind occluders — strictly better than hand-cutting the final
+      composite in Photoshop), auto `xFrac`/`yFrac`/`anchorYFrac` from mask bounds +
+      base depth, bands assigned by depth thresholds, **walkable + holes from a floor
+      mask** (marching squares + simplify) — emitted as an importable scene fragment.
+      Constraint to plan for now: tag objects in UE and lock the camera after render.
+- [ ] **Depth curve computed from the 3D camera** — project a reference-height capsule
+      at several floor positions and measure pixel heights → exact `DepthConfig` stops
+      instead of hand-tuned near/far (characters sit in the render's perspective
+      mathematically).
+- [ ] **Depth-aware fog** — the depth pass as a fog-density mask: quasi-volumetric fog
+      over a static render (thickens with scene distance) — data hand-painted 2.5D
+      games never had.
+- [ ] **Detective vision / senses mode** — per-object masks drive an outline / tint
+      highlight of specific props (a "focus" mode revealing clues; supersedes the plain
+      V2 **Highlight usable objects** _(#15)_).
+- [ ] **Time-of-day + per-light variants as the standard technique** — same camera, sun
+      moved / lights toggled → variant layers over the existing `timeFadeAt` +
+      `colorGradeByTime` + `when` gates (+ the new layer `blend: 'add'`). Document the
+      workflow in `asset_pipeline.md`. UE scenes are **standing sets** — an episode-5
+      winter re-render of an episode-1 location is continuity for free (props moved
+      between episodes = re-render, same camera).
+- [ ] **Parallax from depth slices** — render fore / mid / background holdouts so the
+      parallax factors match true camera distances (scroll reads as 3D because it is).
+- [ ] _(later, V2.2+)_ **Normal-pass directional 2D lighting** — editor lights shade the
+      backdrop via a rendered normal map (a Pixi filter), beyond additive glows.
+
+### V2.2 — Distribution platform  _(offline play + paywall — planned 2026-07-02)_
+
+Principle (user's call, and architecturally right): **commerce lives outside the game and
+the editor.** The platform is a separate web app that authenticates, sells, and then just
+fetches the episode's doc + assets and calls the existing `mountGame(doc, container)`
+embedding API — the engine knows nothing about auth. **Repo boundary (explicit):** the
+platform is **never part of this repo** — this repo is the engine + editor only; the
+platform lives in its own **private repo**, and this roadmap tracks only the engine-side
+hooks it needs (`assetBase`, `loadState`/`onSave`, PWA template). The engine stays
+**MIT** while the games' content (docs, art, audio, script) is **proprietary** ("all
+rights reserved", licensed to players via the platform ToS) — the standard dual model
+(engine open, games not). One cheap future-proofing rule for the platform's data model:
+give games/episodes/entitlements a **`publisher` dimension from day one** — it costs
+nothing while there is one publisher, and it is the difference between "add a table" and
+"rewrite the platform" if V3 (below) ever happens.
+
+**Offline play**
+
+- [ ] **PWA first** — service worker precaching the bundle + `game.json` + baked assets,
+      a manifest, `navigator.storage.persist()`; installable from the browser, runs
+      offline after first (authenticated) load, works desktop + mobile. Ship as part of
+      the `create-pixin` template. Known caveat: iOS Safari storage limits (fine at
+      ~50 MB/episode, but verify). A bare zip + `index.html` is a non-option (`file://`
+      blocks modules/fetch).
+- [ ] **Tauri desktop wrapper later** (real download, installers, and the **Steam
+      channel** — episodes as DLC) — deferred until something demands it: signing
+      (macOS notarization, Windows SmartScreen), per-OS builds and an updater are real
+      overhead PWA avoids.
+
+**The platform (registration → payment → access)**
+
+- [ ] **Auth + payments + entitlements** — accounts (email/OAuth), a purchases DB
+      (user ↔ owned episodes / active subscription). Models: per-episode purchase,
+      season pass, subscription; **episode 1 free** (the pilot funnel). Payments: for a
+      CZ solo seller strongly consider a **Merchant of Record** (Paddle / Lemon
+      Squeezy) — handles EU digital-goods VAT + invoicing for a few extra %; Stripe =
+      you are the merchant and own the VAT OSS admin.
+- [ ] **Entitlement-gated delivery** — episodes on a CDN behind **signed URLs** or an
+      auth cookie on a path prefix (cleaner for long play sessions than per-asset URL
+      expiry). Engine-side this needs almost nothing: `assetUrl` already passes
+      absolute URLs through (`src/data/asset-url.ts`), so the platform can rewrite doc
+      refs to signed absolute URLs — or add a tiny runtime option
+      `mountGame(doc, el, { assetBase })`.
+- [ ] **Cloud saves per account** — the natural carrier for V2.1's **cross-episode
+      carry-over**: episode N's end state is stored server-side and injected as episode
+      N+1's `initialFlags` on boot, on any device. Also the home of the **season menu**
+      (episode library), the recap screen's data, and choice stats ("43 % of players
+      spared the guard").
+- [ ] **Engine hooks (small)** — `mountGame` options: `assetBase`, and
+      `loadState` / `onSave` callbacks so the platform persists story state server-side
+      instead of the hardcoded IDB `slot0` (single-player local play keeps the IDB
+      default).
+- [ ] **Access policy (decide + document)** — purchased episode = **yours forever**
+      (offline, no revalidation); subscription = access while active, **soft**
+      revalidation only when online (never lock out an offline player). Honest DRM
+      stance: once content plays offline it is on the device and extractable — the
+      paywall protects the honest path (convenience, cloud saves, updates), not against
+      determined extraction. GOG/itch model; do **not** invest in DRM.
+
+### V3 — Far future: open publishing platform  _(a marketplace for Pixin games — "far
+far away nice-to-have", recorded 2026-07-02; do NOT start before the saga ships)_
+
+The idea: open the V2.2 platform to **third-party developers** building games on the
+(free, MIT) Pixin editor — they publish a game, set a price (or free), the platform does
+hosting + payments + player accounts + cloud saves, for a revenue share. Precedents:
+itch.io (open, generic), GX.games (engine-tied web arcade for GameMaker), Playdate
+Catalog (curated, one-SDK store), Roblox/UEFN (creation tool + distribution coupled —
+the strongest version of the pattern). Why it is strategically coherent here rather than
+a pivot:
+
+- **The saga is the anchor tenant.** V2.2 gets built for first-party content anyway
+  (accounts, payments, entitlements, delivery, cloud saves); opening it to others is
+  incremental, and the saga solves the marketplace's classic cold-start on the content
+  side — first-party titles sell the platform (the console-maker playbook).
+- **GameDoc-as-data makes third-party hosting near-zero-risk.** A published Pixin game
+  is a declarative document, not arbitrary code — no sandbox-escape surface, players
+  can't be attacked by a hosted game. This is the load-bearing advantage over generic
+  web-game stores and it falls straight out of the engine's core design. (Holds only
+  while the doc stays code-free — a future "custom JS hooks" feature would break it;
+  weigh that trade-off then.)
+- **pixin-lint becomes the store's QA gate.** Submission runs L1–L3 automatically — a
+  **"machine-verified completable"** badge no other storefront can offer (V2.1 tooling
+  reused as marketplace infrastructure).
+- **It is the sustainability model for the OSS engine** — give away the tool, monetize
+  distribution (Unity/Roblox economics, scaled down): the take rate funds engine
+  development without ever closing the engine.
+
+The genuinely hard parts (why this is far-away, not next): **payouts** (marketplace
+payments = Stripe Connect / marketplace-MoR territory: KYC, per-seller VAT, tax forms —
+regulated and operationally heavy), **moderation** (content policy, uploaded-asset IP
+infringement, ratings), **discovery** (storefront, reviews), engine **version pinning**
+per published game (`GameDoc.version` + migrations — V2.1/solution A prereqs), and the
+support burden of a two-sided market. Prereqs before even prototyping: saga shipped and
+earning on V2.2, versioned `GameDoc`, pixin-lint in CI, and the `publisher` dimension
+already in the platform's data model (see V2.2).
 
 ## Notes
 

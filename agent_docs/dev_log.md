@@ -23,6 +23,76 @@ Example shape:
 
 <!-- Newest entries below. Add yours on top of the list. -->
 
+### 2026-07-02 — Editor audit → `editor_analysis.md`
+**What:** a full audit of the no-code editor written up (in Czech) as `editor_analysis.md` at the repo
+root — weaknesses, logical gaps and risks, each with severity, file:line references, a failure scenario
+and a suggested fix, plus a prioritized top-10. No code changed.
+**Why:** requested stock-take before further editor work; the gamejam crash reports (empty doc, missing
+`depth`, draft shadowing) all belonged to one class — this maps the rest of that class systematically.
+**How:** full read of `src/editor/` (store, shell, every panel), the persistence layer (doc-draft/idb),
+the schema, and the runtime paths authored docs exercise (scene host, rules, dialogue, routines).
+Headline findings: draft saves **only** on “▶ Test in game” (no autosave/undo/confirm → data loss);
+deletes don’t cascade and a dangling `goTo`/exit target hard-crashes `show()`→`mountScene` (black
+screen); flags/`startDialog` are free-text with no vocabulary support despite `logic-scan` knowing the
+answers; the IDB draft is per-origin (cross-project shadowing beyond the fixed empty-draft case);
+data-URL-in-JSON docs hit real limits (70 MB export; `content/game.json` is bundled into the JS build;
+`WorldState.collectFlags` stringifies the whole doc per render).
+**Follow-ups:** the doc’s §10 priority table — top items: debounced draft autosave + `beforeunload`,
+missing-scene guard in `show()` + `withScene` start repair, snapshot undo/redo, per-project draft key,
+`findReferences` + Problems panel.
+**Addendum (same day):** §6 corrected after user input — base64-in-doc is deliberate (single-file
+share) and deploy goes through `pnpm assets`; what stands: docs bypass the pipeline
+(`editor_guide`/`content/README` say “commit the raw export”), editor-session costs, editor-side image
+dedupe. **Decided:** versioning/collaboration goes **solution A** — git-native split format
+(per-entity `content/` files + hashed assets), deterministic serialization, `docId`/`version`/`savedAt`
+metadata, editor **Publish** via a Vite dev-server endpoint (analysis §8). Real-time CRDT collab
+(solution C) recorded in `roadmap.md` → **V2**.
+**Addendum 2 (same day):** roadmap gains **V2.1 — Saga production pipeline**: the user plans an
+8-episode saga (2–3 h gameplay each; one `GameDoc` per episode; scenes built in Unreal → rendered
+layers). V2.1 records (a) the design vocabulary that already works today (schedules-as-deduction,
+evidence-as-recipes, scene state variants, light/weather puzzles), (b) logic-vocabulary extensions
+(numeric **counters**, layer `blend: 'add'`, conditional holes, `resetFlags`), (c) episodic features
+(cross-episode carry-over, recap screen, save slots, per-line VO, shared cast, inventory at scale,
+i18n decision), (d) the UE render-pass pipeline (Cryptomatte/depth importer, camera-computed depth
+curve, depth-aware fog, senses mode, variant technique, parallax slices, normal-pass lighting later).
+**Addendum 3 (same day):** V2.1 gains two more blocks. **Pixin Script** — a plain-text markup
+(Ink/Fountain-inspired) in which the author writes the game’s whole **logic layer** (registry of ids,
+dialogs, interactables’ logic, triggers, NPC wiring, `onEnter`) with **no spatial data**; a compiler
+**merges by id** into the doc — script owns logic fields, editor owns spatial fields (drawn polygons
+survive recompiles); a “needs placement” queue turns the editor into the spatial-materialization step.
+Script lives in Google Docs (revision history = narrative versioning; parser normalizes typography).
+**pixin-lint (L1–L3)** — one analysis core for the Problems panel + compiler + CI: references →
+narrative structure → **progression/softlock checking** (fuzzing bots over the pure evaluator, an
+auto-derived puzzle dependency chart with the one-way-exit named check + auto-suggested gate fix, and
+a monotonicity-exploiting state-space solver with shortest repro traces). Canonical L3 test: the 48 h
+jam’s “crossed a one-way exit without the key item” softlock. CI: `pnpm lint:game` = every commit is a
+machine-verified completable game.
+**Addendum 4 (same day):** user prioritized **Pixin Script phase 1 as the roadmap’s ▶ NEXT UP (M14)**,
+ahead of all remaining planned work — a new milestone section at the top of `roadmap.md` (v1 writing
+conventions → interim Claude-conversion workflow → compiler / lint / placement-queue / CI in order;
+full specs stay in V2.1). Rationale: the episode-1 screenplay is being written **now**, so the writing
+conventions must exist first — everything written from here on should already be compilable.
+**Addendum 5 (same day):** roadmap gains **V2.2 — Distribution platform** (offline + paywall).
+Principle: commerce stays **outside** the game/editor — a separate (private-repo) web app that
+authenticates, sells (MoR — Paddle/Lemon Squeezy — recommended over raw Stripe for EU VAT), and
+delivers entitlement-gated episodes (signed URLs / auth-cookie prefix) into the existing
+`mountGame` embedding API. Offline = **PWA first** (SW precache + `storage.persist()`, in the
+create-pixin template), Tauri wrapper + Steam-as-DLC later. **Cloud saves per account** carry V2.1’s
+cross-episode state (ep-N end state → ep-N+1 `initialFlags`) + season menu/recap/choice stats.
+Engine needs only `mountGame` options (`assetBase`, `loadState`/`onSave`). Access policy: purchases
+forever, subscription soft-revalidated online only; honest no-DRM stance (GOG/itch model). Licensing:
+engine MIT, game content proprietary (standard dual model).
+**Addendum 6 (same day):** two boundary decisions. (1) **Repo boundary explicit in V2.2:** the
+platform is never part of this repo (engine + editor only); the roadmap tracks only engine-side hooks;
+platform data model carries a `publisher` dimension from day one (cheap now, prevents a rewrite).
+(2) New **V3 — Far future: open publishing platform** (“far far away nice-to-have”): open the V2.2
+platform to third-party Pixin developers (publish + set price, rev share). Why coherent: the saga is
+the anchor tenant (cold-start solved first-party), **GameDoc-as-data makes hosting third-party games
+near-zero-risk** (declarative doc, no arbitrary code), **pixin-lint becomes the store’s QA gate**
+(“machine-verified completable” badge), and it’s the OSS engine’s sustainability model (tool free,
+distribution monetized). Hard parts named: marketplace payouts (Stripe Connect/KYC/VAT), moderation,
+discovery, engine version pinning. Prereq: saga shipped + earning on V2.2 first.
+
 ### 2026-06-27 — Editor never operates on an empty doc (pixin 0.1.5)
 **What:** the editor store now guarantees **≥1 scene + a valid `selectedSceneId`** (`withScene` helper,
 used in the initial state + `setDoc`).
